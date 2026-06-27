@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+.next/
+dist/
+build/
+.expo/
+*.tsbuildinfo
+
+# Entorno / secretos
+.env
+.env.local
+.env*.local
+!.env.example
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Sistema
+.DS_Store
+*.log
+coverage/

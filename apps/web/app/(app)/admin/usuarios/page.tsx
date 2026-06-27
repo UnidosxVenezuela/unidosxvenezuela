@@ -1,0 +1,65 @@
+import { requireCoordinacion } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
+import type { Perfil } from '@unidos/types';
+import { cambiarVerificacion, cambiarRol } from './actions';
+
+export default async function AdminUsuariosPage() {
+  await requireCoordinacion();
+  const supabase = await createClient();
+  const { data } = await supabase.from('perfiles')
+    .select('id, nombre_completo, telefono, rol, verificado, organizacion, creado_en')
+    .order('creado_en', { ascending: false });
+  const perfiles = (data ?? []) as Perfil[];
+
+  return (
+    <div>
+      <h1>Administración de usuarios</h1>
+      <p className="muted">Verifica identidades y asigna roles. {perfiles.length} usuarios.</p>
+
+      <div className="tarjeta">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Organización</th><th>Estado</th><th>Rol</th></tr>
+          </thead>
+          <tbody>
+            {perfiles.map((p) => (
+              <tr key={p.id}>
+                <td>
+                  {p.nombre_completo || '—'}
+                  {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
+                </td>
+                <td>{p.organizacion || '—'}</td>
+                <td>
+                  <form action={cambiarVerificacion} className="fila">
+                    <input type="hidden" name="perfil_id" value={p.id} />
+                    <input type="hidden" name="verificado" value={(!p.verificado).toString()} />
+                    <span className={'insignia ' + (p.verificado ? 'ok' : 'aviso')}>
+                      {p.verificado ? 'Verificado' : 'Sin verificar'}
+                    </span>
+                    <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>
+                      {p.verificado ? 'Quitar' : 'Verificar'}
+                    </button>
+                  </form>
+                </td>
+                <td>
+                  <form action={cambiarRol} className="fila">
+                    <input type="hidden" name="perfil_id" value={p.id} />
+                    <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
+                      {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
+                    </select>
+                    <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted" style={{ fontSize: '.85rem' }}>
+        Nota: el primer administrador se promueve por SQL (ver README). Endurecer la
+        escalada de privilegios es una mejora pendiente (ver docs/06-MEJORAS.md).
+      </p>
+    </div>
+  );
+}

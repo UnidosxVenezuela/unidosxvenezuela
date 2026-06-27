@@ -1,0 +1,119 @@
+import Link from 'next/link';
+import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import {
+  ESTADOS, PRIORIDADES, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD,
+  claseEstado, clasePrioridad,
+} from '@/lib/constantes';
+import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import { cambiarEstado, actualizarAsignacion, agregarComentario } from '../actions';
+
+export default async function TareaDetallePage({ params }: { params: { id: string } }) {
+  const { user, perfil } = await requireUsuario();
+  const supabase = await createClient();
+  const id = params.id;
+
+  const { data: tarea } = await supabase.from('tareas').select(
+    `id, titulo, descripcion, estado, prioridad, vence_en, lat, lng, grupo_id, asignado_a, creado_por,
+     grupos ( nombre, lider_id ),
+     asignado:perfiles!tareas_asignado_a_fkey ( nombre_completo ),
+     creador:perfiles!tareas_creado_por_fkey ( nombre_completo )`
+  ).eq('id', id).single() as any;
+
+  if (!tarea) {
+    return <div className="tarjeta"><h2>Tarea no encontrada</h2><Link href="/tareas">Volver</Link></div>;
+  }
+
+  const [{ data: comentarios }, { data: perfiles }] = await Promise.all([
+    supabase.from('comentarios_tarea')
+      .select('id, contenido, creado_en, autor:perfiles ( nombre_completo )')
+      .eq('tarea_id', id).order('creado_en', { ascending: true }),
+    supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
+  ]);
+
+  const puedeEditar =
+    esCoordinacion(perfil?.rol) ||
+    tarea.asignado_a === user!.id ||
+    tarea.creado_por === user!.id ||
+    tarea.grupos?.lider_id === user!.id;
+
+  return (
+    <div>
+      <RealtimeRefrescar tabla="tareas" filtro={'id=eq.' + id} />
+      <RealtimeRefrescar tabla="comentarios_tarea" filtro={'tarea_id=eq.' + id} />
+
+      <Link href="/tareas" className="muted">← Tareas</Link>
+      <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
+        <h1 style={{ margin: 0 }}>{tarea.titulo}</h1>
+        <span className={'insignia ' + claseEstado(tarea.estado)}>{ETIQUETA_ESTADO[tarea.estado as keyof typeof ETIQUETA_ESTADO]}</span>
+      </div>
+
+      <div className="tarjeta">
+        <p>{tarea.descripcion || <span className="muted">Sin descripción</span>}</p>
+        <div className="grid grid-2">
+          <div><strong>Prioridad:</strong> <span className={'insignia ' + clasePrioridad(tarea.prioridad)}>{ETIQUETA_PRIORIDAD[tarea.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</span></div>
+          <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
+          <div><strong>Asignado a:</strong> {tarea.asignado?.nombre_completo ?? 'Sin asignar'}</div>
+          <div><strong>Creada por:</strong> {tarea.creador?.nombre_completo ?? '—'}</div>
+          <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
+          <div><strong>Ubicación:</strong> {tarea.lat != null && tarea.lng != null ? tarea.lat + ', ' + tarea.lng : '—'}</div>
+        </div>
+      </div>
+
+      {puedeEditar && (
+        <div className="grid grid-2">
+          <form action={cambiarEstado} className="tarjeta">
+            <h2 style={{ marginTop: 0 }}>Cambiar estado</h2>
+            <input type="hidden" name="tarea_id" value={id} />
+            <div className="campo">
+              <select name="estado" className="input" defaultValue={tarea.estado}>
+                {ESTADOS.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO[e]}</option>)}
+              </select>
+            </div>
+            <button className="btn btn-primario" type="submit">Guardar estado</button>
+          </form>
+
+          <form action={actualizarAsignacion} className="tarjeta">
+            <h2 style={{ marginTop: 0 }}>Asignación y prioridad</h2>
+            <input type="hidden" name="tarea_id" value={id} />
+            <div className="campo">
+              <label>Asignar a</label>
+              <select name="asignado_a" className="input" defaultValue={tarea.asignado_a ?? ''}>
+                <option value="">Sin asignar</option>
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+              </select>
+            </div>
+            <div className="campo">
+              <label>Prioridad</label>
+              <select name="prioridad" className="input" defaultValue={tarea.prioridad}>
+                {PRIORIDADES.map((p) => <option key={p} value={p}>{ETIQUETA_PRIORIDAD[p]}</option>)}
+              </select>
+            </div>
+            <button className="btn btn-primario" type="submit">Guardar</button>
+          </form>
+        </div>
+      )}
+
+      <h2>Comentarios ({(comentarios ?? []).length})</h2>
+      <div className="tarjeta">
+        {(comentarios ?? []).map((c: any) => (
+          <div key={c.id} style={{ borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
+            <div className="muted" style={{ fontSize: '.85rem' }}>
+              {c.autor?.nombre_completo ?? 'Anónimo'} · {new Date(c.creado_en).toLocaleString('es-VE')}
+            </div>
+            <div>{c.contenido}</div>
+          </div>
+        ))}
+        {(comentarios ?? []).length === 0 && <p className="muted">Sin comentarios todavía.</p>}
+
+        <form action={agregarComentario} style={{ marginTop: 12 }}>
+          <input type="hidden" name="tarea_id" value={id} />
+          <div className="campo">
+            <textarea name="contenido" className="input" placeholder="Escribe un comentario…" required />
+          </div>
+          <button className="btn btn-primario" type="submit">Comentar</button>
+        </form>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Unidos",
+    "slug": "plataforma-unidos",
+    "scheme": "unidos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router", "expo-secure-store"],
+    "ios": { "supportsTablet": true },
+    "android": { "package": "org.unidos.app" },
+    "extra": { "eas": { "projectId": "" } }
+  }
+}

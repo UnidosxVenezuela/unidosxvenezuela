@@ -1,0 +1,35 @@
+import Link from 'next/link';
+import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
+import { ETIQUETA_AREA } from '@/lib/constantes';
+import type { Grupo } from '@unidos/types';
+
+export default async function GruposPage() {
+  const { perfil } = await requireUsuario();
+  const supabase = await createClient();
+  const { data } = await supabase.from('grupos')
+    .select('id, nombre, area, descripcion, lider_id').order('nombre');
+  const grupos = (data ?? []) as Grupo[];
+  const coord = esCoordinacion(perfil?.rol);
+
+  return (
+    <div>
+      <div className="fila" style={{ justifyContent: 'space-between' }}>
+        <h1>Grupos</h1>
+        {coord && <Link className="btn btn-primario" href="/grupos/nuevo">+ Nuevo grupo</Link>}
+      </div>
+
+      {grupos.length === 0 && <p className="muted">Aún no hay grupos. {coord ? 'Crea el primero.' : ''}</p>}
+
+      <div className="grid grid-2">
+        {grupos.map((g) => (
+          <Link key={g.id} href={'/grupos/' + g.id} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <span className="insignia">{ETIQUETA_AREA[g.area]}</span>
+            <h2 style={{ margin: '8px 0 4px' }}>{g.nombre}</h2>
+            <p className="muted" style={{ margin: 0 }}>{g.descripcion || 'Sin descripción'}</p>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
