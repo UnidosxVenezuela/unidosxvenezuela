@@ -34,14 +34,18 @@ export type Prioridad = 'baja' | 'media' | 'alta' | 'critica';
 
 export type NivelSensibilidad = 'publica' | 'interna' | 'restringida' | 'confidencial';
 
+// Nota: los campos van en snake_case porque coinciden 1:1 con las columnas
+// que devuelve Supabase (ver supabase/migrations/0001_init_schema.sql).
+// Mantenerlos así evita un mapeo manual en cada lectura.
+
 export interface Perfil {
   id: string;
-  nombreCompleto: string;
+  nombre_completo: string;
   telefono: string | null;
   rol: Rol;
   verificado: boolean;
   organizacion: string | null;
-  creadoEn: string;
+  creado_en: string;
 }
 
 export interface Grupo {
@@ -49,8 +53,8 @@ export interface Grupo {
   nombre: string;
   area: AreaClave;
   descripcion: string | null;
-  liderId: string | null;
-  creadoEn: string;
+  lider_id: string | null;
+  creado_en: string;
 }
 
 export interface Tarea {
@@ -59,31 +63,32 @@ export interface Tarea {
   descripcion: string | null;
   estado: EstadoTarea;
   prioridad: Prioridad;
-  grupoId: string | null;
-  asignadoAId: string | null;
-  creadoPorId: string;
-  ubicacion: { lat: number; lng: number } | null;
-  venceEn: string | null;
-  creadoEn: string;
-  actualizadoEn: string;
+  grupo_id: string | null;
+  asignado_a: string | null;
+  creado_por: string;
+  lat: number | null;
+  lng: number | null;
+  vence_en: string | null;
+  creado_en: string;
+  actualizado_en: string;
 }
 
 export interface PublicacionTablon {
   id: string;
-  autorId: string;
-  grupoId: string | null;   // null = tablón general
+  autor_id: string;
+  grupo_id: string | null;   // null = tablón general
   contenido: string;
   sensibilidad: NivelSensibilidad;
-  creadoEn: string;
+  creado_en: string;
 }
 
 export interface Notificacion {
   id: string;
-  destinatarioId: string;
+  destinatario_id: string;
   tipo: string;
   titulo: string;
   cuerpo: string | null;
   leida: boolean;
   enlace: string | null;
-  creadoEn: string;
+  creado_en: string;
 }
