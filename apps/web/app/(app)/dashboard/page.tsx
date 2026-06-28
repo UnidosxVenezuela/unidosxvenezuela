@@ -29,7 +29,7 @@ export default async function Dashboard() {
       <div className="grid grid-2">
         {tarjeta('Tareas por atender', pendientes.count, '/tareas')}
         {tarjeta('Mis grupos', misGrupos.count, '/grupos')}
-        {tarjeta('Notificaciones sin leer', noLeidas.count, '/dashboard')}
+        {tarjeta('Notificaciones sin leer', noLeidas.count, '/notificaciones')}
       </div>
     </div>
   );
