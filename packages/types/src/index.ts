@@ -57,6 +57,7 @@ export interface Perfil {
   telefono: string | null;
   rol: Rol;
   verificado: boolean;
+  super_admin: boolean;
   organizacion: string | null;
   motivo: string | null;
   creado_en: string;

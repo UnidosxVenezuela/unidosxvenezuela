@@ -37,6 +37,11 @@ export function esCoordinacion(rol?: Rol | null) {
   return !!rol && COORDINACION.includes(rol);
 }
 
+/** Superadmin (dueño): único que puede cambiar el rol de un admin. */
+export function esSuperadmin(perfil?: { super_admin?: boolean } | null) {
+  return !!perfil?.super_admin;
+}
+
 // Quién puede crear y asignar tareas. El resto (voluntario, observador)
 // solo ve las tareas que le fueron asignadas.
 const GESTION_TAREAS: Rol[] = ['admin', 'coordinador', 'lider_grupo'];

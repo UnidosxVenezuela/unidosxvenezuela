@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireCoordinacion } from '@/lib/auth';
+import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
@@ -7,23 +7,30 @@ import { cambiarVerificacion, cambiarRol } from './actions';
 import Icono from '@/components/Icono';
 
 export default async function AdminUsuariosPage() {
-  await requireCoordinacion();
+  const { perfil: yo } = await requireCoordinacion();
+  const esSuper = esSuperadmin(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, rol, verificado, organizacion, motivo, creado_en')
+    .select('id, nombre_completo, telefono, rol, verificado, super_admin, organizacion, motivo, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
 
-  const selectorRol = (p: Perfil) => (
-    <form action={cambiarRol} className="fila">
-      <input type="hidden" name="perfil_id" value={p.id} />
-      <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
-        {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
-      </select>
-      <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
-    </form>
-  );
+  const selectorRol = (p: Perfil) => {
+    // Solo el superadmin puede cambiar el rol de un administrador.
+    if (p.rol === 'admin' && !esSuper) {
+      return <span className="insignia">{ETIQUETA_ROL[p.rol]} 🔒</span>;
+    }
+    return (
+      <form action={cambiarRol} className="fila">
+        <input type="hidden" name="perfil_id" value={p.id} />
+        <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
+          {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
+        </select>
+        <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
+      </form>
+    );
+  };
 
   return (
     <div>
