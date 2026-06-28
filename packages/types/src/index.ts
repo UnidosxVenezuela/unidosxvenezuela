@@ -154,6 +154,8 @@ export interface PublicacionTablon {
   creado_en: string;
 }
 
+export type UrgenciaAcopio = 'alta' | 'media' | 'baja';
+
 export interface PuntoAcopio {
   id: string;
   nombre: string;
@@ -163,11 +165,14 @@ export interface PuntoAcopio {
   recibe: string | null;
   necesita: string | null;
   horario: string | null;
+  capacidad: string | null;
+  urgencia: UrgenciaAcopio;
   lat: number;
   lng: number;
   activo: boolean;
   creado_por: string | null;
   creado_en: string;
+  actualizado_en: string;
 }
 
 export interface Notificacion {

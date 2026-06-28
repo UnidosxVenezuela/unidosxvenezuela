@@ -1,4 +1,15 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio } from '@unidos/types';
+
+export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
+  alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
+};
+export const URGENCIAS: UrgenciaAcopio[] = ['alta', 'media', 'baja'];
+/** Clase de insignia por urgencia del centro de acopio. */
+export function claseUrgencia(u: UrgenciaAcopio): string {
+  if (u === 'alta') return 'critica';
+  if (u === 'media') return 'aviso';
+  return 'ok';
+}
 
 export const ETIQUETA_TIPO_ADJUNTO: Record<TipoAdjunto, string> = {
   imagen: 'Imagen', documento: 'Documento', enlace: 'Enlace',

@@ -9,6 +9,7 @@ const ENLACES = [
   { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
   { href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' },
   { href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' },
+  { href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' },
   { href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' },
   { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
 ] as const;
