@@ -1,21 +1,27 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import Captcha, { captchaActivo } from '@/components/Captcha';
 
 export default function RecuperarPage() {
   const [email, setEmail] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
+  const onToken = useCallback((t: string | null) => setCaptchaToken(t), []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     setCargando(true);
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + '/actualizar-clave',
+      captchaToken: captchaToken ?? undefined,
     });
     setCargando(false);
     if (error) return setError(error.message);
@@ -39,6 +45,7 @@ export default function RecuperarPage() {
               <input id="email" className="input" type="email" autoComplete="email"
                 value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
+            <Captcha onToken={onToken} />
             <button className="btn btn-primario" type="submit" disabled={cargando}>
               {cargando ? 'Enviando…' : 'Enviar enlace'}
             </button>
