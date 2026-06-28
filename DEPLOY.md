@@ -112,5 +112,5 @@ para detectar errores antes de desplegar.
 
 ## Nota sobre el lockfile
 
-Este commit aún no incluye `pnpm-lock.yaml`. Tras el primer `pnpm install` local,
-**haz commit del `pnpm-lock.yaml`** generado para builds reproducibles en Vercel y CI.
+El `pnpm-lock.yaml` ya está commiteado (builds reproducibles en Vercel y CI). Tras
+cambiar dependencias, corré `pnpm install` y commiteá el lockfile actualizado.
