@@ -87,10 +87,12 @@ export default function Mapa({ puntos, tareas }: { puntos: PuntoAcopio[]; tareas
     e.preventDefault();
     setError(null);
     if (!sel) { setError('Toca el mapa para marcar la ubicación del punto.'); return; }
+    // Capturar el form ANTES de cualquier await (React limpia e.currentTarget después).
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     setGuardando(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const fd = new FormData(e.currentTarget);
     const { error } = await supabase.from('puntos_acopio').insert({
       nombre: String(fd.get('nombre') || '').trim(),
       direccion: str(fd.get('direccion')),
@@ -106,7 +108,7 @@ export default function Mapa({ puntos, tareas }: { puntos: PuntoAcopio[]; tareas
     if (error) { setError(error.message); return; }
     marcadorNuevo.current?.remove(); marcadorNuevo.current = null;
     setSel(null);
-    (e.target as HTMLFormElement).reset();
+    form.reset();
     router.refresh();
   }
 
