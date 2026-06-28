@@ -24,9 +24,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="contenedor" style={{ maxWidth: 420 }}>
-      <h1>Iniciar sesión</h1>
-      <form onSubmit={onSubmit} className="tarjeta">
+    <main className="auth-pantalla">
+      <div className="auth-caja">
+        <div className="auth-marca"><span className="punto" /> Unidos</div>
+        <p className="muted" style={{ textAlign: 'center', marginTop: 0 }}>Coordinación de respuesta — Venezuela</p>
+        <h1 style={{ textAlign: 'center' }}>Iniciar sesión</h1>
+        <form onSubmit={onSubmit} className="tarjeta">
         <div className="campo">
           <label htmlFor="email">Correo</label>
           <input id="email" className="input" type="email" autoComplete="email"
@@ -40,9 +43,10 @@ export default function LoginPage() {
         <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>
-        {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
-      </form>
-      <p className="muted">¿No tienes cuenta? <Link href="/registro">Crear cuenta</Link></p>
+          {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
+        </form>
+        <p className="muted" style={{ textAlign: 'center' }}>¿No tienes cuenta? <Link href="/registro">Crear cuenta</Link></p>
+      </div>
     </main>
   );
 }

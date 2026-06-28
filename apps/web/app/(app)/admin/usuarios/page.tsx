@@ -11,12 +11,56 @@ export default async function AdminUsuariosPage() {
     .select('id, nombre_completo, telefono, rol, verificado, organizacion, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
+  const pendientes = perfiles.filter((p) => !p.verificado);
+
+  const selectorRol = (p: Perfil) => (
+    <form action={cambiarRol} className="fila">
+      <input type="hidden" name="perfil_id" value={p.id} />
+      <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
+        {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
+      </select>
+      <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
+    </form>
+  );
 
   return (
     <div>
       <h1>Administración de usuarios</h1>
-      <p className="muted">Verifica identidades y asigna roles. {perfiles.length} usuarios.</p>
+      <p className="muted">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
 
+      {/* Solicitudes de registro pendientes */}
+      <h2>
+        Solicitudes de registro{' '}
+        <span className={'insignia ' + (pendientes.length ? 'aviso' : 'ok')}>{pendientes.length}</span>
+      </h2>
+
+      {pendientes.length === 0 ? (
+        <div className="tarjeta"><span className="muted">No hay solicitudes pendientes. 🎉</span></div>
+      ) : (
+        pendientes.map((p) => (
+          <div className="tarjeta" key={p.id}>
+            <div className="fila" style={{ justifyContent: 'space-between' }}>
+              <div>
+                <strong>{p.nombre_completo || '—'}</strong>
+                <div className="muted" style={{ fontSize: '.9rem' }}>
+                  {[p.organizacion, p.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
+                </div>
+              </div>
+              <div className="fila">
+                {selectorRol(p)}
+                <form action={cambiarVerificacion}>
+                  <input type="hidden" name="perfil_id" value={p.id} />
+                  <input type="hidden" name="verificado" value="true" />
+                  <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 14px' }}>Aprobar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Listado general */}
+      <h2>Todos los usuarios</h2>
       <div className="tarjeta">
         <table>
           <thead>
@@ -42,15 +86,7 @@ export default async function AdminUsuariosPage() {
                     </button>
                   </form>
                 </td>
-                <td>
-                  <form action={cambiarRol} className="fila">
-                    <input type="hidden" name="perfil_id" value={p.id} />
-                    <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
-                      {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
-                    </select>
-                    <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
-                  </form>
-                </td>
+                <td>{selectorRol(p)}</td>
               </tr>
             ))}
           </tbody>

@@ -1,6 +1,7 @@
 import { requireUsuario } from '@/lib/auth';
 import { ETIQUETA_ROL } from '@/lib/constantes';
 import { actualizarPerfil } from './actions';
+import CambiarContrasena from '@/components/CambiarContrasena';
 
 export default async function PerfilPage({
   searchParams,
@@ -39,6 +40,8 @@ export default async function PerfilPage({
         </div>
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
       </form>
+
+      <CambiarContrasena />
     </div>
   );
 }

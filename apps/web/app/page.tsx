@@ -2,15 +2,17 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="contenedor" style={{ maxWidth: 640 }}>
-      <h1>Plataforma Unidos</h1>
-      <p className="muted">
-        Coordinación de equipos, tareas y recursos para la respuesta al terremoto
-        de Venezuela. Identifícate para continuar.
-      </p>
-      <div className="fila" style={{ marginTop: 16 }}>
-        <Link className="btn btn-primario" href="/login">Iniciar sesión</Link>
-        <Link className="btn" href="/registro">Crear cuenta</Link>
+    <main className="auth-pantalla">
+      <div className="auth-caja" style={{ textAlign: 'center' }}>
+        <div className="auth-marca"><span className="punto" /> Unidos</div>
+        <h1>Coordinación de respuesta — Venezuela</h1>
+        <p className="muted">
+          Equipos, tareas y recursos para la respuesta al terremoto. Identifícate para continuar.
+        </p>
+        <div className="fila" style={{ marginTop: 18, justifyContent: 'center' }}>
+          <Link className="btn btn-primario" href="/login">Iniciar sesión</Link>
+          <Link className="btn btn-acento" href="/registro">Crear cuenta</Link>
+        </div>
       </div>
     </main>
   );

@@ -39,20 +39,25 @@ export default function RegistroPage() {
 
   if (ok) {
     return (
-      <main className="contenedor" style={{ maxWidth: 460 }}>
-        <div className="tarjeta">
-          <h1>Cuenta creada</h1>
-          <p>Revisa tu correo si la confirmación está activada. La coordinación verificará tu identidad antes de darte acceso operativo.</p>
-          <Link className="btn btn-primario" href="/dashboard">Continuar</Link>
+      <main className="auth-pantalla">
+        <div className="auth-caja">
+          <div className="auth-marca"><span className="punto" /> Unidos</div>
+          <div className="tarjeta">
+            <h1>Cuenta creada</h1>
+            <p>Revisa tu correo si la confirmación está activada. La coordinación verificará tu identidad antes de darte acceso operativo.</p>
+            <Link className="btn btn-primario" href="/dashboard">Continuar</Link>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="contenedor" style={{ maxWidth: 460 }}>
-      <h1>Crear cuenta</h1>
-      <form onSubmit={onSubmit} className="tarjeta">
+    <main className="auth-pantalla">
+      <div className="auth-caja">
+        <div className="auth-marca"><span className="punto" /> Unidos</div>
+        <h1 style={{ textAlign: 'center' }}>Crear cuenta</h1>
+        <form onSubmit={onSubmit} className="tarjeta">
         <div className="campo">
           <label htmlFor="nombre">Nombre completo</label>
           <input id="nombre" className="input" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
@@ -76,9 +81,10 @@ export default function RegistroPage() {
         <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Creando…' : 'Crear cuenta'}
         </button>
-        {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
-      </form>
-      <p className="muted">¿Ya tienes cuenta? <Link href="/login">Iniciar sesión</Link></p>
+          {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
+        </form>
+        <p className="muted" style={{ textAlign: 'center' }}>¿Ya tienes cuenta? <Link href="/login">Iniciar sesión</Link></p>
+      </div>
     </main>
   );
 }

@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
 
   // Rutas privadas bajo /dashboard, /tareas, /grupos, /tablon, /mapa
   const ruta = request.nextUrl.pathname;
-  const esPrivada = /^\/(dashboard|tareas|grupos|tablon|mapa)/.test(ruta);
+  const esPrivada = /^\/(dashboard|tareas|grupos|tablon|admin|perfil|notificaciones)/.test(ruta);
   if (esPrivada && !user) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
