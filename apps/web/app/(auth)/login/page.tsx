@@ -1,22 +1,30 @@
 'use client';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Captcha, { captchaActivo } from '@/components/Captcha';
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
+
+  const onToken = useCallback((t: string | null) => setCaptchaToken(t), []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     setCargando(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email, password,
+      options: captchaToken ? { captchaToken } : undefined,
+    });
     setCargando(false);
     if (error) return setError(error.message);
     router.push('/dashboard');
@@ -40,6 +48,7 @@ export default function LoginPage() {
           <input id="password" className="input" type="password" autoComplete="current-password"
                  value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
+        <Captcha onToken={onToken} />
         <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>

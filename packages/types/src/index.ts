@@ -58,6 +58,7 @@ export interface Perfil {
   rol: Rol;
   verificado: boolean;
   organizacion: string | null;
+  motivo: string | null;
   creado_en: string;
 }
 

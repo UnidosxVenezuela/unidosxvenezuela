@@ -10,7 +10,7 @@ export default async function AdminUsuariosPage() {
   await requireCoordinacion();
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, rol, verificado, organizacion, creado_en')
+    .select('id, nombre_completo, telefono, rol, verificado, organizacion, motivo, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
@@ -50,6 +50,11 @@ export default async function AdminUsuariosPage() {
                 <div className="muted" style={{ fontSize: '.9rem' }}>
                   {[p.organizacion, p.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
                 </div>
+                {p.motivo && (
+                  <div style={{ fontSize: '.9rem', marginTop: 4 }}>
+                    <span className="muted">Motivo:</span> {p.motivo}
+                  </div>
+                )}
               </div>
               <div className="fila">
                 {selectorRol(p)}
