@@ -22,7 +22,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
-      .select('id, titulo, enlace, inicio, duracion_min').eq('grupo_id', grupoId)
+      .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
   ]);
@@ -34,6 +34,17 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id));
   const waHref = hrefSeguro(grupo.whatsapp);
   const ahora = Date.now();
+
+  // El enlace de videollamada solo se trae (vía RPC) si la reunión está activa ahora.
+  const activas = reuniones.filter((r) => {
+    const ini = new Date(r.inicio).getTime();
+    return ahora >= ini && ahora <= ini + r.duracion_min * 60000;
+  });
+  const enlaces = new Map<string, string | null>();
+  await Promise.all(activas.map(async (r) => {
+    const { data: enl } = await supabase.rpc('enlace_reunion_si_activa', { p_reunion: r.id });
+    enlaces.set(r.id, hrefSeguro(enl as string | null));
+  }));
 
   return (
     <div>
@@ -60,7 +71,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           const ini = new Date(r.inicio).getTime();
           const fin = ini + r.duracion_min * 60000;
           const activa = ahora >= ini && ahora <= fin;
-          const h = hrefSeguro(r.enlace);
+          const h = enlaces.get(r.id) ?? null;
           return (
             <div key={r.id} className="tarjeta">
               <div className="fila" style={{ justifyContent: 'space-between' }}>

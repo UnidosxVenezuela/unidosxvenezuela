@@ -1,0 +1,36 @@
+name: Tests RLS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rls:
+    runs-on: ubuntu-latest
+    env:
+      DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar cliente psql
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Levantar Supabase local (aplica migraciones)
+        run: supabase start
+
+      - name: Sembrar un admin verificado para las pruebas
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000aa', 'admin@test.local');"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "update public.perfiles set rol='admin', verificado=true where id='00000000-0000-0000-0000-0000000000aa';"
+
+      - name: Ejecutar pruebas de RLS
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/verificar_rls.sql
+
+      - name: Apagar Supabase
+        if: always()
+        run: supabase stop
