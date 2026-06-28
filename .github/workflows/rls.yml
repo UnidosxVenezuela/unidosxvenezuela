@@ -23,6 +23,10 @@ jobs:
       - name: Levantar Supabase local (aplica migraciones)
         run: supabase start
 
+      - name: Conceder privilegios a authenticated (como en Supabase cloud)
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "grant usage on schema public to authenticated, anon; grant all on all tables in schema public to authenticated; grant all on all sequences in schema public to authenticated; grant execute on all functions in schema public to authenticated;"
+
       - name: Sembrar un admin verificado para las pruebas
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -c "insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000aa', 'admin@test.local');"
