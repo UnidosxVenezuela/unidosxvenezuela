@@ -9,7 +9,9 @@ schemas = ["public", "storage"]
 
 [db]
 port = 54322
-major_version = 16
+# El stack LOCAL del CLI soporta 15/17 (no 16). Esto es solo para dev/CI;
+# no afecta al proyecto cloud.
+major_version = 17
 
 [studio]
 enabled = true
