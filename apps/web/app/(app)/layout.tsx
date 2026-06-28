@@ -19,7 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="app-shell">
       <aside className="sidebar">
         <div className="tricolor" />
-        <div className="marca"><span className="punto" /> Unidos</div>
+        <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
         <NavLateral coord={coord} />
         <div className="sidebar-pie">
           <Link href="/perfil" className="sidebar-usuario">

@@ -41,7 +41,7 @@ export default function RegistroPage() {
     return (
       <main className="auth-pantalla">
         <div className="auth-caja">
-          <div className="auth-marca"><span className="punto" /> Unidos</div>
+          <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
           <div className="tarjeta">
             <h1>Cuenta creada</h1>
             <p>Revisa tu correo si la confirmación está activada. La coordinación verificará tu identidad antes de darte acceso operativo.</p>
@@ -55,7 +55,7 @@ export default function RegistroPage() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja">
-        <div className="auth-marca"><span className="punto" /> Unidos</div>
+        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
         <h1 style={{ textAlign: 'center' }}>Crear cuenta</h1>
         <form onSubmit={onSubmit} className="tarjeta">
         <div className="campo">

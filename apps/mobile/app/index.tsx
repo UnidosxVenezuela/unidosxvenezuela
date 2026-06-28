@@ -27,7 +27,7 @@ export default function Login() {
     <View style={s.c}>
       <View style={s.marca}>
         <View style={s.punto} />
-        <Text style={s.titulo}>Unidos</Text>
+        <Text style={s.titulo}>UnidosXVenezuela</Text>
       </View>
       <Text style={s.sub}>Coordinación de respuesta — Venezuela</Text>
 

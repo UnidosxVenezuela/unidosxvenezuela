@@ -1,4 +1,13 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea } from '@unidos/types';
+
+export const ETIQUETA_CATEGORIA: Record<CategoriaTarea, string> = {
+  codigo: 'Código', diseno: 'Diseño', marketing: 'Marketing',
+  redes_sociales: 'Redes sociales', transcripcion: 'Transcripción',
+  legal: 'Legal', acopio: 'Acopio', logistica: 'Logística', datos: 'Datos',
+  salud: 'Salud', traduccion: 'Traducción', comunicaciones: 'Comunicaciones',
+  general: 'General',
+};
+export const CATEGORIAS: CategoriaTarea[] = Object.keys(ETIQUETA_CATEGORIA) as CategoriaTarea[];
 
 export const ETIQUETA_AREA: Record<AreaClave, string> = {
   salud: 'Salud',

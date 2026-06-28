@@ -32,6 +32,12 @@ export type EstadoTarea =
 
 export type Prioridad = 'baja' | 'media' | 'alta' | 'critica';
 
+// Tipo de trabajo de una tarea (qué habilidad requiere).
+export type CategoriaTarea =
+  | 'codigo' | 'diseno' | 'marketing' | 'redes_sociales' | 'transcripcion'
+  | 'legal' | 'acopio' | 'logistica' | 'datos' | 'salud' | 'traduccion'
+  | 'comunicaciones' | 'general';
+
 export type NivelSensibilidad = 'publica' | 'interna' | 'restringida' | 'confidencial';
 
 // Nota: los campos van en snake_case porque coinciden 1:1 con las columnas
@@ -63,6 +69,7 @@ export interface Tarea {
   descripcion: string | null;
   estado: EstadoTarea;
   prioridad: Prioridad;
+  categoria: CategoriaTarea;
   grupo_id: string | null;
   asignado_a: string | null;
   creado_por: string;

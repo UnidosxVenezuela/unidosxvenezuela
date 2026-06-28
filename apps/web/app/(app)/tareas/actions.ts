@@ -25,6 +25,7 @@ export async function crearTarea(formData: FormData) {
   const { data, error } = await supabase.from('tareas').insert({
     titulo: txt(formData.get('titulo')),
     descripcion: opt(formData.get('descripcion')),
+    categoria: (txt(formData.get('categoria')) || 'general'),
     prioridad: (txt(formData.get('prioridad')) || 'media') as Prioridad,
     estado: (asignadoA ? 'asignada' : 'pendiente') as EstadoTarea,
     grupo_id: opt(formData.get('grupo_id')),
@@ -60,6 +61,24 @@ export async function actualizarAsignacion(formData: FormData) {
   if (error) throw new Error('No se pudo actualizar la tarea: ' + error.message);
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
+}
+
+export async function tomarTarea(formData: FormData) {
+  const supabase = await createClient();
+  const id = txt(formData.get('tarea_id'));
+  const { error } = await supabase.rpc('tomar_tarea', { p_tarea: id });
+  if (error) throw new Error(error.message);
+  revalidatePath('/tareas');
+  revalidatePath('/tareas/' + id);
+}
+
+export async function liberarTarea(formData: FormData) {
+  const supabase = await createClient();
+  const id = txt(formData.get('tarea_id'));
+  const { error } = await supabase.rpc('liberar_tarea', { p_tarea: id });
+  if (error) throw new Error(error.message);
+  revalidatePath('/tareas');
+  revalidatePath('/tareas/' + id);
 }
 
 export async function agregarComentario(formData: FormData) {

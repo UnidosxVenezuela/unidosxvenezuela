@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeGestionarTareas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { PRIORIDADES, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
+import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from '@/lib/constantes';
 import { crearTarea } from '../actions';
 
 export default async function NuevaTareaPage() {
@@ -26,6 +26,12 @@ export default async function NuevaTareaPage() {
           <textarea id="descripcion" name="descripcion" className="input" />
         </div>
         <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="categoria">Categoría de trabajo</label>
+            <select id="categoria" name="categoria" className="input" defaultValue="general">
+              {CATEGORIAS.map((c) => <option key={c} value={c}>{ETIQUETA_CATEGORIA[c]}</option>)}
+            </select>
+          </div>
           <div className="campo">
             <label htmlFor="prioridad">Prioridad</label>
             <select id="prioridad" name="prioridad" className="input" defaultValue="media">
@@ -59,6 +65,10 @@ export default async function NuevaTareaPage() {
             <input id="lng" name="lng" className="input" type="number" step="any" placeholder="-68.05" />
           </div>
         </div>
+        <p className="muted" style={{ fontSize: '.85rem' }}>
+          Si dejas <strong>Sin asignar</strong>, la tarea queda <strong>abierta</strong> y cualquier
+          voluntario podrá tomarla (libre elección).
+        </p>
         <button className="btn btn-primario" type="submit">Crear tarea</button>
       </form>
     </div>

@@ -7,7 +7,7 @@ export default function RootLayout() {
         headerStyle: { backgroundColor: '#0033A0' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: '800' },
-        headerTitle: 'Unidos',
+        headerTitle: 'UnidosXVenezuela',
         contentStyle: { backgroundColor: '#f4f6fb' },
       }}
     />
