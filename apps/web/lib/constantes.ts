@@ -64,6 +64,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   lider_grupo: 'Líder de grupo',
   voluntario: 'Voluntario',
   observador: 'Observador',
+  lider_plataforma_aliada: 'Líder de plataforma aliada',
 };
 
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {

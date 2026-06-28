@@ -4,11 +4,12 @@
 // y reexporta/combina con estos tipos de dominio.
 
 export type Rol =
-  | 'admin'          // Coordinación general / OCHA-like
-  | 'coordinador'    // Líder de un área (cluster)
-  | 'lider_grupo'    // Líder de un grupo operativo
-  | 'voluntario'     // Miembro de campo
-  | 'observador';    // Solo lectura (donantes, prensa autorizada)
+  | 'admin'                   // Coordinación general / OCHA-like
+  | 'coordinador'             // Líder de un área (cluster)
+  | 'lider_grupo'             // Líder de un grupo operativo
+  | 'voluntario'              // Miembro de campo
+  | 'observador'              // Solo lectura (donantes, prensa autorizada)
+  | 'lider_plataforma_aliada'; // Comparte endpoints de su plataforma (base de datos compartida)
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer
@@ -97,6 +98,21 @@ export interface AdjuntoTarea {
   url: string;
   nombre: string;
   mime: string | null;
+  creado_por: string | null;
+  creado_en: string;
+}
+
+export interface EndpointAliado {
+  id: string;
+  plataforma: string;
+  descripcion: string | null;
+  url: string;
+  metodo: string;
+  formato: string | null;
+  datos: string | null;
+  auth_notas: string | null;
+  contacto: string | null;
+  activo: boolean;
   creado_por: string | null;
   creado_en: string;
 }

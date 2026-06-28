@@ -44,3 +44,8 @@ const GESTION_TAREAS: Rol[] = ['admin', 'coordinador', 'lider_grupo'];
 export function puedeGestionarTareas(rol?: Rol | null) {
   return !!rol && GESTION_TAREAS.includes(rol);
 }
+
+// Acceso a la base de datos compartida de endpoints aliados: admin + líder de plataforma aliada.
+export function puedeVerAliados(rol?: Rol | null) {
+  return rol === 'admin' || rol === 'lider_plataforma_aliada';
+}

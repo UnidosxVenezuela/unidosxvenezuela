@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, puedeVerAliados } from '@/lib/auth';
 import CerrarSesion from '@/components/CerrarSesion';
 import CampanaNotificaciones from '@/components/CampanaNotificaciones';
 import NavLateral from '@/components/NavLateral';
+import RegistrarActividad from '@/components/RegistrarActividad';
 
 function iniciales(nombre?: string | null, email?: string | null) {
   const base = ((nombre || email || '?').trim()) || '?';
@@ -17,10 +18,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="app-shell">
+      <RegistrarActividad />
       <aside className="sidebar">
         <div className="tricolor" />
         <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
-        <NavLateral coord={coord} />
+        <NavLateral coord={coord} aliados={puedeVerAliados(perfil?.rol)} />
         <div className="sidebar-pie">
           <Link href="/perfil" className="sidebar-usuario">
             <span className="avatar">{iniciales(perfil?.nombre_completo, user?.email)}</span>

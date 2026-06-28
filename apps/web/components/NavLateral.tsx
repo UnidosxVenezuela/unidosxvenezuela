@@ -13,11 +13,11 @@ const ENLACES = [
   { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
 ] as const;
 
-export default function NavLateral({ coord }: { coord: boolean }) {
+export default function NavLateral({ coord, aliados }: { coord: boolean; aliados?: boolean }) {
   const ruta = usePathname();
-  const enlaces = coord
-    ? [...ENLACES, { href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' }]
-    : ENLACES;
+  let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
+  if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
+  if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
 
   return (
     <nav className="nav-lateral">
