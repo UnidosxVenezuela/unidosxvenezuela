@@ -10,7 +10,9 @@ export type Rol =
   | 'voluntario'     // Miembro de campo
   | 'observador';    // Solo lectura (donantes, prensa autorizada)
 
-// Áreas inspiradas en el sistema de clusters humanitarios (IASC/OCHA).
+// Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
+// El catálogo es extensible por un admin (tabla `areas`), por eso al leer
+// de la BD un área es `string`; estas son las claves conocidas con etiqueta.
 export type AreaClave =
   | 'salud'
   | 'agua_saneamiento'   // WASH
@@ -20,7 +22,11 @@ export type AreaClave =
   | 'busqueda_rescate'
   | 'telecomunicaciones'
   | 'proteccion'
-  | 'gestion_informacion';
+  | 'gestion_informacion'
+  | 'programacion'
+  | 'diseno'
+  | 'marketing'
+  | 'transcripcion';
 
 export type EstadoTarea =
   | 'pendiente'
@@ -57,9 +63,51 @@ export interface Perfil {
 export interface Grupo {
   id: string;
   nombre: string;
-  area: AreaClave;
+  area: string;            // clave del área (catálogo extensible)
   descripcion: string | null;
   lider_id: string | null;
+  whatsapp: string | null;
+  creado_en: string;
+}
+
+export interface Area {
+  clave: string;
+  nombre: string;
+  descripcion: string | null;
+}
+
+export interface Reunion {
+  id: string;
+  grupo_id: string;
+  titulo: string;
+  enlace: string;
+  inicio: string;
+  duracion_min: number;
+  creado_por: string | null;
+  creado_en: string;
+}
+
+export interface ConteoMiembros { grupo_id: string; total: number; }
+
+export type TipoAdjunto = 'imagen' | 'documento' | 'enlace';
+export interface AdjuntoTarea {
+  id: string;
+  tarea_id: string;
+  tipo: TipoAdjunto;
+  url: string;
+  nombre: string;
+  mime: string | null;
+  creado_por: string | null;
+  creado_en: string;
+}
+
+export interface RegistroHoras {
+  id: string;
+  perfil_id: string;
+  tarea_id: string | null;
+  horas: number;
+  descripcion: string | null;
+  fecha: string;
   creado_en: string;
 }
 

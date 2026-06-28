@@ -1,4 +1,32 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto } from '@unidos/types';
+
+export const ETIQUETA_TIPO_ADJUNTO: Record<TipoAdjunto, string> = {
+  imagen: 'Imagen', documento: 'Documento', enlace: 'Enlace',
+};
+export function iconoAdjunto(t: TipoAdjunto): string {
+  if (t === 'imagen') return 'imagen';
+  if (t === 'enlace') return 'enlace';
+  return 'documento';
+}
+
+// Validación de enlaces (server + UI). Re-validar SIEMPRE en el render antes de href.
+export function esEnlaceWhatsappValido(url: string): boolean {
+  return /^https:\/\/(wa\.me|chat\.whatsapp\.com|api\.whatsapp\.com)\/\S+$/i.test(url.trim());
+}
+export function esEnlaceHttpsValido(url: string): boolean {
+  return /^https:\/\/\S+$/i.test(url.trim());
+}
+/** Devuelve la url solo si es https segura (sin espacios); si no, null. Usar en RENDER antes de href. */
+export function hrefSeguro(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const u = url.trim();
+  return /^https:\/\//i.test(u) && !/\s/.test(u) ? u : null;
+}
+export function formatoHoras(h: number | null | undefined): string {
+  const n = Number(h ?? 0);
+  const t = Number.isInteger(n) ? String(n) : n.toFixed(1).replace('.', ',');
+  return t + ' h';
+}
 
 export const ETIQUETA_CATEGORIA: Record<CategoriaTarea, string> = {
   codigo: 'Código', diseno: 'Diseño', marketing: 'Marketing',
@@ -19,7 +47,16 @@ export const ETIQUETA_AREA: Record<AreaClave, string> = {
   telecomunicaciones: 'Telecomunicaciones',
   proteccion: 'Protección',
   gestion_informacion: 'Gestión de Información',
+  programacion: 'Programación',
+  diseno: 'Diseño',
+  marketing: 'Marketing',
+  transcripcion: 'Transcripción',
 };
+
+/** Etiqueta de un área por su clave (tolera áreas creadas por admin). */
+export function etiquetaArea(clave: string): string {
+  return (ETIQUETA_AREA as Record<string, string>)[clave] ?? clave;
+}
 
 export const ETIQUETA_ROL: Record<Rol, string> = {
   admin: 'Administración',
@@ -59,7 +96,6 @@ export function claseEstado(e: EstadoTarea): string {
   if (e === 'bloqueada' || e === 'cancelada') return 'critica';
   return '';
 }
-
 
 export const ETIQUETA_SENSIBILIDAD: Record<NivelSensibilidad, string> = {
   publica: 'Pública',
