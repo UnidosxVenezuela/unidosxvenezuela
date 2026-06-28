@@ -2,6 +2,8 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { enviarEmail } from '@/lib/email';
 import type { Rol } from '@unidos/types';
 
 async function exigirCoordinacion() {
@@ -25,6 +27,25 @@ export async function cambiarVerificacion(formData: FormData) {
   await supabase.rpc('registrar_auditoria', {
     p_accion: 'cambio_verificacion', p_entidad_id: perfilId, p_metadata: { valor: verificado },
   });
+
+  // Al APROBAR, avisar por email al voluntario (si Resend está configurado).
+  if (verificado) {
+    try {
+      const { data: u } = await createAdminClient().auth.admin.getUserById(perfilId);
+      const email = u?.user?.email;
+      if (email) {
+        await enviarEmail({
+          to: email,
+          subject: 'Tu cuenta fue verificada — UnidosXVenezuela',
+          html: `<p>¡Hola! La coordinación verificó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
+                 <p>Ya tienes acceso operativo completo. Gracias por sumarte a la respuesta. 💛💙❤️</p>
+                 <p><a href="https://unidosxvenezuela-web.vercel.app/dashboard">Entrar a la plataforma</a></p>`,
+        });
+      }
+    } catch (e) {
+      console.error('No se pudo enviar el email de verificación', e);
+    }
+  }
   revalidatePath('/admin/usuarios');
 }
 
