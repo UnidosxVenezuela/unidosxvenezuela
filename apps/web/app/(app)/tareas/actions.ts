@@ -81,6 +81,47 @@ export async function liberarTarea(formData: FormData) {
   revalidatePath('/tareas/' + id);
 }
 
+export async function agregarEnlace(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
+  if (yo?.rol === 'observador') throw new Error('Los observadores no pueden agregar adjuntos.');
+
+  const id = txt(formData.get('tarea_id'));
+  let url = txt(formData.get('url'));
+  const nombre = txt(formData.get('nombre')) || url;
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  if (!/^https:\/\/\S+$/i.test(url)) throw new Error('Enlace no válido (debe ser https).');
+
+  const { error } = await supabase.from('adjuntos_tarea').insert({
+    tarea_id: id, tipo: 'enlace', url, nombre, mime: null, creado_por: user.id,
+  });
+  if (error) throw new Error('No se pudo agregar el enlace: ' + error.message);
+  revalidatePath('/tareas/' + id);
+}
+
+export async function eliminarAdjunto(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('tarea_id'));
+  const adjuntoId = txt(formData.get('adjunto_id'));
+
+  const { data: adj } = await supabase.from('adjuntos_tarea')
+    .select('tipo, url').eq('id', adjuntoId).single();
+
+  // Borrar el OBJETO primero (mientras la fila aún existe para autorizar).
+  if (adj && adj.tipo !== 'enlace' && adj.url) {
+    const { error: sErr } = await supabase.storage.from('adjuntos').remove([adj.url]);
+    if (sErr) throw new Error('No se pudo borrar el archivo: ' + sErr.message);
+  }
+  const { error } = await supabase.from('adjuntos_tarea').delete().eq('id', adjuntoId);
+  if (error) throw new Error('No se pudo eliminar: ' + error.message);
+  revalidatePath('/tareas/' + id);
+}
+
 export async function agregarComentario(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

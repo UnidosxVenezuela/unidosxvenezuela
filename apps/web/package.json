@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "^2.45.0",
     "@unidos/supabase-client": "workspace:*",
     "@unidos/types": "workspace:*",
+    "@vercel/analytics": "^1.3.1",
     "maplibre-gl": "^4.7.1",
     "next": "^14.2.5",
     "react": "^18.3.1",
@@ -23,6 +24,8 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.35",
     "typescript": "^5.5.0"
   }
 }

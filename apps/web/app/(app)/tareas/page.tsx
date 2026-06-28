@@ -92,10 +92,12 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
               <Badges t={t} />
               <h3 style={{ margin: '8px 0 4px' }}><Link href={'/tareas/' + t.id}>{t.titulo}</Link></h3>
               {t.descripcion && <p className="muted" style={{ marginTop: 0 }}>{String(t.descripcion).slice(0, 140)}</p>}
-              <form action={tomarTarea}>
-                <input type="hidden" name="tarea_id" value={t.id} />
-                <button className="btn btn-acento"><Icono nombre="ok" size={16} /> Tomar tarea</button>
-              </form>
+              {perfil?.rol !== 'observador' && (
+                <form action={tomarTarea}>
+                  <input type="hidden" name="tarea_id" value={t.id} />
+                  <button className="btn btn-acento"><Icono nombre="ok" size={16} /> Tomar tarea</button>
+                </form>
+              )}
             </div>
           ))}
         </div>

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
@@ -26,7 +27,10 @@ export default async function AdminUsuariosPage() {
 
   return (
     <div>
-      <h1>Administración de usuarios</h1>
+      <div className="fila" style={{ justifyContent: 'space-between' }}>
+        <h1>Administración de usuarios</h1>
+        <Link className="btn" href="/admin/areas">Áreas</Link>
+      </div>
       <p className="muted">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
 
       {/* Solicitudes de registro pendientes */}

@@ -17,18 +17,26 @@ async function exigirCoordinacion() {
 
 export async function cambiarVerificacion(formData: FormData) {
   const supabase = await exigirCoordinacion();
+  const perfilId = String(formData.get('perfil_id'));
   const verificado = String(formData.get('verificado')) === 'true';
   const { error } = await supabase.from('perfiles')
-    .update({ verificado }).eq('id', String(formData.get('perfil_id')));
+    .update({ verificado }).eq('id', perfilId);
   if (error) throw new Error('No se pudo actualizar la verificación: ' + error.message);
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'cambio_verificacion', p_entidad_id: perfilId, p_metadata: { valor: verificado },
+  });
   revalidatePath('/admin/usuarios');
 }
 
 export async function cambiarRol(formData: FormData) {
   const supabase = await exigirCoordinacion();
+  const perfilId = String(formData.get('perfil_id'));
   const rol = String(formData.get('rol')) as Rol;
   const { error } = await supabase.from('perfiles')
-    .update({ rol }).eq('id', String(formData.get('perfil_id')));
+    .update({ rol }).eq('id', perfilId);
   if (error) throw new Error('No se pudo cambiar el rol: ' + error.message);
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'cambio_rol', p_entidad_id: perfilId, p_metadata: { valor: rol },
+  });
   revalidatePath('/admin/usuarios');
 }

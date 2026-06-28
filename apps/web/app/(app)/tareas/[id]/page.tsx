@@ -3,10 +3,12 @@ import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ESTADOS, PRIORIDADES, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD,
-  claseEstado, clasePrioridad,
+  claseEstado, clasePrioridad, ETIQUETA_TIPO_ADJUNTO, iconoAdjunto, hrefSeguro,
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
-import { cambiarEstado, actualizarAsignacion, agregarComentario } from '../actions';
+import Icono from '@/components/Icono';
+import SubirAdjunto from './SubirAdjunto';
+import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, eliminarAdjunto } from '../actions';
 
 export default async function TareaDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -24,23 +26,35 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Tarea no encontrada</h2><Link href="/tareas">Volver</Link></div>;
   }
 
-  const [{ data: comentarios }, { data: perfiles }] = await Promise.all([
+  const [{ data: comentarios }, { data: perfiles }, { data: adjuntos }] = await Promise.all([
     supabase.from('comentarios_tarea')
       .select('id, contenido, creado_en, autor:perfiles ( nombre_completo )')
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
+    supabase.from('adjuntos_tarea')
+      .select('id, tipo, url, nombre, mime, creado_por, creado_en')
+      .eq('tarea_id', id).order('creado_en', { ascending: true }),
   ]);
+
+  // Firmar URLs de archivos (bucket privado); los enlaces se revalidan en render.
+  const adjuntosConUrl = await Promise.all((adjuntos ?? []).map(async (a: any) => {
+    if (a.tipo === 'enlace') return { ...a, href: hrefSeguro(a.url) };
+    const { data: firma } = await supabase.storage.from('adjuntos').createSignedUrl(a.url, 3600);
+    return { ...a, href: firma?.signedUrl ?? null };
+  }));
 
   const puedeEditar =
     esCoordinacion(perfil?.rol) ||
     tarea.asignado_a === user!.id ||
     tarea.creado_por === user!.id ||
     tarea.grupos?.lider_id === user!.id;
+  const puedeParticipar = perfil?.rol !== 'observador';
 
   return (
     <div>
       <RealtimeRefrescar tabla="tareas" filtro={'id=eq.' + id} />
       <RealtimeRefrescar tabla="comentarios_tarea" filtro={'tarea_id=eq.' + id} />
+      <RealtimeRefrescar tabla="adjuntos_tarea" filtro={'tarea_id=eq.' + id} />
 
       <Link href="/tareas" className="muted">← Tareas</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
@@ -94,6 +108,40 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         </div>
       )}
 
+      <h2>Adjuntos</h2>
+      <div className="tarjeta">
+        {adjuntosConUrl.length === 0 && <p className="muted">Sin adjuntos.</p>}
+        {adjuntosConUrl.map((a: any) => (
+          <div key={a.id} className="fila" style={{ justifyContent: 'space-between', borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
+            <span className="fila" style={{ gap: 8 }}>
+              <Icono nombre={iconoAdjunto(a.tipo)} size={18} />
+              {a.href
+                ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a>
+                : <span>{a.nombre}</span>}
+              <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
+            </span>
+            {(a.creado_por === user!.id || esCoordinacion(perfil?.rol)) && (
+              <form action={eliminarAdjunto}>
+                <input type="hidden" name="tarea_id" value={id} />
+                <input type="hidden" name="adjunto_id" value={a.id} />
+                <button className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></button>
+              </form>
+            )}
+          </div>
+        ))}
+        {puedeEditar && puedeParticipar && (
+          <div style={{ marginTop: 12 }}>
+            <SubirAdjunto tareaId={id} />
+            <form action={agregarEnlace} className="fila" style={{ marginTop: 10 }}>
+              <input type="hidden" name="tarea_id" value={id} />
+              <input name="url" className="input" type="url" placeholder="https://… (enlace o documento externo)" required style={{ maxWidth: 360 }} />
+              <input name="nombre" className="input" placeholder="Nombre (opcional)" style={{ maxWidth: 200 }} />
+              <button className="btn"><Icono nombre="enlace" size={16} /> Agregar enlace</button>
+            </form>
+          </div>
+        )}
+      </div>
+
       <h2>Comentarios ({(comentarios ?? []).length})</h2>
       <div className="tarjeta">
         {(comentarios ?? []).map((c: any) => (
@@ -106,13 +154,15 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         ))}
         {(comentarios ?? []).length === 0 && <p className="muted">Sin comentarios todavía.</p>}
 
-        <form action={agregarComentario} style={{ marginTop: 12 }}>
-          <input type="hidden" name="tarea_id" value={id} />
-          <div className="campo">
-            <textarea name="contenido" className="input" placeholder="Escribe un comentario…" required />
-          </div>
-          <button className="btn btn-primario" type="submit">Comentar</button>
-        </form>
+        {puedeParticipar && (
+          <form action={agregarComentario} style={{ marginTop: 12 }}>
+            <input type="hidden" name="tarea_id" value={id} />
+            <div className="campo">
+              <textarea name="contenido" className="input" placeholder="Escribe un comentario…" required />
+            </div>
+            <button className="btn btn-primario" type="submit">Comentar</button>
+          </form>
+        )}
       </div>
     </div>
   );

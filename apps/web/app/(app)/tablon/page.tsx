@@ -5,7 +5,8 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import { crearPublicacion, comentarPublicacion } from './actions';
 
 export default async function TablonPage({ searchParams }: { searchParams: { grupo?: string } }) {
-  await requireUsuario();
+  const { perfil } = await requireUsuario();
+  const puedeParticipar = perfil?.rol !== 'observador';
   const supabase = await createClient();
 
   const { data: grupos } = await supabase.from('grupos').select('id, nombre').order('nombre');
@@ -31,6 +32,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
       <RealtimeRefrescar tabla="comentarios_publicacion" />
       <h1>Tablón</h1>
 
+      {puedeParticipar && (
       <form action={crearPublicacion} className="tarjeta">
         <div className="campo">
           <label htmlFor="contenido">Nueva publicación</label>
@@ -56,6 +58,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
           La sensibilidad controla quién puede ver la publicación.
         </p>
       </form>
+      )}
 
       <form method="get" className="fila" style={{ margin: '12px 0' }}>
         <select name="grupo" className="input" defaultValue={searchParams.grupo ?? ''} style={{ width: 'auto' }}>
@@ -96,11 +99,13 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
                   <div>{c.contenido}</div>
                 </div>
               ))}
-              <form action={comentarPublicacion} className="fila" style={{ marginTop: 8 }}>
-                <input type="hidden" name="publicacion_id" value={p.id} />
-                <input name="contenido" className="input" placeholder="Comentar…" required style={{ maxWidth: 420 }} />
-                <button className="btn" type="submit">Enviar</button>
-              </form>
+              {puedeParticipar && (
+                <form action={comentarPublicacion} className="fila" style={{ marginTop: 8 }}>
+                  <input type="hidden" name="publicacion_id" value={p.id} />
+                  <input name="contenido" className="input" placeholder="Comentar…" required style={{ maxWidth: 420 }} />
+                  <button className="btn" type="submit">Enviar</button>
+                </form>
+              )}
             </div>
           </details>
         </div>

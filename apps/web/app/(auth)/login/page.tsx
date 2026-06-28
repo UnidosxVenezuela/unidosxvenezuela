@@ -45,6 +45,7 @@ export default function LoginPage() {
         </button>
           {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
         </form>
+        <p className="muted" style={{ textAlign: 'center', marginBottom: 4 }}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
         <p className="muted" style={{ textAlign: 'center' }}>¿No tienes cuenta? <Link href="/registro">Crear cuenta</Link></p>
       </div>
     </main>
