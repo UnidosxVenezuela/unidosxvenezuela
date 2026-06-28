@@ -89,6 +89,22 @@ export interface PublicacionTablon {
   creado_en: string;
 }
 
+export interface PuntoAcopio {
+  id: string;
+  nombre: string;
+  direccion: string | null;
+  responsable: string | null;
+  telefono: string | null;
+  recibe: string | null;
+  necesita: string | null;
+  horario: string | null;
+  lat: number;
+  lng: number;
+  activo: boolean;
+  creado_por: string | null;
+  creado_en: string;
+}
+
 export interface Notificacion {
   id: string;
   destinatario_id: string;
