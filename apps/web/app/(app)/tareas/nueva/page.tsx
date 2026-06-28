@@ -1,10 +1,12 @@
-import { requireUsuario } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { requireUsuario, puedeGestionarTareas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PRIORIDADES, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import { crearTarea } from '../actions';
 
 export default async function NuevaTareaPage() {
-  await requireUsuario();
+  const { perfil } = await requireUsuario();
+  if (!puedeGestionarTareas(perfil?.rol)) redirect('/tareas');
   const supabase = await createClient();
   const [{ data: grupos }, { data: perfiles }] = await Promise.all([
     supabase.from('grupos').select('id, nombre').order('nombre'),

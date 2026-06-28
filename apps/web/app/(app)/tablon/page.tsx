@@ -53,7 +53,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
         </div>
         <button className="btn btn-primario" type="submit">Publicar</button>
         <p className="muted" style={{ fontSize: '.85rem', marginBottom: 0 }}>
-          La sensibilidad controla quién puede ver la publicación (ver docs/04-SEGURIDAD.md).
+          La sensibilidad controla quién puede ver la publicación.
         </p>
       </form>
 
@@ -66,7 +66,9 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
         <button className="btn" type="submit">Filtrar</button>
       </form>
 
-      {posts.length === 0 && <p className="muted">No hay publicaciones visibles para ti.</p>}
+      {posts.length === 0 && (
+        <div className="tarjeta vacio"><p className="muted">Aún no hay publicaciones. Sé el primero en compartir un aviso.</p></div>
+      )}
 
       {posts.map((p) => (
         <div key={p.id} className="tarjeta">

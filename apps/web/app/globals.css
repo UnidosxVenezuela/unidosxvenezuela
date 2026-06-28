@@ -131,6 +131,10 @@ textarea { min-height: 100px; }
 .insignia.ok { background: #d1fae5; color: var(--ok); }
 .insignia.aviso { background: #fef9c3; color: #854d0e; }
 
+/* Estado vacío */
+.vacio { text-align: center; padding: 40px 20px; }
+.vacio svg { color: var(--azul); opacity: .65; }
+
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde); }
 .error { color: var(--critica); font-weight: 600; }

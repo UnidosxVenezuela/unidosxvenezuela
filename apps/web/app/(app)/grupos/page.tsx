@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_AREA } from '@/lib/constantes';
+import Icono from '@/components/Icono';
 import type { Grupo } from '@unidos/types';
 
 export default async function GruposPage() {
@@ -16,10 +17,15 @@ export default async function GruposPage() {
     <div>
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Grupos</h1>
-        {coord && <Link className="btn btn-primario" href="/grupos/nuevo">+ Nuevo grupo</Link>}
+        {coord && <Link className="btn btn-primario" href="/grupos/nuevo"><Icono nombre="mas" /> Nuevo grupo</Link>}
       </div>
 
-      {grupos.length === 0 && <p className="muted">Aún no hay grupos. {coord ? 'Crea el primero.' : ''}</p>}
+      {grupos.length === 0 && (
+        <div className="tarjeta vacio">
+          <Icono nombre="grupos" size={40} />
+          <p className="muted" style={{ marginBottom: 0 }}>Aún no hay grupos. {coord ? 'Crea el primero.' : 'La coordinación creará los grupos operativos.'}</p>
+        </div>
+      )}
 
       <div className="grid grid-2">
         {grupos.map((g) => (

@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import Icono from './Icono';
 
 export default function CerrarSesion() {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function CerrarSesion() {
   }
   return (
     <button className="btn" onClick={salir} style={{ minHeight: 36, padding: '6px 12px' }}>
-      Cerrar sesión
+      <Icono nombre="salir" size={16} /> Salir
     </button>
   );
 }

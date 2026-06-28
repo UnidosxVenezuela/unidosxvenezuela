@@ -15,6 +15,12 @@ export async function crearTarea(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Solo admin/coordinador/líder pueden crear tareas.
+  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
+  if (!yo || !['admin', 'coordinador', 'lider_grupo'].includes(yo.rol)) {
+    throw new Error('No tienes permisos para crear tareas.');
+  }
+
   const asignadoA = opt(formData.get('asignado_a'));
   const { data, error } = await supabase.from('tareas').insert({
     titulo: txt(formData.get('titulo')),

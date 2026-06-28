@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Icono from '@/components/Icono';
 import { marcarLeida, marcarTodasLeidas } from './actions';
 
 export default async function NotificacionesPage() {
@@ -22,14 +23,18 @@ export default async function NotificacionesPage() {
         </form>
       </div>
 
-      {items.length === 0 && <p className="muted">No tienes notificaciones.</p>}
-
+      {items.length === 0 ? (
+        <div className="tarjeta vacio">
+          <Icono nombre="avisos" size={40} />
+          <p className="muted" style={{ marginBottom: 0 }}>No tienes notificaciones.</p>
+        </div>
+      ) : (
       <div className="tarjeta">
         {items.map((it) => (
           <div key={it.id} className="fila" style={{
             justifyContent: 'space-between',
             borderBottom: '1px solid var(--borde)', padding: '10px 0',
-            background: it.leida ? 'transparent' : '#f0fdfa',
+            background: it.leida ? 'transparent' : '#eef3ff',
           }}>
             <div>
               <div className="fila" style={{ gap: 8 }}>
@@ -51,6 +56,7 @@ export default async function NotificacionesPage() {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

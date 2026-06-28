@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, cambiarRol } from './actions';
+import Icono from '@/components/Icono';
 
 export default async function AdminUsuariosPage() {
   await requireCoordinacion();
@@ -51,7 +52,7 @@ export default async function AdminUsuariosPage() {
                 <form action={cambiarVerificacion}>
                   <input type="hidden" name="perfil_id" value={p.id} />
                   <input type="hidden" name="verificado" value="true" />
-                  <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 14px' }}>Aprobar</button>
+                  <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 14px' }}><Icono nombre="ok" size={16} /> Aprobar</button>
                 </form>
               </div>
             </div>
@@ -92,10 +93,6 @@ export default async function AdminUsuariosPage() {
           </tbody>
         </table>
       </div>
-      <p className="muted" style={{ fontSize: '.85rem' }}>
-        Nota: el primer administrador se promueve por SQL (ver README). Endurecer la
-        escalada de privilegios es una mejora pendiente (ver docs/06-MEJORAS.md).
-      </p>
     </div>
   );
 }

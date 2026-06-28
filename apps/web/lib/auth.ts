@@ -36,3 +36,11 @@ export async function requireCoordinacion() {
 export function esCoordinacion(rol?: Rol | null) {
   return !!rol && COORDINACION.includes(rol);
 }
+
+// Quién puede crear y asignar tareas. El resto (voluntario, observador)
+// solo ve las tareas que le fueron asignadas.
+const GESTION_TAREAS: Rol[] = ['admin', 'coordinador', 'lider_grupo'];
+
+export function puedeGestionarTareas(rol?: Rol | null) {
+  return !!rol && GESTION_TAREAS.includes(rol);
+}

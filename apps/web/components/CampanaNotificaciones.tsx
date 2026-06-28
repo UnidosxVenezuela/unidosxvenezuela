@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import Icono from './Icono';
 
 export default function CampanaNotificaciones() {
   const [n, setN] = useState(0);
@@ -36,8 +37,9 @@ export default function CampanaNotificaciones() {
   }, []);
 
   return (
-    <Link href="/notificaciones" className="fila" style={{ gap: 6, color: '#fff', textDecoration: 'none', fontWeight: 600 }}>
-      Avisos
+    <Link href="/notificaciones" className="fila" aria-label="Avisos"
+      style={{ gap: 6, color: '#fff', textDecoration: 'none', fontWeight: 600 }}>
+      <Icono nombre="avisos" size={18} />
       {n > 0 && <span className="insignia critica">{n}</span>}
     </Link>
   );
