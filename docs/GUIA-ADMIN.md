@@ -1,25 +1,25 @@
 # Guía rápida para administradores — UnidosXVenezuela
 
-Guía sencilla para coordinar la plataforma. No necesitás saber de tecnología: seguí los pasos.
+Guía sencilla para coordinar la plataforma. No necesitas saber de tecnología: solo sigue los pasos.
 
 ---
 
 ## 1. Entrar
-1. Andá a **unidosxvenezuela.com** → **Iniciar sesión**.
-2. Poné tu correo y contraseña. Podés tocar el **👁️** para ver lo que escribís.
-3. Si te equivocaste de clave, el sistema te deja reintentar (la verificación anti-robot se renueva sola).
-4. ¿Olvidaste la clave? **"¿Olvidaste tu contraseña?"** → te llega un correo con un enlace para crear una nueva.
+1. Ve a **unidosxvenezuela.com** y entra a **Iniciar sesión**.
+2. Escribe tu correo y contraseña. Puedes tocar el **👁️** para ver lo que escribes.
+3. Si te equivocaste de clave, el sistema te deja intentar de nuevo (la verificación anti-robot se renueva sola).
+4. ¿Olvidaste la clave? Toca **"¿Olvidaste tu contraseña?"** y te llegará un correo con un enlace para crear una nueva.
 
 ---
 
-## 2. Aprobar a la gente que se registra
-Cada persona que se anota queda **pendiente** hasta que vos la apruebes.
-1. Menú **Administración → Usuarios**.
-2. En **"Solicitudes de registro"** vas a ver a los nuevos, con su nombre y el motivo que escribieron.
-3. Elegí su **rol** (ver punto 3) y tocá **Aprobar**.
+## 2. Aprobar a las personas que se registran
+Cada persona que se inscribe queda **pendiente** hasta que tú la apruebes.
+1. Entra al menú **Administración → Usuarios**.
+2. En **"Solicitudes de registro"** verás a los nuevos, con su nombre y el motivo que escribieron.
+3. Elige su **rol** (ver punto 3) y toca **Aprobar**.
 4. La persona recibe un correo avisándole que ya tiene acceso. ✅
 
-> Mientras no la apruebes, solo puede ver tareas abiertas; no entra a grupos ni a información sensible.
+> Mientras no la apruebes, solo puede ver tareas abiertas; no entra a los grupos ni a información sensible.
 
 ---
 
@@ -27,66 +27,67 @@ Cada persona que se anota queda **pendiente** hasta que vos la apruebes.
 | Rol | Para qué sirve |
 |-----|----------------|
 | **Administrador** | Todo: aprueba, crea usuarios, gestiona roles, áreas y grupos. |
-| **Coordinador** | Gestiona usuarios, tareas y grupos. **No** puede tocar a otros administradores. |
+| **Coordinador** | Gestiona usuarios, tareas y grupos. **No** puede modificar a otros administradores. |
 | **Líder de grupo** | Maneja su grupo y crea tareas. |
 | **Voluntario** | Toma tareas y registra sus horas. |
 | **Observador** | Solo mira (no edita). |
 | **Líder de plataforma aliada** | Accede a la base compartida de contactos aliados (ver punto 5). |
 
-Para cambiar el rol de alguien: **Usuarios** → buscá la fila de la persona → elegí el rol → **Guardar**.
+Para cambiar el rol de alguien: entra a **Usuarios**, busca la fila de la persona, elige el rol y toca **Guardar**.
 
-> 🔒 Solo el **superadministrador** (el dueño) puede crear o cambiar a un **Administrador**. Es a propósito, para proteger la cuenta.
+> 🔒 Solo el **superadministrador** (el dueño) puede crear o modificar a un **Administrador**. Es así a propósito, para proteger la cuenta.
 
 ---
 
-## 4. Crear una cuenta vos mismo
-Si querés dar de alta a alguien sin que se registre:
-1. **Usuarios → + Crear usuario**.
-2. Completá nombre, correo, rol y una **contraseña temporal**.
-3. Tocá **Crear usuario**. Le llega un correo de bienvenida.
-4. Pasale la contraseña temporal por un canal seguro (WhatsApp, en persona). La persona la cambia al entrar.
+## 4. Crear una cuenta tú mismo
+Si quieres dar de alta a alguien sin que se registre:
+1. Entra a **Usuarios → + Crear usuario**.
+2. Completa nombre, correo, rol y una **contraseña temporal**.
+3. Toca **Crear usuario**. A la persona le llega un correo de bienvenida.
+4. Compártele la contraseña temporal por un canal seguro (WhatsApp, en persona). La persona la cambia al entrar.
 
 ---
 
 ## 5. Líderes de plataforma aliada (doble aprobación)
-Este rol da acceso a contactos sensibles, así que necesita **2 administradores** (o el superadmin solo).
-1. **Usuarios → sección "Líderes de plataforma aliada"**.
-2. Elegí a la persona → **Proponer como aliado**. Queda en **"1/2"**.
-3. **Otro administrador** entra y toca **Aprobar**. Recién ahí se le da el rol.
-4. Si lo hace el superadmin, alcanza con su aprobación.
+Este rol da acceso a contactos sensibles, así que necesita **2 administradores** (o el superadministrador solo).
+1. Entra a **Usuarios → sección "Líderes de plataforma aliada"**.
+2. Elige a la persona y toca **Proponer como aliado**. Queda en **"1/2"**.
+3. **Otro administrador** entra y toca **Aprobar**. Recién ahí se le otorga el rol.
+4. Si lo hace el superadministrador, basta con su aprobación.
 
 ---
 
 ## 6. Áreas y grupos
-- **Áreas** organizan los grupos (Salud, Logística, etc.). Vienen cargadas; podés crear más en **Administración → Áreas → Nueva área**.
-- **Grupos**: en **Grupos → Nuevo grupo**. Asignale un área, un líder y, si querés, el enlace de WhatsApp.
+- Las **áreas** organizan los grupos (Salud, Logística, etc.). Ya vienen cargadas; puedes crear más en **Administración → Áreas → Nueva área**.
+- Para crear un **grupo**: entra a **Grupos → Nuevo grupo**. Asígnale un área, un líder y, si quieres, el enlace de WhatsApp.
 
 ---
 
 ## 7. Anuncios fijados en un grupo
 Para dejar un mensaje importante arriba de todo en un grupo:
-1. Entrá al grupo.
-2. Escribí el anuncio y tocá **Fijar**.
-3. Lo ven todos los miembros. Solo el líder del grupo, coordinación o admin pueden fijar o quitar.
+1. Entra al grupo.
+2. En el panel de la derecha, escribe el anuncio. Si quieres, **adjunta una imagen o un archivo** (hasta 10 MB).
+3. Toca **Fijar anuncio**. Lo verán todos los miembros del grupo.
+4. Solo el líder del grupo, un coordinador o un administrador pueden fijar o quitar anuncios.
 
 ---
 
 ## 8. Centros de acopio
-**Centros de acopio** → agregá un punto con su dirección (elegís la ubicación en el mapa), qué necesita y la **urgencia**. Cualquier verificado puede ayudar a mantenerlos al día.
+Entra a **Centros de acopio** y agrega un punto con su dirección (eliges la ubicación en el mapa), qué necesita y la **urgencia**. Cualquier persona verificada puede ayudar a mantenerlos al día.
 
 ---
 
 ## 9. Tareas
-- Crear: **Tareas → Nueva tarea** (título, prioridad, categoría, a quién se asigna).
-- La gente también puede **tomar** tareas abiertas.
-- Seguí el estado (pendiente, en progreso, completada).
+- Para crear: **Tareas → Nueva tarea** (título, prioridad, categoría y a quién se asigna).
+- Las personas también pueden **tomar** tareas abiertas.
+- Sigue el estado de cada tarea (pendiente, en progreso, completada).
 
 ---
 
 ## 10. Reglas de oro 🛡️
-- **Nunca compartas tu contraseña.** Cada quien la suya.
-- Da el rol **mínimo** que la persona necesita.
-- Las contraseñas temporales son de un solo uso: pedí que las cambien al entrar.
-- Ante la duda con un cambio sensible (admins, aliados), consultá al superadministrador.
+- **Nunca compartas tu contraseña.** Cada quien usa la suya.
+- Asigna el rol **mínimo** que la persona necesita.
+- Las contraseñas temporales son de un solo uso: pide que las cambien al entrar.
+- Ante la duda con un cambio sensible (administradores, aliados), consulta con el superadministrador.
 
-¿Algo no funciona o tenés una duda? Anotá qué pantalla y qué hiciste, y pasáselo al equipo técnico.
+¿Algo no funciona o tienes una duda? Anota en qué pantalla estabas y qué hiciste, y compártelo con el equipo técnico.
