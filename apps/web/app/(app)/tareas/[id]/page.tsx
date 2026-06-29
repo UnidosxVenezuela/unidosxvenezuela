@@ -17,7 +17,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   const id = params.id;
 
   const { data: tarea } = await supabase.from('tareas').select(
-    `id, titulo, descripcion, estado, prioridad, vence_en, lat, lng, grupo_id, asignado_a, cupo, creado_por,
+    `id, titulo, descripcion, estado, prioridad, vence_en, ubicacion, lat, lng, grupo_id, asignado_a, cupo, creado_por,
      grupos ( nombre, lider_id ),
      asignado:perfiles!tareas_asignado_a_fkey ( nombre_completo ),
      creador:perfiles!tareas_creado_por_fkey ( nombre_completo )`
@@ -58,6 +58,9 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     tarea.creado_por === user!.id ||
     tarea.grupos?.lider_id === user!.id;
   const puedeParticipar = perfil?.rol !== 'observador';
+  // Solo coordinación o el líder del grupo dan una tarea por completada.
+  const esGestorTarea = esCoordinacion(perfil?.rol) || tarea.grupos?.lider_id === user!.id;
+  const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');
 
   return (
     <div>
@@ -68,7 +71,10 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
       <Link href="/tareas" className="muted">← Tareas</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{tarea.titulo}</h1>
-        <span className={'insignia ' + claseEstado(tarea.estado)}>{ETIQUETA_ESTADO[tarea.estado as keyof typeof ETIQUETA_ESTADO]}</span>
+        <span className="fila" style={{ gap: 6 }}>
+          {tieneEntregables && <span className="insignia ok">Entregado</span>}
+          <span className={'insignia ' + claseEstado(tarea.estado)}>{ETIQUETA_ESTADO[tarea.estado as keyof typeof ETIQUETA_ESTADO]}</span>
+        </span>
       </div>
 
       <div className="tarjeta">
@@ -79,7 +85,12 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
           <div><strong>Asignado a:</strong> {tarea.asignado?.nombre_completo ?? 'Sin asignar'}</div>
           <div><strong>Creada por:</strong> {tarea.creador?.nombre_completo ?? '—'}</div>
           <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
-          <div><strong>Ubicación:</strong> {tarea.lat != null && tarea.lng != null ? tarea.lat + ', ' + tarea.lng : '—'}</div>
+          <div><strong>Ubicación:</strong>{' '}
+            {tarea.ubicacion || (tarea.lat != null && tarea.lng != null ? `${tarea.lat}, ${tarea.lng}` : '—')}
+            {tarea.lat != null && tarea.lng != null && (
+              <a href={`https://www.google.com/maps/search/?api=1&query=${tarea.lat},${tarea.lng}`} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8 }}>Ver en mapa</a>
+            )}
+          </div>
         </div>
       </div>
 
@@ -100,7 +111,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
             ) : (
               <form action={tomarTarea}>
                 <input type="hidden" name="tarea_id" value={id} />
-                <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="ok" size={16} /> Unirme</button>
+                <BotonConfirmar mensaje="¿Tomar esta tarea? Quedarás como responsable de realizarla." className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="ok" size={16} /> Unirme</BotonConfirmar>
               </form>
             )
           )}
@@ -126,7 +137,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
             <input type="hidden" name="tarea_id" value={id} />
             <div className="campo">
               <select name="estado" className="input" defaultValue={tarea.estado}>
-                {ESTADOS.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO[e]}</option>)}
+                {ESTADOS.filter((e) => e !== 'completada' || esGestorTarea).map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO[e]}</option>)}
               </select>
             </div>
             <button className="btn btn-primario" type="submit">Guardar estado</button>

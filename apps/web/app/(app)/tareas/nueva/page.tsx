@@ -3,6 +3,7 @@ import { requireUsuario, puedeGestionarTareas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from '@/lib/constantes';
 import { crearTarea } from '../actions';
+import CapturarUbicacion from './CapturarUbicacion';
 
 export default async function NuevaTareaPage() {
   const { perfil } = await requireUsuario();
@@ -60,15 +61,8 @@ export default async function NuevaTareaPage() {
               {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
             </select>
           </div>
-          <div className="campo">
-            <label htmlFor="lat">Latitud (opcional)</label>
-            <input id="lat" name="lat" className="input" type="number" step="any" placeholder="10.49" />
-          </div>
-          <div className="campo">
-            <label htmlFor="lng">Longitud (opcional)</label>
-            <input id="lng" name="lng" className="input" type="number" step="any" placeholder="-68.05" />
-          </div>
         </div>
+        <CapturarUbicacion />
         <p className="muted" style={{ fontSize: '.85rem' }}>
           Si dejas <strong>Sin asignar</strong>, la tarea queda <strong>abierta</strong> y cualquier
           voluntario podrá tomarla (libre elección).

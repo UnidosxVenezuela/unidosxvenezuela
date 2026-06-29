@@ -8,6 +8,7 @@ import {
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import { tomarTarea } from './actions';
 
 type SP = { estado?: string; prioridad?: string; grupo?: string; cat?: string; mias?: string };
@@ -22,7 +23,7 @@ function Badges({ t }: { t: any }) {
   );
 }
 
-function TablaTareas({ tareas }: { tareas: any[] }) {
+function TablaTareas({ tareas, conEntregables }: { tareas: any[]; conEntregables?: Set<string> }) {
   return (
     <div className="tarjeta">
       <table>
@@ -32,7 +33,10 @@ function TablaTareas({ tareas }: { tareas: any[] }) {
         <tbody>
           {tareas.map((t) => (
             <tr key={t.id}>
-              <td><Link href={'/tareas/' + t.id}>{t.titulo}</Link></td>
+              <td>
+                <Link href={'/tareas/' + t.id}>{t.titulo}</Link>
+                {conEntregables?.has(t.id) && <span className="insignia ok" style={{ marginLeft: 8 }}>Entregado</span>}
+              </td>
               <td><span className="insignia">{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</span></td>
               <td>{t.grupos?.nombre ?? '—'}</td>
               <td><span className={'insignia ' + clasePrioridad(t.prioridad)}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</span></td>
@@ -54,12 +58,14 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   const gestor = puedeGestionarTareas(perfil?.rol);
 
   // Conteo de ocupados + mis participaciones (modelo de cupo).
-  const [{ data: conteoData }, { data: misPartData }] = await Promise.all([
+  const [{ data: conteoData }, { data: misPartData }, { data: entregablesData }] = await Promise.all([
     supabase.rpc('conteo_personas_tarea'),
     supabase.from('tarea_personas').select('tarea_id').eq('perfil_id', user!.id),
+    supabase.from('adjuntos_tarea').select('tarea_id').eq('clase', 'entregable'),
   ]);
   const conteo = new Map<string, number>((conteoData ?? []).map((c: any) => [c.tarea_id, Number(c.total)]));
   const misIds = new Set<string>((misPartData ?? []).map((r: any) => r.tarea_id));
+  const conEntregables = new Set<string>((entregablesData ?? []).map((a: any) => a.tarea_id));
 
   // Tareas abiertas (con cupo disponible) — visibles para todos; ordenadas por prioridad.
   let qAbiertas = supabase.from('tareas').select(COLS).in('estado', ['pendiente', 'asignada']);
@@ -116,7 +122,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
               {perfil?.rol !== 'observador' && (
                 <form action={tomarTarea}>
                   <input type="hidden" name="tarea_id" value={t.id} />
-                  <button className="btn btn-acento"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</button>
+                  <BotonConfirmar mensaje={t.cupo ? '¿Sumarte a esta tarea?' : '¿Tomar esta tarea? Quedarás como responsable de realizarla.'} className="btn btn-acento"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</BotonConfirmar>
                 </form>
               )}
             </div>
@@ -133,7 +139,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
             Aún no tienes tareas. Toma una tarea abierta de arriba{gestor ? '' : ' o espera a que la coordinación te asigne una'}.
           </p>
         </div>
-      ) : <TablaTareas tareas={mias} />}
+      ) : <TablaTareas tareas={mias} conEntregables={conEntregables} />}
 
       {/* Gestores: vista completa con filtros */}
       {gestor && <GestorTodas searchParams={searchParams} />}
@@ -148,8 +154,12 @@ async function GestorTodas({ searchParams }: { searchParams: SP }) {
   if (searchParams.estado) q = q.eq('estado', searchParams.estado);
   if (searchParams.prioridad) q = q.eq('prioridad', searchParams.prioridad);
   if (searchParams.grupo) q = q.eq('grupo_id', searchParams.grupo);
-  const { data } = await q;
+  const [{ data }, { data: entregablesData }] = await Promise.all([
+    q,
+    supabase.from('adjuntos_tarea').select('tarea_id').eq('clase', 'entregable'),
+  ]);
   const tareas = (data ?? []) as any[];
+  const conEntregables = new Set<string>((entregablesData ?? []).map((a: any) => a.tarea_id));
 
   return (
     <>
@@ -172,7 +182,7 @@ async function GestorTodas({ searchParams }: { searchParams: SP }) {
       </form>
       {tareas.length === 0
         ? <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>No hay tareas con esos filtros.</p></div>
-        : <TablaTareas tareas={tareas} />}
+        : <TablaTareas tareas={tareas} conEntregables={conEntregables} />}
     </>
   );
 }

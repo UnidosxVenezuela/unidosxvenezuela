@@ -34,6 +34,7 @@ export async function crearTarea(formData: FormData) {
     cupo: num(formData.get('cupo')), // null = sin límite (se trata como 1)
     creado_por: user.id,
     vence_en: opt(formData.get('vence_en')),
+    ubicacion: opt(formData.get('ubicacion')),
     lat: num(formData.get('lat')),
     lng: num(formData.get('lng')),
   }).select('id').single();
