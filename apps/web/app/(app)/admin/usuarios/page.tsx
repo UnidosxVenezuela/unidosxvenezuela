@@ -5,6 +5,7 @@ import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado } from './actions';
 import Icono from '@/components/Icono';
+import BotonActualizar from '@/components/BotonActualizar';
 
 export default async function AdminUsuariosPage() {
   const { user, perfil: yo } = await requireCoordinacion();
@@ -58,6 +59,7 @@ export default async function AdminUsuariosPage() {
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Administración de usuarios</h1>
         <div className="fila">
+          <BotonActualizar />
           <Link className="btn btn-primario" href="/admin/usuarios/nuevo">+ Crear usuario</Link>
           <Link className="btn" href="/admin/areas">Áreas</Link>
         </div>

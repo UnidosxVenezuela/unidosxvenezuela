@@ -7,6 +7,7 @@ import {
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
+import BotonActualizar from '@/components/BotonActualizar';
 import { tomarTarea } from './actions';
 
 type SP = { estado?: string; prioridad?: string; grupo?: string; cat?: string; mias?: string };
@@ -81,7 +82,10 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       <RealtimeRefrescar tabla="tareas" />
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Tareas</h1>
-        {gestor && <Link className="btn btn-primario" href="/tareas/nueva"><Icono nombre="mas" /> Nueva tarea</Link>}
+        <div className="fila">
+          <BotonActualizar />
+          {gestor && <Link className="btn btn-primario" href="/tareas/nueva"><Icono nombre="mas" /> Nueva tarea</Link>}
+        </div>
       </div>
 
       {/* Libre elección */}
