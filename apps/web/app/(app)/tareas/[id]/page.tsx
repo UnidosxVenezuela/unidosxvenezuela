@@ -33,7 +33,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
     supabase.from('adjuntos_tarea')
-      .select('id, tipo, url, nombre, mime, creado_por, creado_en')
+      .select('id, tipo, clase, url, nombre, mime, creado_por, creado_en')
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
     supabase.from('tarea_personas')
       .select('perfil_id, unido_en, perfiles ( nombre_completo )')
@@ -153,37 +153,73 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         </div>
       )}
 
-      <h2>Adjuntos</h2>
+      {/* Material de la tarea — insumos que aporta quien crea/coordina */}
+      <h2 className="fila" style={{ gap: 6 }}><Icono nombre="documento" size={20} /> Material de la tarea</h2>
       <div className="tarjeta">
-        {adjuntosConUrl.length === 0 && <p className="muted">Sin adjuntos.</p>}
-        {adjuntosConUrl.map((a: any) => (
+        {adjuntosConUrl.filter((a: any) => a.clase !== 'entregable').length === 0 && <p className="muted">Sin material adjunto.</p>}
+        {adjuntosConUrl.filter((a: any) => a.clase !== 'entregable').map((a: any) => (
           <div key={a.id} className="fila" style={{ justifyContent: 'space-between', borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
             <span className="fila" style={{ gap: 8 }}>
               <Icono nombre={iconoAdjunto(a.tipo)} size={18} />
-              {a.href
-                ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a>
-                : <span>{a.nombre}</span>}
+              {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
               <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
             </span>
             {(a.creado_por === user!.id || esCoordinacion(perfil?.rol)) && (
               <form action={eliminarAdjunto}>
                 <input type="hidden" name="tarea_id" value={id} />
                 <input type="hidden" name="adjunto_id" value={a.id} />
-                <BotonConfirmar mensaje={'¿Eliminar el adjunto "' + a.nombre + '"?'} className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
+                <BotonConfirmar mensaje={'¿Eliminar "' + a.nombre + '"?'} className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
               </form>
             )}
           </div>
         ))}
-        {puedeEditar && puedeParticipar && (
+        {puedeEditar && (
           <div style={{ marginTop: 12 }}>
-            <SubirAdjunto tareaId={id} />
+            <SubirAdjunto tareaId={id} clase="material" etiqueta="Subir material" />
             <form action={agregarEnlace} className="fila" style={{ marginTop: 10 }}>
               <input type="hidden" name="tarea_id" value={id} />
-              <input name="url" className="input" type="url" placeholder="https://… (enlace o documento externo)" required style={{ maxWidth: 360 }} />
+              <input type="hidden" name="clase" value="material" />
+              <input name="url" className="input" type="url" placeholder="https://… (enlace al material)" required style={{ maxWidth: 360 }} />
               <input name="nombre" className="input" placeholder="Nombre (opcional)" style={{ maxWidth: 200 }} />
               <button className="btn"><Icono nombre="enlace" size={16} /> Agregar enlace</button>
             </form>
           </div>
+        )}
+      </div>
+
+      {/* Entregables — lo que sube la persona asignada */}
+      <h2 className="fila" style={{ gap: 6 }}><Icono nombre="ok" size={20} /> Entregables</h2>
+      <div className="tarjeta">
+        {adjuntosConUrl.filter((a: any) => a.clase === 'entregable').length === 0 && <p className="muted">Aún no hay entregables.</p>}
+        {adjuntosConUrl.filter((a: any) => a.clase === 'entregable').map((a: any) => (
+          <div key={a.id} className="fila" style={{ justifyContent: 'space-between', borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
+            <span className="fila" style={{ gap: 8 }}>
+              <Icono nombre={iconoAdjunto(a.tipo)} size={18} />
+              {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
+              <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
+            </span>
+            {(a.creado_por === user!.id || esCoordinacion(perfil?.rol)) && (
+              <form action={eliminarAdjunto}>
+                <input type="hidden" name="tarea_id" value={id} />
+                <input type="hidden" name="adjunto_id" value={a.id} />
+                <BotonConfirmar mensaje={'¿Eliminar "' + a.nombre + '"?'} className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
+              </form>
+            )}
+          </div>
+        ))}
+        {puedeParticipar && (soyParticipante || puedeEditar) ? (
+          <div style={{ marginTop: 12 }}>
+            <SubirAdjunto tareaId={id} clase="entregable" etiqueta="Subir entregable" />
+            <form action={agregarEnlace} className="fila" style={{ marginTop: 10 }}>
+              <input type="hidden" name="tarea_id" value={id} />
+              <input type="hidden" name="clase" value="entregable" />
+              <input name="url" className="input" type="url" placeholder="https://… (enlace al entregable)" required style={{ maxWidth: 360 }} />
+              <input name="nombre" className="input" placeholder="Nombre (opcional)" style={{ maxWidth: 200 }} />
+              <button className="btn"><Icono nombre="enlace" size={16} /> Guardar enlace</button>
+            </form>
+          </div>
+        ) : (
+          <p className="muted" style={{ marginTop: 8, fontSize: '.85rem' }}>Solo las personas asignadas a la tarea pueden subir entregables.</p>
         )}
       </div>
 

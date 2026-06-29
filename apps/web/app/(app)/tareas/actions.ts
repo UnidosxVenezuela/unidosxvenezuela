@@ -104,8 +104,9 @@ export async function agregarEnlace(formData: FormData) {
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
   if (!/^https:\/\/\S+$/i.test(url)) throw new Error('Enlace no válido (debe ser https).');
 
+  const clase = (txt(formData.get('clase')) === 'entregable') ? 'entregable' : 'material';
   const { error } = await supabase.from('adjuntos_tarea').insert({
-    tarea_id: id, tipo: 'enlace', url, nombre, mime: null, creado_por: user.id,
+    tarea_id: id, tipo: 'enlace', clase, url, nombre, mime: null, creado_por: user.id,
   });
   if (error) throw new Error('No se pudo agregar el enlace: ' + error.message);
   revalidatePath('/tareas/' + id);

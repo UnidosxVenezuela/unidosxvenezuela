@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
+import AnimarEntrada from '@/components/AnimarEntrada';
 
 export default async function Dashboard() {
   const { user, perfil } = await requireUsuario();
@@ -32,7 +33,7 @@ export default async function Dashboard() {
   );
 
   return (
-    <div>
+    <AnimarEntrada>
       <h1>Panel</h1>
       <p className="muted">Hola, {perfil?.nombre_completo || user?.email}.</p>
       <div className="grid grid-2">
@@ -59,6 +60,6 @@ export default async function Dashboard() {
           </Link>
         ))}
       </div>
-    </div>
+    </AnimarEntrada>
   );
 }

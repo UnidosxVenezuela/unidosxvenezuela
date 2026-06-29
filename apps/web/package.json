@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@excalidraw/excalidraw": "0.17.6",
+    "animejs": "^3.2.2",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
     "@unidos/supabase-client": "workspace:*",
@@ -23,6 +24,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/animejs": "^3.1.12",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Icono from '@/components/Icono';
 
-export default function SubirAdjunto({ tareaId }: { tareaId: string }) {
+export default function SubirAdjunto({ tareaId, clase = 'material', etiqueta = 'Subir archivo' }: { tareaId: string; clase?: 'material' | 'entregable'; etiqueta?: string }) {
   const router = useRouter();
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function SubirAdjunto({ tareaId }: { tareaId: string }) {
 
     const tipo = file.type.startsWith('image/') ? 'imagen' : 'documento';
     const { error: rowErr } = await supabase.from('adjuntos_tarea').insert({
-      tarea_id: tareaId, tipo, url: path, nombre: file.name, mime: file.type || null, creado_por: user?.id ?? null,
+      tarea_id: tareaId, tipo, clase, url: path, nombre: file.name, mime: file.type || null, creado_por: user?.id ?? null,
     });
     if (rowErr) {
       await supabase.storage.from('adjuntos').remove([path]); // rollback del objeto
@@ -38,7 +38,7 @@ export default function SubirAdjunto({ tareaId }: { tareaId: string }) {
   return (
     <div>
       <label className="btn" style={{ cursor: 'pointer' }}>
-        <Icono nombre="imagen" size={16} /> {subiendo ? 'Subiendo…' : 'Subir archivo'}
+        <Icono nombre="imagen" size={16} /> {subiendo ? 'Subiendo…' : etiqueta}
         <input type="file" hidden onChange={onChange} disabled={subiendo}
           accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" />
       </label>
