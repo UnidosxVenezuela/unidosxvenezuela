@@ -93,6 +93,9 @@ export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
 export const ESTADOS: EstadoTarea[] = Object.keys(ETIQUETA_ESTADO) as EstadoTarea[];
 export const PRIORIDADES: Prioridad[] = Object.keys(ETIQUETA_PRIORIDAD) as Prioridad[];
 
+/** Orden de prioridad para listar (crítica primero). */
+export const RANGO_PRIORIDAD: Record<Prioridad, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
+
 /** Clase CSS de insignia según prioridad. */
 export function clasePrioridad(p: Prioridad): string {
   if (p === 'critica') return 'critica';

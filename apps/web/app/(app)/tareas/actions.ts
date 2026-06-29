@@ -30,6 +30,7 @@ export async function crearTarea(formData: FormData) {
     estado: (asignadoA ? 'asignada' : 'pendiente') as EstadoTarea,
     grupo_id: opt(formData.get('grupo_id')),
     asignado_a: asignadoA,
+    cupo: num(formData.get('cupo')), // null = sin límite (se trata como 1)
     creado_por: user.id,
     vence_en: opt(formData.get('vence_en')),
     lat: num(formData.get('lat')),
@@ -37,6 +38,8 @@ export async function crearTarea(formData: FormData) {
   }).select('id').single();
 
   if (error) throw new Error('No se pudo crear la tarea: ' + error.message);
+  // El asignado inicial cuenta como participante (para el cupo).
+  if (asignadoA) await supabase.from('tarea_personas').insert({ tarea_id: data!.id, perfil_id: asignadoA });
   revalidatePath('/tareas');
   redirect('/tareas/' + data!.id);
 }
@@ -54,11 +57,14 @@ export async function cambiarEstado(formData: FormData) {
 export async function actualizarAsignacion(formData: FormData) {
   const supabase = await createClient();
   const id = txt(formData.get('tarea_id'));
+  const asignado = opt(formData.get('asignado_a'));
   const { error } = await supabase.from('tareas').update({
-    asignado_a: opt(formData.get('asignado_a')),
+    asignado_a: asignado,
     prioridad: txt(formData.get('prioridad')) as Prioridad,
   }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar la tarea: ' + error.message);
+  // El responsable asignado también cuenta como participante (para el cupo).
+  if (asignado) await supabase.from('tarea_personas').upsert({ tarea_id: id, perfil_id: asignado }, { onConflict: 'tarea_id,perfil_id', ignoreDuplicates: true });
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
 }

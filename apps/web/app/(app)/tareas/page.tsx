@@ -3,7 +3,7 @@ import { requireUsuario, puedeGestionarTareas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_CATEGORIA,
-  ESTADOS, PRIORIDADES, CATEGORIAS, clasePrioridad, claseEstado,
+  ESTADOS, PRIORIDADES, CATEGORIAS, clasePrioridad, claseEstado, RANGO_PRIORIDAD,
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
@@ -45,24 +45,36 @@ function TablaTareas({ tareas }: { tareas: any[] }) {
   );
 }
 
-const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, grupo_id, asignado_a, grupos(nombre)';
+const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, grupo_id, asignado_a, cupo, grupos(nombre)';
 
 export default async function TareasPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
   const gestor = puedeGestionarTareas(perfil?.rol);
 
-  // Tareas abiertas (libre elección) — visibles para todos.
-  let qAbiertas = supabase.from('tareas').select(COLS)
-    .is('asignado_a', null).eq('estado', 'pendiente').order('creado_en', { ascending: false });
+  // Conteo de ocupados + mis participaciones (modelo de cupo).
+  const [{ data: conteoData }, { data: misPartData }] = await Promise.all([
+    supabase.rpc('conteo_personas_tarea'),
+    supabase.from('tarea_personas').select('tarea_id').eq('perfil_id', user!.id),
+  ]);
+  const conteo = new Map<string, number>((conteoData ?? []).map((c: any) => [c.tarea_id, Number(c.total)]));
+  const misIds = new Set<string>((misPartData ?? []).map((r: any) => r.tarea_id));
+
+  // Tareas abiertas (con cupo disponible) — visibles para todos; ordenadas por prioridad.
+  let qAbiertas = supabase.from('tareas').select(COLS).in('estado', ['pendiente', 'asignada']);
   if (searchParams.cat) qAbiertas = qAbiertas.eq('categoria', searchParams.cat);
   const { data: abiertasData } = await qAbiertas;
-  const abiertas = (abiertasData ?? []) as any[];
+  const abiertas = ((abiertasData ?? []) as any[])
+    .filter((t) => !misIds.has(t.id) && (conteo.get(t.id) ?? 0) < (t.cupo ?? 1))
+    .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
-  // Mis tareas asignadas.
-  const { data: miasData } = await supabase.from('tareas').select(COLS)
-    .eq('asignado_a', user!.id).order('creado_en', { ascending: false });
-  const mias = (miasData ?? []) as any[];
+  // Mis tareas (donde participo).
+  let mias: any[] = [];
+  if (misIds.size) {
+    const { data: miasData } = await supabase.from('tareas').select(COLS)
+      .in('id', [...misIds]).order('creado_en', { ascending: false });
+    mias = (miasData ?? []) as any[];
+  }
 
   return (
     <div>
@@ -92,10 +104,15 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
               <Badges t={t} />
               <h3 style={{ margin: '8px 0 4px' }}><Link href={'/tareas/' + t.id}>{t.titulo}</Link></h3>
               {t.descripcion && <p className="muted" style={{ marginTop: 0 }}>{String(t.descripcion).slice(0, 140)}</p>}
+              {t.cupo && (
+                <p className="muted fila" style={{ margin: '0 0 8px', gap: 6, fontSize: '.85rem' }}>
+                  <Icono nombre="grupos" size={15} /> Cupos: {(conteo.get(t.id) ?? 0)}/{t.cupo}
+                </p>
+              )}
               {perfil?.rol !== 'observador' && (
                 <form action={tomarTarea}>
                   <input type="hidden" name="tarea_id" value={t.id} />
-                  <button className="btn btn-acento"><Icono nombre="ok" size={16} /> Tomar tarea</button>
+                  <button className="btn btn-acento"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</button>
                 </form>
               )}
             </div>

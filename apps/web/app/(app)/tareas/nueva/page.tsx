@@ -39,6 +39,10 @@ export default async function NuevaTareaPage() {
             </select>
           </div>
           <div className="campo">
+            <label htmlFor="cupo">Límite de personas (opcional)</label>
+            <input id="cupo" name="cupo" className="input" type="number" min={1} placeholder="Sin límite" />
+          </div>
+          <div className="campo">
             <label htmlFor="vence_en">Vence</label>
             <input id="vence_en" name="vence_en" className="input" type="datetime-local" />
           </div>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePrioridad, claseEstado } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import FijarAnuncio from './FijarAnuncio';
@@ -31,12 +31,14 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
       .eq('grupo_id', grupoId).order('creado_en', { ascending: false }),
     supabase.from('tareas')
       .select('id, titulo, estado, prioridad').eq('grupo_id', grupoId)
-      .order('creado_en', { ascending: false }),
+      .not('estado', 'in', '(completada,cancelada)'),
   ]);
   const miembros = (miembrosRaw ?? []) as any[];
   const reuniones = (reunionesRaw ?? []) as any[];
   const fijados = (fijadosRaw ?? []) as any[];
-  const tareas = (tareasRaw ?? []) as any[];
+  // Solo pendientes por completar, ordenadas por prioridad (crítica primero).
+  const tareas = ((tareasRaw ?? []) as any[])
+    .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
   const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));

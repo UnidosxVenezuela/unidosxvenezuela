@@ -8,7 +8,7 @@ import {
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import SubirAdjunto from './SubirAdjunto';
-import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, eliminarAdjunto } from '../actions';
+import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, eliminarAdjunto, tomarTarea, liberarTarea } from '../actions';
 
 export default async function TareaDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -16,7 +16,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   const id = params.id;
 
   const { data: tarea } = await supabase.from('tareas').select(
-    `id, titulo, descripcion, estado, prioridad, vence_en, lat, lng, grupo_id, asignado_a, creado_por,
+    `id, titulo, descripcion, estado, prioridad, vence_en, lat, lng, grupo_id, asignado_a, cupo, creado_por,
      grupos ( nombre, lider_id ),
      asignado:perfiles!tareas_asignado_a_fkey ( nombre_completo ),
      creador:perfiles!tareas_creado_por_fkey ( nombre_completo )`
@@ -26,7 +26,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Tarea no encontrada</h2><Link href="/tareas">Volver</Link></div>;
   }
 
-  const [{ data: comentarios }, { data: perfiles }, { data: adjuntos }] = await Promise.all([
+  const [{ data: comentarios }, { data: perfiles }, { data: adjuntos }, { data: personasData }] = await Promise.all([
     supabase.from('comentarios_tarea')
       .select('id, contenido, creado_en, autor:perfiles ( nombre_completo )')
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
@@ -34,7 +34,15 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     supabase.from('adjuntos_tarea')
       .select('id, tipo, url, nombre, mime, creado_por, creado_en')
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
+    supabase.from('tarea_personas')
+      .select('perfil_id, unido_en, perfiles ( nombre_completo )')
+      .eq('tarea_id', id).order('unido_en', { ascending: true }),
   ]);
+  const personas = (personasData ?? []) as any[];
+  const cupo: number | null = tarea.cupo ?? null;
+  const ocupados = personas.length;
+  const lleno = ocupados >= (cupo ?? 1);
+  const soyParticipante = personas.some((p) => p.perfil_id === user!.id);
 
   // Firmar URLs de archivos (bucket privado); los enlaces se revalidan en render.
   const adjuntosConUrl = await Promise.all((adjuntos ?? []).map(async (a: any) => {
@@ -72,6 +80,42 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
           <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
           <div><strong>Ubicación:</strong> {tarea.lat != null && tarea.lng != null ? tarea.lat + ', ' + tarea.lng : '—'}</div>
         </div>
+      </div>
+
+      {/* Personas (cupo) */}
+      <div className="tarjeta">
+        <div className="fila" style={{ justifyContent: 'space-between' }}>
+          <strong className="fila" style={{ gap: 6 }}>
+            <Icono nombre="grupos" size={18} /> Personas {cupo ? `${ocupados}/${cupo}` : ocupados}
+          </strong>
+          {puedeParticipar && (
+            soyParticipante ? (
+              <form action={liberarTarea}>
+                <input type="hidden" name="tarea_id" value={id} />
+                <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }}>Salir</button>
+              </form>
+            ) : lleno ? (
+              <span className="insignia">Cupo completo</span>
+            ) : (
+              <form action={tomarTarea}>
+                <input type="hidden" name="tarea_id" value={id} />
+                <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="ok" size={16} /> Unirme</button>
+              </form>
+            )
+          )}
+        </div>
+        {personas.length === 0 ? (
+          <p className="muted" style={{ margin: '8px 0 0' }}>Nadie se ha unido todavía.</p>
+        ) : (
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
+            {personas.map((p) => (
+              <li key={p.perfil_id}>
+                {p.perfiles?.nombre_completo || '—'}
+                {tarea.asignado_a === p.perfil_id && <span className="insignia ok" style={{ marginLeft: 8 }}>Responsable</span>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {puedeEditar && (
