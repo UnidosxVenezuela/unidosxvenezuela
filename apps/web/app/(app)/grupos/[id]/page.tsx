@@ -6,7 +6,7 @@ import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -14,7 +14,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const grupoId = params.id;
 
   const { data: grupo } = await supabase.from('grupos')
-    .select('id, nombre, area, descripcion, lider_id, whatsapp').eq('id', grupoId).single();
+    .select('id, nombre, area, descripcion, lider_id, whatsapp, abierto').eq('id', grupoId).single();
 
   if (!grupo) {
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
@@ -45,6 +45,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
   const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
+  const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
@@ -78,7 +79,10 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
       {/* Cabecera */}
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{grupo.nombre}</h1>
-        <span className="insignia">{etiquetaArea(grupo.area)}</span>
+        <span className="fila" style={{ gap: 6 }}>
+          {!grupo.abierto && <span className="insignia aviso">Privado</span>}
+          <span className="insignia">{etiquetaArea(grupo.area)}</span>
+        </span>
       </div>
       <p className="muted" style={{ marginTop: 4 }}>{grupo.descripcion || 'Sin descripción'}</p>
       <div className="fila" style={{ marginTop: 4 }}>
@@ -90,6 +94,12 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         <Link className="btn" href={'/grupos/' + grupoId + '/pizarra'}>
           <Icono nombre="pizarra" /> Pizarra
         </Link>
+        {grupo.abierto && !soyMiembro && perfil?.rol !== 'observador' && (
+          <form action={unirmeGrupo}>
+            <input type="hidden" name="grupo_id" value={grupoId} />
+            <button className="btn btn-acento"><Icono nombre="mas" /> Unirme</button>
+          </form>
+        )}
       </div>
 
       <div className={puedeGestionar ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
@@ -281,6 +291,24 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   {candidatos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Agregar</button>
+              </form>
+            </div>
+
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="grupos" size={16} /> Visibilidad</h3>
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
+                {grupo.abierto ? 'Abierto: cualquiera lo ve y puede unirse.' : 'Privado: solo lo ven sus miembros; alta por invitación.'}
+              </p>
+              <form action={cambiarVisibilidadGrupo}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <input type="hidden" name="abierto" value={(!grupo.abierto).toString()} />
+                <BotonConfirmar
+                  mensaje={grupo.abierto
+                    ? '¿Hacer este grupo privado? Dejará de ser visible para quienes no son miembros.'
+                    : '¿Hacer este grupo abierto? Cualquiera podrá verlo y unirse.'}
+                  className="btn" style={{ width: '100%' }}>
+                  {grupo.abierto ? 'Hacer privado' : 'Hacer abierto'}
+                </BotonConfirmar>
               </form>
             </div>
           </aside>

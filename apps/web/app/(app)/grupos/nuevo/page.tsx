@@ -31,6 +31,13 @@ export default async function NuevoGrupoPage() {
           <input id="whatsapp" name="whatsapp" className="input" type="url"
             placeholder="https://chat.whatsapp.com/..." />
         </div>
+        <div className="campo">
+          <label htmlFor="visibilidad">Visibilidad</label>
+          <select id="visibilidad" name="visibilidad" className="input" defaultValue="abierto">
+            <option value="abierto">Abierto — cualquiera puede verlo y unirse</option>
+            <option value="privado">Privado — solo miembros invitados lo ven</option>
+          </select>
+        </div>
         <button className="btn btn-primario" type="submit">Crear grupo</button>
       </form>
     </div>

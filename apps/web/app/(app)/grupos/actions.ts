@@ -19,6 +19,7 @@ export async function crearGrupo(formData: FormData) {
     area: String(formData.get('area') ?? ''),
     descripcion: (String(formData.get('descripcion') ?? '') || null),
     whatsapp: whatsappOpcional(formData.get('whatsapp')),
+    abierto: String(formData.get('visibilidad')) !== 'privado',
   }).select('id').single();
 
   if (error) throw new Error('No se pudo crear el grupo: ' + error.message);
@@ -112,6 +113,31 @@ export async function quitarMiembro(formData: FormData) {
   if (error) throw new Error('No se pudo quitar el miembro: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Miembro quitado');
+}
+
+export async function unirmeGrupo(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  // La RLS solo permite auto-unirse a grupos abiertos (y no vetados).
+  const { error } = await supabase.from('miembros_grupo')
+    .insert({ grupo_id: grupoId, perfil_id: user.id });
+  if (error) throw new Error('No se pudo unir al grupo: ' + error.message);
+  revalidatePath('/grupos');
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Te uniste al grupo');
+}
+
+export async function cambiarVisibilidadGrupo(formData: FormData) {
+  const supabase = await createClient();
+  const grupoId = String(formData.get('grupo_id'));
+  const abierto = String(formData.get('abierto')) === 'true';
+  const { error } = await supabase.from('grupos').update({ abierto }).eq('id', grupoId);
+  if (error) throw new Error('No se pudo cambiar la visibilidad: ' + error.message);
+  revalidatePath('/grupos');
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, abierto ? 'Grupo ahora abierto' : 'Grupo ahora privado');
 }
 
 export async function banearMiembro(formData: FormData) {
