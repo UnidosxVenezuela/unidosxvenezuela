@@ -26,5 +26,27 @@ enable_signup = true
 [auth.email]
 enable_confirmations = false  # true en producción
 
+# Plantillas de correo en español (mismas que se pegan en el Dashboard →
+# Authentication → Emails → Templates). content_path es relativo a la raíz del repo.
+[auth.email.template.recovery]
+subject = "Restablecé tu contraseña — UnidosXVenezuela"
+content_path = "./supabase/templates/recuperar.html"
+
+[auth.email.template.confirmation]
+subject = "Confirmá tu cuenta — UnidosXVenezuela"
+content_path = "./supabase/templates/confirmar.html"
+
+[auth.email.template.magic_link]
+subject = "Tu enlace de acceso — UnidosXVenezuela"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.invite]
+subject = "Te invitaron a UnidosXVenezuela"
+content_path = "./supabase/templates/invitacion.html"
+
+[auth.email.template.email_change]
+subject = "Confirmá tu nuevo correo — UnidosXVenezuela"
+content_path = "./supabase/templates/cambio-correo.html"
+
 [realtime]
 enabled = true
