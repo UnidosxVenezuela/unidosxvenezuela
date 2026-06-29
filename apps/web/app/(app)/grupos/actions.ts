@@ -54,6 +54,30 @@ export async function programarReunion(formData: FormData) {
   revalidatePath('/grupos/' + grupoId);
 }
 
+export async function fijarMensaje(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const contenido = String(formData.get('contenido') ?? '').trim();
+  if (!contenido) throw new Error('El mensaje no puede estar vacío.');
+  if (contenido.length > 2000) throw new Error('El mensaje es demasiado largo (máx. 2000).');
+  // La RLS exige ser líder del grupo / coordinación; si no, devuelve error.
+  const { error } = await supabase.from('mensajes_fijados')
+    .insert({ grupo_id: grupoId, autor_id: user.id, contenido });
+  if (error) throw new Error('No se pudo fijar el mensaje: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+}
+
+export async function desfijarMensaje(formData: FormData) {
+  const supabase = await createClient();
+  const grupoId = String(formData.get('grupo_id'));
+  const { error } = await supabase.from('mensajes_fijados').delete()
+    .eq('id', String(formData.get('mensaje_id')));
+  if (error) throw new Error('No se pudo quitar el mensaje: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+}
+
 export async function agregarMiembro(formData: FormData) {
   const supabase = await createClient();
   const grupoId = String(formData.get('grupo_id'));

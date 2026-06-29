@@ -92,6 +92,14 @@ export interface Reunion {
 
 export interface ConteoMiembros { grupo_id: string; total: number; }
 
+export interface MensajeFijado {
+  id: string;
+  grupo_id: string;
+  autor_id: string;
+  contenido: string;
+  creado_en: string;
+}
+
 export type TipoAdjunto = 'imagen' | 'documento' | 'enlace';
 export interface AdjuntoTarea {
   id: string;

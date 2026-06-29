@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, fijarMensaje, desfijarMensaje } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -18,16 +18,20 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
-  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }] = await Promise.all([
+  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
+    supabase.from('mensajes_fijados')
+      .select('id, contenido, creado_en, perfiles(nombre_completo)').eq('grupo_id', grupoId)
+      .order('creado_en', { ascending: false }),
   ]);
   const miembros = (miembrosRaw ?? []) as any[];
   const reuniones = (reunionesRaw ?? []) as any[];
+  const fijados = (fijadosRaw ?? []) as any[];
 
   const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
@@ -49,6 +53,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   return (
     <div>
       <RealtimeRefrescar tabla="reuniones" filtro={'grupo_id=eq.' + grupoId} />
+      <RealtimeRefrescar tabla="mensajes_fijados" filtro={'grupo_id=eq.' + grupoId} />
       <Link href="/grupos" className="muted">← Grupos</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{grupo.nombre}</h1>
@@ -60,6 +65,37 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         <a className="btn btn-acento" href={waHref} target="_blank" rel="noopener noreferrer">
           <Icono nombre="whatsapp" /> WhatsApp del grupo
         </a>
+      )}
+
+      {/* Mensajes fijados (anuncios) — líder/coordinación/admin pueden dejarlos */}
+      {(fijados.length > 0 || puedeGestionar) && <h2>📌 Anuncios fijados</h2>}
+      {fijados.map((m) => (
+        <div key={m.id} className="tarjeta" style={{ borderLeft: '4px solid var(--amarillo, #FFCE00)' }}>
+          <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ whiteSpace: 'pre-wrap' }}>{m.contenido}</div>
+            {puedeGestionar && (
+              <form action={desfijarMensaje}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <input type="hidden" name="mensaje_id" value={m.id} />
+                <button className="btn btn-peligro" style={{ minHeight: 32, padding: '2px 10px' }}>Quitar</button>
+              </form>
+            )}
+          </div>
+          <div className="muted" style={{ fontSize: '.8rem', marginTop: 6 }}>
+            {m.perfiles?.nombre_completo || '—'} · {new Date(m.creado_en).toLocaleString('es-VE')}
+          </div>
+        </div>
+      ))}
+      {puedeGestionar && (
+        <form action={fijarMensaje} className="tarjeta">
+          <input type="hidden" name="grupo_id" value={grupoId} />
+          <div className="campo">
+            <label htmlFor="contenido">Fijar un anuncio para el grupo</label>
+            <textarea id="contenido" name="contenido" className="input" rows={3} maxLength={2000} required
+              placeholder="Ej.: Reunión obligatoria mañana 9am. Traer listado de damnificados." />
+          </div>
+          <button className="btn btn-primario" type="submit">📌 Fijar anuncio</button>
+        </form>
       )}
 
       {/* Reuniones / videollamadas */}
