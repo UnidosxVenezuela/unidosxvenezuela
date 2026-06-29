@@ -77,11 +77,16 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         <span className="insignia">{etiquetaArea(grupo.area)}</span>
       </div>
       <p className="muted" style={{ marginTop: 4 }}>{grupo.descripcion || 'Sin descripción'}</p>
-      {waHref && (
-        <a className="btn btn-acento" href={waHref} target="_blank" rel="noopener noreferrer">
-          <Icono nombre="whatsapp" /> WhatsApp del grupo
-        </a>
-      )}
+      <div className="fila" style={{ marginTop: 4 }}>
+        {waHref && (
+          <a className="btn btn-acento" href={waHref} target="_blank" rel="noopener noreferrer">
+            <Icono nombre="whatsapp" /> WhatsApp del grupo
+          </a>
+        )}
+        <Link className="btn" href={'/grupos/' + grupoId + '/pizarra'}>
+          <Icono nombre="pizarra" /> Pizarra
+        </Link>
+      </div>
 
       <div className={puedeGestionar ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
         {/* ── Columna principal: contenido del grupo ── */}
