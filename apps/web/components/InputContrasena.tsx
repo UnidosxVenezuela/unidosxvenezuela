@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Icono from '@/components/Icono';
 
 /** Input de contraseña con botón "ojo" para mostrar/ocultar lo escrito. */
 export default function InputContrasena({ className, style, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
@@ -10,9 +11,10 @@ export default function InputContrasena({ className, style, ...props }: React.In
         style={{ paddingRight: 42, ...style }} />
       <button type="button" onClick={() => setVer((v) => !v)}
         aria-label={ver ? 'Ocultar contraseña' : 'Mostrar contraseña'} title={ver ? 'Ocultar' : 'Mostrar'}
-        style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
-          background: 'none', border: 0, padding: 4, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>
-        {ver ? '🙈' : '👁️'}
+        style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+          display: 'flex', alignItems: 'center', background: 'none', border: 0, padding: 6,
+          cursor: 'pointer', color: 'var(--texto-suave)' }}>
+        <Icono nombre={ver ? 'ojo_off' : 'ojo'} size={18} />
       </button>
     </div>
   );
