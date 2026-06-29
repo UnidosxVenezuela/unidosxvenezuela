@@ -49,6 +49,61 @@ export async function cambiarVerificacion(formData: FormData) {
   revalidatePath('/admin/usuarios');
 }
 
+export async function crearUsuario(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, super_admin').eq('id', user.id).single();
+  if (!yo || !['admin', 'coordinador'].includes(yo.rol)) throw new Error('No tienes permisos de coordinación.');
+
+  const nombre = String(formData.get('nombre_completo') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const password = String(formData.get('password') ?? '');
+  const rol = String(formData.get('rol') ?? 'voluntario') as Rol;
+  const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
+
+  if (!nombre) throw new Error('El nombre es obligatorio.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Correo inválido.');
+  if (password.length < 8) throw new Error('La contraseña temporal debe tener al menos 8 caracteres.');
+  // Regla de superadmin: el admin-client saltea el trigger, así que se valida aquí.
+  if (rol === 'admin' && !yo.super_admin) {
+    throw new Error('Solo un superadministrador puede crear administradores.');
+  }
+
+  // Crear el usuario (verificado) requiere service_role.
+  const admin = createAdminClient();
+  const { data: creado, error: e1 } = await admin.auth.admin.createUser({
+    email, password, email_confirm: true, user_metadata: { nombre_completo: nombre },
+  });
+  if (e1 || !creado?.user) throw new Error('No se pudo crear el usuario: ' + (e1?.message ?? 'desconocido'));
+
+  // Ajustar el perfil con el cliente del usuario → el trigger 0022 reaplica
+  // la regla de superadmin como respaldo (defensa en profundidad).
+  const { error: e2 } = await supabase.from('perfiles')
+    .update({ nombre_completo: nombre, rol, verificado: true, organizacion })
+    .eq('id', creado.user.id);
+  if (e2) throw new Error('Usuario creado, pero no se pudo asignar el rol: ' + e2.message);
+
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'crear_usuario', p_entidad_id: creado.user.id, p_metadata: { email, rol },
+  });
+
+  try {
+    await enviarEmail({
+      to: email,
+      subject: 'Tu cuenta en UnidosXVenezuela',
+      html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
+             <p>Ingresá con tu correo y la contraseña temporal que te compartieron, y cambiala al entrar.</p>
+             <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
+    });
+  } catch (e) {
+    console.error('No se pudo enviar el email de bienvenida', e);
+  }
+
+  revalidatePath('/admin/usuarios');
+  redirect('/admin/usuarios');
+}
+
 export async function cambiarRol(formData: FormData) {
   const supabase = await exigirCoordinacion();
   const perfilId = String(formData.get('perfil_id'));

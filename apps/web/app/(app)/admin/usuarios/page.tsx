@@ -36,7 +36,10 @@ export default async function AdminUsuariosPage() {
     <div>
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Administración de usuarios</h1>
-        <Link className="btn" href="/admin/areas">Áreas</Link>
+        <div className="fila">
+          <Link className="btn btn-primario" href="/admin/usuarios/nuevo">+ Crear usuario</Link>
+          <Link className="btn" href="/admin/areas">Áreas</Link>
+        </div>
       </div>
       <p className="muted">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
 
