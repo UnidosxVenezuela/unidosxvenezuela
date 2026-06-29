@@ -11,7 +11,7 @@ export default function Login() {
 
   // Si ya hay sesión, ir directo a Mis tareas.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { if (data.user) router.replace('/tareas'); });
+    supabase.auth.getUser().then(({ data }) => { if (data.user) router.replace('/panel'); });
   }, []);
 
   async function entrar() {
@@ -20,7 +20,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setCargando(false);
     if (error) return setError(error.message);
-    router.replace('/tareas');
+    router.replace('/panel');
   }
 
   return (
