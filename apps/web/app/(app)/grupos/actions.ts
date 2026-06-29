@@ -62,9 +62,15 @@ export async function fijarMensaje(formData: FormData) {
   const contenido = String(formData.get('contenido') ?? '').trim();
   if (!contenido) throw new Error('El mensaje no puede estar vacío.');
   if (contenido.length > 2000) throw new Error('El mensaje es demasiado largo (máx. 2000).');
+  // Adjunto opcional (ya subido al bucket 'grupos' por el cliente).
+  const adjPath = String(formData.get('adjunto_path') ?? '').trim() || null;
+  const adjTipo = String(formData.get('adjunto_tipo') ?? '').trim() || null;
+  const adjNombre = String(formData.get('adjunto_nombre') ?? '').trim() || null;
   // La RLS exige ser líder del grupo / coordinación; si no, devuelve error.
-  const { error } = await supabase.from('mensajes_fijados')
-    .insert({ grupo_id: grupoId, autor_id: user.id, contenido });
+  const { error } = await supabase.from('mensajes_fijados').insert({
+    grupo_id: grupoId, autor_id: user.id, contenido,
+    adjunto_path: adjPath, adjunto_tipo: adjTipo, adjunto_nombre: adjNombre,
+  });
   if (error) throw new Error('No se pudo fijar el mensaje: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
 }
@@ -72,9 +78,12 @@ export async function fijarMensaje(formData: FormData) {
 export async function desfijarMensaje(formData: FormData) {
   const supabase = await createClient();
   const grupoId = String(formData.get('grupo_id'));
-  const { error } = await supabase.from('mensajes_fijados').delete()
-    .eq('id', String(formData.get('mensaje_id')));
+  const mensajeId = String(formData.get('mensaje_id'));
+  const { data: row } = await supabase.from('mensajes_fijados')
+    .select('adjunto_path').eq('id', mensajeId).single();
+  const { error } = await supabase.from('mensajes_fijados').delete().eq('id', mensajeId);
   if (error) throw new Error('No se pudo quitar el mensaje: ' + error.message);
+  if (row?.adjunto_path) await supabase.storage.from('grupos').remove([row.adjunto_path]);
   revalidatePath('/grupos/' + grupoId);
 }
 
