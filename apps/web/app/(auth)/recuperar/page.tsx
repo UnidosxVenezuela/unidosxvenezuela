@@ -7,6 +7,7 @@ import Captcha, { captchaActivo } from '@/components/Captcha';
 export default function RecuperarPage() {
   const [email, setEmail] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaNonce, setCaptchaNonce] = useState(0);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -24,7 +25,11 @@ export default function RecuperarPage() {
       captchaToken: captchaToken ?? undefined,
     });
     setCargando(false);
-    if (error) return setError(error.message);
+    if (error) {
+      setCaptchaToken(null);
+      setCaptchaNonce((n) => n + 1);
+      return setError(error.message);
+    }
     setEnviado(true);
   }
 
@@ -45,7 +50,7 @@ export default function RecuperarPage() {
               <input id="email" className="input" type="email" autoComplete="email"
                 value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
-            <Captcha onToken={onToken} />
+            <Captcha key={captchaNonce} onToken={onToken} />
             <button className="btn btn-primario" type="submit" disabled={cargando}>
               {cargando ? 'Enviando…' : 'Enviar enlace'}
             </button>

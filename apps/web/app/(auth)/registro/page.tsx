@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Captcha, { captchaActivo } from '@/components/Captcha';
+import InputContrasena from '@/components/InputContrasena';
 
 export default function RegistroPage() {
   const router = useRouter();
   const supabase = createClient();
   const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '' });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -36,7 +38,11 @@ export default function RegistroPage() {
       },
     });
     setCargando(false);
-    if (error) return setError(error.message);
+    if (error) {
+      setCaptchaToken(null);
+      setCaptchaNonce((n) => n + 1);
+      return setError(error.message);
+    }
     setOk(true);
     // Si la confirmación por email está desactivada (dev), entra directo.
     router.push('/dashboard');
@@ -88,9 +94,9 @@ export default function RegistroPage() {
         </div>
         <div className="campo">
           <label htmlFor="password">Contraseña</label>
-          <input id="password" className="input" type="password" autoComplete="new-password" minLength={8} value={form.password} onChange={(e) => set('password', e.target.value)} required />
+          <InputContrasena id="password" autoComplete="new-password" minLength={8} value={form.password} onChange={(e) => set('password', e.target.value)} required />
         </div>
-        <Captcha onToken={onToken} />
+        <Captcha key={captchaNonce} onToken={onToken} />
         <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Creando…' : 'Crear cuenta'}
         </button>

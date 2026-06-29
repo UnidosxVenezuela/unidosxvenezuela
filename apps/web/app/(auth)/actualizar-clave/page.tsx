@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import InputContrasena from '@/components/InputContrasena';
 
 type Fase =
   | { t: 'verificando' }
@@ -99,12 +100,12 @@ export default function ActualizarClavePage() {
             <p className="muted" style={{ marginTop: 0 }}>Abriste este enlace desde tu correo. Definí tu nueva contraseña.</p>
             <div className="campo">
               <label htmlFor="pass">Nueva contraseña</label>
-              <input id="pass" className="input" type="password" autoComplete="new-password"
+              <InputContrasena id="pass" autoComplete="new-password"
                 minLength={8} value={pass} onChange={(e) => setPass(e.target.value)} required />
             </div>
             <div className="campo">
               <label htmlFor="pass2">Repetir contraseña</label>
-              <input id="pass2" className="input" type="password" autoComplete="new-password"
+              <InputContrasena id="pass2" autoComplete="new-password"
                 minLength={8} value={pass2} onChange={(e) => setPass2(e.target.value)} required />
             </div>
             <button className="btn btn-primario" type="submit" disabled={cargando}>

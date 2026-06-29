@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import Captcha, { captchaActivo } from '@/components/Captcha';
+import InputContrasena from '@/components/InputContrasena';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaNonce, setCaptchaNonce] = useState(0); // remonta el widget para pedir token nuevo
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
@@ -26,7 +28,12 @@ export default function LoginPage() {
       options: captchaToken ? { captchaToken } : undefined,
     });
     setCargando(false);
-    if (error) return setError(error.message);
+    if (error) {
+      // El token de Turnstile es de un solo uso: tras fallar hay que pedir uno nuevo.
+      setCaptchaToken(null);
+      setCaptchaNonce((n) => n + 1);
+      return setError(error.message);
+    }
     router.push('/dashboard');
     router.refresh();
   }
@@ -45,10 +52,10 @@ export default function LoginPage() {
         </div>
         <div className="campo">
           <label htmlFor="password">Contraseña</label>
-          <input id="password" className="input" type="password" autoComplete="current-password"
+          <InputContrasena id="password" autoComplete="current-password"
                  value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
-        <Captcha onToken={onToken} />
+        <Captcha key={captchaNonce} onToken={onToken} />
         <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>
