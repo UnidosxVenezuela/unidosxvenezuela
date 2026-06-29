@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePrioridad, claseEstado } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import FijarAnuncio from './FijarAnuncio';
@@ -19,7 +19,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
-  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }] = await Promise.all([
+  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
@@ -29,10 +29,14 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     supabase.from('mensajes_fijados')
       .select('id, contenido, creado_en, adjunto_path, adjunto_tipo, adjunto_nombre, perfiles(nombre_completo)')
       .eq('grupo_id', grupoId).order('creado_en', { ascending: false }),
+    supabase.from('tareas')
+      .select('id, titulo, estado, prioridad').eq('grupo_id', grupoId)
+      .order('creado_en', { ascending: false }),
   ]);
   const miembros = (miembrosRaw ?? []) as any[];
   const reuniones = (reunionesRaw ?? []) as any[];
   const fijados = (fijadosRaw ?? []) as any[];
+  const tareas = (tareasRaw ?? []) as any[];
 
   const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
@@ -113,6 +117,31 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             );
           })}
 
+          {/* Tareas del grupo */}
+          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="tareas" size={20} /> Tareas del grupo</h2>
+          <div className="tarjeta">
+            {tareas.length === 0 ? (
+              <p className="muted" style={{ margin: 0 }}>Este grupo no tiene tareas todavía.</p>
+            ) : (
+              <table>
+                <thead><tr><th>Tarea</th><th>Prioridad</th><th>Estado</th></tr></thead>
+                <tbody>
+                  {tareas.map((t) => (
+                    <tr key={t.id}>
+                      <td><Link href={'/tareas/' + t.id}>{t.titulo}</Link></td>
+                      <td><span className={'insignia ' + clasePrioridad(t.prioridad)}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD] ?? t.prioridad}</span></td>
+                      <td><span className={'insignia ' + claseEstado(t.estado)}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO] ?? t.estado}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <div className="fila" style={{ marginTop: 10, justifyContent: 'space-between' }}>
+              <Link className="muted" href={'/tareas?grupo=' + grupoId}>Ver todas →</Link>
+              {puedeGestionar && <Link className="btn" href="/tareas/nueva"><Icono nombre="mas" size={16} /> Nueva tarea</Link>}
+            </div>
+          </div>
+
           {/* Videollamadas */}
           <h2 className="fila" style={{ gap: 6 }}><Icono nombre="video" size={20} /> Videollamadas</h2>
           {reuniones.length === 0 ? (
@@ -185,6 +214,16 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             </div>
 
             <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
+              <form action={guardarWhatsappGrupo}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
+                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
+                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
+              </form>
+            </div>
+
+            <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="video" size={16} /> Programar videollamada</h3>
               <form action={programarReunion}>
                 <input type="hidden" name="grupo_id" value={grupoId} />
@@ -205,16 +244,6 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   {candidatos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Agregar</button>
-              </form>
-            </div>
-
-            <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
-              <form action={guardarWhatsappGrupo}>
-                <input type="hidden" name="grupo_id" value={grupoId} />
-                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
-                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
-                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
               </form>
             </div>
           </aside>
