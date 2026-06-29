@@ -6,6 +6,7 @@ import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado } from './actions';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 
 export default async function AdminUsuariosPage() {
   const { user, perfil: yo } = await requireCoordinacion();
@@ -49,7 +50,7 @@ export default async function AdminUsuariosPage() {
         <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
           {rolesSelect.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
         </select>
-        <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
+        <BotonConfirmar mensaje={'¿Cambiar el rol de ' + (p.nombre_completo || 'esta persona') + '?'} className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</BotonConfirmar>
       </form>
     );
   };

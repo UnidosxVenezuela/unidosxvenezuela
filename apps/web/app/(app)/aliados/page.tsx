@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import type { EndpointAliado } from '@unidos/types';
 import { crearEndpoint, eliminarEndpoint } from './actions';
 
@@ -67,7 +68,7 @@ export default async function AliadosPage() {
                 {(esAdmin || e.creado_por === user!.id) && (
                   <form action={eliminarEndpoint}>
                     <input type="hidden" name="id" value={e.id} />
-                    <button className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></button>
+                    <BotonConfirmar mensaje="¿Eliminar este contacto aliado?" className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
                   </form>
                 )}
               </div>

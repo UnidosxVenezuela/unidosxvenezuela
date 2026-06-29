@@ -8,6 +8,7 @@ import {
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import SubirAdjunto from './SubirAdjunto';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, eliminarAdjunto, tomarTarea, liberarTarea } from '../actions';
 
 export default async function TareaDetallePage({ params }: { params: { id: string } }) {
@@ -168,7 +169,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               <form action={eliminarAdjunto}>
                 <input type="hidden" name="tarea_id" value={id} />
                 <input type="hidden" name="adjunto_id" value={a.id} />
-                <button className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></button>
+                <BotonConfirmar mensaje={'¿Eliminar el adjunto "' + a.nombre + '"?'} className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
               </form>
             )}
           </div>

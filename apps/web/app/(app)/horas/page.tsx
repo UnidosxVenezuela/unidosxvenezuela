@@ -2,6 +2,7 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
 import Icono from '@/components/Icono';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import { registrarHoras, eliminarHoras } from './actions';
 
 export default async function HorasPage() {
@@ -66,7 +67,7 @@ export default async function HorasPage() {
                   <td>
                     <form action={eliminarHoras}>
                       <input type="hidden" name="id" value={r.id} />
-                      <button className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></button>
+                      <BotonConfirmar mensaje="¿Eliminar este registro de horas?" className="btn" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Eliminar"><Icono nombre="basura" size={16} /></BotonConfirmar>
                     </form>
                   </td>
                 </tr>

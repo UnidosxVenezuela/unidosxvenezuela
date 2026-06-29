@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import FijarAnuncio from './FijarAnuncio';
 import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje } from '../actions';
 
@@ -99,9 +100,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     <form action={desfijarMensaje}>
                       <input type="hidden" name="grupo_id" value={grupoId} />
                       <input type="hidden" name="mensaje_id" value={m.id} />
-                      <button className="btn btn-peligro" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Quitar anuncio">
+                      <BotonConfirmar mensaje="¿Quitar este anuncio fijado?" className="btn btn-peligro" style={{ minHeight: 32, padding: '2px 10px' }} aria-label="Quitar anuncio">
                         <Icono nombre="basura" size={15} />
-                      </button>
+                      </BotonConfirmar>
                     </form>
                   )}
                 </div>
@@ -195,7 +196,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                         <form action={quitarMiembro}>
                           <input type="hidden" name="grupo_id" value={grupoId} />
                           <input type="hidden" name="perfil_id" value={m.perfil_id} />
-                          <button className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Quitar</button>
+                          <BotonConfirmar mensaje={'¿Quitar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo?'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Quitar</BotonConfirmar>
                         </form>
                       </td>
                     )}
