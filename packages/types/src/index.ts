@@ -112,6 +112,14 @@ export interface AdjuntoTarea {
   creado_en: string;
 }
 
+export interface SolicitudAliado {
+  id: string;
+  perfil_id: string;
+  estado: 'pendiente' | 'aprobada';
+  creado_en: string;
+  resuelto_en: string | null;
+}
+
 export interface EndpointAliado {
   id: string;
   plataforma: string;

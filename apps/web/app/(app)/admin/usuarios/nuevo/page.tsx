@@ -7,8 +7,9 @@ import { crearUsuario } from '../actions';
 export default async function CrearUsuarioPage() {
   const { perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
-  // El rol "admin" solo lo puede asignar un superadministrador.
-  const rolesAsignables = ROLES.filter((r) => r !== 'admin' || esSuper);
+  // "admin" solo lo asigna un superadmin; "aliado" va por doble aprobación (no acá).
+  const rolesAsignables = ROLES.filter((r) =>
+    r !== 'lider_plataforma_aliada' && (r !== 'admin' || esSuper));
 
   return (
     <div>
@@ -50,6 +51,9 @@ export default async function CrearUsuarioPage() {
             🔒 Solo un superadministrador puede crear administradores.
           </p>
         )}
+        <p className="muted" style={{ fontSize: '.85rem', marginTop: 0 }}>
+          Para un <strong>líder de plataforma aliada</strong>: creá la cuenta con otro rol y proponela en la sección “Aliados” (requiere doble aprobación).
+        </p>
         <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Crear usuario</button>
       </form>
     </div>

@@ -69,6 +69,10 @@ export async function crearUsuario(formData: FormData) {
   if (rol === 'admin' && !yo.super_admin) {
     throw new Error('Solo un superadministrador puede crear administradores.');
   }
+  // El rol de aliado no se asigna directo: va por doble aprobación.
+  if (rol === 'lider_plataforma_aliada') {
+    throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: creá la cuenta con otro rol y luego proponela en "Aliados".');
+  }
 
   // Crear el usuario (verificado) requiere service_role.
   const admin = createAdminClient();
@@ -102,6 +106,23 @@ export async function crearUsuario(formData: FormData) {
 
   revalidatePath('/admin/usuarios');
   redirect('/admin/usuarios');
+}
+
+export async function proponerAliado(formData: FormData) {
+  const supabase = await exigirCoordinacion();
+  const perfilId = String(formData.get('perfil_id'));
+  // El RPC exige rol admin y registra al proponente como 1ª aprobación.
+  const { error } = await supabase.rpc('proponer_aliado', { p_perfil: perfilId });
+  if (error) throw new Error('No se pudo proponer: ' + error.message);
+  revalidatePath('/admin/usuarios');
+}
+
+export async function aprobarAliado(formData: FormData) {
+  const supabase = await exigirCoordinacion();
+  const solicitudId = String(formData.get('solicitud_id'));
+  const { error } = await supabase.rpc('aprobar_aliado', { p_solicitud: solicitudId });
+  if (error) throw new Error('No se pudo aprobar: ' + error.message);
+  revalidatePath('/admin/usuarios');
 }
 
 export async function cambiarRol(formData: FormData) {

@@ -3,12 +3,13 @@ import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, cambiarRol } from './actions';
+import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado } from './actions';
 import Icono from '@/components/Icono';
 
 export default async function AdminUsuariosPage() {
-  const { perfil: yo } = await requireCoordinacion();
+  const { user, perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
+  const esAdmin = yo?.rol === 'admin';
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
     .select('id, nombre_completo, telefono, rol, verificado, super_admin, organizacion, motivo, creado_en')
@@ -16,16 +17,36 @@ export default async function AdminUsuariosPage() {
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
 
+  // Flujo de aliados (doble aprobación) — solo administradores.
+  let solicitudes: any[] = [];
+  if (esAdmin) {
+    const { data: sol } = await supabase.from('solicitudes_aliado')
+      .select('id, perfil_id, creado_en, perfiles(nombre_completo), aprobaciones_aliado(admin_id)')
+      .eq('estado', 'pendiente').order('creado_en');
+    solicitudes = sol ?? [];
+  }
+  const idsConSolicitud = new Set(solicitudes.map((s) => s.perfil_id));
+  const candidatosAliado = perfiles.filter(
+    (p) => !['admin', 'lider_plataforma_aliada'].includes(p.rol) && p.id !== user!.id && !idsConSolicitud.has(p.id),
+  );
+
+  // En el selector de rol no aparece "aliado": ese rol va por doble aprobación.
+  const rolesSelect = ROLES.filter((r) => r !== 'lider_plataforma_aliada');
+
   const selectorRol = (p: Perfil) => {
     // Solo el superadmin puede cambiar el rol de un administrador.
     if (p.rol === 'admin' && !esSuper) {
       return <span className="insignia">{ETIQUETA_ROL[p.rol]} 🔒</span>;
     }
+    // El rol de aliado no se edita acá (se otorga/quita por su flujo).
+    if (p.rol === 'lider_plataforma_aliada') {
+      return <span className="insignia">{ETIQUETA_ROL[p.rol]}</span>;
+    }
     return (
       <form action={cambiarRol} className="fila">
         <input type="hidden" name="perfil_id" value={p.id} />
         <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
-          {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
+          {rolesSelect.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
         </select>
         <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</button>
       </form>
@@ -77,6 +98,58 @@ export default async function AdminUsuariosPage() {
             </div>
           </div>
         ))
+      )}
+
+      {/* Líderes de plataforma aliada — doble aprobación (solo admins) */}
+      {esAdmin && (
+        <>
+          <h2 style={{ marginBottom: 0 }}>
+            Líderes de plataforma aliada{' '}
+            <span className="muted" style={{ fontSize: '.9rem', fontWeight: 400 }}>· doble aprobación</span>
+          </h2>
+          <p className="muted">
+            El acceso a la base de endpoints aliados se otorga con <strong>2 administradores</strong> (o 1 si sos superadmin).
+          </p>
+
+          <form action={proponerAliado} className="tarjeta fila">
+            <select name="perfil_id" className="input" required defaultValue="" style={{ maxWidth: 360 }}>
+              <option value="" disabled>Elegí a quién proponer…</option>
+              {candidatosAliado.map((p) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+            </select>
+            <button className="btn btn-primario" type="submit">Proponer como aliado</button>
+          </form>
+
+          {solicitudes.length === 0 ? (
+            <div className="tarjeta"><span className="muted">No hay propuestas pendientes.</span></div>
+          ) : (
+            solicitudes.map((s) => {
+              const aprob = (s.aprobaciones_aliado ?? []) as { admin_id: string }[];
+              const yaAprobe = aprob.some((a) => a.admin_id === user!.id);
+              return (
+                <div className="tarjeta" key={s.id}>
+                  <div className="fila" style={{ justifyContent: 'space-between' }}>
+                    <div>
+                      <strong>{s.perfiles?.nombre_completo || '—'}</strong>
+                      <div className="muted" style={{ fontSize: '.85rem' }}>
+                        {aprob.length}/2 aprobaciones{esSuper ? ' · como superadmin, tu aprobación basta' : ''}
+                      </div>
+                    </div>
+                    {yaAprobe ? (
+                      <span className="insignia ok">Ya aprobaste</span>
+                    ) : (
+                      <form action={aprobarAliado}>
+                        <input type="hidden" name="solicitud_id" value={s.id} />
+                        <button className="btn btn-acento" style={{ minHeight: 34, padding: '4px 14px' }}>
+                          <Icono nombre="ok" size={16} /> Aprobar
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </>
       )}
 
       {/* Listado general */}
