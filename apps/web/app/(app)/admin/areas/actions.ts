@@ -1,5 +1,6 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
 function slug(s: string): string {
@@ -22,4 +23,5 @@ export async function crearArea(formData: FormData) {
   if (error) throw new Error('No se pudo crear el área (¿clave repetida o sin permisos de admin?): ' + error.message);
   revalidatePath('/admin/areas');
   revalidatePath('/grupos/nuevo');
+  redirect('/admin/areas'); // navegación limpia tras crear (evita el re-render in-place frágil)
 }
