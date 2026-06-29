@@ -19,6 +19,7 @@ export default function NavLateral({ coord, aliados }: { coord: boolean; aliados
   let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
+  if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
 
   return (
     <nav className="nav-lateral">
