@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail } from '@/lib/email';
+import { redirigirOk } from '@/lib/flash';
 import type { Rol } from '@unidos/types';
 
 async function exigirCoordinacion() {
@@ -47,6 +48,7 @@ export async function cambiarVerificacion(formData: FormData) {
     }
   }
   revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', verificado ? 'Usuario verificado' : 'Verificación quitada');
 }
 
 export async function crearUsuario(formData: FormData) {
@@ -105,7 +107,7 @@ export async function crearUsuario(formData: FormData) {
   }
 
   revalidatePath('/admin/usuarios');
-  redirect('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Usuario creado');
 }
 
 export async function proponerAliado(formData: FormData) {
@@ -115,6 +117,7 @@ export async function proponerAliado(formData: FormData) {
   const { error } = await supabase.rpc('proponer_aliado', { p_perfil: perfilId });
   if (error) throw new Error('No se pudo proponer: ' + error.message);
   revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Propuesta registrada');
 }
 
 export async function aprobarAliado(formData: FormData) {
@@ -123,6 +126,7 @@ export async function aprobarAliado(formData: FormData) {
   const { error } = await supabase.rpc('aprobar_aliado', { p_solicitud: solicitudId });
   if (error) throw new Error('No se pudo aprobar: ' + error.message);
   revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Aprobación registrada');
 }
 
 export async function cambiarRol(formData: FormData) {
@@ -136,4 +140,5 @@ export async function cambiarRol(formData: FormData) {
     p_accion: 'cambio_rol', p_entidad_id: perfilId, p_metadata: { valor: rol },
   });
   revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Rol actualizado');
 }

@@ -4,7 +4,9 @@ import CerrarSesion from '@/components/CerrarSesion';
 import CampanaNotificaciones from '@/components/CampanaNotificaciones';
 import NavLateral from '@/components/NavLateral';
 import RegistrarActividad from '@/components/RegistrarActividad';
+import Toast from '@/components/Toast';
 import Icono from '@/components/Icono';
+import { Suspense } from 'react';
 
 function iniciales(nombre?: string | null, email?: string | null) {
   const base = ((nombre || email || '?').trim()) || '?';
@@ -40,6 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="app-shell">
+      <Suspense fallback={null}><Toast /></Suspense>
       <RegistrarActividad />
       <aside className="sidebar">
         <div className="tricolor" />

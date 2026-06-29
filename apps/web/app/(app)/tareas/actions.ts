@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { redirigirOk } from '@/lib/flash';
 import type { EstadoTarea, Prioridad } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null): string { return String(v ?? '').trim(); }
@@ -41,7 +42,7 @@ export async function crearTarea(formData: FormData) {
   // El asignado inicial cuenta como participante (para el cupo).
   if (asignadoA) await supabase.from('tarea_personas').insert({ tarea_id: data!.id, perfil_id: asignadoA });
   revalidatePath('/tareas');
-  redirect('/tareas/' + data!.id);
+  redirigirOk('/tareas/' + data!.id, 'Tarea creada');
 }
 
 export async function cambiarEstado(formData: FormData) {
@@ -52,6 +53,7 @@ export async function cambiarEstado(formData: FormData) {
   if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
+  redirigirOk('/tareas/' + id, 'Estado actualizado');
 }
 
 export async function actualizarAsignacion(formData: FormData) {
@@ -67,6 +69,7 @@ export async function actualizarAsignacion(formData: FormData) {
   if (asignado) await supabase.from('tarea_personas').upsert({ tarea_id: id, perfil_id: asignado }, { onConflict: 'tarea_id,perfil_id', ignoreDuplicates: true });
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
+  redirigirOk('/tareas/' + id, 'Cambios guardados');
 }
 
 export async function tomarTarea(formData: FormData) {

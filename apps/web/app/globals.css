@@ -165,3 +165,11 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
   border: 1px solid var(--borde); border-radius: 10px; text-decoration: none; color: var(--texto); }
 .adjunto-chip:hover { background: #f8fafc; }
 @media (max-width: 980px) { .grupo-grid { grid-template-columns: 1fr; } .grupo-aside { position: static; } }
+
+/* Aviso flotante (toast) */
+.toast { position: fixed; bottom: 20px; right: 20px; z-index: 1000; max-width: 360px;
+  padding: 12px 18px; border-radius: 10px; color: #fff; font-weight: 600;
+  box-shadow: 0 8px 28px rgba(16,24,40,.22); animation: toastIn .2s ease; }
+.toast-ok { background: #16a34a; }
+.toast-err { background: var(--rojo); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }

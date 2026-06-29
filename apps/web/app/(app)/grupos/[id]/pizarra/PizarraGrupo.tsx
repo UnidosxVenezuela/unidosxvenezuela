@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase/client';
 
@@ -16,16 +16,18 @@ export default function PizarraGrupo({ grupoId, escenaInicial, miId }: { grupoId
   const apiRef = useRef<any>(null);
   const primera = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [guardado, setGuardado] = useState(false);
 
   const onChange = useCallback((elements: readonly any[], appState: any) => {
     if (primera.current) { primera.current = false; return; } // ignora el onChange de carga
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
+    timer.current = setTimeout(async () => {
       const escena = { elements, appState: { viewBackgroundColor: appState?.viewBackgroundColor ?? '#ffffff' } };
-      void supabase.from('pizarra_grupo').upsert(
+      const { error } = await supabase.from('pizarra_grupo').upsert(
         { grupo_id: grupoId, escena, actualizado_por: miId, actualizado_en: new Date().toISOString() },
         { onConflict: 'grupo_id' },
       );
+      if (!error) { setGuardado(true); setTimeout(() => setGuardado(false), 1500); }
     }, 1500);
   }, [grupoId, miId, supabase]);
 
@@ -43,7 +45,13 @@ export default function PizarraGrupo({ grupoId, escenaInicial, miId }: { grupoId
   }, [grupoId, miId, supabase]);
 
   return (
-    <div style={{ height: 'calc(100vh - 200px)', minHeight: 460, border: '1px solid var(--borde)', borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: 'calc(100vh - 200px)', minHeight: 460, border: '1px solid var(--borde)', borderRadius: 12, overflow: 'hidden' }}>
+      {guardado && (
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 5, background: '#16a34a', color: '#fff',
+          fontWeight: 600, fontSize: 13, padding: '6px 12px', borderRadius: 999, boxShadow: '0 4px 14px rgba(0,0,0,.18)' }}>
+          Guardado ✓
+        </div>
+      )}
       <Excalidraw
         initialData={escenaInicial ?? undefined}
         excalidrawAPI={(api: any) => { apiRef.current = api; }}

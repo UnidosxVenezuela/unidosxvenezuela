@@ -6,7 +6,7 @@ import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -20,7 +20,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
-  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }] = await Promise.all([
+  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
@@ -33,17 +33,21 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     supabase.from('tareas')
       .select('id, titulo, estado, prioridad').eq('grupo_id', grupoId)
       .not('estado', 'in', '(completada,cancelada)'),
+    supabase.from('miembros_baneados')
+      .select('perfil_id, perfiles(nombre_completo)').eq('grupo_id', grupoId),
   ]);
   const miembros = (miembrosRaw ?? []) as any[];
   const reuniones = (reunionesRaw ?? []) as any[];
   const fijados = (fijadosRaw ?? []) as any[];
+  const baneados = (baneadosRaw ?? []) as any[];
   // Solo pendientes por completar, ordenadas por prioridad (crítica primero).
   const tareas = ((tareasRaw ?? []) as any[])
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
   const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
-  const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id));
+  const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
+  const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
   const waHref = hrefSeguro(grupo.whatsapp);
   const ahora = Date.now();
 
@@ -203,6 +207,13 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                           <input type="hidden" name="perfil_id" value={m.perfil_id} />
                           <BotonConfirmar mensaje={'¿Quitar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo?'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Quitar</BotonConfirmar>
                         </form>
+                        {grupo.lider_id !== m.perfil_id && (
+                          <form action={banearMiembro}>
+                            <input type="hidden" name="grupo_id" value={grupoId} />
+                            <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                            <BotonConfirmar mensaje={'¿Vetar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
+                          </form>
+                        )}
                       </td>
                     )}
                   </tr>
@@ -211,6 +222,24 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               </tbody>
             </table>
           </div>
+
+          {puedeGestionar && baneados.length > 0 && (
+            <>
+              <h2 className="fila" style={{ gap: 6 }}><Icono nombre="usuario" size={20} /> Vetados ({baneados.length})</h2>
+              <div className="tarjeta">
+                {baneados.map((b) => (
+                  <div key={b.perfil_id} className="fila" style={{ justifyContent: 'space-between', borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
+                    <span>{b.perfiles?.nombre_completo || '—'}</span>
+                    <form action={desbanearMiembro}>
+                      <input type="hidden" name="grupo_id" value={grupoId} />
+                      <input type="hidden" name="perfil_id" value={b.perfil_id} />
+                      <button className="btn" style={{ minHeight: 32, padding: '2px 12px' }}>Quitar veto</button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Columna derecha: gestión (líder/coordinación) ── */}

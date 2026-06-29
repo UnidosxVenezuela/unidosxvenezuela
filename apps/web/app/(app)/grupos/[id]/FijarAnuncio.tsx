@@ -43,7 +43,7 @@ export default function FijarAnuncio({ grupoId }: { grupoId: string }) {
       await fijarMensaje(fd);
       setContenido(''); setFile(null);
       if (fileRef.current) fileRef.current.value = '';
-      router.refresh();
+      router.push('/grupos/' + grupoId + '?ok=' + encodeURIComponent('Anuncio fijado'));
     } catch (err: any) {
       if (adjPath) await supabase.storage.from('grupos').remove([adjPath]); // rollback del objeto
       setError('No se pudo fijar: ' + (err?.message ?? 'error'));

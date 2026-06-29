@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { redirigirOk } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
 
 function whatsappOpcional(v: FormDataEntryValue | null): string | null {
@@ -22,7 +23,7 @@ export async function crearGrupo(formData: FormData) {
 
   if (error) throw new Error('No se pudo crear el grupo: ' + error.message);
   revalidatePath('/grupos');
-  redirect('/grupos/' + data!.id);
+  redirigirOk('/grupos/' + data!.id, 'Grupo creado');
 }
 
 export async function guardarWhatsappGrupo(formData: FormData) {
@@ -32,6 +33,7 @@ export async function guardarWhatsappGrupo(formData: FormData) {
     .update({ whatsapp: whatsappOpcional(formData.get('whatsapp')) }).eq('id', grupoId);
   if (error) throw new Error('No se pudo guardar el WhatsApp: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'WhatsApp guardado');
 }
 
 export async function programarReunion(formData: FormData) {
@@ -52,6 +54,7 @@ export async function programarReunion(formData: FormData) {
   });
   if (error) throw new Error('No se pudo programar la reunión: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Reunión programada');
 }
 
 export async function fijarMensaje(formData: FormData) {
@@ -85,6 +88,7 @@ export async function desfijarMensaje(formData: FormData) {
   if (error) throw new Error('No se pudo quitar el mensaje: ' + error.message);
   if (row?.adjunto_path) await supabase.storage.from('grupos').remove([row.adjunto_path]);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Anuncio quitado');
 }
 
 export async function agregarMiembro(formData: FormData) {
@@ -96,6 +100,7 @@ export async function agregarMiembro(formData: FormData) {
   });
   if (error) throw new Error('No se pudo agregar el miembro: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Miembro agregado');
 }
 
 export async function quitarMiembro(formData: FormData) {
@@ -106,6 +111,32 @@ export async function quitarMiembro(formData: FormData) {
     .eq('perfil_id', String(formData.get('perfil_id')));
   if (error) throw new Error('No se pudo quitar el miembro: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Miembro quitado');
+}
+
+export async function banearMiembro(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
+  // La RLS exige líder del grupo o coordinación.
+  const { error } = await supabase.from('miembros_baneados')
+    .insert({ grupo_id: grupoId, perfil_id: perfilId, baneado_por: user.id });
+  if (error) throw new Error('No se pudo vetar: ' + error.message);
+  await supabase.from('miembros_grupo').delete().eq('grupo_id', grupoId).eq('perfil_id', perfilId);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Persona vetada del grupo');
+}
+
+export async function desbanearMiembro(formData: FormData) {
+  const supabase = await createClient();
+  const grupoId = String(formData.get('grupo_id'));
+  const { error } = await supabase.from('miembros_baneados').delete()
+    .eq('grupo_id', grupoId).eq('perfil_id', String(formData.get('perfil_id')));
+  if (error) throw new Error('No se pudo quitar el veto: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Veto levantado');
 }
 
 export async function asignarLider(formData: FormData) {
@@ -119,4 +150,5 @@ export async function asignarLider(formData: FormData) {
     .update({ lider_id: perfilId }).eq('id', grupoId);
   if (error) throw new Error('No se pudo asignar el líder: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Líder actualizado');
 }

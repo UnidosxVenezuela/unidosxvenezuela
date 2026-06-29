@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { redirigirOk } from '@/lib/flash';
 
 export async function registrarHoras(formData: FormData) {
   const supabase = await createClient();
@@ -22,6 +23,7 @@ export async function registrarHoras(formData: FormData) {
   if (error) throw new Error('No se pudo registrar: ' + error.message);
   revalidatePath('/horas');
   revalidatePath('/dashboard');
+  redirigirOk('/horas', 'Horas registradas');
 }
 
 export async function eliminarHoras(formData: FormData) {
@@ -31,4 +33,5 @@ export async function eliminarHoras(formData: FormData) {
   if (error) throw new Error('No se pudo eliminar: ' + error.message);
   revalidatePath('/horas');
   revalidatePath('/dashboard');
+  redirigirOk('/horas', 'Registro eliminado');
 }
