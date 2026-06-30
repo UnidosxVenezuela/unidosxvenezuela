@@ -4,10 +4,86 @@ Plataforma web y móvil para **coordinar equipos de respuesta** al terremoto de 
 
 > Estado: **Fase 1 (MVP) completa en web**: auth, perfiles, verificación, grupos, tareas (tiempo real), tablón con sensibilidad y notificaciones. Próximo: paridad móvil y Fase 2 (push, mapa, offline).
 
+---
+
+## Guía de uso
+
+Guía simple para todo el equipo. Explica **qué hace cada rol** y **cómo usar cada parte** de la plataforma. No necesitas saber de tecnología: si sabes usar WhatsApp, puedes usar esto. (También dentro de la app en la sección **Ayuda** y en [docs/GUIA-DE-USO.md](docs/GUIA-DE-USO.md).)
+
+### 1. Primeros pasos
+
+1. **Entrar:** tu correo y contraseña. La primera vez, usa la contraseña temporal que te dio la coordinación y cámbiala al entrar (menú de tu nombre → *Mi perfil*).
+2. **Esperar aprobación:** las cuentas nuevas quedan "pendientes" hasta que un administrador las verifica. Te avisamos por correo.
+3. **Completar tu perfil:** agrega tu **foto**, tu teléfono y tus **habilidades** (tus fortalezas, para saber en qué puedes ayudar más).
+4. **Sonidos:** clic suave al tocar botones; puedes silenciarlos en el menú de tu nombre → *Sonidos*.
+
+### 2. Cómo moverte
+
+- **Barra lateral:** el menú principal; solo ves las secciones de tu rol.
+- **Barra superior:** ☰ abre/cierra el menú · 🔔 tus avisos · tu nombre abre perfil, sonidos y salir.
+- **Panel (inicio):** saludo, **acciones rápidas** de tu rol, **tira del flujo** y un resumen de tareas, grupos, avisos y horas.
+
+### 3. Los roles (qué hace cada uno)
+
+Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La coordinación los asigna. El **administrador tiene acceso a todo**.
+
+| Rol | Para qué sirve |
+|-----|----------------|
+| **Voluntario** | Toma tareas abiertas, participa en grupos, registra sus horas. |
+| **Observador** | Solo mira (no toma tareas ni publica). |
+| **Líder de grupo** | Gestiona su grupo: crea/asigna tareas, lidera la pizarra y los anuncios. |
+| **Coordinador** | Coordina equipos: tareas, grupos, verifica usuarios y ve todo el flujo. |
+| **Administración (admin)** | Acceso total: aprueba usuarios, asigna roles, gestiona todo. |
+| **Recopilación** | Reporta información (casos) para que se verifique. |
+| **Verificación** | Revisa los casos reportados y los confirma o descarta. |
+| **Redacción** | Escribe el contenido de los casos confirmados. |
+| **Diseño Gráfico** | Crea las piezas gráficas. |
+| **Edición de Videos** | Edita los videos / reels. |
+| **Redes Sociales** | Publica el contenido final en las redes. |
+| **Líder de plataforma aliada** | Accede a la base de datos compartida de aliados. |
+
+> **Tu espacio por rol:** si tienes un rol de recopilación o producción, en **"Espacios de trabajo"** tienes tu sección propia con tu cola de trabajo y tu grupo a la mano.
+
+### 4. El flujo completo (de la información a la publicación)
+
+**Recopilación → Verificación → Confirmado → Redacción → Diseño / Video → Redes → Publicado**
+
+1. **Recopilación** reporta un caso.
+2. **Verificación** lo confirma (es real) o lo marca falso/resuelto.
+3. Un caso **confirmado** se envía a **Redacción**.
+4. Redacción escribe y lo manda a **Diseño** o **Video**.
+5. Diseño/Video crea la pieza y la pasa a **Redes**.
+6. **Redes** la publica. ✅
+
+### 5. Cómo usar cada sección
+
+- **Panel:** toca una acción rápida o una etapa de la tira de flujo.
+- **Tareas:** toma *tareas abiertas* (algunas con cupo), sigue *las tuyas* en tarjetas, sube *entregables*. Coordinación y líderes crean y asignan.
+- **Grupos:** abiertos (cualquiera se une) o privados (solo miembros). Traen tareas, videollamadas, miembros, **pizarra**, anuncios y WhatsApp.
+- **Espacios de trabajo:** tu sección propia con tu **cola** de piezas en tu etapa y tu **equipo** (grupo, pizarra, chat). Quedas en el de tu rol automáticamente.
+- **Verificación de casos:** reporta (avisa duplicados), asigna y cambia el estado (*en proceso* / *confirmado* / *falso*); envía a Redacción. Solo un admin borra casos.
+- **Producción de contenido:** tablero por etapas; abre una pieza para escribir/cargar, asignar y avanzar.
+- **Centros de acopio:** registra qué necesitan, capacidad, horario, contacto y ubicación; un admin asigna **coordinadores responsables**.
+- **Mapa:** centros por urgencia y tareas con ubicación.
+- **Tablón:** anuncios con niveles de sensibilidad.
+- **Mis horas:** registra tus horas; suman al total de la comunidad.
+- **Avisos:** la campana 🔔 te avisa cuando te asignan algo o llega una pieza a tu etapa.
+- **Administración:** aprueba registros, asigna rol y **roles adicionales**, ve **habilidades** y el registro de actividad.
+
+### 6. Consejos rápidos
+
+- **No ves una sección:** tu rol no la usa; pide a coordinación el rol que necesitas.
+- **El primer sonido no suena:** el navegador activa el audio con tu primer clic.
+- **En el teléfono:** todo funciona; ☰ abre el menú y las tablas se deslizan de lado.
+- **Datos sensibles:** respeta los niveles del Tablón y no compartas datos de personas fuera del equipo.
+
+---
+
 ## Documentación
 
 | Doc | Contenido |
 |-----|-----------|
+| [docs/GUIA-DE-USO.md](docs/GUIA-DE-USO.md) | **Guía de uso por rol y funcionalidades** (también abajo y dentro de la app en *Ayuda*). |
 | [docs/01-PLAN.md](docs/01-PLAN.md) | Visión, objetivos, alcance, roles, features, casos de uso. |
 | [docs/02-ARQUITECTURA.md](docs/02-ARQUITECTURA.md) | Stack, monorepo, decisiones técnicas, diagrama. |
 | [docs/03-MODELO-DATOS.md](docs/03-MODELO-DATOS.md) | Entidades, relaciones, diccionario, ERD. |

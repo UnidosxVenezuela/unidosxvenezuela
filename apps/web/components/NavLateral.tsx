@@ -23,6 +23,7 @@ export default function NavLateral({ coord, aliados, verificacion, contenido, es
   if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
   if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
   if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
+  enlaces.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
 
   return (
     <nav className="nav-lateral">

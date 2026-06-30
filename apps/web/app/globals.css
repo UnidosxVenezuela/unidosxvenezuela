@@ -414,3 +414,7 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 /* Editor de roles adicionales (admin) */
 .roles-extra { font-size: .85rem; }
 .roles-extra > summary { cursor: pointer; color: var(--azul); font-weight: 600; }
+
+/* Página de Ayuda (guía de uso) */
+.ayuda-lista { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.ayuda-lista li { line-height: 1.45; }
