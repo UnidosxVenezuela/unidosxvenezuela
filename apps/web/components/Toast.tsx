@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { exito, error as sonidoError } from '@/lib/sonido';
 
 /** Lee ?ok= / ?err= de la URL, muestra un aviso flotante y lo cierra solo. */
 export default function Toast() {
@@ -20,9 +21,10 @@ export default function Toast() {
     router.replace(pathname + (sp.toString() ? '?' + sp.toString() : ''), { scroll: false });
   }, [params, pathname, router]);
 
-  // Auto-cierre: temporizador atado al aviso, no a la URL.
+  // Auto-cierre + sonido: temporizador atado al aviso, no a la URL.
   useEffect(() => {
     if (!aviso) return;
+    if (aviso.tipo === 'ok') exito(); else sonidoError();
     const t = setTimeout(() => setAviso(null), 3500);
     return () => clearTimeout(t);
   }, [aviso]);

@@ -362,3 +362,28 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 .timeline li::before { content: ''; position: absolute; left: 3px; top: 4px; width: 9px; height: 9px; border-radius: 999px; background: var(--azul); }
 .timeline li::after { content: ''; position: absolute; left: 7px; top: 14px; bottom: 0; width: 2px; background: var(--borde); }
 .timeline li:last-child::after { display: none; }
+
+/* ===== Panel de inicio: acciones rápidas + tira de flujo de trabajo ===== */
+/* Tarjeta de acción rápida (ícono + título + descripción + flecha) */
+.accion-rapida { display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; margin: 0; }
+.accion-ico { width: 46px; height: 46px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.accion-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.accion-txt strong { font-size: 1.02rem; }
+.accion-txt .muted { font-size: .85rem; }
+.accion-flecha { color: var(--texto-suave); flex-shrink: 0; transition: transform .15s ease, color .15s ease; }
+.accion-rapida:hover .accion-flecha { transform: translateX(4px); color: var(--azul); }
+
+/* Tira del flujo de trabajo: pasos con flechas y conteo en vivo */
+.flujo { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 4px 2px 12px; }
+.flujo::-webkit-scrollbar { height: 8px; }
+.flujo::-webkit-scrollbar-thumb { background: #d4dbe6; border-radius: 999px; }
+.flujo-paso { display: flex; align-items: center; gap: 11px; flex: 1 0 auto; min-width: 156px;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 11px 14px;
+  box-shadow: var(--sombra); text-decoration: none; color: inherit;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24,40,.10); border-color: #cdd5e3; }
+.flujo-ico { width: 38px; height: 38px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.flujo-txt { display: flex; flex-direction: column; line-height: 1.12; }
+.flujo-num { font-size: 1.35rem; font-weight: 800; }
+.flujo-et { font-size: .8rem; color: var(--texto-suave); font-weight: 600; }
+.flujo-flecha { display: inline-flex; align-items: center; color: var(--texto-suave); flex-shrink: 0; }

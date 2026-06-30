@@ -5,6 +5,7 @@ import Icono from './Icono';
 import NavLateral from './NavLateral';
 import CampanaNotificaciones from './CampanaNotificaciones';
 import UserChip from './UserChip';
+import SonidoBotones from './SonidoBotones';
 
 type Usuario = { nombre: string; rol?: string | null; email?: string | null; avatarUrl?: string | null };
 type Nav = { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean };
@@ -33,6 +34,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
 
   return (
     <div className={'app-shell' + (colapsada ? ' lateral-colapsada' : '') + (cajon ? ' lateral-movil' : '')}>
+      <SonidoBotones />
       <aside className="sidebar">
         <div className="tricolor" />
         <div className="marca"><span className="punto" /> UnidosXVenezuela</div>

@@ -33,6 +33,10 @@ const TRAZOS: Record<string, React.ReactNode> = {
   chevron: <path d="m6 9 6 6 6-6" />,
   buscar: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
   cerrar: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
+  flecha: <><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></>,
+  sonido: <><path d="M11 5 6 9H2v6h4l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M19 5a9 9 0 0 1 0 14" /></>,
+  sonido_off: <><path d="M11 5 6 9H2v6h4l5 4z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></>,
+  cohete: <><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91 0z" /><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" /><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /></>,
 };
 
 export default function Icono({ nombre, size = 20, ...props }: { nombre: string; size?: number } & SVGProps<SVGSVGElement>) {
