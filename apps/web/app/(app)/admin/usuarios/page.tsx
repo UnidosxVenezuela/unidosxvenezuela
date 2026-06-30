@@ -8,6 +8,7 @@ import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Avatar from '@/components/Avatar';
+import Pill from '@/components/Pill';
 
 export default async function AdminUsuariosPage() {
   const { user, perfil: yo } = await requireCoordinacion();
@@ -58,15 +59,17 @@ export default async function AdminUsuariosPage() {
 
   return (
     <div>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1>Administración de usuarios</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Administración de usuarios</h1>
+          <p className="muted sub">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
+        </div>
         <div className="fila">
           <BotonActualizar />
-          <Link className="btn btn-primario" href="/admin/usuarios/nuevo">+ Crear usuario</Link>
+          <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
           <Link className="btn" href="/admin/areas">Áreas</Link>
         </div>
       </div>
-      <p className="muted">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
 
       {/* Solicitudes de registro pendientes */}
       <h2>
@@ -183,9 +186,7 @@ export default async function AdminUsuariosPage() {
                   <form action={cambiarVerificacion} className="fila">
                     <input type="hidden" name="perfil_id" value={p.id} />
                     <input type="hidden" name="verificado" value={(!p.verificado).toString()} />
-                    <span className={'insignia ' + (p.verificado ? 'ok' : 'aviso')}>
-                      {p.verificado ? 'Verificado' : 'Sin verificar'}
-                    </span>
+                    <Pill tono={p.verificado ? 'ok' : 'aviso'}>{p.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
                     <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>
                       {p.verificado ? 'Quitar' : 'Verificar'}
                     </button>

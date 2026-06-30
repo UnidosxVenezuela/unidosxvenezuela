@@ -7,6 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { createClient } from '@/lib/supabase/client';
 import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia } from '@/lib/constantes';
 import Icono from './Icono';
+import Pill, { tonoDeClase } from './Pill';
 import type { PuntoAcopio, UrgenciaAcopio } from '@unidos/types';
 
 const ESTILO: StyleSpecification = {
@@ -66,7 +67,7 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
   async function guardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    if (!sel) { setError('Marcá la ubicación en el mapa (tocá o arrastrá el pin).'); return; }
+    if (!sel) { setError('Marca la ubicación en el mapa (toca o arrastra el pin).'); return; }
     const form = e.currentTarget;
     const fd = new FormData(form);
     const nombre = String(fd.get('nombre') || '').trim();
@@ -109,13 +110,15 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
 
   return (
     <div>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1>Centros de acopio</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Centros de acopio</h1>
+          <p className="muted sub">Registra los puntos, su capacidad, qué necesitan y su ubicación exacta. Aparecen en el mapa coloreados por urgencia.</p>
+        </div>
         {editando === null && (
           <button className="btn btn-primario" onClick={() => abrir('nuevo')}><Icono nombre="mas" /> Nuevo centro</button>
         )}
       </div>
-      <p className="muted">Registrá los puntos, su capacidad, qué necesitan y su ubicación exacta. Aparecen en el mapa coloreados por urgencia.</p>
 
       {/* Formulario crear/editar */}
       {editando !== null && (
@@ -128,7 +131,7 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
             <div>
               <div ref={cont} style={{ height: 360, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--borde)' }} />
               <p className="muted" style={{ fontSize: '.85rem' }}>
-                <Icono nombre="ubicacion" size={14} /> {sel ? `Ubicación: ${sel.lat}, ${sel.lng}` : 'Tocá el mapa para marcar la ubicación exacta.'}
+                <Icono nombre="ubicacion" size={14} /> {sel ? `Ubicación: ${sel.lat}, ${sel.lng}` : 'Toca el mapa para marcar la ubicación exacta.'}
               </p>
             </div>
             <div>
@@ -160,7 +163,7 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
       ) : centros.length === 0 ? (
         <div className="tarjeta vacio">
           <Icono nombre="acopio" size={40} />
-          <p className="muted" style={{ marginBottom: 0 }}>Aún no hay centros de acopio. Creá el primero.</p>
+          <p className="muted" style={{ marginBottom: 0 }}>Aún no hay centros de acopio. Crea el primero.</p>
         </div>
       ) : (
         <div className="grid grid-2">
@@ -168,7 +171,7 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
             <div key={c.id} className="tarjeta" style={{ borderLeft: '5px solid ' + (c.urgencia === 'alta' ? '#CF142B' : c.urgencia === 'baja' ? '#0A7D2C' : '#E6A100'), opacity: c.activo ? 1 : 0.55 }}>
               <div className="fila" style={{ justifyContent: 'space-between' }}>
                 <strong>{c.nombre}</strong>
-                <span className={'insignia ' + claseUrgencia(c.urgencia)}>{ETIQUETA_URGENCIA[c.urgencia]}</span>
+                <Pill tono={tonoDeClase(claseUrgencia(c.urgencia))}>{ETIQUETA_URGENCIA[c.urgencia]}</Pill>
               </div>
               {c.necesita && <p style={{ margin: '6px 0' }}><strong>Necesita:</strong> {c.necesita}</p>}
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}

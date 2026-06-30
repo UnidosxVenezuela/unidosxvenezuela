@@ -4,6 +4,7 @@ import {
 } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Avatar from '@/components/Avatar';
+import Pill, { tonoDeClase } from '@/components/Pill';
 import { cambiarEstado, actualizarAsignacion } from './actions';
 
 /**
@@ -27,8 +28,8 @@ export default function DetalleTarea({
         <div>
           <h2 style={{ margin: '2px 0' }}>{tarea.titulo}</h2>
           <span className="fila" style={{ gap: 6 }}>
-            {tieneEntregables && <span className="insignia ok">Entregado</span>}
-            <span className={'insignia ' + claseEstado(tarea.estado)}>{ETIQUETA_ESTADO[tarea.estado as keyof typeof ETIQUETA_ESTADO]}</span>
+            {tieneEntregables && <Pill tono="ok" punto={false}>Entregado</Pill>}
+            <Pill tono={tonoDeClase(claseEstado(tarea.estado))}>{ETIQUETA_ESTADO[tarea.estado as keyof typeof ETIQUETA_ESTADO]}</Pill>
           </span>
         </div>
         <Link href={cerrarHref} className="btn" style={{ minHeight: 34, padding: '4px 10px' }} aria-label="Cerrar">✕</Link>
@@ -37,7 +38,7 @@ export default function DetalleTarea({
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <p style={{ marginTop: 0 }}>{tarea.descripcion || <span className="muted">Sin descripción</span>}</p>
         <div className="grid grid-2">
-          <div><strong>Prioridad:</strong> <span className={'insignia ' + clasePrioridad(tarea.prioridad)}>{ETIQUETA_PRIORIDAD[tarea.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</span></div>
+          <div><strong>Prioridad:</strong> <Pill tono={tonoDeClase(clasePrioridad(tarea.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[tarea.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill></div>
           <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
           <div className="fila" style={{ gap: 6 }}>
             <strong>Asignado a:</strong>
@@ -93,7 +94,7 @@ export default function DetalleTarea({
               <li key={p.perfil_id} className="fila" style={{ gap: 8 }}>
                 <Avatar nombre={p.perfiles?.nombre_completo} size={22} />
                 {p.perfiles?.nombre_completo || '—'}
-                {tarea.asignado_a === p.perfil_id && <span className="insignia ok">Responsable</span>}
+                {tarea.asignado_a === p.perfil_id && <Pill tono="ok" punto={false}>Responsable</Pill>}
               </li>
             ))}
           </ul>

@@ -3,7 +3,14 @@ import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro } from '@/lib/constantes
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
+import BadgeCategoria from '@/components/BadgeCategoria';
 import { cambiarEstadoCaso, actualizarCaso } from './actions';
+
+const EXPLICA_ESTADO: Record<string, string> = {
+  en_proceso: 'Ya hay una persona verificando el caso. Nadie más debe revisarlo.',
+  confirmado: 'La información fue validada y está lista para Redacción de Contenido.',
+  falso: 'La información es falsa, antigua o el caso ya fue resuelto. No continúa en el flujo.',
+};
 
 /**
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
@@ -35,7 +42,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <p style={{ marginTop: 0 }}>{caso.descripcion || <span className="muted">Sin descripción</span>}</p>
         <div className="grid grid-2">
-          <div><strong>Categoría:</strong> {caso.categoria ? <span className="insignia">{caso.categoria}</span> : '—'}</div>
+          <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? new Date(caso.fecha_publicacion + 'T00:00:00').toLocaleDateString('es-VE') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           <div className="fila" style={{ gap: 6 }}>
@@ -76,10 +83,10 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       <div className="tarjeta">
         <h3 className="aside-titulo"><Icono nombre="historial" size={16} /> Historial de cambios</h3>
         {(historial ?? []).length === 0 ? <p className="muted" style={{ margin: 0 }}>Sin movimientos.</p> : (
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
+          <ul className="timeline">
             {(historial ?? []).map((h: any) => (
-              <li key={h.id} style={{ marginBottom: 8 }}>
-                <div>{describir(h.accion, h.metadata)}</div>
+              <li key={h.id}>
+                <div style={{ fontWeight: 600 }}>{describir(h.accion, h.metadata)}</div>
                 <div className="muted" style={{ fontSize: '.8rem' }}>
                   {new Date(h.creado_en).toLocaleString('es-VE')}{h.actor_id ? ' · por ' + (nombres.get(h.actor_id) ?? '—') : ''}
                 </div>
@@ -87,6 +94,18 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="tarjeta">
+        <h3 className="aside-titulo"><Icono nombre="filtro" size={16} /> Estados del caso</h3>
+        <div className="leyenda">
+          {ESTADOS_CASO.map((e) => (
+            <div key={e} className="leyenda-fila">
+              <EstadoCaso estado={e} />
+              <span className="muted">{EXPLICA_ESTADO[e]}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

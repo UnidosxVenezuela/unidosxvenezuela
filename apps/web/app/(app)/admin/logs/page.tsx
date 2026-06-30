@@ -5,6 +5,8 @@ import { ETIQUETA_ROL } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import Avatar from '@/components/Avatar';
+import Pill from '@/components/Pill';
+import BarraBusqueda from '@/components/BarraBusqueda';
 
 type SP = { q?: string; rol?: string };
 
@@ -63,25 +65,31 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
 
   return (
     <div>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1 className="fila" style={{ gap: 8 }}><Icono nombre="historial" size={24} /> Registro de actividad</h1>
-        <div className="fila">
+      <div className="pagina-cab">
+        <div>
+          <h1 className="fila" style={{ gap: 8 }}><Icono nombre="historial" size={24} /> Registro de actividad</h1>
+          <p className="muted sub">Quién hizo qué y cuándo, en toda la plataforma. Últimos {(logsRaw ?? []).length} eventos.</p>
+        </div>
+      </div>
+
+      <div className="toolbar">
+        <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
+          <BarraBusqueda name="q" placeholder="Buscar por persona, acción o entidad…" defaultValue={searchParams.q ?? ''} className="crece" />
+          <div className="campo-filtro">
+            <label>Rol</label>
+            <select name="rol" className="input" defaultValue={rolFiltro} style={{ width: 'auto' }}>
+              <option value="">Todos</option>
+              {Object.entries(ETIQUETA_ROL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </div>
+          <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
+          {(q || rolFiltro) && <Link className="btn" href="/admin/logs">Limpiar</Link>}
+        </form>
+        <div className="toolbar-acciones">
           <BotonActualizar />
           <Link className="btn" href="/admin/usuarios">Usuarios</Link>
         </div>
       </div>
-      <p className="muted">Quién hizo qué y cuándo, en toda la plataforma. Últimos {(logsRaw ?? []).length} eventos.</p>
-
-      <form method="get" className="fila" style={{ marginBottom: 12 }}>
-        <input name="q" className="input" placeholder="Buscar por persona, acción o entidad…"
-          defaultValue={searchParams.q ?? ''} style={{ maxWidth: 320 }} />
-        <select name="rol" className="input" defaultValue={rolFiltro} style={{ width: 'auto' }}>
-          <option value="">Todos los roles</option>
-          {Object.entries(ETIQUETA_ROL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
-        {(q || rolFiltro) && <Link className="btn" href="/admin/logs">Limpiar</Link>}
-      </form>
 
       <div className="tarjeta">
         {logs.length === 0 ? (
@@ -102,7 +110,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
                       </span>
                     </td>
                     <td>{l.actorRol
-                      ? <span className="insignia">{ETIQUETA_ROL[l.actorRol as keyof typeof ETIQUETA_ROL] ?? l.actorRol}</span>
+                      ? <Pill tono="neutra" punto={false}>{ETIQUETA_ROL[l.actorRol as keyof typeof ETIQUETA_ROL] ?? l.actorRol}</Pill>
                       : <span className="muted">—</span>}</td>
                     <td>{l.desc}{extra ? <span className="muted"> · {extra}</span> : null}</td>
                   </tr>

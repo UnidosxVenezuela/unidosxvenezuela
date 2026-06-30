@@ -9,6 +9,11 @@ import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Avatar from '@/components/Avatar';
 import MenuFila from '@/components/MenuFila';
+import Kpi from '@/components/Kpi';
+import Pill from '@/components/Pill';
+import BadgeCategoria from '@/components/BadgeCategoria';
+import BarraBusqueda from '@/components/BarraBusqueda';
+import Carrusel from '@/components/Carrusel';
 import DetalleCaso from './DetalleCaso';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -60,47 +65,47 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     drawerCaso = dc; drawerHist = dh ?? [];
   }
 
-  const kpi = (label: string, valor: number, sub: string, color: string, href: string) => (
-    <Link href={href} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div className="muted">{label}</div>
-      <div style={{ fontSize: '2rem', fontWeight: 800, color }}>{valor}</div>
-      <div className="muted" style={{ fontSize: '.8rem' }}>{sub}</div>
-    </Link>
-  );
-
   return (
     <AnimarEntrada>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
+      <div className="pagina-cab">
         <div>
-          <h1 style={{ margin: 0 }}>Panel de Verificación</h1>
-          <p className="muted" style={{ margin: '4px 0 0' }}>Seguimiento de la información enviada para verificar.</p>
+          <h1>Panel de Verificación</h1>
+          <p className="muted sub">Gestiona y da seguimiento a toda la información enviada por el equipo de recopilación.</p>
         </div>
-        <div className="fila">
+      </div>
+
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
+        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub="Todos los registros" color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
+        <Kpi etiqueta="En proceso" valor={enProc.count ?? 0} sub="Siendo verificados" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
+        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub="Listos para redacción" color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado" />
+        <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
+      </div>
+
+      <div className="toolbar">
+        <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
+          <BarraBusqueda name="q" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
+          <div className="campo-filtro">
+            <label>Estado</label>
+            <select name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
+              <option value="">Todos</option>
+              {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
+            </select>
+          </div>
+          <div className="campo-filtro">
+            <label>Categoría</label>
+            <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
+              <option value="">Todas</option>
+              {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
+          {(searchParams.q || searchParams.estado || searchParams.categoria) && <Link className="btn" href="/casos">Limpiar</Link>}
+        </form>
+        <div className="toolbar-acciones">
           <BotonActualizar />
           <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>
         </div>
       </div>
-
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', margin: '14px 0' }}>
-        {kpi('Total de casos', total.count ?? 0, 'Todos los registros', 'var(--texto)', '/casos')}
-        {kpi('En proceso', enProc.count ?? 0, 'Siendo verificados', '#a16207', '/casos?estado=en_proceso')}
-        {kpi('Confirmados y activos', conf.count ?? 0, 'Listos para redacción', '#16a34a', '/casos?estado=confirmado')}
-        {kpi('Falsos / resueltos', falso.count ?? 0, 'No continúan', '#b91c1c', '/casos?estado=falso')}
-      </div>
-
-      <form method="get" className="fila" style={{ marginBottom: 12 }}>
-        <input name="q" className="input" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} style={{ maxWidth: 320 }} />
-        <select name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
-          <option value="">Todos los estados</option>
-          {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
-        </select>
-        <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
-          <option value="">Todas las categorías</option>
-          {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
-        {(searchParams.q || searchParams.estado || searchParams.categoria) && <Link className="btn" href="/casos">Limpiar</Link>}
-      </form>
 
       <div className={drawerCaso ? 'grupo-grid' : undefined}>
         <div className="grupo-main">
@@ -115,10 +120,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 <tr key={c.id}>
                   <td className="muted">#{String(c.numero).padStart(5, '0')}</td>
                   <td>
-                    <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
-                    {c.descripcion && <div className="muted" style={{ fontSize: '.82rem' }}>{String(c.descripcion).slice(0, 60)}</div>}
+                    <div className="celda-titulo">
+                      <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                      {c.descripcion && <div className="desc">{String(c.descripcion).slice(0, 60)}</div>}
+                    </div>
                   </td>
-                  <td>{c.categoria ? <span className="insignia">{c.categoria}</span> : '—'}</td>
+                  <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
                   <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
                   <td>
                     {c.asignado_a
@@ -147,21 +154,26 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         )}
       </div>
 
-      <h2 className="fila" style={{ gap: 6 }}><Icono nombre="ok" size={20} /> Listos para redacción <span className="insignia ok">{conf.count ?? 0}</span></h2>
+      <h2 className="fila" style={{ gap: 8 }}>
+        <span className="kpi-ico" style={{ width: 32, height: 32, background: '#d1fae5', color: '#16a34a' }}><Icono nombre="ok" size={18} /></span>
+        Listos para redacción <Pill tono="ok" punto={false}>{conf.count ?? 0}</Pill>
+      </h2>
       <p className="muted" style={{ marginTop: -6 }}>Casos confirmados y activos, listos para pasar a la siguiente etapa.</p>
       {(listos ?? []).length === 0 ? (
         <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Aún no hay casos confirmados.</p></div>
       ) : (
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))' }}>
+        <Carrusel>
           {(listos ?? []).map((c: any) => (
-            <Link key={c.id} href={'/casos/' + c.id} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link key={c.id} href={'/casos/' + c.id} className="tarjeta carrusel-item" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')}</div>
               <strong>{c.titulo}</strong>
-              <div className="muted" style={{ fontSize: '.85rem', marginTop: 6 }}>{nombres.get(c.asignado_a) ?? 'Sin asignar'}</div>
-              <div style={{ marginTop: 8 }}><EstadoCaso estado="confirmado" /></div>
+              <div className="fila" style={{ gap: 6, margin: '8px 0', fontSize: '.85rem' }}>
+                <Avatar nombre={nombres.get(c.asignado_a)} size={22} /> {nombres.get(c.asignado_a) ?? 'Sin asignar'}
+              </div>
+              <EstadoCaso estado="confirmado" />
             </Link>
           ))}
-        </div>
+        </Carrusel>
       )}
     </AnimarEntrada>
   );

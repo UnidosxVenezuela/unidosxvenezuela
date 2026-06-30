@@ -12,6 +12,9 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Avatar from '@/components/Avatar';
 import MenuFila from '@/components/MenuFila';
+import Kpi from '@/components/Kpi';
+import Pill, { tonoDeClase } from '@/components/Pill';
+import BadgeCategoria from '@/components/BadgeCategoria';
 import DetalleTarea from './DetalleTarea';
 import { tomarTarea } from './actions';
 
@@ -32,9 +35,9 @@ function hrefDetalleTarea(searchParams: SP, tareaId: string): string {
 function Badges({ t }: { t: any }) {
   return (
     <div className="fila" style={{ gap: 6 }}>
-      <span className="insignia">{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</span>
-      <span className={'insignia ' + clasePrioridad(t.prioridad)}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</span>
-      <span className={'insignia ' + claseEstado(t.estado)}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</span>
+      <BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria>
+      <Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill>
+      <Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</Pill>
     </div>
   );
 }
@@ -52,16 +55,18 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
           {tareas.map((t) => (
             <tr key={t.id}>
               <td>
-                <Link href={hrefDetalle(t.id)}>{t.titulo}</Link>
-                {conEntregables?.has(t.id) && <span className="insignia ok" style={{ marginLeft: 8 }}>Entregado</span>}
+                <span className="celda-persona">
+                  <Link href={hrefDetalle(t.id)}>{t.titulo}</Link>
+                  {conEntregables?.has(t.id) && <Pill tono="ok" punto={false}>Entregado</Pill>}
+                </span>
               </td>
-              <td><span className="insignia">{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</span></td>
+              <td><BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria></td>
               <td>{t.grupos?.nombre ?? '—'}</td>
               <td>{t.asignado_a
-                ? <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }}><Avatar nombre={t.asignado?.nombre_completo} size={24} /> {t.asignado?.nombre_completo ?? '—'}</span>
+                ? <span className="celda-persona"><Avatar nombre={t.asignado?.nombre_completo} size={24} /> {t.asignado?.nombre_completo ?? '—'}</span>
                 : <span className="muted">Sin asignar</span>}</td>
-              <td><span className={'insignia ' + clasePrioridad(t.prioridad)}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</span></td>
-              <td><span className={'insignia ' + claseEstado(t.estado)}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</span></td>
+              <td><Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill></td>
+              <td><Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</Pill></td>
               <td style={{ whiteSpace: 'nowrap' }}>{t.vence_en ? new Date(t.vence_en).toLocaleString('es-VE') : '—'}</td>
               <td style={{ textAlign: 'right' }}>
                 <MenuFila etiqueta={'Acciones de ' + t.titulo}>
@@ -147,24 +152,14 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
     }
   }
 
-  const kpi = (p: { label: string; valor: number; sub: string; color: string; icono: string; tinte: string; href: string }) => (
-    <Link key={p.label} href={p.href} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div className="fila" style={{ gap: 12, flexWrap: 'nowrap' }}>
-        <span className="kpi-ico" style={{ background: p.tinte, color: p.color }}><Icono nombre={p.icono} /></span>
-        <div>
-          <div style={{ fontSize: '1.7rem', fontWeight: 800, color: p.color, lineHeight: 1.1 }}>{p.valor}</div>
-          <div style={{ fontWeight: 600 }}>{p.label}</div>
-          <div className="muted" style={{ fontSize: '.78rem' }}>{p.sub}</div>
-        </div>
-      </div>
-    </Link>
-  );
-
   return (
     <AnimarEntrada>
       <RealtimeRefrescar tabla="tareas" />
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1>Tareas</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Tareas</h1>
+          <p className="muted sub">Toma tareas abiertas, sigue las tuyas y coordina el trabajo del equipo.</p>
+        </div>
         <div className="fila">
           <BotonActualizar />
           {gestor && <Link className="btn btn-primario" href="/tareas/nueva"><Icono nombre="mas" /> Nueva tarea</Link>}
@@ -172,11 +167,11 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       </div>
 
       {kpis && (
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', margin: '14px 0' }}>
-          {kpi({ label: 'Total de tareas', valor: kpis.total, sub: 'Todas las registradas', color: 'var(--texto)', icono: 'tareas', tinte: '#eef2ff', href: '/tareas' })}
-          {kpi({ label: 'Pendientes', valor: kpis.pendientes, sub: 'Esperando a alguien', color: '#a16207', icono: 'reloj', tinte: '#fef9c3', href: '/tareas?estado=pendiente' })}
-          {kpi({ label: 'En progreso', valor: kpis.progreso, sub: 'En marcha ahora', color: '#2563eb', icono: 'refrescar', tinte: '#dbeafe', href: '/tareas?estado=en_progreso' })}
-          {kpi({ label: 'Completadas', valor: kpis.completadas, sub: 'Trabajo terminado', color: '#16a34a', icono: 'ok', tinte: '#d1fae5', href: '/tareas?estado=completada' })}
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
+          <Kpi etiqueta="Total de tareas" valor={kpis.total} sub="Todas las registradas" color="var(--azul)" icono="tareas" tinte="#eef2ff" href="/tareas" />
+          <Kpi etiqueta="Pendientes" valor={kpis.pendientes} sub="Esperando a alguien" color="#a16207" icono="reloj" tinte="#fef9c3" href="/tareas?estado=pendiente" />
+          <Kpi etiqueta="En progreso" valor={kpis.progreso} sub="En marcha ahora" color="#2563eb" icono="refrescar" tinte="#dbeafe" href="/tareas?estado=en_progreso" />
+          <Kpi etiqueta="Completadas" valor={kpis.completadas} sub="Trabajo terminado" color="#16a34a" icono="ok" tinte="#d1fae5" href="/tareas?estado=completada" />
         </div>
       )}
 
