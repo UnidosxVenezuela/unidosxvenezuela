@@ -54,7 +54,7 @@ export async function cambiarEstado(formData: FormData) {
   if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
-  redirigirOk('/tareas/' + id, 'Estado actualizado');
+  redirigirOk(opt(formData.get('volver')) || ('/tareas/' + id), 'Estado actualizado');
 }
 
 export async function actualizarAsignacion(formData: FormData) {
@@ -70,7 +70,7 @@ export async function actualizarAsignacion(formData: FormData) {
   if (asignado) await supabase.from('tarea_personas').upsert({ tarea_id: id, perfil_id: asignado }, { onConflict: 'tarea_id,perfil_id', ignoreDuplicates: true });
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
-  redirigirOk('/tareas/' + id, 'Cambios guardados');
+  redirigirOk(opt(formData.get('volver')) || ('/tareas/' + id), 'Cambios guardados');
 }
 
 export async function tomarTarea(formData: FormData) {
