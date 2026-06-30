@@ -109,6 +109,24 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
       </div>
 
+      {/* Filtro rápido por sub-área de verificación */}
+      <div className="fila" style={{ gap: 8, marginBottom: 14 }}>
+        <span className="muted" style={{ fontSize: '.82rem' }}>Sub-áreas:</span>
+        {['Desaparecidos', 'Casos de Niños', 'Otras Informaciones Relevantes'].map((cat) => {
+          const activo = searchParams.categoria === cat;
+          const p = new URLSearchParams();
+          if (searchParams.q) p.set('q', searchParams.q);
+          if (searchParams.estado) p.set('estado', searchParams.estado);
+          if (!activo) p.set('categoria', cat);
+          return (
+            <Link key={cat} href={'/casos' + (p.toString() ? '?' + p.toString() : '')}
+              className={'pill ' + (activo ? 'pill-info' : 'pill-neutra')} style={{ textDecoration: 'none' }}>
+              {cat}
+            </Link>
+          );
+        })}
+      </div>
+
       <div className={drawerCaso ? 'grupo-grid' : undefined}>
         <div className="grupo-main">
       <div className="tarjeta">
@@ -123,7 +141,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   <td className="muted">#{String(c.numero).padStart(5, '0')}</td>
                   <td>
                     <div className="celda-titulo">
-                      <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                      <span className="fila" style={{ gap: 6 }}>
+                        <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                        {c.fecha_publicacion && (Date.now() - new Date(c.fecha_publicacion + 'T00:00:00').getTime()) > 2 * 86400000 ? (
+                          <Pill tono="aviso" punto={false}>+2 días</Pill>
+                        ) : null}
+                      </span>
                       {c.descripcion && <div className="desc">{String(c.descripcion).slice(0, 60)}</div>}
                     </div>
                   </td>

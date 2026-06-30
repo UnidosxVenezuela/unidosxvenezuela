@@ -5,6 +5,7 @@ import {
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
+import SubirPiezaArchivo from './SubirPiezaArchivo';
 import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa } from './actions';
 
 const EXPLICA_ETAPA: Record<string, string> = {
@@ -52,8 +53,11 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
             {pieza.asignado_a ? <><Avatar nombre={nombres.get(pieza.asignado_a)} url={avatares.get(pieza.asignado_a)} size={22} /> {nombres.get(pieza.asignado_a) ?? '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
           {pieza.caso_id && <div style={{ gridColumn: '1 / -1' }}><strong>Caso de origen:</strong> <Link href={'/casos/' + pieza.caso_id}>Ver caso ↗</Link></div>}
+          {pieza.adjunto_url && (
+            <div style={{ gridColumn: '1 / -1' }}><strong>Archivo:</strong> <a href={pieza.adjunto_url} target="_blank" rel="noopener noreferrer">{pieza.adjunto_nombre || 'Abrir archivo'} ↗</a></div>
+          )}
           {pieza.enlace_pieza && hrefSeguro(pieza.enlace_pieza) && (
-            <div style={{ gridColumn: '1 / -1' }}><strong>Pieza final:</strong> <a href={hrefSeguro(pieza.enlace_pieza)!} target="_blank" rel="noopener noreferrer">Abrir entregable ↗</a></div>
+            <div style={{ gridColumn: '1 / -1' }}><strong>Enlace:</strong> <a href={hrefSeguro(pieza.enlace_pieza)!} target="_blank" rel="noopener noreferrer">Abrir entregable ↗</a></div>
           )}
         </div>
       </div>
@@ -85,18 +89,21 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
         )}
       </form>
 
-      {/* Entregable final: enlace en Diseño / Video */}
+      {/* Entregable final: archivo subido o enlace, en Diseño / Video */}
       {puedeEtapa && (etapa === 'diseno' || etapa === 'video') && (
-        <form action={guardarEnlacePieza} className="tarjeta">
-          <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Entregable final</h3>
-          <input type="hidden" name="pieza_id" value={pieza.id} />
-          <input type="hidden" name="volver" value={volver} />
-          <div className="campo">
-            <label>Enlace a la pieza (Drive, Figma, WeTransfer…)</label>
-            <input name="enlace_pieza" className="input" type="url" defaultValue={pieza.enlace_pieza ?? ''} placeholder="https://…" />
-          </div>
-          <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar enlace</button>
-        </form>
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Entregable final</h3>
+          <SubirPiezaArchivo piezaId={pieza.id} urlActual={pieza.adjunto_url} nombreActual={pieza.adjunto_nombre} />
+          <form action={guardarEnlacePieza} style={{ marginTop: 12 }}>
+            <input type="hidden" name="pieza_id" value={pieza.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <div className="campo">
+              <label>…o pegá un enlace (Drive, Figma, WeTransfer…)</label>
+              <input name="enlace_pieza" className="input" type="url" defaultValue={pieza.enlace_pieza ?? ''} placeholder="https://…" />
+            </div>
+            <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar enlace</button>
+          </form>
+        </div>
       )}
 
       {/* Asignación + avanzar etapa */}

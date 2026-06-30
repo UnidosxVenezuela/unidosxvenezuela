@@ -152,6 +152,8 @@ export interface PiezaContenido {
   contenido: string | null;
   descripcion: string | null;
   enlace_pieza: string | null;
+  adjunto_url: string | null;
+  adjunto_nombre: string | null;
   notas: string | null;
   asignado_a: string | null;
   creado_por: string | null;

@@ -205,6 +205,11 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 .auth-caja { width: 100%; max-width: 420px; }
 .auth-marca { display: flex; align-items: center; justify-content: center; gap: 10px;
   font-weight: 800; font-size: 1.5rem; color: var(--azul); margin-bottom: 6px; }
+/* Acento tricolor arriba de la tarjeta de auth + botón primario a lo ancho */
+.auth-caja .tarjeta { position: relative; overflow: hidden; padding-top: 22px; }
+.auth-caja .tarjeta::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--amarillo) 0 33.33%, var(--azul) 33.33% 66.66%, var(--rojo) 66.66% 100%); }
+.auth-caja .tarjeta .btn-primario { width: 100%; margin-top: 4px; }
 
 /* Vista de grupo: contenido a la izquierda, panel de gestión a la derecha */
 .grupo-grid { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 20px; align-items: start; }

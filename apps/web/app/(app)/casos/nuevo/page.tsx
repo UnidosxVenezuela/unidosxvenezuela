@@ -4,6 +4,7 @@ import { requireUsuario, puedeVerificar, puedeRecopilar } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
+import TituloConDuplicados from './TituloConDuplicados';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
@@ -22,10 +23,7 @@ export default async function NuevoCasoPage() {
         </div>
       </div>
       <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
-        <div className="campo">
-          <label htmlFor="titulo">Título</label>
-          <input id="titulo" name="titulo" className="input" required />
-        </div>
+        <TituloConDuplicados />
         <div className="campo">
           <label htmlFor="descripcion">Descripción</label>
           <textarea id="descripcion" name="descripcion" className="input" rows={3} />
