@@ -2,6 +2,8 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { SENSIBILIDADES, ETIQUETA_SENSIBILIDAD, claseSensibilidad } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Pill, { tonoDeClase } from '@/components/Pill';
+import Avatar from '@/components/Avatar';
 import { crearPublicacion, comentarPublicacion } from './actions';
 
 export default async function TablonPage({ searchParams }: { searchParams: { grupo?: string } }) {
@@ -30,7 +32,12 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
     <div>
       <RealtimeRefrescar tabla="publicaciones" />
       <RealtimeRefrescar tabla="comentarios_publicacion" />
-      <h1>Tablón</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Tablón</h1>
+          <p className="muted sub">Avisos, opiniones y necesidades del equipo. La sensibilidad controla quién ve cada publicación.</p>
+        </div>
+      </div>
 
       {puedeParticipar && (
       <form action={crearPublicacion} className="tarjeta">
@@ -76,10 +83,10 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
       {posts.map((p) => (
         <div key={p.id} className="tarjeta">
           <div className="fila" style={{ justifyContent: 'space-between' }}>
-            <strong>{p.autor?.nombre_completo ?? 'Anónimo'}</strong>
-            <span className={'insignia ' + claseSensibilidad(p.sensibilidad)}>
+            <span className="celda-persona"><Avatar nombre={p.autor?.nombre_completo} size={28} /> <strong>{p.autor?.nombre_completo ?? 'Anónimo'}</strong></span>
+            <Pill tono={tonoDeClase(claseSensibilidad(p.sensibilidad))}>
               {ETIQUETA_SENSIBILIDAD[p.sensibilidad as keyof typeof ETIQUETA_SENSIBILIDAD]}
-            </span>
+            </Pill>
           </div>
           <div className="muted" style={{ fontSize: '.85rem' }}>
             {p.grupos?.nombre ? 'Grupo: ' + p.grupos.nombre : 'General'} · {new Date(p.creado_en).toLocaleString('es-VE')}

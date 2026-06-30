@@ -5,6 +5,7 @@ import { hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import Pill from '@/components/Pill';
 import type { EndpointAliado } from '@unidos/types';
 import { crearEndpoint, eliminarEndpoint } from './actions';
 
@@ -22,11 +23,15 @@ export default async function AliadosPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="endpoints_aliados" />
-      <h1>Base de datos compartida</h1>
-      <p className="muted">
-        Endpoints de plataformas aliadas para unificar la data entre todas las apps de la respuesta.
-        Acceso exclusivo de coordinación (admin) y líderes de plataforma aliada. <strong>Juntos somos más.</strong>
-      </p>
+      <div className="pagina-cab">
+        <div>
+          <h1>Base de datos compartida</h1>
+          <p className="muted sub">
+            Endpoints de plataformas aliadas para unificar la data entre todas las apps de la respuesta.
+            Acceso exclusivo de coordinación (admin) y líderes de plataforma aliada. <strong>Juntos somos más.</strong>
+          </p>
+        </div>
+      </div>
 
       <form action={crearEndpoint} className="tarjeta">
         <h2 style={{ marginTop: 0 }}>Compartir un endpoint</h2>
@@ -61,9 +66,9 @@ export default async function AliadosPage() {
           return (
             <div key={e.id} className="tarjeta">
               <div className="fila" style={{ justifyContent: 'space-between' }}>
-                <div>
-                  <strong>{e.plataforma}</strong> <span className="insignia">{e.metodo}</span>
-                  {e.formato && <span className="insignia" style={{ marginLeft: 6 }}>{e.formato}</span>}
+                <div className="fila" style={{ gap: 6 }}>
+                  <strong>{e.plataforma}</strong> <Pill tono="info" punto={false}>{e.metodo}</Pill>
+                  {e.formato && <Pill tono="neutra" punto={false}>{e.formato}</Pill>}
                 </div>
                 {(esAdmin || e.creado_por === user!.id) && (
                   <form action={eliminarEndpoint}>

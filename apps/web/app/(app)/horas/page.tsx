@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import Kpi from '@/components/Kpi';
 import { registrarHoras, eliminarHoras } from './actions';
 
 export default async function HorasPage() {
@@ -21,18 +22,16 @@ export default async function HorasPage() {
 
   return (
     <div>
-      <h1>Mis horas</h1>
-      <p className="muted">Registra tu tiempo de voluntariado. Gracias por colaborar con el corazón. 💛💙❤️</p>
+      <div className="pagina-cab">
+        <div>
+          <h1>Mis horas</h1>
+          <p className="muted sub">Registra tu tiempo de voluntariado. Gracias por colaborar con el corazón. 💛💙❤️</p>
+        </div>
+      </div>
 
-      <div className="grid grid-2">
-        <div className="tarjeta">
-          <div className="muted">Tus horas</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800 }}>{formatoHoras(misHoras)}</div>
-        </div>
-        <div className="tarjeta">
-          <div className="muted">Juntos llevamos</div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--azul)' }}>{formatoHoras(totalComunidad)}</div>
-        </div>
+      <div className="grid grid-2" style={{ margin: '16px 0' }}>
+        <Kpi etiqueta="Tus horas" valor={formatoHoras(misHoras)} sub="de voluntariado" icono="reloj" tinte="#fce7f3" color="#9d2463" />
+        <Kpi etiqueta="Juntos llevamos" valor={formatoHoras(totalComunidad)} sub="de toda la comunidad" icono="grupos" tinte="#eef2ff" color="var(--azul)" />
       </div>
 
       <form action={registrarHoras} className="tarjeta">

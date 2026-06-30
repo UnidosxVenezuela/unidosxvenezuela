@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import Pill from '@/components/Pill';
+import BadgeCategoria from '@/components/BadgeCategoria';
 import { unirmeGrupo } from './actions';
 
 export default async function GruposPage() {
@@ -21,11 +23,13 @@ export default async function GruposPage() {
 
   return (
     <AnimarEntrada>
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1>Grupos</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Grupos</h1>
+          <p className="muted sub">Los grupos <strong>abiertos</strong> los puede ver y unir cualquiera; los <strong>privados</strong> solo los ven sus miembros.</p>
+        </div>
         {coord && <Link className="btn btn-primario" href="/grupos/nuevo"><Icono nombre="mas" /> Nuevo grupo</Link>}
       </div>
-      <p className="muted">Los grupos <strong>abiertos</strong> los puede ver y unir cualquiera; los <strong>privados</strong> solo los ven sus miembros.</p>
 
       {grupos.length === 0 && (
         <div className="tarjeta vacio">
@@ -41,8 +45,8 @@ export default async function GruposPage() {
             <div key={g.id} className="tarjeta">
               <div className="fila" style={{ justifyContent: 'space-between' }}>
                 <span className="fila" style={{ gap: 6 }}>
-                  <span className="insignia">{etiquetaArea(g.area)}</span>
-                  {!g.abierto && <span className="insignia aviso">Privado</span>}
+                  <BadgeCategoria>{etiquetaArea(g.area)}</BadgeCategoria>
+                  {!g.abierto && <Pill tono="aviso" punto={false}>Privado</Pill>}
                 </span>
                 <span className="fila muted" style={{ gap: 4, fontSize: '.85rem' }}>
                   <Icono nombre="grupos" size={16} /> {totalPorGrupo.get(g.id) ?? 0}
@@ -55,7 +59,7 @@ export default async function GruposPage() {
               <div className="fila" style={{ marginTop: 10 }}>
                 <Link className="btn" href={'/grupos/' + g.id}>Ver</Link>
                 {soyMiembro
-                  ? <span className="insignia ok">Miembro</span>
+                  ? <Pill tono="ok">Miembro</Pill>
                   : (g.abierto && perfil?.rol !== 'observador' && (
                       <form action={unirmeGrupo}>
                         <input type="hidden" name="grupo_id" value={g.id} />

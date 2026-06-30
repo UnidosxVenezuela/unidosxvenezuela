@@ -3,6 +3,7 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
+import Pill from '@/components/Pill';
 import { marcarLeida, marcarTodasLeidas } from './actions';
 
 export default async function NotificacionesPage() {
@@ -16,10 +17,13 @@ export default async function NotificacionesPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="notificaciones" />
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
-        <h1>Notificaciones</h1>
+      <div className="pagina-cab">
+        <div>
+          <h1>Notificaciones</h1>
+          <p className="muted sub">Avisos de tareas, grupos y casos en los que participas.</p>
+        </div>
         <form action={marcarTodasLeidas}>
-          <button className="btn" type="submit">Marcar todas como leídas</button>
+          <button className="btn" type="submit"><Icono nombre="ok" size={16} /> Marcar todas como leídas</button>
         </form>
       </div>
 
@@ -38,7 +42,7 @@ export default async function NotificacionesPage() {
           }}>
             <div>
               <div className="fila" style={{ gap: 8 }}>
-                {!it.leida && <span className="insignia critica">Nuevo</span>}
+                {!it.leida && <Pill tono="info" punto={false}>Nuevo</Pill>}
                 <strong>{it.titulo}</strong>
               </div>
               {it.cuerpo && <div className="muted">{it.cuerpo}</div>}
