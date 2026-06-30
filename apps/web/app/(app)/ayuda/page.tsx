@@ -35,6 +35,37 @@ export default function AyudaPage() {
     ['avisos', 'Avisos', <>La <strong>campana 🔔</strong> te avisa cuando te asignan algo o una pieza llega a tu etapa. Tócala para verlas.</>],
     ['admin', 'Administración', <>Coordinación/admin: <strong>aprueba</strong> registros, asigna el <strong>rol</strong> y <strong>roles adicionales</strong>, ve las <strong>habilidades</strong> de cada quien, y el registro de actividad.</>],
   ];
+  const pasoApaso: [string, string, string[]][] = [
+    ['mas', 'Reportar un caso (Recopilación)', [
+      'Menú → "Verificación de casos" (o tu espacio de Recopilación) → "Nuevo caso".',
+      'Escribe el título. Si aparece el aviso de "posibles duplicados", revisa que no exista ya.',
+      'Elige la categoría, escribe la descripción y pega la fuente (enlace o de dónde salió).',
+      'Guarda: el caso queda "en proceso" para que verificación lo revise.',
+    ]],
+    ['ok', 'Verificar un caso (Verificación)', [
+      'Menú → "Verificación de casos". Verás los casos y la tira del flujo.',
+      'Abre un caso (clic en su título): se abre el panel a la derecha.',
+      'Asígnalo a un verificador y revisa la fuente.',
+      'Cambia el estado: "Confirmado y activo" si es real, o "Falso / resuelto" si no.',
+      'Si quedó confirmado, toca "Enviar a Redacción" para pasarlo a producción.',
+    ]],
+    ['documento', 'Trabajar tu pieza (Redacción / Diseño / Video / Redes)', [
+      'Menú → "Espacios de trabajo" → abre tu espacio: verás "Tu cola en tu etapa".',
+      'Abre una pieza. Si no tiene responsable, asígnatela.',
+      'Haz tu parte: Redacción escribe y elige destino (Diseño o Video); Diseño/Video sube el archivo o pega el enlace; Redes publica.',
+      'Toca "Enviar a la siguiente etapa" (o "Marcar como publicado" en Redes). El equipo siguiente recibe un aviso.',
+    ]],
+    ['tareas', 'Tomar una tarea (todos)', [
+      'Menú → "Tareas" → sección "Tareas abiertas".',
+      'Toca "Tomar tarea" (o "Unirme" si tiene cupo) y confirma.',
+      'Hazla y, si aplica, sube el entregable. Coordinación o el líder la dan por completada.',
+    ]],
+    ['admin', 'Aprobar usuarios y asignar roles (Coordinación / Admin)', [
+      'Menú → "Administración".',
+      'En "Solicitudes de registro", toca "Aprobar" para dar acceso.',
+      'En la lista, cambia el "Rol" principal. Para varios roles, abre "Roles adicionales", marca los que correspondan y "Guardar roles".',
+    ]],
+  ];
 
   return (
     <AnimarEntrada>
@@ -100,8 +131,20 @@ export default function AyudaPage() {
         ))}
       </div>
 
+      <h2>6. Paso a paso (lo más común)</h2>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(340px,1fr))' }}>
+        {pasoApaso.map(([ico, titulo, pasos]) => (
+          <div key={titulo} className="tarjeta" style={{ marginBottom: 0 }}>
+            <h3 className="fila" style={{ gap: 8, marginTop: 0 }}><Icono nombre={ico} size={18} /> {titulo}</h3>
+            <ol className="ayuda-lista">
+              {pasos.map((p, i) => <li key={i}>{p}</li>)}
+            </ol>
+          </div>
+        ))}
+      </div>
+
       <div className="tarjeta" style={{ marginTop: 16 }}>
-        <h2 style={{ marginTop: 0 }}>6. Consejos rápidos</h2>
+        <h2 style={{ marginTop: 0 }}>7. Consejos rápidos</h2>
         <ul className="ayuda-lista">
           <li><strong>No ves una sección:</strong> tu rol no la usa. Pídele a coordinación el rol que necesitas.</li>
           <li><strong>El primer sonido no suena:</strong> el navegador activa el audio con tu primer clic.</li>

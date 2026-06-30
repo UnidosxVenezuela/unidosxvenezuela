@@ -127,7 +127,40 @@ La **campana 🔔** te avisa cuando te asignan algo, cuando una pieza llega a tu
 
 ---
 
-## 6. Consejos rápidos
+## 6. Paso a paso (lo más común)
+
+### Reportar un caso (Recopilación)
+1. Menú → **Verificación de casos** (o tu espacio de Recopilación) → **Nuevo caso**.
+2. Escribe el **título**. Si aparece el aviso de *posibles duplicados*, revisa que no exista ya.
+3. Elige la **categoría**, escribe la **descripción** y pega la **fuente** (enlace o de dónde salió).
+4. **Guarda**: el caso queda *en proceso* para que verificación lo revise.
+
+### Verificar un caso (Verificación)
+1. Menú → **Verificación de casos**. Verás los casos y la tira del flujo.
+2. **Abre** un caso (clic en su título): se abre el panel a la derecha.
+3. **Asígnalo** a un verificador y revisa la fuente.
+4. Cambia el **estado**: *Confirmado y activo* si es real, o *Falso / resuelto* si no.
+5. Si quedó confirmado, toca **Enviar a Redacción** para pasarlo a producción.
+
+### Trabajar tu pieza (Redacción / Diseño / Video / Redes)
+1. Menú → **Espacios de trabajo** → abre tu espacio: verás *Tu cola en tu etapa*.
+2. **Abre** una pieza. Si no tiene responsable, **asígnatela**.
+3. Haz tu parte: Redacción escribe y elige destino (Diseño o Video); Diseño/Video **sube el archivo** o pega el enlace; Redes **publica**.
+4. Toca **Enviar a la siguiente etapa** (o *Marcar como publicado* en Redes). El equipo siguiente recibe un aviso.
+
+### Tomar una tarea (todos)
+1. Menú → **Tareas** → sección *Tareas abiertas*.
+2. Toca **Tomar tarea** (o *Unirme* si tiene cupo) y confirma.
+3. Hazla y, si aplica, **sube el entregable**. Coordinación o el líder la dan por completada.
+
+### Aprobar usuarios y asignar roles (Coordinación / Admin)
+1. Menú → **Administración**.
+2. En *Solicitudes de registro*, toca **Aprobar** para dar acceso.
+3. En la lista, cambia el **Rol** principal. Para varios roles, abre **Roles adicionales**, marca los que correspondan y **Guardar roles**.
+
+---
+
+## 7. Consejos rápidos
 
 - **No encuentras una sección:** probablemente tu rol no la usa. Pídele a coordinación el rol que necesitas.
 - **El primer sonido no suena:** los navegadores activan el audio recién con tu **primer clic**; de ahí en adelante es normal.

@@ -70,7 +70,15 @@ Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La co
 - **Avisos:** la campana 🔔 te avisa cuando te asignan algo o llega una pieza a tu etapa.
 - **Administración:** aprueba registros, asigna rol y **roles adicionales**, ve **habilidades** y el registro de actividad.
 
-### 6. Consejos rápidos
+### 6. Paso a paso (lo más común)
+
+- **Reportar un caso (Recopilación):** Verificación de casos → *Nuevo caso* → título (ojo a duplicados), categoría, descripción y fuente → *Guardar* (queda *en proceso*).
+- **Verificar (Verificación):** abre el caso → asígnalo → cambia el estado (*Confirmado* / *Falso*) → si confirmado, *Enviar a Redacción*.
+- **Trabajar tu pieza (producción):** Espacios de trabajo → tu cola → abre la pieza → asígnatela → haz tu parte (escribir / subir archivo / publicar) → *Enviar a la siguiente etapa*.
+- **Tomar una tarea:** Tareas → *Tareas abiertas* → *Tomar tarea* / *Unirme* → súbele el entregable.
+- **Aprobar y asignar roles (Admin):** Administración → *Aprobar* la solicitud → cambia el *Rol*; para varios, *Roles adicionales* → *Guardar roles*.
+
+### 7. Consejos rápidos
 
 - **No ves una sección:** tu rol no la usa; pide a coordinación el rol que necesitas.
 - **El primer sonido no suena:** el navegador activa el audio con tu primer clic.
