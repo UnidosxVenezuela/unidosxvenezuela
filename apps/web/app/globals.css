@@ -197,6 +197,15 @@ textarea { min-height: 100px; }
 .vacio { text-align: center; padding: 40px 20px; }
 .vacio svg { color: var(--azul); opacity: .65; }
 
+/* Aviso de supervisión (coordinación viendo un grupo del que no es miembro) */
+.aviso-superv {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; padding: 10px 14px;
+  background: #eef3ff; border: 1px solid #c7d6ff; border-left: 3px solid var(--azul);
+  border-radius: 10px; color: var(--azul-osc); font-size: .92rem;
+}
+.aviso-superv svg { flex-shrink: 0; color: var(--azul); }
+
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde); }
 .error { color: var(--critica); font-weight: 600; }

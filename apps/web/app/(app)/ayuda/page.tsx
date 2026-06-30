@@ -7,7 +7,7 @@ import Pill from '@/components/Pill';
 /** Guía de uso dentro de la app (misma guía que docs/GUIA-DE-USO.md). */
 export default function AyudaPage() {
   const roles: [string, string][] = [
-    ['Voluntario', 'Toma tareas abiertas, participa en grupos, registra sus horas.'],
+    ['Voluntario', 'Toma tareas abiertas y se une a los grupos abiertos (a los privados, solo por invitación). Registra sus horas.'],
     ['Observador', 'Solo mira (no toma tareas ni publica). Útil para acompañantes o prensa.'],
     ['Líder de grupo', 'Gestiona su grupo: crea/asigna tareas, lidera la pizarra y los anuncios.'],
     ['Coordinador', 'Coordina equipos: tareas, grupos, verifica usuarios y ve todo el flujo.'],
@@ -106,6 +106,18 @@ export default function AyudaPage() {
             ))}
           </tbody>
         </table></div>
+      </div>
+
+      <div className="tarjeta">
+        <h2 style={{ marginTop: 0 }}>3.1 ¿A qué grupos puedes entrar?</h2>
+        <ul className="ayuda-lista">
+          <li><strong>Grupos abiertos:</strong> cualquier persona <strong>verificada</strong> los ve y se une sola con el botón <em>Unirme</em>.</li>
+          <li><strong>Grupos privados:</strong> solo los ven sus miembros. Entras <strong>por invitación</strong>: un líder o la coordinación te agregan.</li>
+          <li><strong>Voluntario:</strong> se une a los abiertos y participa en los privados a los que lo inviten. Toma tareas abiertas y registra horas; no crea tareas ni verifica casos.</li>
+          <li><strong>Observador:</strong> ve los grupos abiertos pero <strong>no se une ni toma tareas</strong> (solo acompaña; útil para prensa o aliados que solo miran).</li>
+          <li><strong>Líder de grupo:</strong> gestiona <strong>su</strong> grupo (miembros, tareas, anuncios, pizarra) además de lo de un voluntario.</li>
+          <li><strong>Coordinación / Admin:</strong> ven y gestionan <strong>todos</strong> los grupos —también los privados— para <strong>supervisar</strong> cómo va cada uno.</li>
+        </ul>
       </div>
 
       <div className="tarjeta">

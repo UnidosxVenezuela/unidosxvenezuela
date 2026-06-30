@@ -32,7 +32,7 @@ Un usuario **puede tener más de un rol** (por ejemplo, verificar *y* redactar).
 
 | Rol | Para qué sirve |
 |-----|----------------|
-| **Voluntario** | Toma tareas abiertas, participa en grupos, registra sus horas. |
+| **Voluntario** | Toma tareas abiertas y se une a los grupos **abiertos** (a los privados, solo por invitación). Registra sus horas. |
 | **Observador** | Solo mira (no toma tareas ni publica). Útil para acompañantes o prensa. |
 | **Líder de grupo** | Gestiona su grupo: crea/asigna tareas, lidera la pizarra y los anuncios. |
 | **Coordinador** | Coordina equipos: gestiona tareas, grupos, verifica usuarios y ve todo el flujo. |
@@ -46,6 +46,15 @@ Un usuario **puede tener más de un rol** (por ejemplo, verificar *y* redactar).
 | **Líder de plataforma aliada** | Accede a la base de datos compartida de aliados. |
 
 > **Tu espacio por rol:** si tienes un rol de recopilación o producción, en **"Espacios de trabajo"** tienes tu sección propia con tu cola de trabajo y tu grupo a la mano (ver punto 5).
+
+### ¿A qué grupos puede entrar cada quién?
+
+- **Grupos abiertos:** cualquier persona **verificada** los ve y **se une sola** (botón *Unirme*).
+- **Grupos privados:** solo los ven sus miembros; entras **por invitación** (un líder o la coordinación te agregan).
+- **Voluntario:** se une a los **abiertos** y participa en los **privados** a los que lo inviten. Toma tareas abiertas y registra horas; **no** crea tareas, **no** verifica casos ni trabaja la producción de contenido.
+- **Observador:** ve los grupos abiertos pero **no se une ni toma tareas** (solo acompaña; útil para prensa o aliados que solo miran).
+- **Líder de grupo:** gestiona **su** grupo (miembros, tareas, anuncios, pizarra), además de todo lo de un voluntario.
+- **Coordinación / Admin:** ven y gestionan **todos** los grupos —también los privados— para **supervisar** cómo va cada uno.
 
 ---
 

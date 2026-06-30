@@ -29,7 +29,7 @@ Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La co
 
 | Rol | Para qué sirve |
 |-----|----------------|
-| **Voluntario** | Toma tareas abiertas, participa en grupos, registra sus horas. |
+| **Voluntario** | Toma tareas abiertas y se une a los grupos **abiertos** (a los privados, solo por invitación). Registra sus horas. |
 | **Observador** | Solo mira (no toma tareas ni publica). |
 | **Líder de grupo** | Gestiona su grupo: crea/asigna tareas, lidera la pizarra y los anuncios. |
 | **Coordinador** | Coordina equipos: tareas, grupos, verifica usuarios y ve todo el flujo. |
@@ -43,6 +43,8 @@ Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La co
 | **Líder de plataforma aliada** | Accede a la base de datos compartida de aliados. |
 
 > **Tu espacio por rol:** si tienes un rol de recopilación o producción, en **"Espacios de trabajo"** tienes tu sección propia con tu cola de trabajo y tu grupo a la mano.
+>
+> **¿A qué grupos entra cada quién?** *Abiertos:* cualquier verificado se une solo. *Privados:* solo por invitación. **Voluntario** entra a los abiertos; **Observador** solo mira; **Líder** gestiona el suyo; **Coordinación/Admin** ven y gestionan **todos** (también privados) para supervisar. Detalle en [docs/ROLES.md](docs/ROLES.md).
 
 ### 4. El flujo completo (de la información a la publicación)
 
@@ -92,6 +94,7 @@ Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La co
 | Doc | Contenido |
 |-----|-----------|
 | [docs/GUIA-DE-USO.md](docs/GUIA-DE-USO.md) | **Guía de uso por rol y funcionalidades** (también abajo y dentro de la app en *Ayuda*). |
+| [docs/ROLES.md](docs/ROLES.md) | **Funciones de cada rol y a qué grupos entra** — referencia simple para organizadores. |
 | [docs/01-PLAN.md](docs/01-PLAN.md) | Visión, objetivos, alcance, roles, features, casos de uso. |
 | [docs/02-ARQUITECTURA.md](docs/02-ARQUITECTURA.md) | Stack, monorepo, decisiones técnicas, diagrama. |
 | [docs/03-MODELO-DATOS.md](docs/03-MODELO-DATOS.md) | Entidades, relaciones, diccionario, ERD. |

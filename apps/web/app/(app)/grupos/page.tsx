@@ -27,7 +27,11 @@ export default async function GruposPage() {
       <div className="pagina-cab">
         <div>
           <h1>Grupos</h1>
-          <p className="muted sub">Los grupos <strong>abiertos</strong> los puede ver y unir cualquiera; los <strong>privados</strong> solo los ven sus miembros.</p>
+          <p className="muted sub">
+            {coord
+              ? <>Como <strong>coordinación</strong> ves <strong>todos</strong> los grupos —también los privados— para revisar cómo van. Entra a cualquiera para supervisarlo.</>
+              : <>Los grupos <strong>abiertos</strong> los puede ver y unir cualquiera; los <strong>privados</strong> solo los ven sus miembros.</>}
+          </p>
         </div>
         {coord && <Link className="btn btn-primario" href="/grupos/nuevo"><Icono nombre="mas" /> Nuevo grupo</Link>}
       </div>

@@ -105,6 +105,13 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         )}
       </div>
 
+      {esCoordinacion(perfil) && !soyMiembro && (
+        <div className="aviso-superv" role="note">
+          <Icono nombre="ojo" size={18} />
+          <span>Estás viendo este grupo como <strong>coordinación</strong>: tienes acceso para <strong>supervisar</strong> y gestionar aunque no seas miembro.</span>
+        </div>
+      )}
+
       <div className={puedeGestionar ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
         {/* ── Columna principal: contenido del grupo ── */}
         <div className="grupo-main">
