@@ -7,6 +7,7 @@ import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado } from '
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import Avatar from '@/components/Avatar';
 
 export default async function AdminUsuariosPage() {
   const { user, perfil: yo } = await requireCoordinacion();
@@ -79,7 +80,9 @@ export default async function AdminUsuariosPage() {
         pendientes.map((p) => (
           <div className="tarjeta" key={p.id}>
             <div className="fila" style={{ justifyContent: 'space-between' }}>
-              <div>
+              <div className="fila" style={{ gap: 10, alignItems: 'flex-start' }}>
+                <Avatar nombre={p.nombre_completo} size={34} />
+                <div>
                 <strong>{p.nombre_completo || '—'}</strong>
                 <div className="muted" style={{ fontSize: '.9rem' }}>
                   {[p.organizacion, p.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
@@ -89,6 +92,7 @@ export default async function AdminUsuariosPage() {
                     <span className="muted">Motivo:</span> {p.motivo}
                   </div>
                 )}
+                </div>
               </div>
               <div className="fila">
                 {selectorRol(p)}
@@ -166,8 +170,13 @@ export default async function AdminUsuariosPage() {
             {perfiles.map((p) => (
               <tr key={p.id}>
                 <td>
-                  {p.nombre_completo || '—'}
-                  {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
+                  <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
+                    <Avatar nombre={p.nombre_completo} />
+                    <span>
+                      {p.nombre_completo || '—'}
+                      {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
+                    </span>
+                  </span>
                 </td>
                 <td>{p.organizacion || '—'}</td>
                 <td>

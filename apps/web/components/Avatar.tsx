@@ -6,9 +6,21 @@ function colorDe(s: string): string {
   return COLORES[h % COLORES.length]!;
 }
 
-/** Avatar de iniciales con color determinístico según el nombre. */
-export default function Avatar({ nombre, size = 26 }: { nombre?: string | null; size?: number }) {
+/**
+ * Avatar de iniciales con color determinístico según el nombre.
+ * Si se pasa `url` (foto de perfil), muestra la imagen; si no, las iniciales.
+ */
+export default function Avatar({ nombre, url, size = 26 }: { nombre?: string | null; url?: string | null; size?: number }) {
   const base = (nombre || '?').trim() || '?';
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- avatar simple; evita configurar remotePatterns de next/image
+      <img src={url} alt={nombre || 'Avatar'} title={nombre || undefined} width={size} height={size} style={{
+        width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0,
+        background: '#e5e7eb',
+      }} />
+    );
+  }
   const ini = base.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase() || '?';
   return (
     <span title={nombre || undefined} style={{

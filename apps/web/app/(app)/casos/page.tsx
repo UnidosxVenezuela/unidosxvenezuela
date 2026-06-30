@@ -8,6 +8,7 @@ import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Avatar from '@/components/Avatar';
+import MenuFila from '@/components/MenuFila';
 import DetalleCaso from './DetalleCaso';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -108,7 +109,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
         ) : (
           <table>
-            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th></tr></thead>
+            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
                 <tr key={c.id}>
@@ -126,6 +127,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   </td>
                   <td><EstadoCaso estado={c.estado} /></td>
                   <td className="muted" style={{ fontSize: '.82rem', whiteSpace: 'nowrap' }}>{new Date(c.actualizado_en).toLocaleString('es-VE')}</td>
+                  <td style={{ textAlign: 'right' }}>
+                    <MenuFila etiqueta={'Acciones del caso ' + c.titulo}>
+                      <Link href={hrefCaso(c.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>
+                      <Link href={'/casos/' + c.id}><Icono nombre="enlace" size={16} /> Abrir en página</Link>
+                    </MenuFila>
+                  </td>
                 </tr>
               ))}
             </tbody>

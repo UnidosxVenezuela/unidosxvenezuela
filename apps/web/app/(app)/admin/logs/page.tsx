@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ROL } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
+import Avatar from '@/components/Avatar';
 
 type SP = { q?: string; rol?: string };
 
@@ -94,7 +95,12 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
                 return (
                   <tr key={l.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{new Date(l.creado_en).toLocaleString('es-VE')}</td>
-                    <td>{l.actorNombre}</td>
+                    <td>
+                      <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
+                        <Avatar nombre={l.actor_id ? l.actorNombre : 'Sistema'} size={24} />
+                        {l.actorNombre}
+                      </span>
+                    </td>
                     <td>{l.actorRol
                       ? <span className="insignia">{ETIQUETA_ROL[l.actorRol as keyof typeof ETIQUETA_ROL] ?? l.actorRol}</span>
                       : <span className="muted">—</span>}</td>
