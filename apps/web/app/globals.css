@@ -173,3 +173,15 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 .toast-ok { background: #16a34a; }
 .toast-err { background: var(--rojo); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ===== Uplift visual (UX tipo panel de verificación) ===== */
+/* Tablas más legibles y con hover de fila */
+thead th { text-transform: uppercase; font-size: .72rem; letter-spacing: .04em; color: var(--texto-suave); font-weight: 700; }
+th, td { padding: 12px 10px; }
+tbody tr { transition: background .12s; }
+tbody tr:hover { background: #f8fafc; }
+/* Tarjetas clicables (KPIs, listas) se elevan al pasar el mouse */
+a.tarjeta { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24,40,.10); border-color: #cdd5e3; }
+/* Caja de ícono para KPIs */
+.kpi-ico { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }

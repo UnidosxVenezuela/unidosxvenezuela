@@ -3,6 +3,7 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import Icono from '@/components/Icono';
 
 export default async function Dashboard() {
   const { user, perfil } = await requireUsuario();
@@ -25,10 +26,14 @@ export default async function Dashboard() {
     gruposPorArea.set(g.area, (gruposPorArea.get(g.area) ?? 0) + 1);
   }
 
-  const tarjeta = (titulo: string, valor: string | number, enlace: string) => (
-    <Link href={enlace} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div className="muted">{titulo}</div>
-      <div style={{ fontSize: '2rem', fontWeight: 800 }}>{valor}</div>
+  const tarjeta = (titulo: string, valor: string | number, enlace: string, icono: string, sub: string) => (
+    <Link href={enlace} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: 14, alignItems: 'center' }}>
+      <span className="kpi-ico" style={{ background: 'rgba(0,51,160,.08)', color: 'var(--azul)' }}><Icono nombre={icono} size={22} /></span>
+      <span>
+        <div className="muted">{titulo}</div>
+        <div style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.1 }}>{valor}</div>
+        <div className="muted" style={{ fontSize: '.78rem' }}>{sub}</div>
+      </span>
     </Link>
   );
 
@@ -37,10 +42,10 @@ export default async function Dashboard() {
       <h1>Panel</h1>
       <p className="muted">Hola, {perfil?.nombre_completo || user?.email}.</p>
       <div className="grid grid-2">
-        {tarjeta('Tareas por atender', pendientes.count ?? 0, '/tareas')}
-        {tarjeta('Mis grupos', misGrupos.count ?? 0, '/grupos')}
-        {tarjeta('Notificaciones sin leer', noLeidas.count ?? 0, '/notificaciones')}
-        {tarjeta('Tus horas', formatoHoras(misHoras), '/horas')}
+        {tarjeta('Tareas por atender', pendientes.count ?? 0, '/tareas', 'tareas', 'pendientes y asignadas')}
+        {tarjeta('Mis grupos', misGrupos.count ?? 0, '/grupos', 'grupos', 'donde participás')}
+        {tarjeta('Notificaciones sin leer', noLeidas.count ?? 0, '/notificaciones', 'avisos', 'por revisar')}
+        {tarjeta('Tus horas', formatoHoras(misHoras), '/horas', 'reloj', 'de voluntariado')}
       </div>
 
       <div className="tarjeta" style={{ textAlign: 'center', borderColor: 'var(--azul)' }}>

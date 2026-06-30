@@ -3,6 +3,7 @@ import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea } from '@/lib/constantes';
 import Icono from '@/components/Icono';
+import AnimarEntrada from '@/components/AnimarEntrada';
 import { unirmeGrupo } from './actions';
 
 export default async function GruposPage() {
@@ -19,7 +20,7 @@ export default async function GruposPage() {
   const misIds = new Set<string>((mis ?? []).map((m: any) => m.grupo_id));
 
   return (
-    <div>
+    <AnimarEntrada>
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Grupos</h1>
         {coord && <Link className="btn btn-primario" href="/grupos/nuevo"><Icono nombre="mas" /> Nuevo grupo</Link>}
@@ -66,6 +67,6 @@ export default async function GruposPage() {
           );
         })}
       </div>
-    </div>
+    </AnimarEntrada>
   );
 }

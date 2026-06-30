@@ -9,6 +9,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import AnimarEntrada from '@/components/AnimarEntrada';
 import { tomarTarea } from './actions';
 
 type SP = { estado?: string; prioridad?: string; grupo?: string; cat?: string; mias?: string };
@@ -84,7 +85,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   }
 
   return (
-    <div>
+    <AnimarEntrada>
       <RealtimeRefrescar tabla="tareas" />
       <div className="fila" style={{ justifyContent: 'space-between' }}>
         <h1>Tareas</h1>
@@ -143,7 +144,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
 
       {/* Gestores: vista completa con filtros */}
       {gestor && <GestorTodas searchParams={searchParams} />}
-    </div>
+    </AnimarEntrada>
   );
 }
 

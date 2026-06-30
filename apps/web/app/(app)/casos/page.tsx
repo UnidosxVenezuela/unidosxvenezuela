@@ -7,6 +7,7 @@ import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import Avatar from '@/components/Avatar';
 
 type SP = { q?: string; estado?: string; categoria?: string };
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
@@ -98,7 +99,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   </td>
                   <td>{c.categoria ? <span className="insignia">{c.categoria}</span> : '—'}</td>
                   <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
-                  <td>{nombres.get(c.asignado_a) ?? '—'}</td>
+                  <td>
+                    {c.asignado_a
+                      ? <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }}><Avatar nombre={nombres.get(c.asignado_a)} /> {nombres.get(c.asignado_a) ?? '—'}</span>
+                      : <span className="muted">Sin asignar</span>}
+                  </td>
                   <td><EstadoCaso estado={c.estado} /></td>
                   <td className="muted" style={{ fontSize: '.82rem', whiteSpace: 'nowrap' }}>{new Date(c.actualizado_en).toLocaleString('es-VE')}</td>
                 </tr>
