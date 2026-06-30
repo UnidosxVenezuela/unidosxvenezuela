@@ -2,13 +2,14 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-/** Lee ?ok= / ?err= de la URL, muestra un aviso flotante y limpia el parámetro. */
+/** Lee ?ok= / ?err= de la URL, muestra un aviso flotante y lo cierra solo. */
 export default function Toast() {
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
   const [aviso, setAviso] = useState<{ texto: string; tipo: 'ok' | 'err' } | null>(null);
 
+  // Detectar ?ok=/?err= y limpiarlo de la URL (sin afectar el temporizador).
   useEffect(() => {
     const ok = params.get('ok');
     const err = params.get('err');
@@ -17,10 +18,19 @@ export default function Toast() {
     const sp = new URLSearchParams(Array.from(params.entries()));
     sp.delete('ok'); sp.delete('err');
     router.replace(pathname + (sp.toString() ? '?' + sp.toString() : ''), { scroll: false });
-    const t = setTimeout(() => setAviso(null), 3500);
-    return () => clearTimeout(t);
   }, [params, pathname, router]);
 
+  // Auto-cierre: temporizador atado al aviso, no a la URL.
+  useEffect(() => {
+    if (!aviso) return;
+    const t = setTimeout(() => setAviso(null), 3500);
+    return () => clearTimeout(t);
+  }, [aviso]);
+
   if (!aviso) return null;
-  return <div className={'toast toast-' + aviso.tipo} role="status">{aviso.texto}</div>;
+  return (
+    <div className={'toast toast-' + aviso.tipo} role="status" onClick={() => setAviso(null)} title="Tocá para cerrar">
+      {aviso.texto}
+    </div>
+  );
 }

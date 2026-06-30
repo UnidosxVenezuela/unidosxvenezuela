@@ -151,7 +151,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
         {drawerCaso && (
           <aside className="grupo-aside">
-            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} />
+            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={perfil?.rol === 'admin'} />
           </aside>
         )}
       </div>

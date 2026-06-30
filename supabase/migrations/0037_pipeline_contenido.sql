@@ -73,7 +73,12 @@ drop policy if exists "piezas_delete" on public.piezas_contenido;
 create policy "piezas_delete" on public.piezas_contenido for delete to authenticated
   using (public.es_coordinacion());
 
--- Realtime + auditoría (historial reutilizando registro_auditoria).
-alter publication supabase_realtime add table public.piezas_contenido;
+-- Realtime + auditoría (historial reutilizando registro_auditoria). Idempotente:
+-- se puede re-ejecutar sin error aunque la tabla ya esté en la publicación.
+do $$ begin
+  alter publication supabase_realtime add table public.piezas_contenido;
+exception when duplicate_object then null; end $$;
+
+drop trigger if exists aud_piezas_contenido on public.piezas_contenido;
 create trigger aud_piezas_contenido after insert or update or delete on public.piezas_contenido
   for each row execute function public.auditar_cambio();

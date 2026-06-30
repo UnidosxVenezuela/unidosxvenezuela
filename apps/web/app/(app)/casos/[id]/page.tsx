@@ -27,7 +27,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
       <Link href="/casos" className="muted">← Verificación</Link>
       <div style={{ marginTop: 8 }}>
-        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil?.rol)} />
+        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil?.rol)} esAdmin={perfil?.rol === 'admin'} />
       </div>
     </div>
   );

@@ -4,7 +4,8 @@ import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
-import { cambiarEstadoCaso, actualizarCaso } from './actions';
+import BotonConfirmar from '@/components/BotonConfirmar';
+import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
 import { enviarARedaccion } from '../contenido/actions';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -17,8 +18,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, esAdmin = false }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; esAdmin?: boolean;
 }) {
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
@@ -126,6 +127,19 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           ))}
         </div>
       </div>
+
+      {esAdmin && (
+        <form action={eliminarCaso} className="tarjeta" style={{ borderColor: '#fecaca' }}>
+          <h3 className="aside-titulo" style={{ color: 'var(--critica)' }}><Icono nombre="basura" size={16} /> Eliminar caso</h3>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Solo un administrador puede borrar un caso. Esta acción no se puede deshacer.</p>
+          <BotonConfirmar
+            mensaje={'¿Eliminar definitivamente el caso "' + caso.titulo + '"? Esta acción no se puede deshacer.'}
+            className="btn btn-peligro" style={{ width: '100%' }}>
+            <Icono nombre="basura" size={16} /> Eliminar caso
+          </BotonConfirmar>
+        </form>
+      )}
     </div>
   );
 }

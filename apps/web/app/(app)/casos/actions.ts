@@ -56,6 +56,19 @@ export async function cambiarEstadoCaso(formData: FormData) {
   redirigirOk(opt(formData.get('volver')) || ('/casos/' + id), 'Estado actualizado');
 }
 
+export async function eliminarCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
+  if (yo?.rol !== 'admin') throw new Error('Solo un administrador puede eliminar casos.');
+  const id = txt(formData.get('caso_id'));
+  const { error } = await supabase.from('casos').delete().eq('id', id);
+  if (error) throw new Error('No se pudo eliminar el caso: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk('/casos', 'Caso eliminado');
+}
+
 export async function actualizarCaso(formData: FormData) {
   const { supabase } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
