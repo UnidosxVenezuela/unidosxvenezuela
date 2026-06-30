@@ -1,9 +1,10 @@
 'use server';
+import { randomBytes } from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { enviarEmail } from '@/lib/email';
+import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk } from '@/lib/flash';
 import type { Rol } from '@unidos/types';
 
@@ -159,4 +160,60 @@ export async function guardarRolesExtra(formData: FormData) {
   });
   revalidatePath('/admin/usuarios');
   redirigirOk('/admin/usuarios', 'Roles adicionales actualizados');
+}
+
+// Exige que el actor sea ADMIN (rol principal o adicional).
+async function exigirAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede hacer esto.');
+  return { supabase, userId: user.id };
+}
+
+/** Contraseña temporal legible (12+ caracteres). */
+function generarTemporal(): string {
+  return randomBytes(9).toString('base64url'); // ~12 chars [A-Za-z0-9_-]
+}
+
+// Un ADMIN restablece la contraseña de un usuario NO administrador. La temporal
+// se envía SOLO al correo de la persona (el admin no la ve). Audita el cambio.
+export async function restablecerContrasena(formData: FormData) {
+  const { supabase, userId } = await exigirAdmin();
+  const perfilId = String(formData.get('perfil_id'));
+  if (perfilId === userId) throw new Error('Para tu propia cuenta usa "Cambiar contraseña" en tu perfil.');
+  if (!emailActivo()) throw new Error('El correo (RESEND) no está configurado; no se puede enviar la contraseña temporal.');
+
+  const { data: objetivo } = await supabase.from('perfiles')
+    .select('rol, roles_extra, super_admin, nombre_completo').eq('id', perfilId).single();
+  if (!objetivo) throw new Error('Usuario no encontrado.');
+  const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
+  if (rolesObjetivo.includes('admin') || objetivo.super_admin) {
+    throw new Error('No puedes restablecer la contraseña de otro administrador.');
+  }
+
+  const admin = createAdminClient();
+  const { data: u } = await admin.auth.admin.getUserById(perfilId);
+  const email = u?.user?.email;
+  if (!email) throw new Error('Esa persona no tiene correo registrado.');
+
+  const temporal = generarTemporal();
+  const { error } = await admin.auth.admin.updateUserById(perfilId, { password: temporal });
+  if (error) throw new Error('No se pudo restablecer la contraseña: ' + error.message);
+
+  await enviarEmail({
+    to: email,
+    subject: 'Tu contraseña fue restablecida — UnidosXVenezuela',
+    html: `<p>Hola${objetivo.nombre_completo ? ', ' + objetivo.nombre_completo : ''}. Un administrador restableció tu contraseña en <strong>UnidosXVenezuela</strong>.</p>
+           <p>Tu nueva contraseña temporal es:</p>
+           <p style="font-size:1.25rem;font-weight:700;letter-spacing:.5px">${temporal}</p>
+           <p>Ingresa con ella y <strong>cámbiala apenas entres</strong>, desde <em>Mi perfil</em>.</p>
+           <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
+  });
+
+  await supabase.rpc('registrar_auditoria', { p_accion: 'reset_contrasena', p_entidad_id: perfilId, p_metadata: {} });
+  revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Contraseña restablecida; se envió la temporal al correo de ' + (objetivo.nombre_completo || 'la persona'));
 }

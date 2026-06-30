@@ -3,7 +3,7 @@ import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra } from './actions';
+import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena } from './actions';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -219,6 +219,16 @@ export default async function AdminUsuariosPage() {
                       {p.verificado ? 'Quitar' : 'Verificar'}
                     </button>
                   </form>
+                  {esAdmin && p.id !== user!.id && !(p.rol === 'admin' || (p.roles_extra ?? []).includes('admin') || p.super_admin) && (
+                    <form action={restablecerContrasena} style={{ marginTop: 6 }}>
+                      <input type="hidden" name="perfil_id" value={p.id} />
+                      <BotonConfirmar
+                        mensaje={'¿Restablecer la contraseña de ' + (p.nombre_completo || 'esta persona') + '? Se le enviará una contraseña temporal a su correo.'}
+                        className="btn" style={{ minHeight: 32, padding: '4px 10px' }}>
+                        <Icono nombre="llave" size={14} /> Restablecer contraseña
+                      </BotonConfirmar>
+                    </form>
+                  )}
                 </td>
                 <td>
                   {selectorRol(p)}
