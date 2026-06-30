@@ -309,6 +309,13 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 .leyenda-fila { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
 .leyenda-fila .muted { font-size: .82rem; }
 
+/* Tablero (kanban) del pipeline de contenido */
+.tablero { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+.tablero-col { flex: 0 0 244px; display: flex; flex-direction: column; gap: 10px; background: #eef2f7; border-radius: 14px; padding: 10px; }
+.tablero-col-cab { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 4px; }
+.tablero-col .tarjeta { box-shadow: none; border-color: #dde3ee; }
+.tablero-col a.tarjeta:hover { box-shadow: var(--sombra); }
+
 /* Línea de tiempo (historial) */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline li { position: relative; padding: 0 0 14px 20px; }

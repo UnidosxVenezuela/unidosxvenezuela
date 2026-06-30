@@ -5,6 +5,7 @@ import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import { cambiarEstadoCaso, actualizarCaso } from './actions';
+import { enviarARedaccion } from '../contenido/actions';
 
 const EXPLICA_ESTADO: Record<string, string> = {
   en_proceso: 'Ya hay una persona verificando el caso. Nadie más debe revisarlo.',
@@ -87,6 +88,15 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         <div className="tarjeta">
           <p className="muted" style={{ margin: 0 }}>Enviaste este caso para verificación. Solo coordinación o verificadores pueden cambiar su estado o asignación.</p>
         </div>
+      )}
+
+      {puedeEditar && caso.estado === 'confirmado' && (
+        <form action={enviarARedaccion} className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
+          <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Pasar a producción</h3>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Confirmado y activo. Enviálo al equipo de Redacción para producir el contenido.</p>
+          <button className="btn btn-acento" type="submit" style={{ width: '100%' }}><Icono nombre="ok" size={16} /> Enviar a Redacción</button>
+        </form>
       )}
 
       <div className="tarjeta">
