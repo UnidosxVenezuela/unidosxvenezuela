@@ -9,8 +9,13 @@ export default async function NuevoGrupoPage() {
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <h1>Nuevo grupo</h1>
-      <form action={crearGrupo} className="tarjeta">
+      <div className="pagina-cab">
+        <div>
+          <h1>Nuevo grupo</h1>
+          <p className="muted sub">Asigna un área, un líder y la visibilidad (abierto o privado).</p>
+        </div>
+      </div>
+      <form action={crearGrupo} className="tarjeta" style={{ marginTop: 12 }}>
         <div className="campo">
           <label htmlFor="nombre">Nombre del grupo</label>
           <input id="nombre" name="nombre" className="input" required />

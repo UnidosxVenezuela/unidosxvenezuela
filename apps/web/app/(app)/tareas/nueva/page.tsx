@@ -16,8 +16,13 @@ export default async function NuevaTareaPage() {
 
   return (
     <div style={{ maxWidth: 640 }}>
-      <h1>Nueva tarea</h1>
-      <form action={crearTarea} className="tarjeta">
+      <div className="pagina-cab">
+        <div>
+          <h1>Nueva tarea</h1>
+          <p className="muted sub">Define título, cupo de personas, prioridad, categoría y a quién se asigna.</p>
+        </div>
+      </div>
+      <form action={crearTarea} className="tarjeta" style={{ marginTop: 12 }}>
         <div className="campo">
           <label htmlFor="titulo">Título</label>
           <input id="titulo" name="titulo" className="input" required />

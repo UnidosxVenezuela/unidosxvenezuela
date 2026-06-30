@@ -14,8 +14,13 @@ export default async function NuevoCasoPage() {
   return (
     <div style={{ maxWidth: 640 }}>
       <Link href="/casos" className="muted">← Verificación</Link>
-      <h1>Nuevo caso</h1>
-      <form action={crearCaso} className="tarjeta">
+      <div className="pagina-cab" style={{ marginTop: 8 }}>
+        <div>
+          <h1>Nuevo caso</h1>
+          <p className="muted sub">Registra la información que llega para verificar: título, categoría, fuente y fecha.</p>
+        </div>
+      </div>
+      <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
         <div className="campo">
           <label htmlFor="titulo">Título</label>
           <input id="titulo" name="titulo" className="input" required />
