@@ -59,3 +59,16 @@ export function puedeVerAliados(rol?: Rol | null) {
 export function puedeVerificar(rol?: Rol | null) {
   return rol === 'admin' || rol === 'coordinador' || rol === 'verificador';
 }
+
+// Quién puede ENVIAR/crear y ver casos: verificación + el rol de recopilación
+// (recopilación solo envía: no puede cambiar el estado ni asignar).
+export function puedeRecopilar(rol?: Rol | null) {
+  return puedeVerificar(rol) || rol === 'recopilacion';
+}
+
+// Pipeline de producción de contenido (ve y trabaja en /contenido): coordinación
+// o un rol de producción. Cada rol actúa solo en la etapa que le corresponde.
+const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+export function puedePipeline(rol?: Rol | null) {
+  return !!rol && PIPELINE.includes(rol);
+}

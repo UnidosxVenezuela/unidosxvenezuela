@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -21,7 +21,8 @@ const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fe
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { perfil } = await requireUsuario();
-  if (!puedeVerificar(perfil?.rol)) redirect('/dashboard');
+  if (!puedeRecopilar(perfil?.rol)) redirect('/dashboard');
+  const puedeVerif = puedeVerificar(perfil?.rol);
   const supabase = await createClient();
 
   const cnt = (estado?: string) => {
@@ -150,7 +151,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
         {drawerCaso && (
           <aside className="grupo-aside">
-            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} />
+            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} />
           </aside>
         )}
       </div>

@@ -7,7 +7,7 @@ import CampanaNotificaciones from './CampanaNotificaciones';
 import UserChip from './UserChip';
 
 type Usuario = { nombre: string; rol?: string | null; email?: string | null; avatarUrl?: string | null };
-type Nav = { coord: boolean; aliados?: boolean; verificacion?: boolean };
+type Nav = { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean };
 
 /**
  * Shell de la app: barra lateral (colapsable en escritorio, cajón off-canvas en
@@ -36,7 +36,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
       <aside className="sidebar">
         <div className="tricolor" />
         <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
-        <NavLateral coord={nav.coord} aliados={nav.aliados} verificacion={nav.verificacion} />
+        <NavLateral coord={nav.coord} aliados={nav.aliados} verificacion={nav.verificacion} contenido={nav.contenido} />
       </aside>
 
       {cajon && <button className="backdrop" aria-label="Cerrar menú" onClick={() => setCajon(false)} />}

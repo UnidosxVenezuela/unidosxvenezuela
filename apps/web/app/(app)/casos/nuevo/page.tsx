@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeVerificar(perfil?.rol)) redirect('/dashboard');
+  if (!puedeRecopilar(perfil?.rol)) redirect('/dashboard');
+  const puedeAsignar = puedeVerificar(perfil?.rol);
   const supabase = await createClient();
   const { data: perfiles } = await supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo');
 
@@ -49,13 +50,15 @@ export default async function NuevoCasoPage() {
             <label htmlFor="fuente_url">Enlace de la fuente (opcional)</label>
             <input id="fuente_url" name="fuente_url" className="input" type="url" placeholder="https://…" />
           </div>
-          <div className="campo">
-            <label htmlFor="asignado_a">Asignar a (verificador)</label>
-            <select id="asignado_a" name="asignado_a" className="input" defaultValue="">
-              <option value="">Sin asignar</option>
-              {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
-            </select>
-          </div>
+          {puedeAsignar && (
+            <div className="campo">
+              <label htmlFor="asignado_a">Asignar a (verificador)</label>
+              <select id="asignado_a" name="asignado_a" className="input" defaultValue="">
+                <option value="">Sin asignar</option>
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+              </select>
+            </div>
+          )}
         </div>
         <button className="btn btn-primario" type="submit">Crear caso</button>
       </form>

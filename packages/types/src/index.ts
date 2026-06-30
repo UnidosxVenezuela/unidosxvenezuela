@@ -10,7 +10,13 @@ export type Rol =
   | 'voluntario'              // Miembro de campo
   | 'observador'              // Solo lectura (donantes, prensa autorizada)
   | 'lider_plataforma_aliada' // Comparte endpoints de su plataforma (base de datos compartida)
-  | 'verificador';            // Revisa y aprueba casos sensibles (módulo de verificación)
+  | 'verificador'             // Revisa y aprueba casos sensibles (módulo de verificación)
+  // Pipeline de contenido (grupos exclusivos por rol)
+  | 'recopilacion'            // Envía información/casos para verificar (no verifica)
+  | 'redaccion'               // Redacta contenido y copy a partir de casos confirmados
+  | 'diseno_grafico'          // Diseña la pieza gráfica
+  | 'edicion_video'           // Edita el video/reel
+  | 'redes_sociales';         // Publica la pieza final
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer
@@ -128,6 +134,26 @@ export interface Caso {
   asignado_a: string | null;
   estado: EstadoCaso;
   notas: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
+// Pipeline de producción de contenido (un caso confirmado → pieza publicable).
+export type EtapaContenido = 'redaccion' | 'diseno' | 'video' | 'redes' | 'publicado';
+export type DestinoContenido = 'diseno' | 'video';
+
+export interface PiezaContenido {
+  id: string;
+  caso_id: string | null;
+  titulo: string;
+  etapa: EtapaContenido;
+  destino: DestinoContenido | null;
+  contenido: string | null;
+  descripcion: string | null;
+  enlace_pieza: string | null;
+  notas: string | null;
+  asignado_a: string | null;
   creado_por: string | null;
   creado_en: string;
   actualizado_en: string;

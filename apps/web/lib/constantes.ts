@@ -1,4 +1,4 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido } from '@unidos/types';
 
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
@@ -77,13 +77,47 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   observador: 'Observador',
   lider_plataforma_aliada: 'Líder de plataforma aliada',
   verificador: 'Verificación',
+  recopilacion: 'Recopilación',
+  redaccion: 'Redacción',
+  diseno_grafico: 'Diseño Gráfico',
+  edicion_video: 'Edición de Videos',
+  redes_sociales: 'Redes Sociales',
 };
 
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
   en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
 };
 export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso'];
-export const CATEGORIAS_CASO = ['Desaparecidos', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras informaciones'];
+export const CATEGORIAS_CASO = ['Desaparecidos', 'Casos de Niños', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras informaciones', 'Otras Informaciones Relevantes'];
+
+// ── Pipeline de producción de contenido ──
+export const ETIQUETA_ETAPA: Record<EtapaContenido, string> = {
+  redaccion: 'Redacción', diseno: 'Diseño Gráfico', video: 'Edición de Videos', redes: 'Redes Sociales', publicado: 'Publicado',
+};
+export const ETAPAS_CONTENIDO: EtapaContenido[] = ['redaccion', 'diseno', 'video', 'redes', 'publicado'];
+export const ETIQUETA_DESTINO: Record<DestinoContenido, string> = { diseno: 'Diseño Gráfico', video: 'Edición de Videos' };
+export const DESTINOS: DestinoContenido[] = ['diseno', 'video'];
+
+/** Rol responsable de cada etapa (para asignar y permitir acciones). */
+export const ROL_DE_ETAPA: Record<EtapaContenido, Rol | null> = {
+  redaccion: 'redaccion', diseno: 'diseno_grafico', video: 'edicion_video', redes: 'redes_sociales', publicado: null,
+};
+
+/** Tono de Pill por etapa. */
+export function claseEtapa(e: EtapaContenido): string {
+  if (e === 'publicado') return 'ok';
+  if (e === 'redes') return 'info';
+  if (e === 'redaccion') return 'aviso';
+  return ''; // diseño / video → neutro
+}
+
+/** Siguiente etapa según la actual y el destino elegido en Redacción. */
+export function siguienteEtapa(etapa: EtapaContenido, destino: DestinoContenido | null): EtapaContenido | null {
+  if (etapa === 'redaccion') return destino === 'video' ? 'video' : 'diseno';
+  if (etapa === 'diseno' || etapa === 'video') return 'redes';
+  if (etapa === 'redes') return 'publicado';
+  return null; // publicado = fin del flujo
+}
 
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {
   pendiente: 'Pendiente', asignada: 'Asignada', en_progreso: 'En progreso',

@@ -16,8 +16,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean;
 }) {
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
@@ -53,33 +53,41 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
       </div>
 
-      <form action={cambiarEstadoCaso} className="tarjeta">
-        <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Estado del caso</h3>
-        <input type="hidden" name="caso_id" value={caso.id} />
-        <input type="hidden" name="volver" value={volver} />
-        <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }}>
-          {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
-        </select>
-        <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
-      </form>
+      {puedeEditar ? (
+        <>
+          <form action={cambiarEstadoCaso} className="tarjeta">
+            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Estado del caso</h3>
+            <input type="hidden" name="caso_id" value={caso.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }}>
+              {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
+            </select>
+            <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
+          </form>
 
-      <form action={actualizarCaso} className="tarjeta">
-        <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Asignación y notas</h3>
-        <input type="hidden" name="caso_id" value={caso.id} />
-        <input type="hidden" name="volver" value={volver} />
-        <div className="campo">
-          <label>Asignar a (verificador)</label>
-          <select name="asignado_a" className="input" defaultValue={caso.asignado_a ?? ''} style={{ width: '100%' }}>
-            <option value="">Sin asignar</option>
-            {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
-          </select>
+          <form action={actualizarCaso} className="tarjeta">
+            <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Asignación y notas</h3>
+            <input type="hidden" name="caso_id" value={caso.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <div className="campo">
+              <label>Asignar a (verificador)</label>
+              <select name="asignado_a" className="input" defaultValue={caso.asignado_a ?? ''} style={{ width: '100%' }}>
+                <option value="">Sin asignar</option>
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+              </select>
+            </div>
+            <div className="campo">
+              <label>Notas / observaciones</label>
+              <textarea name="notas" className="input" rows={3} defaultValue={caso.notas ?? ''} />
+            </div>
+            <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar</button>
+          </form>
+        </>
+      ) : (
+        <div className="tarjeta">
+          <p className="muted" style={{ margin: 0 }}>Enviaste este caso para verificación. Solo coordinación o verificadores pueden cambiar su estado o asignación.</p>
         </div>
-        <div className="campo">
-          <label>Notas / observaciones</label>
-          <textarea name="notas" className="input" rows={3} defaultValue={caso.notas ?? ''} />
-        </div>
-        <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar</button>
-      </form>
+      )}
 
       <div className="tarjeta">
         <h3 className="aside-titulo"><Icono nombre="historial" size={16} /> Historial de cambios</h3>
