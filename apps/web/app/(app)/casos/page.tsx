@@ -8,8 +8,9 @@ import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Avatar from '@/components/Avatar';
+import DetalleCaso from './DetalleCaso';
 
-type SP = { q?: string; estado?: string; categoria?: string };
+type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
@@ -40,6 +41,23 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const { data: listos } = await supabase.from('casos')
     .select('id, numero, titulo, asignado_a').eq('estado', 'confirmado')
     .order('actualizado_en', { ascending: false }).limit(8);
+
+  // Panel lateral (drawer) cuando hay ?caso=ID, conservando los filtros.
+  const filtros = new URLSearchParams();
+  if (searchParams.q) filtros.set('q', searchParams.q);
+  if (searchParams.estado) filtros.set('estado', searchParams.estado);
+  if (searchParams.categoria) filtros.set('categoria', searchParams.categoria);
+  const hrefCaso = (cid: string) => { const p = new URLSearchParams(filtros); p.set('caso', cid); return '/casos?' + p.toString(); };
+  const cerrarHref = '/casos' + (filtros.toString() ? '?' + filtros.toString() : '');
+
+  let drawerCaso: any = null; let drawerHist: any[] = [];
+  if (searchParams.caso) {
+    const [{ data: dc }, { data: dh }] = await Promise.all([
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas').eq('id', searchParams.caso).single(),
+      supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
+    ]);
+    drawerCaso = dc; drawerHist = dh ?? [];
+  }
 
   const kpi = (label: string, valor: number, sub: string, color: string, href: string) => (
     <Link href={href} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -83,6 +101,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         {(searchParams.q || searchParams.estado || searchParams.categoria) && <Link className="btn" href="/casos">Limpiar</Link>}
       </form>
 
+      <div className={drawerCaso ? 'grupo-grid' : undefined}>
+        <div className="grupo-main">
       <div className="tarjeta">
         {(casos ?? []).length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
@@ -94,7 +114,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 <tr key={c.id}>
                   <td className="muted">#{String(c.numero).padStart(5, '0')}</td>
                   <td>
-                    <Link href={'/casos/' + c.id}>{c.titulo}</Link>
+                    <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
                     {c.descripcion && <div className="muted" style={{ fontSize: '.82rem' }}>{String(c.descripcion).slice(0, 60)}</div>}
                   </td>
                   <td>{c.categoria ? <span className="insignia">{c.categoria}</span> : '—'}</td>
@@ -110,6 +130,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+        </div>
+        {drawerCaso && (
+          <aside className="grupo-aside">
+            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} />
+          </aside>
         )}
       </div>
 

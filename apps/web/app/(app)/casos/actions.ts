@@ -48,7 +48,7 @@ export async function cambiarEstadoCaso(formData: FormData) {
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
   revalidatePath('/casos/' + id);
-  redirigirOk('/casos/' + id, 'Estado actualizado');
+  redirigirOk(opt(formData.get('volver')) || ('/casos/' + id), 'Estado actualizado');
 }
 
 export async function actualizarCaso(formData: FormData) {
@@ -60,6 +60,7 @@ export async function actualizarCaso(formData: FormData) {
     actualizado_en: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el caso: ' + error.message);
+  revalidatePath('/casos');
   revalidatePath('/casos/' + id);
-  redirigirOk('/casos/' + id, 'Caso actualizado');
+  redirigirOk(opt(formData.get('volver')) || ('/casos/' + id), 'Caso actualizado');
 }
