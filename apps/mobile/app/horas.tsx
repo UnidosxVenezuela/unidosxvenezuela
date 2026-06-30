@@ -32,7 +32,7 @@ export default function Horas() {
 
   async function registrar() {
     const n = Number(horas.replace(',', '.'));
-    if (!Number.isFinite(n) || n <= 0 || n > 24) { Alert.alert('Horas inválidas', 'Indicá un número entre 0 y 24.'); return; }
+    if (!Number.isFinite(n) || n <= 0 || n > 24) { Alert.alert('Horas inválidas', 'Indica un número entre 0 y 24.'); return; }
     setEnviando(true);
     const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('registro_horas')

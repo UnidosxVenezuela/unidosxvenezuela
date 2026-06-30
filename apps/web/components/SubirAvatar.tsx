@@ -20,7 +20,7 @@ export default function SubirAvatar({ nombre, urlActual }: { nombre?: string | n
   async function elegir(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { setError('Elegí un archivo de imagen.'); return; }
+    if (!file.type.startsWith('image/')) { setError('Elige un archivo de imagen.'); return; }
     if (file.size > 5 * 1024 * 1024) { setError('La imagen no debe superar 5 MB.'); return; }
     setError(null); setTrabajando(true);
     const supabase = createClient();

@@ -22,7 +22,7 @@ export default function SubirPiezaArchivo({ piezaId, urlActual, nombreActual }: 
   async function elegir(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 25 * 1024 * 1024) { setError('El archivo no debe superar 25 MB. Para videos pesados, usá el enlace.'); return; }
+    if (file.size > 25 * 1024 * 1024) { setError('El archivo no debe superar 25 MB. Para videos pesados, usa el enlace.'); return; }
     setError(null); setTrabajando(true);
     const supabase = createClient();
     const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
@@ -57,7 +57,7 @@ export default function SubirPiezaArchivo({ piezaId, urlActual, nombreActual }: 
         </button>
         {url && <button type="button" className="btn" onClick={quitar} disabled={trabajando}>Quitar</button>}
       </div>
-      <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Imagen o documento, hasta 25 MB. Para videos pesados, usá el enlace.</p>
+      <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Imagen o documento, hasta 25 MB. Para videos pesados, usa el enlace.</p>
       {error && <p className="error" style={{ marginTop: 6 }}>{error}</p>}
     </div>
   );

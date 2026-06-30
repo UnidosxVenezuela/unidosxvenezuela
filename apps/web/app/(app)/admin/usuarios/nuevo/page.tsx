@@ -56,7 +56,7 @@ export default async function CrearUsuarioPage() {
           </p>
         )}
         <p className="muted" style={{ fontSize: '.85rem', marginTop: 0 }}>
-          Para un <strong>líder de plataforma aliada</strong>: creá la cuenta con otro rol y proponela en la sección “Aliados” (requiere doble aprobación).
+          Para un <strong>líder de plataforma aliada</strong>: crea la cuenta con otro rol y proponla en la sección “Aliados” (requiere doble aprobación).
         </p>
         <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Crear usuario</button>
       </form>

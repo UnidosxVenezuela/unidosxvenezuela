@@ -40,7 +40,7 @@ export default function RecuperarPage() {
         <h1 style={{ textAlign: 'center' }}>Recuperar contraseña</h1>
         {enviado ? (
           <div className="tarjeta">
-            <p>Si el correo existe, te enviamos un enlace para restablecer tu contraseña. Revisá tu bandeja (y spam).</p>
+            <p>Si el correo existe, te enviamos un enlace para restablecer tu contraseña. Revisa tu bandeja (y spam).</p>
             <Link className="btn btn-primario" href="/login">Volver a iniciar sesión</Link>
           </div>
         ) : (

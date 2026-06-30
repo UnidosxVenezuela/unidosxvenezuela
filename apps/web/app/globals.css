@@ -123,6 +123,11 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
   font-weight: 600; color: var(--texto); text-decoration: none; cursor: pointer;
 }
 .user-menu a:hover, .user-menu button:hover { background: #f1f5f9; }
+/* En móvil el chip se reduce al avatar para no desbordar la barra superior. */
+@media (max-width: 600px) {
+  .user-chip { padding: 4px; gap: 0; }
+  .user-chip .uc-textos, .user-chip > svg { display: none; }
+}
 
 /* Telón para el cajón móvil */
 .backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(15,23,42,.45); border: 0; cursor: pointer; }
@@ -214,7 +219,9 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 /* Vista de grupo: contenido a la izquierda, panel de gestión a la derecha */
 .grupo-grid { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 20px; align-items: start; }
 .grupo-main { min-width: 0; }
-.grupo-aside { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
+/* top: 76px = alto de la barra superior (60) + aire, para que el panel no quede
+   debajo de la barra sticky al hacer scroll. */
+.grupo-aside { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 14px; max-height: calc(100vh - 92px); overflow-y: auto; }
 .grupo-aside .tarjeta { margin: 0; }
 .aside-titulo { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: .95rem; }
 .anuncio { border-left: 4px solid var(--amarillo); }
@@ -244,9 +251,10 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 /* Caja de ícono para KPIs */
 .kpi-ico { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
-/* Menú de acciones por fila (popover "⋮") */
+/* Menú de acciones por fila (popover "⋮"). z 70: sobre la barra superior (50)
+   y el telón (55), debajo del menú de usuario (80). */
 .menu-fila {
-  position: absolute; right: 0; top: calc(100% + 4px); z-index: 50; min-width: 190px;
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 70; min-width: 190px;
   background: #fff; border: 1px solid var(--borde); border-radius: 10px;
   box-shadow: 0 10px 30px rgba(16,24,40,.16); padding: 6px;
   display: flex; flex-direction: column; gap: 2px;
@@ -297,6 +305,13 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 /* Tabla compacta: oculta columnas de menor prioridad (p.ej. junto al drawer) */
 .tabla-compacta th:nth-child(4), .tabla-compacta td:nth-child(4),
 .tabla-compacta th:nth-child(7), .tabla-compacta td:nth-child(7) { display: none; }
+
+/* Desplazamiento horizontal de tablas anchas en pantallas chicas: contiene el
+   desborde dentro de la tarjeta en lugar de mover toda la página de lado. */
+.tabla-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tabla-scroll > table { min-width: 560px; }
+.tabla-scroll::-webkit-scrollbar { height: 8px; }
+.tabla-scroll::-webkit-scrollbar-thumb { background: #d4dbe6; border-radius: 999px; }
 
 /* Celdas de tabla: título en dos líneas + persona con avatar */
 .celda-titulo strong { display: block; font-weight: 700; }

@@ -66,7 +66,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
           {piezas.length === 0 ? (
             <div className="tarjeta vacio">
               <Icono nombre="documento" size={40} />
-              <p className="muted" style={{ marginBottom: 0 }}>Todavía no hay piezas. Desde Verificación, enviá un caso confirmado a Redacción.</p>
+              <p className="muted" style={{ marginBottom: 0 }}>Todavía no hay piezas. Desde Verificación, envía un caso confirmado a Redacción.</p>
             </div>
           ) : (
             <div className="tablero">

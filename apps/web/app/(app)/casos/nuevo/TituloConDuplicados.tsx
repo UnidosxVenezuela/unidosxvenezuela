@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 /**
- * Campo de título que, mientras escribís, busca casos ya registrados con título
+ * Campo de título que, mientras escribes, busca casos ya registrados con título
  * parecido para evitar duplicados. La lectura respeta la RLS (verificación/recopilación).
  */
 export default function TituloConDuplicados() {

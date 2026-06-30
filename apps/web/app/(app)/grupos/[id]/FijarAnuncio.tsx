@@ -18,7 +18,7 @@ export default function FijarAnuncio({ grupoId }: { grupoId: string }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!contenido.trim()) { setError('Escribí el anuncio.'); return; }
+    if (!contenido.trim()) { setError('Escribe el anuncio.'); return; }
     if (file && file.size > MAX) { setError('El archivo supera 10 MB.'); return; }
     setEnviando(true);
     const supabase = createClient();

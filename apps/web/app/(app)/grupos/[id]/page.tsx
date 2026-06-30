@@ -148,7 +148,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             {tareas.length === 0 ? (
               <p className="muted" style={{ margin: 0 }}>Este grupo no tiene tareas todavía.</p>
             ) : (
-              <table>
+              <div className="tabla-scroll"><table>
                 <thead><tr><th>Tarea</th><th>Prioridad</th><th>Estado</th></tr></thead>
                 <tbody>
                   {tareas.map((t) => (
@@ -159,7 +159,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )}
             <div className="fila" style={{ marginTop: 10, justifyContent: 'space-between' }}>
               <Link className="muted" href={'/tareas?grupo=' + grupoId}>Ver todas →</Link>
@@ -196,7 +196,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           {/* Miembros */}
           <h2 className="fila" style={{ gap: 6 }}><Icono nombre="grupos" size={20} /> Miembros ({miembros.length})</h2>
           <div className="tarjeta">
-            <table>
+            <div className="tabla-scroll"><table>
               <thead><tr><th>Nombre</th><th>En grupo</th>{puedeGestionar && <th></th>}</tr></thead>
               <tbody>
                 {miembros.map((m) => (
@@ -236,7 +236,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 ))}
                 {miembros.length === 0 && <tr><td colSpan={3} className="muted">Sin miembros todavía.</td></tr>}
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           {puedeGestionar && baneados.length > 0 && (

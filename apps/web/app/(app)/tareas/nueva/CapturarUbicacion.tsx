@@ -34,7 +34,7 @@ export default function CapturarUbicacion() {
         {coords && <span className="insignia ok">📍 {coords.lat}, {coords.lng}</span>}
         {coords && <button type="button" className="btn" style={{ minHeight: 32, padding: '2px 10px' }} onClick={() => setCoords(null)}>Quitar GPS</button>}
       </div>
-      {estado === 'error' && <p className="error" style={{ marginTop: 6 }}>No se pudo obtener el GPS. Podés escribir la dirección.</p>}
+      {estado === 'error' && <p className="error" style={{ marginTop: 6 }}>No se pudo obtener el GPS. Puedes escribir la dirección.</p>}
     </div>
   );
 }

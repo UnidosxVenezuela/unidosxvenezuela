@@ -95,7 +95,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         <form action={enviarARedaccion} className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
           <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Pasar a producción</h3>
           <input type="hidden" name="caso_id" value={caso.id} />
-          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Confirmado y activo. Enviálo al equipo de Redacción para producir el contenido.</p>
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Confirmado y activo. Envíalo al equipo de Redacción para producir el contenido.</p>
           <button className="btn btn-acento" type="submit" style={{ width: '100%' }}><Icono nombre="ok" size={16} /> Enviar a Redacción</button>
         </form>
       )}

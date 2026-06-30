@@ -96,7 +96,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
         {logs.length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>Sin actividad para ese filtro.</p>
         ) : (
-          <table>
+          <div className="tabla-scroll"><table>
             <thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th></tr></thead>
             <tbody>
               {logs.map((l: any) => {
@@ -118,7 +118,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
                 );
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

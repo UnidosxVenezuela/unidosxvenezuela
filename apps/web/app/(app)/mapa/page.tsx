@@ -35,7 +35,7 @@ export default async function MapaPage() {
         <span className="leyenda-pin" style={{ background: '#E6A100' }} /> necesita,{' '}
         <span className="leyenda-pin" style={{ background: '#0A7D2C' }} /> cubierto) y
         tareas con ubicación (<span className="leyenda-pin" style={{ background: '#0033A0' }} /> azul).
-        Para crear o editar centros, entrá a <strong>Centros de acopio</strong>.
+        Para crear o editar centros, entra a <strong>Centros de acopio</strong>.
       </p>
       <Mapa puntos={puntos} tareas={tareas} />
     </div>

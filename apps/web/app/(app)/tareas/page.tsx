@@ -47,7 +47,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
 }) {
   return (
     <div className="tarjeta">
-      <table>
+      <div className="tabla-scroll"><table>
         <thead>
           <tr><th>Tarea</th><th>Categoría</th><th>Grupo</th><th>Asignado</th><th>Prioridad</th><th>Estado</th><th>Vence</th><th aria-label="Acciones"></th></tr>
         </thead>
@@ -77,7 +77,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

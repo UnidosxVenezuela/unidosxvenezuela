@@ -29,7 +29,7 @@ export default function Toast() {
 
   if (!aviso) return null;
   return (
-    <div className={'toast toast-' + aviso.tipo} role="status" onClick={() => setAviso(null)} title="Tocá para cerrar">
+    <div className={'toast toast-' + aviso.tipo} role="status" onClick={() => setAviso(null)} title="Toca para cerrar">
       {aviso.texto}
     </div>
   );

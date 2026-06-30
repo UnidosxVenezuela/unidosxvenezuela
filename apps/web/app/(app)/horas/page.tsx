@@ -55,7 +55,7 @@ export default async function HorasPage() {
         </div>
       ) : (
         <div className="tarjeta">
-          <table>
+          <div className="tabla-scroll"><table>
             <thead><tr><th>Fecha</th><th>Horas</th><th>Detalle</th><th></th></tr></thead>
             <tbody>
               {items.map((r) => (
@@ -72,7 +72,7 @@ export default async function HorasPage() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         </div>
       )}
     </div>

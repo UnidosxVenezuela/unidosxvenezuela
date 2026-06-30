@@ -118,12 +118,12 @@ export default async function AdminUsuariosPage() {
             <span className="muted" style={{ fontSize: '.9rem', fontWeight: 400 }}>· doble aprobación</span>
           </h2>
           <p className="muted">
-            El acceso a la base de endpoints aliados se otorga con <strong>2 administradores</strong> (o 1 si sos superadmin).
+            El acceso a la base de endpoints aliados se otorga con <strong>2 administradores</strong> (o 1 si eres superadmin).
           </p>
 
           <form action={proponerAliado} className="tarjeta fila">
             <select name="perfil_id" className="input" required defaultValue="" style={{ maxWidth: 360 }}>
-              <option value="" disabled>Elegí a quién proponer…</option>
+              <option value="" disabled>Elige a quién proponer…</option>
               {candidatosAliado.map((p) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
             </select>
             <button className="btn btn-primario" type="submit">Proponer como aliado</button>
@@ -165,7 +165,7 @@ export default async function AdminUsuariosPage() {
       {/* Listado general */}
       <h2>Todos los usuarios</h2>
       <div className="tarjeta">
-        <table>
+        <div className="tabla-scroll"><table>
           <thead>
             <tr><th>Nombre</th><th>Organización</th><th>Estado</th><th>Rol</th></tr>
           </thead>
@@ -196,7 +196,7 @@ export default async function AdminUsuariosPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

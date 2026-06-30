@@ -133,7 +133,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         {(casos ?? []).length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
         ) : (
-          <table className={drawerCaso ? 'tabla-compacta' : undefined}>
+          <div className="tabla-scroll"><table className={drawerCaso ? 'tabla-compacta' : undefined}>
             <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
@@ -168,7 +168,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
         </div>

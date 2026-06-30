@@ -42,7 +42,7 @@ export default function Avisos() {
       }} />
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={() => { setRefrescando(true); cargar(); }} />}>
-        {avisos.length === 0 && <Text style={s.vacio}>No tenés avisos. 🎉</Text>}
+        {avisos.length === 0 && <Text style={s.vacio}>No tienes avisos. 🎉</Text>}
         {avisos.map((a) => (
           <View key={a.id} style={[s.tarjeta, !a.leida && s.noLeida]}>
             <Text style={s.titulo}>{a.titulo}</Text>

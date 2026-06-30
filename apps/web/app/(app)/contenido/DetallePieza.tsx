@@ -24,7 +24,7 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
   const etapa = pieza.etapa as string;
   const sig = siguienteEtapa(pieza.etapa, pieza.destino ?? null);
   const etiquetaAvanzar = etapa === 'redaccion'
-    ? (pieza.destino ? 'Enviar a ' + ETIQUETA_DESTINO[pieza.destino as keyof typeof ETIQUETA_DESTINO] : 'Elegí el destino para avanzar')
+    ? (pieza.destino ? 'Enviar a ' + ETIQUETA_DESTINO[pieza.destino as keyof typeof ETIQUETA_DESTINO] : 'Elige el destino para avanzar')
     : etapa === 'redes' ? 'Marcar como publicado' : sig ? 'Enviar a ' + ETIQUETA_ETAPA[sig] : null;
 
   const describir = (accion: string) => {
@@ -98,7 +98,7 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
             <input type="hidden" name="pieza_id" value={pieza.id} />
             <input type="hidden" name="volver" value={volver} />
             <div className="campo">
-              <label>…o pegá un enlace (Drive, Figma, WeTransfer…)</label>
+              <label>…o pega un enlace (Drive, Figma, WeTransfer…)</label>
               <input name="enlace_pieza" className="input" type="url" defaultValue={pieza.enlace_pieza ?? ''} placeholder="https://…" />
             </div>
             <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar enlace</button>

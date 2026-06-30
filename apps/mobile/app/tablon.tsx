@@ -45,7 +45,7 @@ export default function Tablon() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={() => { setRefrescando(true); cargar(); }} />}>
         <View style={s.tarjeta}>
-          <TextInput style={s.input} placeholder="Compartí algo con el equipo…" multiline
+          <TextInput style={s.input} placeholder="Comparte algo con el equipo…" multiline
             value={texto} onChangeText={setTexto} />
           <Pressable style={[s.btn, enviando && { opacity: 0.6 }]} onPress={publicar} disabled={enviando}>
             <Text style={s.btnTxt}>{enviando ? 'Publicando…' : 'Publicar'}</Text>

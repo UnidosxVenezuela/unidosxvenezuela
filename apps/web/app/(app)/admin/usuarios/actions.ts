@@ -73,7 +73,7 @@ export async function crearUsuario(formData: FormData) {
   }
   // El rol de aliado no se asigna directo: va por doble aprobación.
   if (rol === 'lider_plataforma_aliada') {
-    throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: creá la cuenta con otro rol y luego proponela en "Aliados".');
+    throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: crea la cuenta con otro rol y luego proponla en "Aliados".');
   }
 
   // Crear el usuario (verificado) requiere service_role.
@@ -99,7 +99,7 @@ export async function crearUsuario(formData: FormData) {
       to: email,
       subject: 'Tu cuenta en UnidosXVenezuela',
       html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
-             <p>Ingresá con tu correo y la contraseña temporal que te compartieron, y cambiala al entrar.</p>
+             <p>Ingresa con tu correo y la contraseña temporal que te compartieron, y cámbiala al entrar.</p>
              <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
     });
   } catch (e) {
