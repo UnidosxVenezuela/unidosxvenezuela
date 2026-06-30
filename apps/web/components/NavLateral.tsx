@@ -18,7 +18,7 @@ export default function NavLateral({ coord, aliados, verificacion, contenido }: 
   const ruta = usePathname();
   let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
-  if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación', icono: 'ok' });
+  if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
   if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
   if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
   if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });

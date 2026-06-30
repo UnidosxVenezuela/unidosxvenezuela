@@ -175,7 +175,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
         </div>
       )}
 
-      <div className={drawerTarea ? 'grupo-grid' : undefined}>
+      <div>
         <div className="grupo-main">
 
       {/* Libre elección */}
@@ -230,14 +230,17 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
 
         </div>
         {drawerTarea && (
-          <aside className="grupo-aside">
-            <DetalleTarea
-              tarea={drawerTarea} personas={drawerPersonas} perfiles={drawerPerfiles}
-              puedeEditar={drawerPuedeEditar} esGestorTarea={drawerEsGestorTarea}
-              tieneEntregables={drawerTieneEntregables}
-              volver={hrefDetalleTarea(searchParams, drawerTarea.id)} cerrarHref={cerrarHref}
-            />
-          </aside>
+          <>
+            <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
+            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle de la tarea ' + drawerTarea.titulo}>
+              <DetalleTarea
+                tarea={drawerTarea} personas={drawerPersonas} perfiles={drawerPerfiles}
+                puedeEditar={drawerPuedeEditar} esGestorTarea={drawerEsGestorTarea}
+                tieneEntregables={drawerTieneEntregables}
+                volver={hrefDetalleTarea(searchParams, drawerTarea.id)} cerrarHref={cerrarHref}
+              />
+            </aside>
+          </>
         )}
       </div>
     </AnimarEntrada>

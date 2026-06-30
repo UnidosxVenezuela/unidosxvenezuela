@@ -127,13 +127,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         })}
       </div>
 
-      <div className={drawerCaso ? 'grupo-grid' : undefined}>
+      <div>
         <div className="grupo-main">
       <div className="tarjeta">
         {(casos ?? []).length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
         ) : (
-          <div className="tabla-scroll"><table className={drawerCaso ? 'tabla-compacta' : undefined}>
+          <div className="tabla-scroll"><table>
             <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
@@ -173,9 +173,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       </div>
         </div>
         {drawerCaso && (
-          <aside className="grupo-aside">
-            <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={perfil?.rol === 'admin'} />
-          </aside>
+          <>
+            <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
+            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle del caso ' + drawerCaso.titulo}>
+              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={perfil?.rol === 'admin'} />
+            </aside>
+          </>
         )}
       </div>
 

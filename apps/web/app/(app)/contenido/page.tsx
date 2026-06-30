@@ -61,7 +61,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
         ))}
       </div>
 
-      <div className={drawerPieza ? 'grupo-grid' : undefined}>
+      <div>
         <div className="grupo-main">
           {piezas.length === 0 ? (
             <div className="tarjeta vacio">
@@ -94,13 +94,16 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
           )}
         </div>
         {drawerPieza && (
-          <aside className="grupo-aside">
-            <DetallePieza
-              pieza={drawerPieza} perfiles={perfilesData ?? []} historial={drawerHist}
-              volver={hrefPieza(drawerPieza.id)} cerrarHref="/contenido" puedeEtapa={drawerPuedeEtapa}
-              nombres={nombres} avatares={avatares}
-            />
-          </aside>
+          <>
+            <Link href="/contenido" className="drawer-backdrop" aria-label="Cerrar detalle" />
+            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle de la pieza ' + drawerPieza.titulo}>
+              <DetallePieza
+                pieza={drawerPieza} perfiles={perfilesData ?? []} historial={drawerHist}
+                volver={hrefPieza(drawerPieza.id)} cerrarHref="/contenido" puedeEtapa={drawerPuedeEtapa}
+                nombres={nombres} avatares={avatares}
+              />
+            </aside>
+          </>
         )}
       </div>
     </AnimarEntrada>
