@@ -63,11 +63,13 @@ export interface Perfil {
   nombre_completo: string;
   telefono: string | null;
   rol: Rol;
+  roles_extra: Rol[];
   verificado: boolean;
   super_admin: boolean;
   organizacion: string | null;
   motivo: string | null;
   avatar_url: string | null;
+  habilidades: string[];
   creado_en: string;
 }
 

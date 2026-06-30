@@ -47,7 +47,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const tareas = ((tareasRaw ?? []) as any[])
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
-  const puedeGestionar = esCoordinacion(perfil?.rol) || grupo.lider_id === user!.id;
+  const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));

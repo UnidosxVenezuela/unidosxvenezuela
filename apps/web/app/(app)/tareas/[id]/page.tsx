@@ -54,13 +54,13 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   }));
 
   const puedeEditar =
-    esCoordinacion(perfil?.rol) ||
+    esCoordinacion(perfil) ||
     tarea.asignado_a === user!.id ||
     tarea.creado_por === user!.id ||
     tarea.grupos?.lider_id === user!.id;
   const puedeParticipar = perfil?.rol !== 'observador';
   // Solo coordinación o el líder del grupo dan una tarea por completada.
-  const esGestorTarea = esCoordinacion(perfil?.rol) || tarea.grupos?.lider_id === user!.id;
+  const esGestorTarea = esCoordinacion(perfil) || tarea.grupos?.lider_id === user!.id;
   const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');
 
   return (
@@ -176,7 +176,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
               <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
             </span>
-            {(a.creado_por === user!.id || esCoordinacion(perfil?.rol)) && (
+            {(a.creado_por === user!.id || esCoordinacion(perfil)) && (
               <form action={eliminarAdjunto}>
                 <input type="hidden" name="tarea_id" value={id} />
                 <input type="hidden" name="adjunto_id" value={a.id} />
@@ -210,7 +210,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
               <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
             </span>
-            {(a.creado_por === user!.id || esCoordinacion(perfil?.rol)) && (
+            {(a.creado_por === user!.id || esCoordinacion(perfil)) && (
               <form action={eliminarAdjunto}>
                 <input type="hidden" name="tarea_id" value={id} />
                 <input type="hidden" name="adjunto_id" value={a.id} />

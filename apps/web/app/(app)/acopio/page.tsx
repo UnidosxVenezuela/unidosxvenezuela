@@ -1,4 +1,4 @@
-import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import CentrosAcopio from '@/components/CentrosAcopio';
 
@@ -7,7 +7,7 @@ export default async function AcopioPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="puntos_acopio" />
-      <CentrosAcopio userId={user!.id} esCoord={esCoordinacion(perfil?.rol)} esAdmin={perfil?.rol === 'admin'} />
+      <CentrosAcopio userId={user!.id} esCoord={esCoordinacion(perfil)} esAdmin={esAdministrador(perfil)} />
     </div>
   );
 }

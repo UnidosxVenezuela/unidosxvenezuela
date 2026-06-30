@@ -87,7 +87,7 @@ const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, g
 export default async function TareasPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
-  const gestor = puedeGestionarTareas(perfil?.rol);
+  const gestor = puedeGestionarTareas(perfil);
 
   // Conteo de ocupados + mis participaciones (modelo de cupo).
   const [{ data: conteoData }, { data: misPartData }, { data: entregablesData }] = await Promise.all([
@@ -147,7 +147,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
     drawerTieneEntregables = (dent ?? []).length > 0;
     if (dt) {
       const liderId = (dt as any).grupos?.lider_id;
-      drawerEsGestorTarea = esCoordinacion(perfil?.rol) || liderId === user!.id;
+      drawerEsGestorTarea = esCoordinacion(perfil) || liderId === user!.id;
       drawerPuedeEditar = drawerEsGestorTarea || dt.asignado_a === user!.id || dt.creado_por === user!.id;
     }
   }

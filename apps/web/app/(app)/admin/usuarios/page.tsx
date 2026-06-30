@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
+import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado } from './actions';
+import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra } from './actions';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -13,10 +13,10 @@ import Pill from '@/components/Pill';
 export default async function AdminUsuariosPage() {
   const { user, perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
-  const esAdmin = yo?.rol === 'admin';
+  const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, rol, verificado, super_admin, organizacion, motivo, avatar_url, creado_en')
+    .select('id, nombre_completo, telefono, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
@@ -54,6 +54,29 @@ export default async function AdminUsuariosPage() {
         </select>
         <BotonConfirmar mensaje={'¿Cambiar el rol de ' + (p.nombre_completo || 'esta persona') + '?'} className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</BotonConfirmar>
       </form>
+    );
+  };
+
+  // Roles adicionales: un usuario puede tener más de un rol (verificador + redactor, etc.).
+  const editorRolesExtra = (p: Perfil) => {
+    const asignables = ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
+    const extra = p.roles_extra ?? [];
+    return (
+      <details className="roles-extra">
+        <summary>Roles adicionales{extra.length ? ` · ${extra.length}` : ''}</summary>
+        <form action={guardarRolesExtra} style={{ marginTop: 8 }}>
+          <input type="hidden" name="perfil_id" value={p.id} />
+          <div style={{ display: 'grid', gap: 4 }}>
+            {asignables.map((r) => (
+              <label key={r} className="fila" style={{ gap: 6, fontWeight: 500 }}>
+                <input type="checkbox" name="roles" value={r} defaultChecked={extra.includes(r)} style={{ width: 'auto', minHeight: 0 }} />
+                {ETIQUETA_ROL[r]}
+              </label>
+            ))}
+          </div>
+          <button className="btn" style={{ minHeight: 32, padding: '4px 10px', marginTop: 8 }}>Guardar roles</button>
+        </form>
+      </details>
     );
   };
 
@@ -178,6 +201,11 @@ export default async function AdminUsuariosPage() {
                     <span>
                       {p.nombre_completo || '—'}
                       {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
+                      {(p.habilidades ?? []).length > 0 && (
+                        <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                          {(p.habilidades ?? []).slice(0, 6).map((h) => <span key={h} className="hab-ro">{h}</span>)}
+                        </div>
+                      )}
                     </span>
                   </span>
                 </td>
@@ -192,7 +220,15 @@ export default async function AdminUsuariosPage() {
                     </button>
                   </form>
                 </td>
-                <td>{selectorRol(p)}</td>
+                <td>
+                  {selectorRol(p)}
+                  {(p.roles_extra ?? []).length > 0 && (
+                    <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                      {(p.roles_extra ?? []).map((r) => <Pill key={r} tono="info" punto={false}>{ETIQUETA_ROL[r]}</Pill>)}
+                    </div>
+                  )}
+                  <div style={{ marginTop: 6 }}>{editorRolesExtra(p)}</div>
+                </td>
               </tr>
             ))}
           </tbody>

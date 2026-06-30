@@ -15,7 +15,7 @@ export default async function PizarraPage({ params }: { params: { id: string } }
   // Solo miembros del grupo o coordinación.
   const { data: miembro } = await supabase.from('miembros_grupo')
     .select('perfil_id').eq('grupo_id', grupoId).eq('perfil_id', user!.id).maybeSingle();
-  if (!esCoordinacion(perfil?.rol) && !miembro) redirect('/grupos/' + grupoId);
+  if (!esCoordinacion(perfil) && !miembro) redirect('/grupos/' + grupoId);
 
   const { data: piz } = await supabase.from('pizarra_grupo')
     .select('escena').eq('grupo_id', grupoId).maybeSingle();

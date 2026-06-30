@@ -8,7 +8,7 @@ import { Suspense } from 'react';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, perfil } = await requireUsuario();
-  const coord = esCoordinacion(perfil?.rol);
+  const coord = esCoordinacion(perfil);
 
   // Bloqueo total: una cuenta sin verificar (y que no sea coordinación) solo
   // ve una pantalla de espera, sin navegación ni contenido, hasta su aprobación.
@@ -42,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
         }}
-        nav={{ coord, aliados: puedeVerAliados(perfil?.rol), verificacion: puedeRecopilar(perfil?.rol), contenido: puedePipeline(perfil?.rol) }}
+        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil) }}
       >
         {children}
       </Shell>

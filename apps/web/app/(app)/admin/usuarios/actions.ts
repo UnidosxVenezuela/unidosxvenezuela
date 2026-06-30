@@ -142,3 +142,21 @@ export async function cambiarRol(formData: FormData) {
   revalidatePath('/admin/usuarios');
   redirigirOk('/admin/usuarios', 'Rol actualizado');
 }
+
+// Roles adicionales (un usuario puede tener más de un rol). La RLS y el trigger
+// proteger_campos_perfil validan: solo coordinación cambia roles_extra y conceder
+// 'admin' como extra exige superadmin.
+export async function guardarRolesExtra(formData: FormData) {
+  const supabase = await exigirCoordinacion();
+  const perfilId = String(formData.get('perfil_id'));
+  const roles = Array.from(new Set(formData.getAll('roles').map(String)))
+    .filter((r) => r !== 'lider_plataforma_aliada') as Rol[];
+  const { error } = await supabase.from('perfiles')
+    .update({ roles_extra: roles }).eq('id', perfilId);
+  if (error) throw new Error('No se pudieron guardar los roles: ' + error.message);
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'cambio_roles_extra', p_entidad_id: perfilId, p_metadata: { roles },
+  });
+  revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Roles adicionales actualizados');
+}

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, puedePipeline } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, puedePipeline, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
@@ -18,9 +18,8 @@ type SP = { pieza?: string };
 
 export default async function ContenidoPage({ searchParams }: { searchParams: SP }) {
   const { perfil } = await requireUsuario();
-  if (!puedePipeline(perfil?.rol)) redirect('/dashboard');
+  if (!puedePipeline(perfil)) redirect('/dashboard');
   const supabase = await createClient();
-  const rol = perfil?.rol;
 
   const [{ data: piezasData }, { data: perfilesData }] = await Promise.all([
     supabase.from('piezas_contenido').select('*').order('actualizado_en', { ascending: false }),
@@ -41,7 +40,10 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
         .eq('entidad', 'piezas_contenido').eq('entidad_id', searchParams.pieza).order('creado_en', { ascending: false }).limit(50),
     ]);
     drawerPieza = dp; drawerHist = dh ?? [];
-    if (dp) drawerPuedeEtapa = esCoordinacion(rol) || ROL_DE_ETAPA[dp.etapa as EtapaContenido] === rol;
+    if (dp) {
+      const rolEtapa = ROL_DE_ETAPA[dp.etapa as EtapaContenido];
+      drawerPuedeEtapa = esCoordinacion(perfil) || (!!rolEtapa && rolesDe(perfil).includes(rolEtapa));
+    }
   }
 
   return (

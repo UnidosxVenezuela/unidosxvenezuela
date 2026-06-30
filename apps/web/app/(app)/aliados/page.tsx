@@ -11,7 +11,7 @@ import { crearEndpoint, eliminarEndpoint } from './actions';
 
 export default async function AliadosPage() {
   const { user, perfil } = await requireUsuario();
-  if (!puedeVerAliados(perfil?.rol)) redirect('/dashboard');
+  if (!puedeVerAliados(perfil)) redirect('/dashboard');
   const supabase = await createClient();
 
   const { data } = await supabase.from('endpoints_aliados')

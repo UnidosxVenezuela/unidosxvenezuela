@@ -7,7 +7,7 @@ import CapturarUbicacion from './CapturarUbicacion';
 
 export default async function NuevaTareaPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeGestionarTareas(perfil?.rol)) redirect('/tareas');
+  if (!puedeGestionarTareas(perfil)) redirect('/tareas');
   const supabase = await createClient();
   const [{ data: grupos }, { data: perfiles }] = await Promise.all([
     supabase.from('grupos').select('id, nombre').order('nombre'),

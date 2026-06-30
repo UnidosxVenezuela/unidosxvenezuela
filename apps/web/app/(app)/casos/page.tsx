@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -23,8 +23,8 @@ const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fe
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { perfil } = await requireUsuario();
-  if (!puedeRecopilar(perfil?.rol)) redirect('/dashboard');
-  const puedeVerif = puedeVerificar(perfil?.rol);
+  if (!puedeRecopilar(perfil)) redirect('/dashboard');
+  const puedeVerif = puedeVerificar(perfil);
   const supabase = await createClient();
 
   const cnt = (estado?: string) => {
@@ -192,7 +192,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
             <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle del caso ' + drawerCaso.titulo}>
-              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={perfil?.rol === 'admin'} />
+              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={esAdministrador(perfil)} />
             </aside>
           </>
         )}

@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import DetalleCaso from '../DetalleCaso';
 
 export default async function CasoDetallePage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
-  if (!puedeRecopilar(perfil?.rol)) redirect('/dashboard');
+  if (!puedeRecopilar(perfil)) redirect('/dashboard');
   const supabase = await createClient();
   const id = params.id;
 
@@ -27,7 +27,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
       <Link href="/casos" className="muted">← Verificación</Link>
       <div style={{ marginTop: 8 }}>
-        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil?.rol)} esAdmin={perfil?.rol === 'admin'} />
+        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil)} esAdmin={esAdministrador(perfil)} />
       </div>
     </div>
   );

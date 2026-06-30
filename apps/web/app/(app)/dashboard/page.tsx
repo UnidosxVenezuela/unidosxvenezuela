@@ -15,10 +15,10 @@ export default async function Dashboard() {
   const supabase = await createClient();
   const rol = perfil?.rol as Rol | undefined;
 
-  const recopila = puedeRecopilar(rol);
-  const verifica = puedeVerificar(rol);
-  const pipeline = puedePipeline(rol);
-  const coord = esCoordinacion(rol);
+  const recopila = puedeRecopilar(perfil);
+  const verifica = puedeVerificar(perfil);
+  const pipeline = puedePipeline(perfil);
+  const coord = esCoordinacion(perfil);
   const mostrarFlujo = recopila || pipeline;
 
   const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom] = await Promise.all([

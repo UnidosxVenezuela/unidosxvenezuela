@@ -1,8 +1,10 @@
 import { requireUsuario } from '@/lib/auth';
-import { ETIQUETA_ROL } from '@/lib/constantes';
+import { ETIQUETA_ROL, HABILIDADES_SUGERIDAS } from '@/lib/constantes';
+import type { Rol } from '@unidos/types';
 import { actualizarPerfil } from './actions';
 import CambiarContrasena from '@/components/CambiarContrasena';
 import SubirAvatar from '@/components/SubirAvatar';
+import SelectorHabilidades from '@/components/SelectorHabilidades';
 import Pill from '@/components/Pill';
 
 export default async function PerfilPage({
@@ -16,8 +18,10 @@ export default async function PerfilPage({
       <div className="pagina-cab">
         <div>
           <h1>Mi perfil</h1>
-          <div className="fila" style={{ marginTop: 4 }}>
-            <Pill tono="neutra" punto={false}>{ETIQUETA_ROL[perfil?.rol ?? 'voluntario']}</Pill>
+          <div className="fila" style={{ marginTop: 4, flexWrap: 'wrap' }}>
+            {[perfil?.rol ?? 'voluntario', ...(perfil?.roles_extra ?? [])].map((r) => (
+              <Pill key={r} tono="neutra" punto={false}>{ETIQUETA_ROL[r as Rol] ?? r}</Pill>
+            ))}
             <Pill tono={perfil?.verificado ? 'ok' : 'aviso'}>{perfil?.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
           </div>
         </div>
@@ -48,6 +52,7 @@ export default async function PerfilPage({
           <label>Correo</label>
           <input className="input" value={user?.email ?? ''} disabled />
         </div>
+        <SelectorHabilidades iniciales={perfil?.habilidades ?? []} sugeridas={HABILIDADES_SUGERIDAS} />
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
       </form>
 

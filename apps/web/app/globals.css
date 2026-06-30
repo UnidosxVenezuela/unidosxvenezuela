@@ -403,3 +403,14 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 .chip-resp { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border: 1px solid var(--borde); border-radius: 999px; background: #fff; font-size: .85rem; font-weight: 600; }
 .chip-x { border: 0; background: none; cursor: pointer; color: var(--texto-suave); font-size: .85rem; line-height: 1; padding: 0 0 0 2px; }
 .chip-x:hover { color: var(--critica); }
+
+/* Habilidades del perfil (chips marcables) */
+.chip-hab { border: 1px solid var(--borde); background: #fff; color: var(--texto); border-radius: 999px; padding: 5px 12px; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.chip-hab:hover { background: #f1f5f9; }
+.chip-hab-on { background: var(--azul); border-color: var(--azul); color: #fff; }
+.chip-hab-on:hover { background: var(--azul-osc); }
+/* Habilidad en modo solo lectura (perfil ajeno, admin) */
+.hab-ro { display: inline-block; border: 1px solid var(--borde); background: #f8fafc; border-radius: 999px; padding: 3px 10px; font-size: .8rem; font-weight: 600; color: var(--texto); }
+/* Editor de roles adicionales (admin) */
+.roles-extra { font-size: .85rem; }
+.roles-extra > summary { cursor: pointer; color: var(--azul); font-weight: 600; }

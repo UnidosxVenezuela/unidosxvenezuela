@@ -18,7 +18,7 @@ export default async function GruposPage() {
     supabase.from('miembros_grupo').select('grupo_id').eq('perfil_id', user!.id),
   ]);
   const grupos = (data ?? []) as any[];
-  const coord = esCoordinacion(perfil?.rol);
+  const coord = esCoordinacion(perfil);
   const totalPorGrupo = new Map<string, number>((conteos ?? []).map((c: any) => [c.grupo_id, Number(c.total)]));
   const misIds = new Set<string>((mis ?? []).map((m: any) => m.grupo_id));
 

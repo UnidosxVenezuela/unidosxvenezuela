@@ -103,6 +103,19 @@ export const ROL_DE_ETAPA: Record<EtapaContenido, Rol | null> = {
   redaccion: 'redaccion', diseno: 'diseno_grafico', video: 'edicion_video', redes: 'redes_sociales', publicado: null,
 };
 
+// ── Habilidades del perfil ──
+// Lista sugerida; si alguien no encuentra la suya, puede escribirla. Sirve para
+// que coordinación y admin conozcan los fuertes de cada quien y en qué ayudar.
+export const HABILIDADES_SUGERIDAS = [
+  'Redacción', 'Diseño gráfico', 'Edición de video', 'Fotografía',
+  'Manejo de redes sociales', 'Community management', 'Traducción / idiomas',
+  'Logística', 'Transporte / conducción', 'Primeros auxilios', 'Medicina / salud',
+  'Psicología / apoyo emocional', 'Atención al público', 'Cocina / alimentación',
+  'Legal', 'Finanzas / contabilidad', 'Datos / Excel', 'Programación',
+  'Mapas / GIS', 'Gestión de proyectos', 'Comunicación institucional',
+  'Recaudación de fondos', 'Trabajo de campo', 'Coordinación de equipos',
+];
+
 /** Tono de Pill por etapa. */
 export function claseEtapa(e: EtapaContenido): string {
   if (e === 'publicado') return 'ok';

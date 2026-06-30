@@ -8,8 +8,8 @@ import TituloConDuplicados from './TituloConDuplicados';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeRecopilar(perfil?.rol)) redirect('/dashboard');
-  const puedeAsignar = puedeVerificar(perfil?.rol);
+  if (!puedeRecopilar(perfil)) redirect('/dashboard');
+  const puedeAsignar = puedeVerificar(perfil);
   const supabase = await createClient();
   const { data: perfiles } = await supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo');
 
