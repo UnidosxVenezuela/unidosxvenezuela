@@ -232,12 +232,21 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 @media (max-width: 980px) { .grupo-grid { grid-template-columns: 1fr; } .grupo-aside { position: static; } }
 
 /* Aviso flotante (toast) */
-.toast { position: fixed; bottom: 20px; right: 20px; z-index: 1000; max-width: 360px;
-  padding: 12px 18px; border-radius: 10px; color: #fff; font-weight: 600;
-  box-shadow: 0 8px 28px rgba(16,24,40,.22); animation: toastIn .2s ease; }
-.toast-ok { background: #16a34a; }
-.toast-err { background: var(--rojo); }
-@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.toast { position: fixed; bottom: 20px; right: 20px; z-index: 1000; max-width: 380px;
+  display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-radius: 13px;
+  background: #fff; color: var(--texto); font-weight: 600; cursor: pointer;
+  border: 1px solid var(--borde); border-left: 4px solid var(--azul);
+  box-shadow: 0 14px 36px rgba(16,24,40,.18); animation: toastIn .22s cubic-bezier(.22,.61,.36,1); }
+.toast:hover { background: #fcfdff; }
+.toast-ico { display: inline-flex; width: 30px; height: 30px; border-radius: 9px; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-txt { flex: 1; font-size: .92rem; line-height: 1.3; min-width: 0; }
+.toast-x { color: var(--texto-suave); flex-shrink: 0; display: inline-flex; }
+.toast-ok { border-left-color: #16a34a; }
+.toast-ok .toast-ico { background: #d1fae5; color: #16a34a; }
+.toast-err { border-left-color: var(--rojo); }
+.toast-err .toast-ico { background: #fee2e2; color: var(--rojo); }
+@media (max-width: 560px) { .toast { left: 16px; right: 16px; max-width: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
 
 /* ===== Panel lateral deslizante (slide-over) =====
    Detalle de caso / tarea / pieza: cubre el lado derecho a altura completa con
@@ -396,6 +405,13 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 .flujo-num { font-size: 1.35rem; font-weight: 800; }
 .flujo-et { font-size: .8rem; color: var(--texto-suave); font-weight: 600; }
 .flujo-flecha { display: inline-flex; align-items: center; color: var(--texto-suave); flex-shrink: 0; }
+
+/* Espacios de trabajo (lanzador): tarjetas con ícono por tipo de trabajo,
+   agrupadas por flujo. */
+.flujo-seccion { margin-bottom: 20px; }
+.flujo-chip { display: inline-flex; width: 28px; height: 28px; border-radius: 8px; align-items: center; justify-content: center; background: #eef2ff; color: var(--azul); flex-shrink: 0; }
+.espacio-card { margin-bottom: 0; }
+.espacio-ico { width: 46px; height: 46px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 
 /* Coordinadores responsables de un centro de acopio */
 .acopio-resp { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--borde); }

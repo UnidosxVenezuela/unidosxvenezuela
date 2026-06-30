@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { exito, error as sonidoError } from '@/lib/sonido';
+import Icono from './Icono';
 
 /** Lee ?ok= / ?err= de la URL, muestra un aviso flotante y lo cierra solo. */
 export default function Toast() {
@@ -32,7 +33,9 @@ export default function Toast() {
   if (!aviso) return null;
   return (
     <div className={'toast toast-' + aviso.tipo} role="status" onClick={() => setAviso(null)} title="Toca para cerrar">
-      {aviso.texto}
+      <span className="toast-ico"><Icono nombre={aviso.tipo === 'ok' ? 'ok' : 'avisos'} size={18} /></span>
+      <span className="toast-txt">{aviso.texto}</span>
+      <span className="toast-x" aria-hidden="true"><Icono nombre="cerrar" size={15} /></span>
     </div>
   );
 }

@@ -116,6 +116,23 @@ export const HABILIDADES_SUGERIDAS = [
   'Recaudación de fondos', 'Trabajo de campo', 'Coordinación de equipos',
 ];
 
+// ── Espacios de trabajo por rol ──
+// Metadatos visuales de cada espacio: ícono del tipo de trabajo, color, el
+// ORDEN dentro de su flujo, y a qué FLUJO pertenece. Pensado para sumar más
+// flujos a futuro: basta agregar roles con otro `flujo` y una entrada en FLUJOS.
+export const ESPACIO_META: Record<string, { icono: string; color: string; tinte: string; orden: number; flujo: string }> = {
+  recopilacion:   { icono: 'buscar',    color: '#a16207',     tinte: '#fef9c3', orden: 0, flujo: 'contenido' },
+  redaccion:      { icono: 'documento', color: 'var(--azul)', tinte: '#eef2ff', orden: 1, flujo: 'contenido' },
+  diseno_grafico: { icono: 'imagen',    color: '#9d2463',     tinte: '#fce7f3', orden: 2, flujo: 'contenido' },
+  edicion_video:  { icono: 'video',     color: '#7c3aed',     tinte: '#ede9fe', orden: 3, flujo: 'contenido' },
+  redes_sociales: { icono: 'tablon',    color: '#0e7490',     tinte: '#cffafe', orden: 4, flujo: 'contenido' },
+};
+
+// Flujos de trabajo (cada uno agrupa varios espacios, en orden). Agregar más aquí.
+export const FLUJOS_TRABAJO: { clave: string; titulo: string; icono: string }[] = [
+  { clave: 'contenido', titulo: 'Producción de contenido', icono: 'cohete' },
+];
+
 /** Tono de Pill por etapa. */
 export function claseEtapa(e: EtapaContenido): string {
   if (e === 'publicado') return 'ok';
