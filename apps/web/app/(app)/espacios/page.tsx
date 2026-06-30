@@ -34,7 +34,7 @@ export default async function EspaciosPage() {
       </div>
       {g.descripcion && <p className="muted" style={{ margin: '6px 0' }}>{g.descripcion}</p>}
       <div className="fila" style={{ marginTop: 8, flexWrap: 'wrap' }}>
-        <Link className="btn btn-primario" href={'/grupos/' + g.id}><Icono nombre="grupos" size={16} /> Abrir espacio</Link>
+        <Link className="btn btn-primario" href={'/espacios/' + g.id}><Icono nombre="flecha" size={16} /> Abrir espacio</Link>
         <Link className="btn" href={'/grupos/' + g.id + '/pizarra'}><Icono nombre="pizarra" size={16} /> Pizarra</Link>
         {g.whatsapp && <a className="btn" href={g.whatsapp} target="_blank" rel="noopener noreferrer"><Icono nombre="whatsapp" size={16} /> Chat</a>}
       </div>
