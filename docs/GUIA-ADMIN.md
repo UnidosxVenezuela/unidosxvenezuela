@@ -32,6 +32,11 @@ Cada persona que se inscribe queda **pendiente** hasta que tú la apruebes.
 | **Voluntario** | Toma tareas y registra sus horas. |
 | **Observador** | Solo mira (no edita). |
 | **Verificación** | Recibe y verifica los casos que llegan (módulo **Verificación**): confirma, marca como falso o resuelto, y prepara los confirmados para redacción. Ver punto 10. |
+| **Recopilación** | Solo **envía** casos al módulo de Verificación (los crea); no puede cambiar su estado ni asignarlos. |
+| **Redacción** | Redacta el contenido y la descripción de las piezas confirmadas, y elige el destino (Diseño o Video). Ver punto 11. |
+| **Diseño Gráfico** | Crea la pieza gráfica con el contenido recibido. |
+| **Edición de Videos** | Edita el video/reel con el contenido recibido. |
+| **Redes Sociales** | Publica la pieza final con su descripción. |
 | **Líder de plataforma aliada** | Accede a la base compartida de contactos aliados (ver punto 5). |
 
 Para cambiar el rol de alguien: entra a **Usuarios**, busca la fila de la persona, elige el rol y toca **Guardar**.
@@ -98,7 +103,21 @@ El módulo **Verificación** (menú **Verificación**) sirve para procesar la in
 
 ---
 
-## 11. Reglas de oro 🛡️
+## 11. Producción de contenido (menú **Contenido**)
+Cuando un caso queda **Confirmado y activo**, coordinación o un verificador toca **"Enviar a Redacción"** en su panel. Eso crea una **pieza** que recorre el flujo:
+
+> **Redacción → Diseño Gráfico o Edición de Videos → Redes Sociales → Publicado**
+
+- En **Contenido** ves un tablero por etapas; cada pieza abre un panel lateral.
+- **Redacción** escribe el *contenido* (base del diseño/video) y la *descripción* (copy de redes), y elige el **destino** (Diseño o Video).
+- **Diseño / Video** suben el **enlace** a la pieza final (Drive, Figma, WeTransfer…).
+- Cada equipo toca **"Enviar a…"** para pasar la pieza a la etapa siguiente.
+- **Redes Sociales** publica y marca la pieza como **Publicado**.
+- Cada persona solo puede tocar las piezas **de su etapa** (la coordinación, todas).
+
+---
+
+## 12. Reglas de oro 🛡️
 - **Nunca compartas tu contraseña.** Cada quien usa la suya.
 - Asigna el rol **mínimo** que la persona necesita.
 - Las contraseñas temporales son de un solo uso: pide que las cambien al entrar.
