@@ -113,7 +113,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         {(casos ?? []).length === 0 ? (
           <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
         ) : (
-          <table>
+          <table className={drawerCaso ? 'tabla-compacta' : undefined}>
             <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
@@ -133,7 +133,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                       : <span className="muted">Sin asignar</span>}
                   </td>
                   <td><EstadoCaso estado={c.estado} /></td>
-                  <td className="muted" style={{ fontSize: '.82rem', whiteSpace: 'nowrap' }}>{new Date(c.actualizado_en).toLocaleString('es-VE')}</td>
+                  <td className="muted" style={{ fontSize: '.82rem' }}>{new Date(c.actualizado_en).toLocaleString('es-VE')}</td>
                   <td style={{ textAlign: 'right' }}>
                     <MenuFila etiqueta={'Acciones del caso ' + c.titulo}>
                       <Link href={hrefCaso(c.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>

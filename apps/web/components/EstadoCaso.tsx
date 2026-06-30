@@ -13,9 +13,9 @@ export default function EstadoCaso({ estado }: { estado: TEstadoCaso }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6, background: c.bg, color: c.fg,
-      fontWeight: 700, fontSize: '.8rem', padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap',
+      fontWeight: 700, fontSize: '.8rem', padding: '4px 10px', borderRadius: 999,
     }}>
-      <span style={{ width: 8, height: 8, borderRadius: 999, background: c.fg, display: 'inline-block' }} />
+      <span style={{ width: 8, height: 8, borderRadius: 999, background: c.fg, display: 'inline-block', flexShrink: 0 }} />
       {ETIQUETA_ESTADO_CASO[estado]}
     </span>
   );

@@ -208,6 +208,7 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 
 /* Vista de grupo: contenido a la izquierda, panel de gestión a la derecha */
 .grupo-grid { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 20px; align-items: start; }
+.grupo-main { min-width: 0; }
 .grupo-aside { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
 .grupo-aside .tarjeta { margin: 0; }
 .aside-titulo { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; font-size: .95rem; }
@@ -287,6 +288,10 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 
 /* Badge de categoría (color suave determinístico) */
 .badge-cat { display: inline-block; padding: 3px 10px; border-radius: var(--r-pill); font-size: .76rem; font-weight: 700; }
+
+/* Tabla compacta: oculta columnas de menor prioridad (p.ej. junto al drawer) */
+.tabla-compacta th:nth-child(4), .tabla-compacta td:nth-child(4),
+.tabla-compacta th:nth-child(7), .tabla-compacta td:nth-child(7) { display: none; }
 
 /* Celdas de tabla: título en dos líneas + persona con avatar */
 .celda-titulo strong { display: block; font-weight: 700; }
