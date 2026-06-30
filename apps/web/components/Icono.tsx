@@ -29,6 +29,9 @@ const TRAZOS: Record<string, React.ReactNode> = {
   historial: <><path d="M3 12a9 9 0 1 0 3-7.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" /></>,
   ojo_off: <><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="2" x2="22" y1="2" y2="22" /></>,
   puntos: <><circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" /></>,
+  menu: <><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></>,
+  chevron: <path d="m6 9 6 6 6-6" />,
+  buscar: <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
 };
 
 export default function Icono({ nombre, size = 20, ...props }: { nombre: string; size?: number } & SVGProps<SVGSVGElement>) {

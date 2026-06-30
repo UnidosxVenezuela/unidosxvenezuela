@@ -3,7 +3,7 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
 import AnimarEntrada from '@/components/AnimarEntrada';
-import Icono from '@/components/Icono';
+import Kpi from '@/components/Kpi';
 
 export default async function Dashboard() {
   const { user, perfil } = await requireUsuario();
@@ -26,26 +26,19 @@ export default async function Dashboard() {
     gruposPorArea.set(g.area, (gruposPorArea.get(g.area) ?? 0) + 1);
   }
 
-  const tarjeta = (titulo: string, valor: string | number, enlace: string, icono: string, sub: string) => (
-    <Link href={enlace} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: 14, alignItems: 'center' }}>
-      <span className="kpi-ico" style={{ background: 'rgba(0,51,160,.08)', color: 'var(--azul)' }}><Icono nombre={icono} size={22} /></span>
-      <span>
-        <div className="muted">{titulo}</div>
-        <div style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.1 }}>{valor}</div>
-        <div className="muted" style={{ fontSize: '.78rem' }}>{sub}</div>
-      </span>
-    </Link>
-  );
-
   return (
     <AnimarEntrada>
-      <h1>Panel</h1>
-      <p className="muted">Hola, {perfil?.nombre_completo || user?.email}.</p>
-      <div className="grid grid-2">
-        {tarjeta('Tareas por atender', pendientes.count ?? 0, '/tareas', 'tareas', 'pendientes y asignadas')}
-        {tarjeta('Mis grupos', misGrupos.count ?? 0, '/grupos', 'grupos', 'donde participás')}
-        {tarjeta('Notificaciones sin leer', noLeidas.count ?? 0, '/notificaciones', 'avisos', 'por revisar')}
-        {tarjeta('Tus horas', formatoHoras(misHoras), '/horas', 'reloj', 'de voluntariado')}
+      <div className="pagina-cab">
+        <div>
+          <h1>Panel</h1>
+          <p className="muted sub">Hola, {perfil?.nombre_completo || user?.email}. Este es el resumen de tu actividad.</p>
+        </div>
+      </div>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', margin: '16px 0' }}>
+        <Kpi etiqueta="Tareas por atender" valor={pendientes.count ?? 0} sub="pendientes y asignadas" icono="tareas" tinte="#eef2ff" color="var(--azul)" href="/tareas" />
+        <Kpi etiqueta="Mis grupos" valor={misGrupos.count ?? 0} sub="donde participas" icono="grupos" tinte="#dcfce7" color="#16a34a" href="/grupos" />
+        <Kpi etiqueta="Avisos sin leer" valor={noLeidas.count ?? 0} sub="por revisar" icono="avisos" tinte="#fef9c3" color="#a16207" href="/notificaciones" />
+        <Kpi etiqueta="Tus horas" valor={formatoHoras(misHoras)} sub="de voluntariado" icono="reloj" tinte="#fce7f3" color="#9d2463" href="/horas" />
       </div>
 
       <div className="tarjeta" style={{ textAlign: 'center', borderColor: 'var(--azul)' }}>

@@ -1,19 +1,10 @@
-import Link from 'next/link';
 import { requireUsuario, esCoordinacion, puedeVerAliados, puedeVerificar } from '@/lib/auth';
 import CerrarSesion from '@/components/CerrarSesion';
-import CampanaNotificaciones from '@/components/CampanaNotificaciones';
-import NavLateral from '@/components/NavLateral';
 import RegistrarActividad from '@/components/RegistrarActividad';
+import Shell from '@/components/Shell';
 import Toast from '@/components/Toast';
 import Icono from '@/components/Icono';
 import { Suspense } from 'react';
-
-function iniciales(nombre?: string | null, email?: string | null) {
-  const base = ((nombre || email || '?').trim()) || '?';
-  const partes = base.split(/\s+/).filter(Boolean);
-  const dos = ((partes[0]?.[0] ?? '') + (partes[1]?.[0] ?? '')).toUpperCase();
-  return dos || base.charAt(0).toUpperCase();
-}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, perfil } = await requireUsuario();
@@ -41,32 +32,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="app-shell">
+    <>
       <Suspense fallback={null}><Toast /></Suspense>
       <RegistrarActividad />
-      <aside className="sidebar">
-        <div className="tricolor" />
-        <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
-        <NavLateral coord={coord} aliados={puedeVerAliados(perfil?.rol)} verificacion={puedeVerificar(perfil?.rol)} />
-        <div className="sidebar-pie">
-          <Link href="/perfil" className="sidebar-usuario">
-            <span className="avatar">{iniciales(perfil?.nombre_completo, user?.email)}</span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {perfil?.nombre_completo || user?.email}
-            </span>
-          </Link>
-          <div className="fila" style={{ justifyContent: 'space-between' }}>
-            <CampanaNotificaciones />
-            <CerrarSesion />
-          </div>
-        </div>
-      </aside>
-
-      <div className="contenido">
-        <main className="contenedor">
-          {children}
-        </main>
-      </div>
-    </div>
+      <Shell
+        usuario={{
+          nombre: perfil?.nombre_completo || user?.email || '',
+          rol: perfil?.rol,
+          email: user?.email,
+          avatarUrl: (perfil as { avatar_url?: string | null } | null)?.avatar_url ?? null,
+        }}
+        nav={{ coord, aliados: puedeVerAliados(perfil?.rol), verificacion: puedeVerificar(perfil?.rol) }}
+      >
+        {children}
+      </Shell>
+    </>
   );
 }
