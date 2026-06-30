@@ -333,6 +333,10 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 .tabla-scroll::-webkit-scrollbar { height: 8px; }
 .tabla-scroll::-webkit-scrollbar-thumb { background: #d4dbe6; border-radius: 999px; }
 
+/* Tarjeta de tarea (lista de tareas en tarjetas, no en tabla) */
+.tarea-card { margin-bottom: 0; }
+.tarea-card h3 { font-size: 1.05rem; line-height: 1.25; }
+
 /* Celdas de tabla: título en dos líneas + persona con avatar */
 .celda-titulo strong { display: block; font-weight: 700; }
 .celda-titulo .desc { color: var(--texto-suave); font-size: .82rem; }
@@ -349,9 +353,14 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 .leyenda-fila { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
 .leyenda-fila .muted { font-size: .82rem; }
 
-/* Tablero (kanban) del pipeline de contenido */
-.tablero { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
-.tablero-col { flex: 0 0 244px; display: flex; flex-direction: column; gap: 10px; background: #eef2f7; border-radius: 14px; padding: 10px; }
+/* Tablero (kanban) del pipeline de contenido: columnas que llenan el ancho en
+   escritorio (sin barra de desplazamiento); en móvil sí deslizan. */
+.tablero { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.tablero-col { display: flex; flex-direction: column; gap: 10px; background: #eef2f7; border-radius: 14px; padding: 10px; min-width: 0; }
+@media (max-width: 920px) {
+  .tablero { display: flex; overflow-x: auto; padding-bottom: 10px; }
+  .tablero-col { flex: 0 0 78%; }
+}
 .tablero-col-cab { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 4px; }
 .tablero-col .tarjeta { box-shadow: none; border-color: #dde3ee; }
 .tablero-col a.tarjeta:hover { box-shadow: var(--sombra); }

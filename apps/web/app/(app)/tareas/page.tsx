@@ -47,38 +47,37 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
   tareas: any[]; conEntregables?: Set<string>; hrefDetalle: (id: string) => string;
 }) {
   return (
-    <div className="tarjeta">
-      <div className="tabla-scroll"><table>
-        <thead>
-          <tr><th>Tarea</th><th>Categoría</th><th>Grupo</th><th>Asignado</th><th>Prioridad</th><th>Estado</th><th>Vence</th><th aria-label="Acciones"></th></tr>
-        </thead>
-        <tbody>
-          {tareas.map((t) => (
-            <tr key={t.id}>
-              <td>
-                <span className="celda-persona">
-                  <Link href={hrefDetalle(t.id)}>{t.titulo}</Link>
-                  {conEntregables?.has(t.id) && <Pill tono="ok" punto={false}>Entregado</Pill>}
-                </span>
-              </td>
-              <td><BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria></td>
-              <td>{t.grupos?.nombre ?? '—'}</td>
-              <td>{t.asignado_a
-                ? <span className="celda-persona"><Avatar nombre={t.asignado?.nombre_completo} url={t.asignado?.avatar_url} size={24} /> {t.asignado?.nombre_completo ?? '—'}</span>
-                : <span className="muted">Sin asignar</span>}</td>
-              <td><Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill></td>
-              <td><Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</Pill></td>
-              <td style={{ whiteSpace: 'nowrap' }}>{t.vence_en ? new Date(t.vence_en).toLocaleString('es-VE') : '—'}</td>
-              <td style={{ textAlign: 'right' }}>
-                <MenuFila etiqueta={'Acciones de ' + t.titulo}>
-                  <Link href={hrefDetalle(t.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>
-                  <Link href={'/tareas/' + t.id}><Icono nombre="enlace" size={16} /> Abrir en página</Link>
-                </MenuFila>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table></div>
+    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))' }}>
+      {tareas.map((t) => (
+        <div key={t.id} className="tarjeta tarea-card">
+          <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+              <BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria>
+              <Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</Pill>
+            </span>
+            <MenuFila etiqueta={'Acciones de ' + t.titulo}>
+              <Link href={hrefDetalle(t.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>
+              <Link href={'/tareas/' + t.id}><Icono nombre="enlace" size={16} /> Abrir en página</Link>
+            </MenuFila>
+          </div>
+          <h3 style={{ margin: '8px 0 8px' }}>
+            <Link href={hrefDetalle(t.id)} style={{ textDecoration: 'none', color: 'inherit' }}>{t.titulo}</Link>
+          </h3>
+          <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+            <Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill>
+            {conEntregables?.has(t.id) && <Pill tono="ok" punto={false}>Entregado</Pill>}
+            {t.grupos?.nombre && <span className="muted fila" style={{ gap: 4, fontSize: '.82rem' }}><Icono nombre="grupos" size={14} /> {t.grupos.nombre}</span>}
+          </div>
+          <div className="fila" style={{ justifyContent: 'space-between', gap: 8, fontSize: '.85rem' }}>
+            <span className="celda-persona">
+              {t.asignado_a
+                ? <><Avatar nombre={t.asignado?.nombre_completo} url={t.asignado?.avatar_url} size={22} /> {t.asignado?.nombre_completo ?? '—'}</>
+                : <span className="muted">Sin asignar</span>}
+            </span>
+            {t.vence_en && <span className="muted" style={{ whiteSpace: 'nowrap' }}>Vence {new Date(t.vence_en).toLocaleDateString('es-VE')}</span>}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
