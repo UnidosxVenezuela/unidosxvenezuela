@@ -14,6 +14,8 @@ import Pill from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BarraBusqueda from '@/components/BarraBusqueda';
 import Carrusel from '@/components/Carrusel';
+import FlujoTrabajo from '@/components/FlujoTrabajo';
+import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -50,6 +52,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     .select('id, numero, titulo, asignado_a').eq('estado', 'confirmado')
     .order('actualizado_en', { ascending: false }).limit(8);
 
+  const pasos = pasosFlujo(await contarFlujo(supabase));
+
   // Panel lateral (drawer) cuando hay ?caso=ID, conservando los filtros.
   const filtros = new URLSearchParams();
   if (searchParams.q) filtros.set('q', searchParams.q);
@@ -83,7 +87,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
       </div>
 
-      <div className="toolbar">
+      <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>Del caso a la publicación · toca una etapa para abrirla</p>
+      <FlujoTrabajo pasos={pasos} />
+
+      <div className="toolbar" style={{ marginTop: 14 }}>
         <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
           <BarraBusqueda name="q" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
           <div className="campo-filtro">
@@ -131,7 +138,16 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <div className="grupo-main">
       <div className="tarjeta">
         {(casos ?? []).length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros.</p>
+          (total.count ?? 0) === 0 ? (
+            <div className="vacio">
+              <Icono nombre="documento" size={42} />
+              <h3 style={{ margin: '10px 0 4px' }}>Aún no hay casos</h3>
+              <p className="muted" style={{ margin: '0 auto 14px', maxWidth: 440 }}>Cuando el equipo de recopilación reporte información, aparecerá aquí para verificarla.</p>
+              <Link href="/casos/nuevo" className="btn btn-primario"><Icono nombre="mas" size={16} /> Reportar un caso</Link>
+            </div>
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros. <Link href={cerrarHref}>Limpiar filtros</Link>.</p>
+          )
         ) : (
           <div className="tabla-scroll"><table>
             <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>

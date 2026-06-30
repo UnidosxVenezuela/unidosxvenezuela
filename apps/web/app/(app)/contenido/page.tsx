@@ -6,10 +6,12 @@ import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import AnimarEntrada from '@/components/AnimarEntrada';
-import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
+import FlujoTrabajo from '@/components/FlujoTrabajo';
+import EstadoVacio from '@/components/EstadoVacio';
+import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetallePieza from './DetallePieza';
 
 type SP = { pieza?: string };
@@ -28,6 +30,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
   const nombres = new Map<string, string>((perfilesData ?? []).map((p: any) => [p.id, p.nombre_completo]));
   const avatares = new Map<string, string | null>((perfilesData ?? []).map((p: any) => [p.id, p.avatar_url]));
   const porEtapa = (e: EtapaContenido) => piezas.filter((p) => p.etapa === e);
+  const pasos = pasosFlujo(await contarFlujo(supabase));
 
   const hrefPieza = (id: string) => '/contenido?pieza=' + id;
   let drawerPieza: any = null; let drawerHist: any[] = []; let drawerPuedeEtapa = false;
@@ -52,22 +55,18 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
         <BotonActualizar />
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', margin: '16px 0' }}>
-        {ETAPAS_CONTENIDO.map((e) => (
-          <div key={e} className="tarjeta" style={{ marginBottom: 0 }}>
-            <div style={{ marginBottom: 6 }}><Pill tono={tonoDeClase(claseEtapa(e))}>{ETIQUETA_ETAPA[e]}</Pill></div>
-            <div style={{ fontSize: '1.7rem', fontWeight: 800, lineHeight: 1 }}>{porEtapa(e).length}</div>
-          </div>
-        ))}
-      </div>
+      <p className="muted" style={{ margin: '12px 0 6px', fontWeight: 600 }}>Del caso a la publicación · toca una etapa para abrirla</p>
+      <FlujoTrabajo pasos={pasos} />
 
       <div>
         <div className="grupo-main">
           {piezas.length === 0 ? (
-            <div className="tarjeta vacio">
-              <Icono nombre="documento" size={40} />
-              <p className="muted" style={{ marginBottom: 0 }}>Todavía no hay piezas. Desde Verificación, envía un caso confirmado a Redacción.</p>
-            </div>
+            <EstadoVacio
+              icono="documento"
+              titulo="Todavía no hay piezas en producción"
+              texto="Cuando un caso se confirme en Verificación y se envíe a Redacción, aparecerá aquí para producir el contenido."
+              accion={{ href: '/casos?estado=confirmado', etiqueta: 'Ver casos confirmados', icono: 'ok' }}
+            />
           ) : (
             <div className="tablero">
               {ETAPAS_CONTENIDO.map((e) => (

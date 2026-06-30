@@ -5,10 +5,13 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { createClient } from '@/lib/supabase/client';
-import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia } from '@/lib/constantes';
+import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL } from '@/lib/constantes';
 import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
-import type { PuntoAcopio, UrgenciaAcopio } from '@unidos/types';
+import Avatar from './Avatar';
+import type { PuntoAcopio, UrgenciaAcopio, Rol } from '@unidos/types';
+
+type Resp = { perfil_id: string; nombre: string | null; avatar: string | null; rol: Rol | null };
 
 const ESTILO: StyleSpecification = {
   version: 8,
@@ -17,8 +20,10 @@ const ESTILO: StyleSpecification = {
 };
 const ORDEN: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 
-export default function CentrosAcopio({ userId, esCoord }: { userId: string; esCoord: boolean }) {
+export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: string; esCoord: boolean; esAdmin: boolean }) {
   const [centros, setCentros] = useState<PuntoAcopio[]>([]);
+  const [responsables, setResponsables] = useState<Map<string, Resp[]>>(new Map());
+  const [candidatos, setCandidatos] = useState<{ id: string; nombre_completo: string | null; rol: Rol | null }[]>([]);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState<PuntoAcopio | 'nuevo' | null>(null);
   const [sel, setSel] = useState<{ lat: number; lng: number } | null>(null);
@@ -29,13 +34,32 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
   const marcador = useRef<MapLibreMarker | null>(null);
 
   const cargar = useCallback(async () => {
-    const { data } = await createClient().from('puntos_acopio').select('*');
+    const supabase = createClient();
+    const [{ data }, resp] = await Promise.all([
+      supabase.from('puntos_acopio').select('*'),
+      supabase.from('acopio_responsables').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
+    ]);
     const arr = ((data ?? []) as PuntoAcopio[]).sort((a, b) =>
       ((ORDEN[a.urgencia] ?? 1) - (ORDEN[b.urgencia] ?? 1)) || a.nombre.localeCompare(b.nombre));
     setCentros(arr);
+    // Agrupa responsables por centro (vacío si la tabla aún no existe).
+    const map = new Map<string, Resp[]>();
+    for (const r of (resp.data ?? []) as any[]) {
+      const lista = map.get(r.punto_id) ?? [];
+      lista.push({ perfil_id: r.perfil_id, nombre: r.perfiles?.nombre_completo ?? null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
+      map.set(r.punto_id, lista);
+    }
+    setResponsables(map);
     setCargando(false);
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
+
+  // Candidatos a responsable (solo el admin asigna).
+  useEffect(() => {
+    if (!esAdmin) return;
+    createClient().from('perfiles').select('id, nombre_completo, rol').order('nombre_completo')
+      .then(({ data }) => setCandidatos((data ?? []) as any[]));
+  }, [esAdmin]);
 
   // Mapa selector: vive mientras el formulario está abierto.
   useEffect(() => {
@@ -105,6 +129,17 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
     if (error) { alert(error.message); return; }
     cargar();
   }
+  async function asignarResp(puntoId: string, perfilId: string) {
+    if (!perfilId) return;
+    const { error } = await createClient().from('acopio_responsables').insert({ punto_id: puntoId, perfil_id: perfilId, asignado_por: userId });
+    if (error) { alert(error.message); return; }
+    cargar();
+  }
+  async function quitarResp(puntoId: string, perfilId: string) {
+    const { error } = await createClient().from('acopio_responsables').delete().eq('punto_id', puntoId).eq('perfil_id', perfilId);
+    if (error) { alert(error.message); return; }
+    cargar();
+  }
 
   const ed = editando !== null && editando !== 'nuevo' ? editando : null;
 
@@ -146,7 +181,7 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
               <div className="campo"><label>Qué recibe</label><input name="recibe" className="input" defaultValue={ed?.recibe ?? ''} /></div>
               <div className="campo"><label>Dirección</label><input name="direccion" className="input" defaultValue={ed?.direccion ?? ''} /></div>
               <div className="grid grid-2">
-                <div className="campo"><label>Responsable</label><input name="responsable" className="input" defaultValue={ed?.responsable ?? ''} /></div>
+                <div className="campo"><label>Contacto en el sitio</label><input name="responsable" className="input" placeholder="nombre de quien atiende" defaultValue={ed?.responsable ?? ''} /></div>
                 <div className="campo"><label>Teléfono</label><input name="telefono" className="input" type="tel" defaultValue={ed?.telefono ?? ''} /></div>
               </div>
               <div className="campo"><label>Horario</label><input name="horario" className="input" placeholder="8:00–18:00" defaultValue={ed?.horario ?? ''} /></div>
@@ -176,9 +211,37 @@ export default function CentrosAcopio({ userId, esCoord }: { userId: string; esC
               {c.necesita && <p style={{ margin: '6px 0' }}><strong>Necesita:</strong> {c.necesita}</p>}
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}
               {c.recibe && <div className="muted" style={{ fontSize: '.9rem' }}>Recibe: {c.recibe}</div>}
-              {c.direccion && <div className="muted" style={{ fontSize: '.9rem' }}>📍 {c.direccion}</div>}
-              {(c.responsable || c.telefono) && <div className="muted" style={{ fontSize: '.9rem' }}>{[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
-              {c.horario && <div className="muted" style={{ fontSize: '.85rem' }}>🕒 {c.horario}</div>}
+              {c.direccion && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="ubicacion" size={14} /> {c.direccion}</div>}
+              {(c.responsable || c.telefono) && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Contacto: {[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
+              {c.horario && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="reloj" size={14} /> {c.horario}</div>}
+
+              <div className="acopio-resp">
+                <div className="acopio-resp-tit">Coordinadores responsables</div>
+                {(responsables.get(c.id) ?? []).length === 0
+                  ? <span className="muted" style={{ fontSize: '.88rem' }}>Sin coordinador asignado.</span>
+                  : (
+                    <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+                      {(responsables.get(c.id) ?? []).map((r) => (
+                        <span key={r.perfil_id} className="chip-resp" title={r.rol ? ETIQUETA_ROL[r.rol] : undefined}>
+                          <Avatar nombre={r.nombre} url={r.avatar} size={20} /> {r.nombre ?? '—'}
+                          {esAdmin && <button type="button" className="chip-x" onClick={() => quitarResp(c.id, r.perfil_id)} aria-label={'Quitar a ' + (r.nombre ?? 'responsable')}>✕</button>}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                {esAdmin && (
+                  <select className="input" style={{ minHeight: 36, marginTop: 8 }} value=""
+                    onChange={(e) => { const v = e.target.value; e.currentTarget.value = ''; asignarResp(c.id, v); }}>
+                    <option value="">+ Asignar coordinador responsable…</option>
+                    {candidatos
+                      .filter((p) => !(responsables.get(c.id) ?? []).some((r) => r.perfil_id === p.id))
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>{(p.nombre_completo || p.id) + (p.rol ? ' · ' + ETIQUETA_ROL[p.rol] : '')}</option>
+                      ))}
+                  </select>
+                )}
+              </div>
+
               <div className="fila" style={{ marginTop: 10 }}>
                 <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => abrir(c)}>Editar</button>
                 {(esCoord || c.creado_por === userId) && (

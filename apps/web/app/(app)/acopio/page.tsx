@@ -7,7 +7,7 @@ export default async function AcopioPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="puntos_acopio" />
-      <CentrosAcopio userId={user!.id} esCoord={esCoordinacion(perfil?.rol)} />
+      <CentrosAcopio userId={user!.id} esCoord={esCoordinacion(perfil?.rol)} esAdmin={perfil?.rol === 'admin'} />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import MenuFila from '@/components/MenuFila';
 import Kpi from '@/components/Kpi';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
+import EstadoVacio from '@/components/EstadoVacio';
 import DetalleTarea from './DetalleTarea';
 import { tomarTarea } from './actions';
 
@@ -217,12 +218,13 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       {/* Mis tareas */}
       <h2>Mis tareas</h2>
       {mias.length === 0 ? (
-        <div className="tarjeta vacio">
-          <Icono nombre="reloj" size={40} />
-          <p className="muted" style={{ marginBottom: 0 }}>
-            Aún no tienes tareas. Toma una tarea abierta de arriba{gestor ? '' : ' o espera a que la coordinación te asigne una'}.
-          </p>
-        </div>
+        <EstadoVacio
+          icono="tareas"
+          titulo="Aún no tienes tareas"
+          texto={gestor
+            ? 'Toma una tarea abierta de arriba para empezar a colaborar.'
+            : 'Toma una tarea abierta de arriba, o espera a que la coordinación te asigne una.'}
+        />
       ) : <TablaTareas tareas={mias} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} />}
 
       {/* Gestores: vista completa con filtros */}

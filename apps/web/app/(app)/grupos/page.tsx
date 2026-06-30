@@ -6,6 +6,7 @@ import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Pill from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
+import EstadoVacio from '@/components/EstadoVacio';
 import { unirmeGrupo } from './actions';
 
 export default async function GruposPage() {
@@ -32,10 +33,12 @@ export default async function GruposPage() {
       </div>
 
       {grupos.length === 0 && (
-        <div className="tarjeta vacio">
-          <Icono nombre="grupos" size={40} />
-          <p className="muted" style={{ marginBottom: 0 }}>No hay grupos visibles para ti. {coord ? 'Crea el primero.' : ''}</p>
-        </div>
+        <EstadoVacio
+          icono="grupos"
+          titulo="No hay grupos para mostrar"
+          texto={coord ? 'Crea el primer grupo para organizar al equipo por áreas de trabajo.' : 'Cuando te unas a un grupo o haya grupos abiertos, aparecerán aquí.'}
+          accion={coord ? { href: '/grupos/nuevo', etiqueta: 'Crear grupo' } : undefined}
+        />
       )}
 
       <div className="grid grid-2">
