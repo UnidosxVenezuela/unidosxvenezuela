@@ -42,7 +42,7 @@ export default function DetalleTarea({
           <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
           <div className="fila" style={{ gap: 6 }}>
             <strong>Asignado a:</strong>
-            {tarea.asignado_a ? <><Avatar nombre={tarea.asignado?.nombre_completo} size={22} /> {tarea.asignado?.nombre_completo ?? '—'}</> : <span className="muted">Sin asignar</span>}
+            {tarea.asignado_a ? <><Avatar nombre={tarea.asignado?.nombre_completo} url={tarea.asignado?.avatar_url} size={22} /> {tarea.asignado?.nombre_completo ?? '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
           <div><strong>Personas:</strong> {cupo ? `${ocupados}/${cupo}` : ocupados}</div>
           <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
@@ -92,7 +92,7 @@ export default function DetalleTarea({
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {personas.map((p: any) => (
               <li key={p.perfil_id} className="fila" style={{ gap: 8 }}>
-                <Avatar nombre={p.perfiles?.nombre_completo} size={22} />
+                <Avatar nombre={p.perfiles?.nombre_completo} url={p.perfiles?.avatar_url} size={22} />
                 {p.perfiles?.nombre_completo || '—'}
                 {tarea.asignado_a === p.perfil_id && <Pill tono="ok" punto={false}>Responsable</Pill>}
               </li>

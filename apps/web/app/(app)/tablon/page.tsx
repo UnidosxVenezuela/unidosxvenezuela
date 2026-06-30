@@ -15,7 +15,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
 
   let q = supabase.from('publicaciones').select(
     `id, contenido, sensibilidad, creado_en, grupo_id,
-     autor:perfiles ( nombre_completo ),
+     autor:perfiles ( nombre_completo, avatar_url ),
      grupos ( nombre ),
      comentarios_publicacion ( id, contenido, creado_en, autor:perfiles ( nombre_completo ) )`
   ).order('creado_en', { ascending: false })
@@ -83,7 +83,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
       {posts.map((p) => (
         <div key={p.id} className="tarjeta">
           <div className="fila" style={{ justifyContent: 'space-between' }}>
-            <span className="celda-persona"><Avatar nombre={p.autor?.nombre_completo} size={28} /> <strong>{p.autor?.nombre_completo ?? 'Anónimo'}</strong></span>
+            <span className="celda-persona"><Avatar nombre={p.autor?.nombre_completo} url={p.autor?.avatar_url} size={28} /> <strong>{p.autor?.nombre_completo ?? 'Anónimo'}</strong></span>
             <Pill tono={tonoDeClase(claseSensibilidad(p.sensibilidad))}>
               {ETIQUETA_SENSIBILIDAD[p.sensibilidad as keyof typeof ETIQUETA_SENSIBILIDAD]}
             </Pill>

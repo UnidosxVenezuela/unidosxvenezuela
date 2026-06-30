@@ -5,6 +5,9 @@ import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePri
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import Pill, { tonoDeClase } from '@/components/Pill';
+import BadgeCategoria from '@/components/BadgeCategoria';
+import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
 import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo } from '../actions';
 
@@ -22,7 +25,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
-      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol)').eq('grupo_id', grupoId),
+      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
@@ -80,8 +83,8 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{grupo.nombre}</h1>
         <span className="fila" style={{ gap: 6 }}>
-          {!grupo.abierto && <span className="insignia aviso">Privado</span>}
-          <span className="insignia">{etiquetaArea(grupo.area)}</span>
+          {!grupo.abierto && <Pill tono="aviso" punto={false}>Privado</Pill>}
+          <BadgeCategoria>{etiquetaArea(grupo.area)}</BadgeCategoria>
         </span>
       </div>
       <p className="muted" style={{ marginTop: 4 }}>{grupo.descripcion || 'Sin descripción'}</p>
@@ -151,8 +154,8 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   {tareas.map((t) => (
                     <tr key={t.id}>
                       <td><Link href={'/tareas/' + t.id}>{t.titulo}</Link></td>
-                      <td><span className={'insignia ' + clasePrioridad(t.prioridad)}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD] ?? t.prioridad}</span></td>
-                      <td><span className={'insignia ' + claseEstado(t.estado)}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO] ?? t.estado}</span></td>
+                      <td><Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD] ?? t.prioridad}</Pill></td>
+                      <td><Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO] ?? t.estado}</Pill></td>
                     </tr>
                   ))}
                 </tbody>
@@ -179,7 +182,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     <strong>{r.titulo}</strong>
                     <div className="muted" style={{ fontSize: '.85rem' }}>
                       {new Date(r.inicio).toLocaleString('es-VE')} · {r.duracion_min} min
-                      {activa && <span className="insignia ok" style={{ marginLeft: 8 }}>En curso</span>}
+                      {activa && <span style={{ marginLeft: 8 }}><Pill tono="ok">En curso</Pill></span>}
                     </div>
                   </div>
                   {activa && h
@@ -199,8 +202,11 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 {miembros.map((m) => (
                   <tr key={m.perfil_id}>
                     <td>
-                      {m.perfiles?.nombre_completo || '—'}
-                      {grupo.lider_id === m.perfil_id && <span className="insignia ok" style={{ marginLeft: 8 }}>Líder</span>}
+                      <span className="celda-persona">
+                        <Avatar nombre={m.perfiles?.nombre_completo} url={m.perfiles?.avatar_url} size={26} />
+                        {m.perfiles?.nombre_completo || '—'}
+                        {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
+                      </span>
                     </td>
                     <td>{m.rol_en_grupo}</td>
                     {puedeGestionar && (

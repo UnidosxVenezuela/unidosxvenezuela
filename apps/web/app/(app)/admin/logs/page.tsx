@@ -40,7 +40,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
     supabase.from('registro_auditoria')
       .select('id, actor_id, accion, entidad, entidad_id, metadata, creado_en')
       .order('creado_en', { ascending: false }).limit(500),
-    supabase.from('perfiles').select('id, nombre_completo, rol'),
+    supabase.from('perfiles').select('id, nombre_completo, rol, avatar_url'),
   ]);
 
   const perfiles = new Map<string, any>((perfilesRaw ?? []).map((p: any) => [p.id, p]));
@@ -53,6 +53,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
       ...l,
       actorNombre: actor?.nombre_completo ?? (l.actor_id ? '—' : 'Sistema'),
       actorRol: actor?.rol ?? null,
+      actorAvatar: actor?.avatar_url ?? null,
       desc: describir(l.accion, l.entidad),
     };
   });
@@ -105,7 +106,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
                     <td style={{ whiteSpace: 'nowrap' }}>{new Date(l.creado_en).toLocaleString('es-VE')}</td>
                     <td>
                       <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
-                        <Avatar nombre={l.actor_id ? l.actorNombre : 'Sistema'} size={24} />
+                        <Avatar nombre={l.actor_id ? l.actorNombre : 'Sistema'} url={l.actorAvatar} size={24} />
                         {l.actorNombre}
                       </span>
                     </td>

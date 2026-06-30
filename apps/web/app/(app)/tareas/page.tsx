@@ -63,7 +63,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
               <td><BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria></td>
               <td>{t.grupos?.nombre ?? '—'}</td>
               <td>{t.asignado_a
-                ? <span className="celda-persona"><Avatar nombre={t.asignado?.nombre_completo} size={24} /> {t.asignado?.nombre_completo ?? '—'}</span>
+                ? <span className="celda-persona"><Avatar nombre={t.asignado?.nombre_completo} url={t.asignado?.avatar_url} size={24} /> {t.asignado?.nombre_completo ?? '—'}</span>
                 : <span className="muted">Sin asignar</span>}</td>
               <td><Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill></td>
               <td><Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO]}</Pill></td>
@@ -82,7 +82,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
   );
 }
 
-const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, grupo_id, asignado_a, cupo, grupos(nombre), asignado:perfiles!tareas_asignado_a_fkey(nombre_completo)';
+const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, grupo_id, asignado_a, cupo, grupos(nombre), asignado:perfiles!tareas_asignado_a_fkey(nombre_completo, avatar_url)';
 
 export default async function TareasPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -137,9 +137,9 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       supabase.from('tareas').select(
         `id, titulo, descripcion, estado, prioridad, vence_en, ubicacion, lat, lng, grupo_id, asignado_a, cupo, creado_por,
          grupos ( nombre, lider_id ),
-         asignado:perfiles!tareas_asignado_a_fkey ( nombre_completo )`,
+         asignado:perfiles!tareas_asignado_a_fkey ( nombre_completo, avatar_url )`,
       ).eq('id', tid).single(),
-      supabase.from('tarea_personas').select('perfil_id, perfiles ( nombre_completo )').eq('tarea_id', tid).order('unido_en', { ascending: true }),
+      supabase.from('tarea_personas').select('perfil_id, perfiles ( nombre_completo, avatar_url )').eq('tarea_id', tid).order('unido_en', { ascending: true }),
       supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
       supabase.from('adjuntos_tarea').select('id').eq('tarea_id', tid).eq('clase', 'entregable').limit(1),
     ]);

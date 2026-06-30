@@ -31,9 +31,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   };
   const [total, enProc, conf, falso, perfilesRes] = await Promise.all([
     cnt(), cnt('en_proceso'), cnt('confirmado'), cnt('falso'),
-    supabase.from('perfiles').select('id, nombre_completo'),
+    supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
   ]);
   const nombres = new Map<string, string>((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre_completo]));
+  const avatares = new Map<string, string | null>((perfilesRes.data ?? []).map((p: any) => [p.id, p.avatar_url]));
 
   let q = supabase.from('casos').select(COLS).order('actualizado_en', { ascending: false }).limit(200);
   if (searchParams.estado) q = q.eq('estado', searchParams.estado);
@@ -129,7 +130,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
                   <td>
                     {c.asignado_a
-                      ? <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }}><Avatar nombre={nombres.get(c.asignado_a)} /> {nombres.get(c.asignado_a) ?? '—'}</span>
+                      ? <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }}><Avatar nombre={nombres.get(c.asignado_a)} url={avatares.get(c.asignado_a)} /> {nombres.get(c.asignado_a) ?? '—'}</span>
                       : <span className="muted">Sin asignar</span>}
                   </td>
                   <td><EstadoCaso estado={c.estado} /></td>
@@ -168,7 +169,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
               <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')}</div>
               <strong>{c.titulo}</strong>
               <div className="fila" style={{ gap: 6, margin: '8px 0', fontSize: '.85rem' }}>
-                <Avatar nombre={nombres.get(c.asignado_a)} size={22} /> {nombres.get(c.asignado_a) ?? 'Sin asignar'}
+                <Avatar nombre={nombres.get(c.asignado_a)} url={avatares.get(c.asignado_a)} size={22} /> {nombres.get(c.asignado_a) ?? 'Sin asignar'}
               </div>
               <EstadoCaso estado="confirmado" />
             </Link>

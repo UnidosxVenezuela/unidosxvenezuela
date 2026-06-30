@@ -14,11 +14,15 @@ export default async function CrearUsuarioPage() {
   return (
     <div>
       <Link href="/admin/usuarios" className="muted">← Usuarios</Link>
-      <h1>Crear usuario</h1>
-      <p className="muted" style={{ maxWidth: 520 }}>
-        Crea una cuenta ya verificada y lista para usar. Compartí la contraseña temporal
-        por un canal seguro; la persona la cambia al entrar.
-      </p>
+      <div className="pagina-cab" style={{ marginTop: 8 }}>
+        <div>
+          <h1>Crear usuario</h1>
+          <p className="muted sub" style={{ maxWidth: 520 }}>
+            Crea una cuenta ya verificada y lista para usar. Comparte la contraseña temporal
+            por un canal seguro; la persona la cambia al entrar.
+          </p>
+        </div>
+      </div>
 
       <form action={crearUsuario} className="tarjeta" style={{ maxWidth: 520 }}>
         <div className="campo">

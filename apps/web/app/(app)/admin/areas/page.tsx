@@ -12,8 +12,12 @@ export default async function AdminAreasPage() {
   return (
     <div>
       <Link href="/admin/usuarios" className="muted">← Administración</Link>
-      <h1>Áreas</h1>
-      <p className="muted">Las áreas organizan los grupos. Las 9 humanitarias (OCHA) y las de trabajo vienen predeterminadas; un administrador puede crear más.</p>
+      <div className="pagina-cab" style={{ marginTop: 8 }}>
+        <div>
+          <h1>Áreas</h1>
+          <p className="muted sub">Las áreas organizan los grupos. Las 9 humanitarias (OCHA) y las de trabajo vienen predeterminadas; un administrador puede crear más.</p>
+        </div>
+      </div>
 
       {esAdmin && (
         <form action={crearArea} className="tarjeta">

@@ -61,6 +61,7 @@ export interface Perfil {
   super_admin: boolean;
   organizacion: string | null;
   motivo: string | null;
+  avatar_url: string | null;
   creado_en: string;
 }
 

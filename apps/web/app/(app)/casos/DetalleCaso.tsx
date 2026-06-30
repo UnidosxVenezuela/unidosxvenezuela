@@ -20,6 +20,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string;
 }) {
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
+  const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
   const waFuente = hrefSeguro(caso.fuente_url);
 
   const describir = (accion: string, meta: any) => {
@@ -47,7 +48,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           <div className="fila" style={{ gap: 6 }}>
             <strong>Asignado a:</strong>
-            {caso.asignado_a ? <><Avatar nombre={nombres.get(caso.asignado_a)} size={22} /> {nombres.get(caso.asignado_a) ?? '—'}</> : <span className="muted">Sin asignar</span>}
+            {caso.asignado_a ? <><Avatar nombre={nombres.get(caso.asignado_a)} url={avatares.get(caso.asignado_a)} size={22} /> {nombres.get(caso.asignado_a) ?? '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
         </div>
       </div>

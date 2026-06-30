@@ -16,7 +16,7 @@ export default async function AdminUsuariosPage() {
   const esAdmin = yo?.rol === 'admin';
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, rol, verificado, super_admin, organizacion, motivo, creado_en')
+    .select('id, nombre_completo, telefono, rol, verificado, super_admin, organizacion, motivo, avatar_url, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
@@ -84,7 +84,7 @@ export default async function AdminUsuariosPage() {
           <div className="tarjeta" key={p.id}>
             <div className="fila" style={{ justifyContent: 'space-between' }}>
               <div className="fila" style={{ gap: 10, alignItems: 'flex-start' }}>
-                <Avatar nombre={p.nombre_completo} size={34} />
+                <Avatar nombre={p.nombre_completo} url={p.avatar_url} size={34} />
                 <div>
                 <strong>{p.nombre_completo || '—'}</strong>
                 <div className="muted" style={{ fontSize: '.9rem' }}>
@@ -174,7 +174,7 @@ export default async function AdminUsuariosPage() {
               <tr key={p.id}>
                 <td>
                   <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
-                    <Avatar nombre={p.nombre_completo} />
+                    <Avatar nombre={p.nombre_completo} url={p.avatar_url} />
                     <span>
                       {p.nombre_completo || '—'}
                       {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}

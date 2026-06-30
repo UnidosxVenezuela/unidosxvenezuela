@@ -40,7 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           nombre: perfil?.nombre_completo || user?.email || '',
           rol: perfil?.rol,
           email: user?.email,
-          avatarUrl: (perfil as { avatar_url?: string | null } | null)?.avatar_url ?? null,
+          avatarUrl: perfil?.avatar_url ?? null,
         }}
         nav={{ coord, aliados: puedeVerAliados(perfil?.rol), verificacion: puedeVerificar(perfil?.rol) }}
       >

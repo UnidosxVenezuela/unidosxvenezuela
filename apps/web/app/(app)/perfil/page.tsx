@@ -9,7 +9,7 @@ export default async function PerfilPage({
   searchParams,
 }: { searchParams: { guardado?: string } }) {
   const { user, perfil } = await requireUsuario();
-  const avatarUrl = (perfil as { avatar_url?: string | null } | null)?.avatar_url ?? null;
+  const avatarUrl = perfil?.avatar_url ?? null;
 
   return (
     <div style={{ maxWidth: 560 }}>

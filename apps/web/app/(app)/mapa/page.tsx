@@ -25,7 +25,7 @@ export default async function MapaPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="puntos_acopio" />
-      <div className="fila" style={{ justifyContent: 'space-between' }}>
+      <div className="pagina-cab">
         <h1>Mapa de coordinación</h1>
         <Link className="btn" href="/acopio"><Icono nombre="acopio" /> Centros de acopio</Link>
       </div>
