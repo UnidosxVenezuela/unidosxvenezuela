@@ -2,23 +2,33 @@ import { requireUsuario } from '@/lib/auth';
 import { ETIQUETA_ROL } from '@/lib/constantes';
 import { actualizarPerfil } from './actions';
 import CambiarContrasena from '@/components/CambiarContrasena';
+import SubirAvatar from '@/components/SubirAvatar';
+import Pill from '@/components/Pill';
 
 export default async function PerfilPage({
   searchParams,
 }: { searchParams: { guardado?: string } }) {
   const { user, perfil } = await requireUsuario();
+  const avatarUrl = (perfil as { avatar_url?: string | null } | null)?.avatar_url ?? null;
 
   return (
     <div style={{ maxWidth: 560 }}>
-      <h1>Mi perfil</h1>
-      <div className="fila" style={{ marginBottom: 12 }}>
-        <span className="insignia">{ETIQUETA_ROL[perfil?.rol ?? 'voluntario']}</span>
-        <span className={'insignia ' + (perfil?.verificado ? 'ok' : 'aviso')}>
-          {perfil?.verificado ? 'Verificado' : 'Sin verificar'}
-        </span>
+      <div className="pagina-cab">
+        <div>
+          <h1>Mi perfil</h1>
+          <div className="fila" style={{ marginTop: 4 }}>
+            <Pill tono="neutra" punto={false}>{ETIQUETA_ROL[perfil?.rol ?? 'voluntario']}</Pill>
+            <Pill tono={perfil?.verificado ? 'ok' : 'aviso'}>{perfil?.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
+          </div>
+        </div>
       </div>
+
+      <div className="tarjeta" style={{ marginTop: 12 }}>
+        <SubirAvatar nombre={perfil?.nombre_completo} urlActual={avatarUrl} />
+      </div>
+
       {searchParams?.guardado && (
-        <p className="insignia ok" style={{ marginBottom: 12 }}>Cambios guardados</p>
+        <p className="exito" style={{ marginBottom: 12 }}>✓ Cambios guardados</p>
       )}
 
       <form action={actualizarPerfil} className="tarjeta">
