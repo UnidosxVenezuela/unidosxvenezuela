@@ -1,6 +1,7 @@
 {
   "name": "plataforma-unidos",
   "private": true,
+  "license": "AGPL-3.0-only",
   "version": "0.1.0",
   "description": "Plataforma de coordinación de equipos para la respuesta al terremoto de Venezuela (2026).",
   "packageManager": "pnpm@9.7.0",

@@ -158,4 +158,8 @@ Ver `docs/05-ROADMAP.md`. Sugerido: Sprint 1 = Auth + perfiles + verificación +
 
 ## Licencia
 
-Pendiente de definir. Para un proyecto humanitario se recomienda una licencia abierta (p. ej. MIT o AGPL-3.0).
+Copyright (C) 2026 UnidosXVenezuela
+
+Este proyecto es software libre bajo la **GNU Affero General Public License v3.0** (`AGPL-3.0-only`). Puedes usarlo, estudiarlo, modificarlo y compartirlo. Por ser una aplicación que se usa **en red**, la AGPL añade una condición clave: **si despliegas una versión —modificada o no— como servicio, debes ofrecer su código fuente a quienes la usen**. Así las mejoras vuelven a la comunidad y la plataforma humanitaria se mantiene abierta para todos.
+
+Texto completo en [LICENSE](LICENSE).
