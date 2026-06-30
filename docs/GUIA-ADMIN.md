@@ -31,6 +31,7 @@ Cada persona que se inscribe queda **pendiente** hasta que tú la apruebes.
 | **Líder de grupo** | Maneja su grupo y crea tareas. |
 | **Voluntario** | Toma tareas y registra sus horas. |
 | **Observador** | Solo mira (no edita). |
+| **Verificación** | Recibe y verifica los casos que llegan (módulo **Verificación**): confirma, marca como falso o resuelto, y prepara los confirmados para redacción. Ver punto 10. |
 | **Líder de plataforma aliada** | Accede a la base compartida de contactos aliados (ver punto 5). |
 
 Para cambiar el rol de alguien: entra a **Usuarios**, busca la fila de la persona, elige el rol y toca **Guardar**.
@@ -80,11 +81,24 @@ Entra a **Centros de acopio** y agrega un punto con su dirección (eliges la ubi
 ## 9. Tareas
 - Para crear: **Tareas → Nueva tarea** (título, prioridad, categoría y a quién se asigna).
 - Las personas también pueden **tomar** tareas abiertas.
-- Sigue el estado de cada tarea (pendiente, en progreso, completada).
+- Sigue el estado de cada tarea (pendiente, en progreso, completada). Arriba, los gestores ven **indicadores** (total, pendientes, en progreso, completadas).
+- Toca el título de una tarea (o el menú **⋮** de su fila) para abrir el **panel lateral** con su detalle, cambiar el estado y la asignación sin salir de la lista. Para comentarios, material y entregables, usa **"Ver tarea completa"**.
 
 ---
 
-## 10. Reglas de oro 🛡️
+## 10. Verificación de casos
+El módulo **Verificación** (menú **Verificación**) sirve para procesar la información que llega y decidir si es real.
+- Quién entra: **administradores**, **coordinadores** y el rol **Verificación**.
+- Arriba ves los **indicadores** (total, en proceso, confirmados, falsos/resueltos) y un buscador con filtros por estado y categoría.
+- Para registrar algo nuevo: **Verificación → Nuevo caso**.
+- Toca un caso en la tabla para abrir su **panel lateral**: ahí cambias el estado, lo asignas a un verificador, dejas notas y ves el **historial de cambios**.
+- Los casos marcados como **Confirmado y activo** aparecen en **"Listos para redacción"**, listos para la siguiente etapa.
+
+> El módulo es solo para coordinar la verificación; respeta los mismos permisos del resto de la plataforma.
+
+---
+
+## 11. Reglas de oro 🛡️
 - **Nunca compartas tu contraseña.** Cada quien usa la suya.
 - Asigna el rol **mínimo** que la persona necesita.
 - Las contraseñas temporales son de un solo uso: pide que las cambien al entrar.
