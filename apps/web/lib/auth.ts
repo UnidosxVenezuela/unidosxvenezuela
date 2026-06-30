@@ -54,3 +54,8 @@ export function puedeGestionarTareas(rol?: Rol | null) {
 export function puedeVerAliados(rol?: Rol | null) {
   return rol === 'admin' || rol === 'lider_plataforma_aliada';
 }
+
+// Módulo de verificación de casos: coordinación o rol verificador.
+export function puedeVerificar(rol?: Rol | null) {
+  return rol === 'admin' || rol === 'coordinador' || rol === 'verificador';
+}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion, puedeVerAliados } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, puedeVerAliados, puedeVerificar } from '@/lib/auth';
 import CerrarSesion from '@/components/CerrarSesion';
 import CampanaNotificaciones from '@/components/CampanaNotificaciones';
 import NavLateral from '@/components/NavLateral';
@@ -47,7 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <aside className="sidebar">
         <div className="tricolor" />
         <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
-        <NavLateral coord={coord} aliados={puedeVerAliados(perfil?.rol)} />
+        <NavLateral coord={coord} aliados={puedeVerAliados(perfil?.rol)} verificacion={puedeVerificar(perfil?.rol)} />
         <div className="sidebar-pie">
           <Link href="/perfil" className="sidebar-usuario">
             <span className="avatar">{iniciales(perfil?.nombre_completo, user?.email)}</span>

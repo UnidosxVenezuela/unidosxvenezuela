@@ -9,7 +9,8 @@ export type Rol =
   | 'lider_grupo'             // Líder de un grupo operativo
   | 'voluntario'              // Miembro de campo
   | 'observador'              // Solo lectura (donantes, prensa autorizada)
-  | 'lider_plataforma_aliada'; // Comparte endpoints de su plataforma (base de datos compartida)
+  | 'lider_plataforma_aliada' // Comparte endpoints de su plataforma (base de datos compartida)
+  | 'verificador';            // Revisa y aprueba casos sensibles (módulo de verificación)
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer
@@ -110,6 +111,25 @@ export interface AdjuntoTarea {
   mime: string | null;
   creado_por: string | null;
   creado_en: string;
+}
+
+export type EstadoCaso = 'en_proceso' | 'confirmado' | 'falso';
+
+export interface Caso {
+  id: string;
+  numero: number;
+  titulo: string;
+  descripcion: string | null;
+  categoria: string | null;
+  fuente: string | null;
+  fuente_url: string | null;
+  fecha_publicacion: string | null;
+  asignado_a: string | null;
+  estado: EstadoCaso;
+  notas: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
 }
 
 export interface SolicitudAliado {

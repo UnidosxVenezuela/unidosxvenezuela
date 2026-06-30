@@ -1,4 +1,4 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso } from '@unidos/types';
 
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
@@ -76,7 +76,14 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   voluntario: 'Voluntario',
   observador: 'Observador',
   lider_plataforma_aliada: 'Líder de plataforma aliada',
+  verificador: 'Verificación',
 };
+
+export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
+  en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
+};
+export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso'];
+export const CATEGORIAS_CASO = ['Desaparecidos', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras informaciones'];
 
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {
   pendiente: 'Pendiente', asignada: 'Asignada', en_progreso: 'En progreso',

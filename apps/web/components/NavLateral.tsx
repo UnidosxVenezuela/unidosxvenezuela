@@ -14,10 +14,11 @@ const ENLACES = [
   { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
 ] as const;
 
-export default function NavLateral({ coord, aliados }: { coord: boolean; aliados?: boolean }) {
+export default function NavLateral({ coord, aliados, verificacion }: { coord: boolean; aliados?: boolean; verificacion?: boolean }) {
   const ruta = usePathname();
   let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
+  if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación', icono: 'ok' });
   if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
   if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
 
