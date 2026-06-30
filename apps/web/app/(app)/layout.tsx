@@ -1,4 +1,4 @@
-import { requireUsuario, esCoordinacion, puedeVerAliados, puedeRecopilar, puedePipeline } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, puedeVerAliados, puedeRecopilar, puedePipeline, rolesDe } from '@/lib/auth';
 import CerrarSesion from '@/components/CerrarSesion';
 import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
@@ -9,6 +9,9 @@ import { Suspense } from 'react';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, perfil } = await requireUsuario();
   const coord = esCoordinacion(perfil);
+  // Quién tiene un espacio de trabajo por rol (recopilación/producción) o lo gestiona.
+  const ROLES_ESPACIO = ['recopilacion', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+  const espacios = coord || rolesDe(perfil).some((r) => ROLES_ESPACIO.includes(r));
 
   // Bloqueo total: una cuenta sin verificar (y que no sea coordinación) solo
   // ve una pantalla de espera, sin navegación ni contenido, hasta su aprobación.
@@ -42,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
         }}
-        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil) }}
+        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil), espacios }}
       >
         {children}
       </Shell>

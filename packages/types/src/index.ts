@@ -80,6 +80,7 @@ export interface Grupo {
   descripcion: string | null;
   lider_id: string | null;
   whatsapp: string | null;
+  rol_objetivo: Rol | null; // si es un espacio de trabajo por rol (pre-hecho)
   creado_en: string;
 }
 

@@ -14,9 +14,10 @@ const ENLACES = [
   { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
 ] as const;
 
-export default function NavLateral({ coord, aliados, verificacion, contenido }: { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean }) {
+export default function NavLateral({ coord, aliados, verificacion, contenido, espacios }: { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean; espacios?: boolean }) {
   const ruta = usePathname();
   let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
+  if (espacios) enlaces.push({ href: '/espacios', etiqueta: 'Espacios de trabajo', icono: 'pizarra' });
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
   if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
