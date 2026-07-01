@@ -347,3 +347,46 @@ export async function restablecerContrasena(formData: FormData) {
   revalidatePath('/admin/usuarios');
   redirigirOk('/admin/usuarios', 'Contraseña restablecida; se envió la temporal al correo de ' + (objetivo.nombre_completo || 'la persona'));
 }
+
+// Un ADMIN elimina una cuenta (no admin). Se borra de Auth y su perfil en
+// cascada; sus registros (casos, tareas, contenido, comentarios) se CONSERVAN
+// con el autor en null. Requiere la migración 0048. No se puede deshacer.
+export async function eliminarUsuario(formData: FormData) {
+  const { supabase, userId } = await exigirAdmin();
+  const perfilId = String(formData.get('perfil_id'));
+  if (perfilId === userId) throw new Error('No puedes eliminar tu propia cuenta.');
+
+  const { data: objetivo } = await supabase.from('perfiles')
+    .select('rol, roles_extra, super_admin, nombre_completo').eq('id', perfilId).single();
+  if (!objetivo) throw new Error('Usuario no encontrado.');
+  const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
+  if (rolesObjetivo.includes('admin') || objetivo.super_admin) {
+    throw new Error('No puedes eliminar a otro administrador.');
+  }
+
+  // Auditar antes de borrar (el actor —el admin— sigue existiendo).
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'eliminar_usuario', p_entidad_id: perfilId, p_metadata: { nombre: objetivo.nombre_completo },
+  });
+
+  const { error } = await createAdminClient().auth.admin.deleteUser(perfilId);
+  if (error) throw new Error('No se pudo eliminar el usuario: ' + error.message);
+
+  revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Usuario eliminado');
+}
+
+// Sumar a una persona a un grupo desde Administración (coordinación).
+export async function agregarAGrupo(formData: FormData) {
+  const supabase = await exigirCoordinacion();
+  const perfilId = String(formData.get('perfil_id'));
+  const grupoId = String(formData.get('grupo_id'));
+  if (!grupoId) throw new Error('Elige un grupo.');
+  const { error } = await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: perfilId });
+  if (error) {
+    if ((error as { code?: string }).code === '23505') throw new Error('La persona ya está en ese grupo.');
+    throw new Error('No se pudo agregar al grupo: ' + error.message);
+  }
+  revalidatePath('/admin/usuarios');
+  redirigirOk('/admin/usuarios', 'Agregado al grupo');
+}

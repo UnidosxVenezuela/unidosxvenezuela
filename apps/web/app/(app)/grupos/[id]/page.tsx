@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
@@ -10,7 +10,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo, asignarRolesContenido } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo, asignarRolesContenido, eliminarGrupo } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -59,6 +59,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
+  const liderNombre = (todosPerfiles ?? []).find((p: any) => p.id === grupo.lider_id)?.nombre_completo;
   const waHref = hrefSeguro(grupo.whatsapp);
   const ahora = Date.now();
 
@@ -333,6 +334,21 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             </div>
 
             <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Líder del grupo</h3>
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
+                {grupo.lider_id ? <>Actual: <strong>{liderNombre || '—'}</strong></> : 'Sin líder asignado.'}
+              </p>
+              <form action={asignarLider}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <select name="perfil_id" className="input" required defaultValue={grupo.lider_id ?? ''} style={{ width: '100%' }}>
+                  <option value="" disabled>Elige a la persona…</option>
+                  {(todosPerfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                </select>
+                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar como líder</button>
+              </form>
+            </div>
+
+            <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="grupos" size={16} /> Visibilidad</h3>
               <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
                 {grupo.abierto ? 'Abierto: cualquiera lo ve y puede unirse.' : 'Privado: solo lo ven sus miembros; alta por invitación.'}
@@ -349,6 +365,23 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 </BotonConfirmar>
               </form>
             </div>
+
+            {esAdministrador(perfil) && (
+              <div className="tarjeta">
+                <h3 className="aside-titulo"><Icono nombre="basura" size={16} /> Eliminar grupo</h3>
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
+                  Borra el grupo y su contenido (miembros, anuncios, reuniones, pizarra). Las tareas se conservan sin grupo. No se puede deshacer.
+                </p>
+                <form action={eliminarGrupo}>
+                  <input type="hidden" name="grupo_id" value={grupoId} />
+                  <BotonConfirmar
+                    mensaje={'¿ELIMINAR el grupo "' + grupo.nombre + '"? Esta acción no se puede deshacer.'}
+                    className="btn btn-peligro" style={{ width: '100%' }}>
+                    Eliminar grupo
+                  </BotonConfirmar>
+                </form>
+              </div>
+            )}
           </aside>
         )}
       </div>

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
+import type { Rol } from '@unidos/types';
 
 function whatsappOpcional(v: FormDataEntryValue | null): string | null {
   const s = String(v ?? '').trim();
@@ -197,4 +198,21 @@ export async function asignarRolesContenido(formData: FormData) {
   });
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Roles de contenido actualizados');
+}
+
+// Eliminar un grupo: SOLO administradores (la RLS 0049 también lo exige). Borra
+// el grupo y su contenido en cascada; las tareas se conservan sin grupo.
+export async function eliminarGrupo(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede eliminar grupos.');
+
+  const grupoId = String(formData.get('grupo_id'));
+  const { error } = await supabase.from('grupos').delete().eq('id', grupoId);
+  if (error) throw new Error('No se pudo eliminar el grupo: ' + error.message);
+  revalidatePath('/grupos');
+  redirigirOk('/grupos', 'Grupo eliminado');
 }

@@ -3,7 +3,7 @@ import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena } from './actions';
+import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena, eliminarUsuario, agregarAGrupo } from './actions';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -20,6 +20,18 @@ export default async function AdminUsuariosPage() {
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
+
+  // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
+  const { data: gruposData } = await supabase.from('grupos').select('id, nombre').order('nombre');
+  const grupos = (gruposData ?? []) as { id: string; nombre: string }[];
+  const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupos(nombre)');
+  const gruposPorPerfil = new Map<string, string[]>();
+  (membresias ?? []).forEach((m: any) => {
+    if (!m.grupos?.nombre) return;
+    const arr = gruposPorPerfil.get(m.perfil_id) ?? [];
+    arr.push(m.grupos.nombre);
+    gruposPorPerfil.set(m.perfil_id, arr);
+  });
 
   // Flujo de aliados (doble aprobación) — solo administradores.
   let solicitudes: any[] = [];
@@ -208,6 +220,11 @@ export default async function AdminUsuariosPage() {
                           {(p.habilidades ?? []).slice(0, 6).map((h) => <span key={h} className="hab-ro">{h}</span>)}
                         </div>
                       )}
+                      {(gruposPorPerfil.get(p.id) ?? []).length > 0 && (
+                        <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                          {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
+                        </div>
+                      )}
                     </span>
                   </span>
                 </td>
@@ -231,6 +248,16 @@ export default async function AdminUsuariosPage() {
                       </BotonConfirmar>
                     </form>
                   )}
+                  {esAdmin && p.id !== user!.id && !(p.rol === 'admin' || (p.roles_extra ?? []).includes('admin') || p.super_admin) && (
+                    <form action={eliminarUsuario} style={{ marginTop: 6 }}>
+                      <input type="hidden" name="perfil_id" value={p.id} />
+                      <BotonConfirmar
+                        mensaje={'¿ELIMINAR a ' + (p.nombre_completo || 'esta persona') + '? Se borra su cuenta definitivamente; sus registros se conservan sin autor. No se puede deshacer.'}
+                        className="btn btn-peligro" style={{ minHeight: 32, padding: '4px 10px' }}>
+                        <Icono nombre="basura" size={14} /> Eliminar
+                      </BotonConfirmar>
+                    </form>
+                  )}
                 </td>
                 <td>
                   {selectorRol(p)}
@@ -240,6 +267,16 @@ export default async function AdminUsuariosPage() {
                     </div>
                   )}
                   <div style={{ marginTop: 6 }}>{editorRolesExtra(p)}</div>
+                  {grupos.length > 0 && (
+                    <form action={agregarAGrupo} className="fila" style={{ gap: 6, marginTop: 8, flexWrap: 'nowrap' }}>
+                      <input type="hidden" name="perfil_id" value={p.id} />
+                      <select name="grupo_id" className="input" required defaultValue="" style={{ minHeight: 32, padding: '2px 8px', width: 'auto' }}>
+                        <option value="" disabled>Agregar a grupo…</option>
+                        {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+                      </select>
+                      <button className="btn" style={{ minHeight: 32, padding: '4px 10px' }}>Agregar</button>
+                    </form>
+                  )}
                 </td>
               </tr>
             ))}
