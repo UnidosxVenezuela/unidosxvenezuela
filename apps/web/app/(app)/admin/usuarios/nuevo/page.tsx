@@ -18,10 +18,12 @@ export default async function CrearUsuarioPage() {
         <div>
           <h1>Crear usuario</h1>
           <p className="muted sub" style={{ maxWidth: 520 }}>
-            Crea una cuenta ya verificada y lista para usar. Comparte la contraseña temporal
-            por un canal seguro; la persona la cambia al entrar.
+            Crea una cuenta ya verificada y lista para usar, con <strong>correo</strong> o solo
+            con <strong>WhatsApp</strong>. Comparte la contraseña temporal por un canal seguro;
+            la persona la cambia al entrar.
           </p>
         </div>
+        <Link className="btn" href="/admin/usuarios/importar"><Icono nombre="grupos" size={16} /> Importar por lote</Link>
       </div>
 
       <form action={crearUsuario} className="tarjeta" style={{ maxWidth: 520 }}>
@@ -29,10 +31,19 @@ export default async function CrearUsuarioPage() {
           <label htmlFor="nombre_completo">Nombre completo</label>
           <input id="nombre_completo" name="nombre_completo" className="input" required />
         </div>
-        <div className="campo">
-          <label htmlFor="email">Correo</label>
-          <input id="email" name="email" type="email" className="input" autoComplete="off" required />
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="email">Correo (opcional)</label>
+            <input id="email" name="email" type="email" className="input" autoComplete="off" placeholder="correo@ejemplo.com" />
+          </div>
+          <div className="campo">
+            <label htmlFor="whatsapp">WhatsApp (con código de país)</label>
+            <input id="whatsapp" name="whatsapp" type="tel" className="input" autoComplete="off" placeholder="+58 412 000 0000" />
+          </div>
         </div>
+        <p className="muted" style={{ fontSize: '.82rem', marginTop: 0 }}>
+          Indica <strong>correo o WhatsApp</strong> (al menos uno). Sin correo, la persona entra con su <strong>número de WhatsApp</strong> y la contraseña temporal.
+        </p>
         <div className="campo">
           <label htmlFor="organizacion">Organización (opcional)</label>
           <input id="organizacion" name="organizacion" className="input" />

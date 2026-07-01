@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
+import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -9,7 +10,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo, asignarRolesContenido } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -25,7 +26,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
-      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url)').eq('grupo_id', grupoId),
+      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
@@ -49,6 +50,12 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
+  // ¿A quién puede un líder sumar al flujo de contenido? A voluntarios (no a
+  // otros mandos) o a sí mismo. La autorización real la impone la RLS/función.
+  const MANDOS: Rol[] = ['admin', 'coordinador', 'lider_grupo', 'lider_plataforma_aliada'];
+  const esAsignable = (m: any) =>
+    m.perfil_id === user!.id ||
+    (!MANDOS.includes(m.perfiles?.rol) && !((m.perfiles?.roles_extra ?? []) as Rol[]).some((r) => MANDOS.includes(r)));
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
@@ -236,6 +243,24 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                             <input type="hidden" name="perfil_id" value={m.perfil_id} />
                             <BotonConfirmar mensaje={'¿Vetar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
                           </form>
+                        )}
+                        {esAsignable(m) && (
+                          <details className="roles-extra" style={{ flexBasis: '100%' }}>
+                            <summary>Roles de contenido</summary>
+                            <form action={asignarRolesContenido} style={{ marginTop: 8 }}>
+                              <input type="hidden" name="grupo_id" value={grupoId} />
+                              <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                              <div style={{ display: 'grid', gap: 4 }}>
+                                {ROLES_CADENA_CONTENIDO.map((r) => (
+                                  <label key={r} className="fila" style={{ gap: 6, fontWeight: 500 }}>
+                                    <input type="checkbox" name="roles" value={r} defaultChecked={((m.perfiles?.roles_extra ?? []) as string[]).includes(r)} style={{ width: 'auto', minHeight: 0 }} />
+                                    {ETIQUETA_ROL[r]}
+                                  </label>
+                                ))}
+                              </div>
+                              <button className="btn" style={{ minHeight: 32, padding: '4px 10px', marginTop: 8 }}>Guardar</button>
+                            </form>
+                          </details>
                         )}
                       </td>
                     )}

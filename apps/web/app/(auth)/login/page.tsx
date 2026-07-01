@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { normalizarWhatsapp, emailInternoWhatsapp } from '@/lib/whatsapp';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 
@@ -22,9 +23,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
+    // Se puede entrar con correo o con el número de WhatsApp (sin correo): en ese
+    // caso el correo interno se deriva del número (mismo cálculo que al crearlo).
+    const id = email.trim();
+    const correo = id.includes('@')
+      ? id.toLowerCase()
+      : (() => { const d = normalizarWhatsapp(id); return d ? emailInternoWhatsapp(d) : ''; })();
+    if (!correo) return setError('Escribe tu correo o tu número de WhatsApp con código de país.');
     setCargando(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email, password,
+      email: correo, password,
       options: captchaToken ? { captchaToken } : undefined,
     });
     setCargando(false);
@@ -46,9 +54,10 @@ export default function LoginPage() {
         <h1 style={{ textAlign: 'center' }}>Iniciar sesión</h1>
         <form onSubmit={onSubmit} className="tarjeta">
         <div className="campo">
-          <label htmlFor="email">Correo</label>
-          <input id="email" className="input" type="email" autoComplete="email"
-                 value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <label htmlFor="email">Correo o WhatsApp</label>
+          <input id="email" className="input" type="text" autoComplete="username"
+                 value={email} onChange={(e) => setEmail(e.target.value)} required
+                 placeholder="correo@ejemplo.com  ·  o  +58 412…" />
         </div>
         <div className="campo">
           <label htmlFor="password">Contraseña</label>

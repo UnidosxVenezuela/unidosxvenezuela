@@ -62,6 +62,7 @@ export interface Perfil {
   id: string;
   nombre_completo: string;
   telefono: string | null;
+  whatsapp: string | null;   // dígitos normalizados; login sin correo + contacto
   rol: Rol;
   roles_extra: Rol[];
   verificado: boolean;

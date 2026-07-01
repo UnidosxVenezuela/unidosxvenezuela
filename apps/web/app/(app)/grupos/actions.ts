@@ -178,3 +178,23 @@ export async function asignarLider(formData: FormData) {
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Líder actualizado');
 }
+
+// Asigna roles ADICIONALES de la cadena de contenido a un miembro (o a uno
+// mismo). La autorización real la hace la función asignar_roles_contenido:
+// coordinación a cualquiera; un líder solo a voluntarios o a sí mismo, y solo
+// roles de la cadena de contenido. Facilita sumar gente al flujo de trabajo.
+export async function asignarRolesContenido(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
+  const roles = Array.from(new Set(formData.getAll('roles').map(String)));
+  const { error } = await supabase.rpc('asignar_roles_contenido', { p_perfil: perfilId, p_roles: roles });
+  if (error) throw new Error('No se pudieron asignar los roles: ' + error.message);
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'cambio_roles_extra', p_entidad_id: perfilId, p_metadata: { roles, via: 'grupo' },
+  });
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Roles de contenido actualizados');
+}

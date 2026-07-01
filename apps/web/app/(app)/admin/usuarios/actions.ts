@@ -6,7 +6,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk } from '@/lib/flash';
+import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
 import type { Rol } from '@unidos/types';
+import type { EstadoImport, FilaImport } from './tipos';
 
 async function exigirCoordinacion() {
   const supabase = await createClient();
@@ -60,13 +62,15 @@ export async function crearUsuario(formData: FormData) {
   if (!yo || !['admin', 'coordinador'].includes(yo.rol)) throw new Error('No tienes permisos de coordinación.');
 
   const nombre = String(formData.get('nombre_completo') ?? '').trim();
-  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const emailReal = String(formData.get('email') ?? '').trim().toLowerCase();
+  const whatsapp = normalizarWhatsapp(formData.get('whatsapp') as string);
   const password = String(formData.get('password') ?? '');
   const rol = String(formData.get('rol') ?? 'voluntario') as Rol;
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
 
   if (!nombre) throw new Error('El nombre es obligatorio.');
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Correo inválido.');
+  if (emailReal && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailReal)) throw new Error('Correo inválido.');
+  if (!emailReal && !whatsapp) throw new Error('Indica un correo o un número de WhatsApp (con código de país, solo dígitos).');
   if (password.length < 8) throw new Error('La contraseña temporal debe tener al menos 8 caracteres.');
   // Regla de superadmin: el admin-client saltea el trigger, así que se valida aquí.
   if (rol === 'admin' && !yo.super_admin) {
@@ -77,6 +81,9 @@ export async function crearUsuario(formData: FormData) {
     throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: crea la cuenta con otro rol y luego proponla en "Aliados".');
   }
 
+  // Sin correo real: se usa un correo interno derivado del número (login por WhatsApp).
+  const email = emailReal || emailInternoWhatsapp(whatsapp!);
+
   // Crear el usuario (verificado) requiere service_role.
   const admin = createAdminClient();
   const { data: creado, error: e1 } = await admin.auth.admin.createUser({
@@ -84,31 +91,147 @@ export async function crearUsuario(formData: FormData) {
   });
   if (e1 || !creado?.user) throw new Error('No se pudo crear el usuario: ' + (e1?.message ?? 'desconocido'));
 
-  // Ajustar el perfil con el cliente del usuario → el trigger 0022 reaplica
-  // la regla de superadmin como respaldo (defensa en profundidad).
   const { error: e2 } = await supabase.from('perfiles')
-    .update({ nombre_completo: nombre, rol, verificado: true, organizacion })
+    .update({ nombre_completo: nombre, rol, verificado: true, organizacion, whatsapp })
     .eq('id', creado.user.id);
-  if (e2) throw new Error('Usuario creado, pero no se pudo asignar el rol: ' + e2.message);
+  if (e2) throw new Error('Usuario creado, pero no se pudo completar el perfil: ' + e2.message);
 
   await supabase.rpc('registrar_auditoria', {
-    p_accion: 'crear_usuario', p_entidad_id: creado.user.id, p_metadata: { email, rol },
+    p_accion: 'crear_usuario', p_entidad_id: creado.user.id, p_metadata: { email: emailReal || null, whatsapp, rol },
   });
 
-  try {
-    await enviarEmail({
-      to: email,
-      subject: 'Tu cuenta en UnidosXVenezuela',
-      html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
-             <p>Ingresa con tu correo y la contraseña temporal que te compartieron, y cámbiala al entrar.</p>
-             <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
-    });
-  } catch (e) {
-    console.error('No se pudo enviar el email de bienvenida', e);
+  // Correo de bienvenida SOLO si dio un correo real (a los de WhatsApp se les
+  // comparte la contraseña por WhatsApp; el correo interno no recibe nada).
+  if (emailReal) {
+    try {
+      await enviarEmail({
+        to: emailReal,
+        subject: 'Tu cuenta en UnidosXVenezuela',
+        html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
+               <p>Ingresa con tu correo y la contraseña temporal que te compartieron, y cámbiala al entrar.</p>
+               <p><a href="https://unidosxvnezuela.com/login">Entrar a la plataforma</a></p>`,
+      });
+    } catch (e) {
+      console.error('No se pudo enviar el email de bienvenida', e);
+    }
   }
 
   revalidatePath('/admin/usuarios');
-  redirigirOk('/admin/usuarios', 'Usuario creado');
+  redirigirOk('/admin/usuarios', whatsapp && !emailReal
+    ? 'Usuario creado. Comparte la contraseña temporal por WhatsApp; entra con su número.'
+    : 'Usuario creado');
+}
+
+// ── Importar usuarios por lote (pegar la lista) ──
+// Coordinación pega una persona por línea (número y/o correo + nombre); crea las
+// cuentas verificadas de una vez y, si se eligió, las suma a un grupo. Devuelve
+// el resultado por fila (con la contraseña temporal y un enlace wa.me listo).
+
+/** Extrae {nombre, whatsapp, email} de una línea suelta y flexible. */
+function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | null; email: string | null } | null {
+  let s = String(raw ?? '').replace(/[‒-―]/g, '-').trim(); // guiones largos → '-'
+  if (!s) return null;
+  const em = s.match(/[^\s<>(),]+@[^\s<>(),]+\.[^\s<>(),]+/);
+  const email = em ? em[0].toLowerCase() : null;
+  if (em) s = s.replace(em[0], ' ');
+  const ph = s.match(/\+?\d[\d\s().-]{5,}\d/);
+  const whatsapp = ph ? normalizarWhatsapp(ph[0]) : null;
+  if (ph) s = s.replace(ph[0], ' ');
+  if (!whatsapp && !email) return null; // línea sin datos útiles (p. ej. "Horario Tarde")
+  let nombre = s
+    .replace(/\(([^)]*)\)/g, ' ')                                   // "(Lider de equipo)"
+    .replace(/^\s*\d+\s*[-.)]\s*/, ' ')                             // "1- ", "3) "
+    .replace(/\b(l[ií]der(?:\s+de\s+equipo)?|horario)\b\s*:?/gi, ' ')
+    .replace(/[-:]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!nombre) nombre = whatsapp ? '+' + whatsapp : (email ?? 'Sin nombre');
+  return { nombre, whatsapp, email };
+}
+
+export async function importarUsuarios(_prev: EstadoImport, formData: FormData): Promise<EstadoImport> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const rolesYo = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!rolesYo.includes('admin') && !rolesYo.includes('coordinador')) {
+    return { ok: false, mensaje: 'No tienes permisos de coordinación.', filas: [] };
+  }
+
+  const rol = String(formData.get('rol') ?? 'voluntario') as Rol;
+  if (rol === 'admin' || rol === 'lider_plataforma_aliada') {
+    return { ok: false, mensaje: 'Ese rol no se puede asignar por importación (usa el flujo correspondiente).', filas: [] };
+  }
+  const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
+  const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
+  const lineas = String(formData.get('lista') ?? '').split('\n').slice(0, 200);
+
+  const parsed = lineas.map(parsearLineaImport).filter(Boolean) as { nombre: string; whatsapp: string | null; email: string | null }[];
+  if (parsed.length === 0) {
+    return { ok: false, mensaje: 'No se reconoció ningún contacto. Pega una persona por línea, con su número (con código de país) o su correo.', filas: [] };
+  }
+
+  const admin = createAdminClient();
+  const filas: FilaImport[] = [];
+  const vistos = new Set<string>();
+
+  for (const p of parsed) {
+    const clave = (p.whatsapp ?? p.email ?? '').toLowerCase();
+    if (clave && vistos.has(clave)) {
+      filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'duplicado', detalle: 'Repetido en la lista' });
+      continue;
+    }
+    vistos.add(clave);
+
+    const email = p.email || (p.whatsapp ? emailInternoWhatsapp(p.whatsapp) : null);
+    if (!email) {
+      filas.push({ nombre: p.nombre, whatsapp: null, email: null, estado: 'omitido', detalle: 'Sin número ni correo' });
+      continue;
+    }
+    const password = generarTemporal();
+    const { data: creado, error: e1 } = await admin.auth.admin.createUser({
+      email, password, email_confirm: true, user_metadata: { nombre_completo: p.nombre },
+    });
+    if (e1 || !creado?.user) {
+      const dup = /already|registered|exists|duplicate/i.test(e1?.message ?? '');
+      filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: dup ? 'duplicado' : 'error', detalle: e1?.message });
+      continue;
+    }
+    const { error: e2 } = await supabase.from('perfiles')
+      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp })
+      .eq('id', creado.user.id);
+    if (e2) {
+      filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'error', detalle: e2.message });
+      continue;
+    }
+    if (grupoId) {
+      await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: creado.user.id });
+    }
+    if (p.email) {
+      try {
+        await enviarEmail({
+          to: p.email,
+          subject: 'Tu cuenta en UnidosXVenezuela',
+          html: `<p>¡Hola, ${p.nombre}! Te sumamos a <strong>UnidosXVenezuela</strong>.</p>
+                 <p>Ingresa con tu correo y esta contraseña temporal: <strong>${password}</strong> (cámbiala al entrar).</p>
+                 <p><a href="https://unidosxvnezuela.com/login">Entrar a la plataforma</a></p>`,
+        });
+      } catch (e) { console.error('No se pudo enviar el email de bienvenida', e); }
+    }
+    const waLink = p.whatsapp
+      ? linkWaMe(p.whatsapp, `Hola ${p.nombre} 👋 Te sumamos a UnidosXVenezuela. Entra en https://unidosxvnezuela.com con tu WhatsApp +${p.whatsapp} y esta clave temporal: ${password} (cámbiala al entrar). 💛`)
+      : undefined;
+    filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'creado', password, waLink });
+  }
+
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'crear_usuario', p_entidad_id: user.id,
+    p_metadata: { importados: filas.filter((f) => f.estado === 'creado').length, rol, grupo: grupoId },
+  });
+  revalidatePath('/admin/usuarios');
+  const creados = filas.filter((f) => f.estado === 'creado').length;
+  return { ok: true, mensaje: `${creados} de ${filas.length} contactos creados.`, filas };
 }
 
 export async function proponerAliado(formData: FormData) {

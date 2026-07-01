@@ -16,7 +16,7 @@ export default async function AdminUsuariosPage() {
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   const perfiles = (data ?? []) as Perfil[];
   const pendientes = perfiles.filter((p) => !p.verificado);
@@ -90,6 +90,7 @@ export default async function AdminUsuariosPage() {
         <div className="fila">
           <BotonActualizar />
           <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
+          <Link className="btn" href="/admin/usuarios/importar"><Icono nombre="grupos" size={16} /> Importar por lote</Link>
           <Link className="btn" href="/admin/areas">Áreas</Link>
         </div>
       </div>
@@ -201,6 +202,7 @@ export default async function AdminUsuariosPage() {
                     <span>
                       {p.nombre_completo || '—'}
                       {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
+                      {p.whatsapp && <div className="muted" style={{ fontSize: '.85rem' }}>WhatsApp +{p.whatsapp}</div>}
                       {(p.habilidades ?? []).length > 0 && (
                         <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
                           {(p.habilidades ?? []).slice(0, 6).map((h) => <span key={h} className="hab-ro">{h}</span>)}

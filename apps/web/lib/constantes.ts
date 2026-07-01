@@ -84,6 +84,11 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   redes_sociales: 'Redes Sociales',
 };
 
+// Roles de la "cadena de contenido" (de la información a la publicación). Los
+// coordinadores y líderes pueden asignarlos como roles ADICIONALES a voluntarios
+// o a sí mismos, para sumarlos al flujo de trabajo (no a otros mandos).
+export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
   en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
 };
