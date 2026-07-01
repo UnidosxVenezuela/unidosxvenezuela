@@ -59,10 +59,13 @@ create policy "solacc_delete" on public.solicitudes_acceso for delete to authent
 -- La resolución (aprobar/rechazar) va SOLO por la función de abajo.
 
 -- Grupos privados que el usuario puede SOLICITAR (solo id/nombre/área; no expone contenido).
+-- 'area' se devuelve como text (la app usa etiquetaArea(clave)); evita el desajuste
+-- de tipo enum en el RETURNS TABLE.
+drop function if exists public.grupos_solicitables();
 create or replace function public.grupos_solicitables()
-returns table (id uuid, nombre text, area public.area_clave)
+returns table (id uuid, nombre text, area text)
 language sql stable security definer set search_path = public as $$
-  select g.id, g.nombre, g.area
+  select g.id, g.nombre, g.area::text
   from public.grupos g
   where g.abierto = false
     and not public.es_miembro_de(g.id)
