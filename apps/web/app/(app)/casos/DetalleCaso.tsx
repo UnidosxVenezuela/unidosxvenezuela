@@ -1,3 +1,4 @@
+import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -46,7 +47,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         <p style={{ marginTop: 0 }}>{caso.descripcion || <span className="muted">Sin descripción</span>}</p>
         <div className="grid grid-2">
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
-          <div><strong>Publicación:</strong> {caso.fecha_publicacion ? new Date(caso.fecha_publicacion + 'T00:00:00').toLocaleDateString('es-VE') : '—'}</div>
+          <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           <div className="fila" style={{ gap: 6 }}>
             <strong>Asignado a:</strong>
@@ -108,7 +109,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
               <li key={h.id}>
                 <div style={{ fontWeight: 600 }}>{describir(h.accion, h.metadata)}</div>
                 <div className="muted" style={{ fontSize: '.8rem' }}>
-                  {new Date(h.creado_en).toLocaleString('es-VE')}{h.actor_id ? ' · por ' + (nombres.get(h.actor_id) ?? '—') : ''}
+                  {fechaHora(h.creado_en)}{h.actor_id ? ' · por ' + (nombres.get(h.actor_id) ?? '—') : ''}
                 </div>
               </li>
             ))}

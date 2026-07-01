@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -49,7 +50,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             {s.descripcion && <p style={{ whiteSpace: 'pre-wrap', marginTop: 10 }}>{s.descripcion}</p>}
             <div className="muted" style={{ fontSize: '.85rem', marginTop: 8 }}>
               {s.puntos_acopio?.nombre && <div className="fila" style={{ gap: 4 }}><Icono nombre="ubicacion" size={14} /> {s.puntos_acopio.nombre}</div>}
-              <div>Solicitado por {s.perfiles?.nombre_completo || '—'} · {new Date(s.creado_en).toLocaleString('es-VE')}</div>
+              <div>Solicitado por {s.perfiles?.nombre_completo || '—'} · {fechaHora(s.creado_en)}</div>
             </div>
           </div>
 

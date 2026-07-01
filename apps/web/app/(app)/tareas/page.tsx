@@ -1,3 +1,4 @@
+import { fechaCorta } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario, puedeGestionarTareas, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -74,7 +75,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
                 ? <><Avatar nombre={t.asignado?.nombre_completo} url={t.asignado?.avatar_url} size={22} /> {t.asignado?.nombre_completo ?? '—'}</>
                 : <span className="muted">Sin asignar</span>}
             </span>
-            {t.vence_en && <span className="muted" style={{ whiteSpace: 'nowrap' }}>Vence {new Date(t.vence_en).toLocaleDateString('es-VE')}</span>}
+            {t.vence_en && <span className="muted" style={{ whiteSpace: 'nowrap' }}>Vence {fechaCorta(t.vence_en)}</span>}
           </div>
         </div>
       ))}

@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { SENSIBILIDADES, ETIQUETA_SENSIBILIDAD, claseSensibilidad } from '@/lib/constantes';
@@ -89,7 +90,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
             </Pill>
           </div>
           <div className="muted" style={{ fontSize: '.85rem' }}>
-            {p.grupos?.nombre ? 'Grupo: ' + p.grupos.nombre : 'General'} · {new Date(p.creado_en).toLocaleString('es-VE')}
+            {p.grupos?.nombre ? 'Grupo: ' + p.grupos.nombre : 'General'} · {fechaHora(p.creado_en)}
           </div>
           <p style={{ whiteSpace: 'pre-wrap' }}>{p.contenido}</p>
 
@@ -101,7 +102,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
               {(p.comentarios_publicacion ?? []).map((c: any) => (
                 <div key={c.id} style={{ borderTop: '1px solid var(--borde)', padding: '6px 0' }}>
                   <div className="muted" style={{ fontSize: '.8rem' }}>
-                    {c.autor?.nombre_completo ?? 'Anónimo'} · {new Date(c.creado_en).toLocaleString('es-VE')}
+                    {c.autor?.nombre_completo ?? 'Anónimo'} · {fechaHora(c.creado_en)}
                   </div>
                   <div>{c.contenido}</div>
                 </div>

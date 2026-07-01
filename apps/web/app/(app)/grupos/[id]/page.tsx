@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -162,7 +163,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                       </a>
                 )}
                 <div className="muted" style={{ fontSize: '.8rem', marginTop: 8 }}>
-                  {m.perfiles?.nombre_completo || '—'} · {new Date(m.creado_en).toLocaleString('es-VE')}
+                  {m.perfiles?.nombre_completo || '—'} · {fechaHora(m.creado_en)}
                 </div>
               </div>
             );
@@ -207,7 +208,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   <div>
                     <strong>{r.titulo}</strong>
                     <div className="muted" style={{ fontSize: '.85rem' }}>
-                      {new Date(r.inicio).toLocaleString('es-VE')} · {r.duracion_min} min
+                      {fechaHora(r.inicio)} · {r.duracion_min} min
                       {activa && <span style={{ marginLeft: 8 }}><Pill tono="ok">En curso</Pill></span>}
                     </div>
                   </div>

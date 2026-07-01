@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -46,7 +47,7 @@ export default async function NotificacionesPage() {
                 <strong>{it.titulo}</strong>
               </div>
               {it.cuerpo && <div className="muted">{it.cuerpo}</div>}
-              <div className="muted" style={{ fontSize: '.8rem' }}>{new Date(it.creado_en).toLocaleString('es-VE')}</div>
+              <div className="muted" style={{ fontSize: '.8rem' }}>{fechaHora(it.creado_en)}</div>
             </div>
             <div className="fila">
               {it.enlace && <Link className="btn" href={it.enlace} style={{ minHeight: 34, padding: '4px 10px' }}>Abrir</Link>}

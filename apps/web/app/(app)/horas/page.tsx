@@ -1,3 +1,4 @@
+import { fechaCorta } from '@/lib/fechas';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { formatoHoras } from '@/lib/constantes';
@@ -60,7 +61,7 @@ export default async function HorasPage() {
             <tbody>
               {items.map((r) => (
                 <tr key={r.id}>
-                  <td>{new Date(r.fecha + 'T00:00:00').toLocaleDateString('es-VE')}</td>
+                  <td>{fechaCorta(r.fecha + 'T00:00:00')}</td>
                   <td>{formatoHoras(Number(r.horas))}</td>
                   <td>{r.descripcion || '—'}</td>
                   <td>

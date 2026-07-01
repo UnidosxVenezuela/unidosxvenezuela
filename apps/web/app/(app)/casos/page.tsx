@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador } from '@/lib/auth';
@@ -174,7 +175,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                       : <span className="muted">Sin asignar</span>}
                   </td>
                   <td><EstadoCaso estado={c.estado} /></td>
-                  <td className="muted" style={{ fontSize: '.82rem' }}>{new Date(c.actualizado_en).toLocaleString('es-VE')}</td>
+                  <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                   <td style={{ textAlign: 'right' }}>
                     <MenuFila etiqueta={'Acciones del caso ' + c.titulo}>
                       <Link href={hrefCaso(c.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>

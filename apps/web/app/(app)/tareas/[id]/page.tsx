@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -85,7 +86,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
           <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
           <div><strong>Asignado a:</strong> {tarea.asignado?.nombre_completo ?? 'Sin asignar'}</div>
           <div><strong>Creada por:</strong> {tarea.creador?.nombre_completo ?? '—'}</div>
-          <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
+          <div><strong>Vence:</strong> {tarea.vence_en ? fechaHora(tarea.vence_en) : '—'}</div>
           <div><strong>Ubicación:</strong>{' '}
             {tarea.ubicacion || (tarea.lat != null && tarea.lng != null ? `${tarea.lat}, ${tarea.lng}` : '—')}
             {tarea.lat != null && tarea.lng != null && (
@@ -240,7 +241,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         {(comentarios ?? []).map((c: any) => (
           <div key={c.id} style={{ borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
             <div className="muted" style={{ fontSize: '.85rem' }}>
-              {c.autor?.nombre_completo ?? 'Anónimo'} · {new Date(c.creado_en).toLocaleString('es-VE')}
+              {c.autor?.nombre_completo ?? 'Anónimo'} · {fechaHora(c.creado_en)}
             </div>
             <div>{c.contenido}</div>
           </div>

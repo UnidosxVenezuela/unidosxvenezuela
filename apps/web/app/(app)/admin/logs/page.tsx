@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -103,7 +104,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
                 const extra = l.metadata?.titulo || l.metadata?.nombre;
                 return (
                   <tr key={l.id}>
-                    <td style={{ whiteSpace: 'nowrap' }}>{new Date(l.creado_en).toLocaleString('es-VE')}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>{fechaHora(l.creado_en)}</td>
                     <td>
                       <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
                         <Avatar nombre={l.actor_id ? l.actorNombre : 'Sistema'} url={l.actorAvatar} size={24} />

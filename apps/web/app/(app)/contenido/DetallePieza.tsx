@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import {
   ETIQUETA_ETAPA, ETAPAS_CONTENIDO, ETIQUETA_DESTINO, DESTINOS, claseEtapa, siguienteEtapa, hrefSeguro,
@@ -140,7 +141,7 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
               <li key={h.id}>
                 <div style={{ fontWeight: 600 }}>{describir(h.accion)}</div>
                 <div className="muted" style={{ fontSize: '.8rem' }}>
-                  {new Date(h.creado_en).toLocaleString('es-VE')}{h.actor_id ? ' · por ' + (nombres.get(h.actor_id) ?? '—') : ''}
+                  {fechaHora(h.creado_en)}{h.actor_id ? ' · por ' + (nombres.get(h.actor_id) ?? '—') : ''}
                 </div>
               </li>
             ))}

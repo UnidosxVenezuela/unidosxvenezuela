@@ -1,3 +1,4 @@
+import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import {
   ESTADOS, PRIORIDADES, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, claseEstado, clasePrioridad,
@@ -45,7 +46,7 @@ export default function DetalleTarea({
             {tarea.asignado_a ? <><Avatar nombre={tarea.asignado?.nombre_completo} url={tarea.asignado?.avatar_url} size={22} /> {tarea.asignado?.nombre_completo ?? '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
           <div><strong>Personas:</strong> {cupo ? `${ocupados}/${cupo}` : ocupados}</div>
-          <div><strong>Vence:</strong> {tarea.vence_en ? new Date(tarea.vence_en).toLocaleString('es-VE') : '—'}</div>
+          <div><strong>Vence:</strong> {tarea.vence_en ? fechaHora(tarea.vence_en) : '—'}</div>
           <div><strong>Ubicación:</strong>{' '}
             {tarea.ubicacion || (tarea.lat != null && tarea.lng != null ? `${tarea.lat}, ${tarea.lng}` : '—')}
           </div>
