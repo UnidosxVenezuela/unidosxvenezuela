@@ -22,6 +22,14 @@ export default async function GruposPage() {
   const totalPorGrupo = new Map<string, number>((conteos ?? []).map((c: any) => [c.grupo_id, Number(c.total)]));
   const misIds = new Set<string>((mis ?? []).map((m: any) => m.grupo_id));
 
+  // Nombre del líder de cada grupo (para mostrarlo en la tarjeta).
+  const liderIds = Array.from(new Set(grupos.map((g) => g.lider_id).filter(Boolean)));
+  const nombrePorId = new Map<string, string>();
+  if (liderIds.length) {
+    const { data: lideres } = await supabase.from('perfiles').select('id, nombre_completo').in('id', liderIds);
+    (lideres ?? []).forEach((p: any) => nombrePorId.set(p.id, p.nombre_completo));
+  }
+
   return (
     <AnimarEntrada>
       <div className="pagina-cab">
@@ -63,6 +71,12 @@ export default async function GruposPage() {
                 <Link href={'/grupos/' + g.id} style={{ textDecoration: 'none', color: 'inherit' }}>{g.nombre}</Link>
               </h2>
               <p className="muted" style={{ margin: 0 }}>{g.descripcion || 'Sin descripción'}</p>
+              <div className="fila muted" style={{ gap: 4, margin: '6px 0 0', fontSize: '.85rem' }}>
+                <Icono nombre="usuario" size={14} />
+                {g.lider_id && nombrePorId.get(g.lider_id)
+                  ? <>Líder: <strong style={{ color: 'var(--texto)' }}>{nombrePorId.get(g.lider_id)}</strong></>
+                  : <span>Sin líder asignado</span>}
+              </div>
               <div className="fila" style={{ marginTop: 10 }}>
                 <Link className="btn" href={'/grupos/' + g.id}>Ver</Link>
                 {soyMiembro

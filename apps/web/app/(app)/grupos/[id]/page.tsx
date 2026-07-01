@@ -96,6 +96,12 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         </span>
       </div>
       <p className="muted" style={{ marginTop: 4 }}>{grupo.descripcion || 'Sin descripción'}</p>
+      <div className="fila muted" style={{ gap: 5, marginTop: 4, fontSize: '.9rem' }}>
+        <Icono nombre="usuario" size={15} />
+        {grupo.lider_id
+          ? <>Líder del grupo: <strong style={{ color: 'var(--texto)' }}>{liderNombre || '—'}</strong></>
+          : <span>Sin líder asignado</span>}
+      </div>
       <div className="fila" style={{ marginTop: 4 }}>
         {waHref && (
           <a className="btn btn-acento" href={waHref} target="_blank" rel="noopener noreferrer">
