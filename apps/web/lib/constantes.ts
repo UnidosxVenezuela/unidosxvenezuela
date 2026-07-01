@@ -82,7 +82,41 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   diseno_grafico: 'Diseño Gráfico',
   edicion_video: 'Edición de Videos',
   redes_sociales: 'Redes Sociales',
+  logistica: 'Logística',
 };
+
+// ── Insumos / Logística ──
+export const ETIQUETA_TIPO_INSUMO: Record<string, string> = {
+  medicamentos: 'Medicamentos', alimentos: 'Alimentos', agua: 'Agua', higiene: 'Higiene', refugio: 'Refugio', otro: 'Otro',
+};
+export const TIPOS_INSUMO = Object.keys(ETIQUETA_TIPO_INSUMO);
+export const ETIQUETA_ESTADO_INSUMO: Record<string, string> = {
+  solicitado: 'Solicitado', en_gestion: 'En gestión', en_ruta: 'En ruta', entregado: 'Entregado', cancelado: 'Cancelado',
+};
+/** Orden del tablero (el estado 'cancelado' se muestra aparte). */
+export const ESTADOS_INSUMO = ['solicitado', 'en_gestion', 'en_ruta', 'entregado'];
+export function claseEstadoInsumo(e: string): string {
+  if (e === 'entregado') return 'ok';
+  if (e === 'en_ruta') return 'info';
+  if (e === 'en_gestion') return 'aviso';
+  if (e === 'cancelado') return 'critica';
+  return '';
+}
+export function siguienteEstadoInsumo(e: string): string | null {
+  const orden = ['solicitado', 'en_gestion', 'en_ruta', 'entregado'];
+  const i = orden.indexOf(e);
+  return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
+}
+export const ETIQUETA_ESTADO_DONACION: Record<string, string> = {
+  comprometida: 'Comprometida', recibida: 'Recibida', asignada: 'Asignada',
+};
+export const ESTADOS_DONACION = ['comprometida', 'recibida', 'asignada'];
+export function claseEstadoDonacion(e: string): string {
+  if (e === 'asignada') return 'ok';
+  if (e === 'recibida') return 'info';
+  return 'aviso';
+}
+export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón', 'Otro'];
 
 // Roles de la "cadena de contenido" (de la información a la publicación). Los
 // coordinadores y líderes pueden asignarlos como roles ADICIONALES a voluntarios

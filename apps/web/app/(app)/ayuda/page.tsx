@@ -29,6 +29,7 @@ export default function AyudaPage() {
     ['ok', 'Verificación de casos', <>Reporta un <strong>nuevo caso</strong> (avisa de posibles duplicados al escribir), asígnalo y cambia su estado: <em>en proceso</em>, <em>confirmado</em> (listo para Redacción) o <em>falso/resuelto</em>. Un caso confirmado se manda con <strong>Enviar a Redacción</strong>.</>],
     ['documento', 'Producción de contenido', <>Tablero por etapas (Redacción → Diseño/Video → Redes → Publicado). Abre una pieza para escribir/cargar el entregable, <strong>asignarla</strong> y <strong>avanzarla</strong>. Para el día a día usa tu <strong>Espacio de trabajo</strong>.</>],
     ['acopio', 'Centros de acopio', <>Registra puntos: qué necesitan, capacidad, horario, contacto y <strong>ubicación en el mapa</strong>. La urgencia los pinta de color. Un <strong>admin</strong> puede asignar coordinadores responsables.</>],
+    ['camion', 'Insumos', <>Organiza la ayuda a los centros de acopio: crea <strong>solicitudes</strong> de insumos y síguelas por su tablero (Solicitado → En gestión → En ruta → Entregado). Logística gestiona <strong>proveedores</strong>, <strong>envíos</strong> (voluntario, vehículo, flete) y <strong>donaciones</strong>.</>],
     ['mapa', 'Mapa', <>Muestra los centros de acopio coloreados por urgencia y las tareas con ubicación.</>],
     ['tablon', 'Tablón', <>Mensajes y anuncios para el equipo, con niveles de sensibilidad. Cuida los datos sensibles.</>],
     ['reloj', 'Mis horas', <>Registra tus horas de voluntariado; suman al total de la comunidad. 💛💙❤️</>],

@@ -93,3 +93,8 @@ const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'diseno_grafico', 
 export function puedePipeline(e?: EntradaRoles) {
   return tieneAlguno(e, PIPELINE);
 }
+
+// Módulo de insumos / logística: coordinación o rol logística gestiona el flujo.
+export function puedeLogistica(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'coordinador', 'logistica']);
+}

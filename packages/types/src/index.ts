@@ -16,7 +16,8 @@ export type Rol =
   | 'redaccion'               // Redacta contenido y copy a partir de casos confirmados
   | 'diseno_grafico'          // Diseña la pieza gráfica
   | 'edicion_video'           // Edita el video/reel
-  | 'redes_sociales';         // Publica la pieza final
+  | 'redes_sociales'          // Publica la pieza final
+  | 'logistica';              // Insumos / logística de acopio (envíos, proveedores, donaciones)
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer

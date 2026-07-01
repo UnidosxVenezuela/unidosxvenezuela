@@ -206,6 +206,13 @@ textarea { min-height: 100px; }
 }
 .aviso-superv svg { flex-shrink: 0; color: var(--azul); }
 
+/* Tablero de Insumos / Logística */
+.tablero-insumos { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items: start; }
+.tablero-col { background: #f7f8fb; border: 1px solid var(--borde); border-radius: 12px; padding: 10px; }
+.tablero-col > h3 { margin: 2px 4px 8px; font-size: .95rem; }
+.insumo-card { display: block; margin-bottom: 8px; padding: 10px 12px; text-decoration: none; color: inherit; }
+.insumo-card:hover { border-color: var(--azul); }
+
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde); }
 .error { color: var(--critica); font-weight: 600; }
