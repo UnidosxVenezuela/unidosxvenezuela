@@ -1,7 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import Icono from '@/components/Icono';
 import { fijarMensaje } from '../actions';
 
@@ -21,23 +20,12 @@ export default function FijarAnuncio({ grupoId }: { grupoId: string }) {
     if (!contenido.trim()) { setError('Escribe el anuncio.'); return; }
     if (file && file.size > MAX) { setError('El archivo supera 10 MB.'); return; }
     setEnviando(true);
-    const supabase = createClient();
 
-    let adjPath: string | null = null, adjTipo: string | null = null, adjNombre: string | null = null;
-    if (file) {
-      const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
-      const path = `${grupoId}/${Date.now()}-${safe}`;
-      const { error: upErr } = await supabase.storage.from('grupos').upload(path, file, { upsert: false });
-      if (upErr) { setEnviando(false); setError('No se pudo subir el archivo: ' + upErr.message); return; }
-      adjPath = path;
-      adjTipo = file.type.startsWith('image/') ? 'imagen' : 'archivo';
-      adjNombre = file.name;
-    }
-
+    // El archivo se sube en el servidor con la service key (salta la RLS de Storage).
     const fd = new FormData();
     fd.set('grupo_id', grupoId);
     fd.set('contenido', contenido.trim());
-    if (adjPath) { fd.set('adjunto_path', adjPath); fd.set('adjunto_tipo', adjTipo!); fd.set('adjunto_nombre', adjNombre!); }
+    if (file) fd.set('file', file);
 
     try {
       await fijarMensaje(fd);
@@ -45,7 +33,6 @@ export default function FijarAnuncio({ grupoId }: { grupoId: string }) {
       if (fileRef.current) fileRef.current.value = '';
       router.push('/grupos/' + grupoId + '?ok=' + encodeURIComponent('Anuncio fijado'));
     } catch (err: any) {
-      if (adjPath) await supabase.storage.from('grupos').remove([adjPath]); // rollback del objeto
       setError('No se pudo fijar: ' + (err?.message ?? 'error'));
     } finally {
       setEnviando(false);

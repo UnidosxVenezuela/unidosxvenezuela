@@ -1,4 +1,5 @@
 import { fechaHora } from '@/lib/fechas';
+import { urlFirmadaAdmin } from '@/lib/storage';
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -72,8 +73,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   // URLs firmadas de los adjuntos (bucket privado).
   const firmas = new Map<string, string | null>();
   await Promise.all(fijados.filter((m) => m.adjunto_path).map(async (m) => {
-    const { data } = await supabase.storage.from('grupos').createSignedUrl(m.adjunto_path, 3600);
-    firmas.set(m.id, data?.signedUrl ?? null);
+    firmas.set(m.id, await urlFirmadaAdmin('grupos', m.adjunto_path, 3600));
   }));
 
   // El enlace de videollamada solo se trae (vía RPC) si la reunión está activa ahora.

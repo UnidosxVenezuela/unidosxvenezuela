@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { subirAdjuntoTarea } from '../actions';
 import Icono from '@/components/Icono';
 
 export default function SubirAdjunto({ tareaId, clase = 'material', etiqueta = 'Subir archivo' }: { tareaId: string; clase?: 'material' | 'entregable'; etiqueta?: string }) {
@@ -14,24 +14,14 @@ export default function SubirAdjunto({ tareaId, clase = 'material', etiqueta = '
     if (!file) return;
     setError(null);
     setSubiendo(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
-    const path = `${tareaId}/${Date.now()}-${safe}`;
-
-    const { error: upErr } = await supabase.storage.from('adjuntos').upload(path, file, { upsert: false });
-    if (upErr) { setSubiendo(false); setError('No se pudo subir: ' + upErr.message); e.target.value = ''; return; }
-
-    const tipo = file.type.startsWith('image/') ? 'imagen' : 'documento';
-    const { error: rowErr } = await supabase.from('adjuntos_tarea').insert({
-      tarea_id: tareaId, tipo, clase, url: path, nombre: file.name, mime: file.type || null, creado_por: user?.id ?? null,
-    });
-    if (rowErr) {
-      await supabase.storage.from('adjuntos').remove([path]); // rollback del objeto
-      setSubiendo(false); setError('No se pudo registrar: ' + rowErr.message); e.target.value = ''; return;
-    }
+    const fd = new FormData();
+    fd.set('tarea_id', tareaId);
+    fd.set('clase', clase);
+    fd.set('file', file);
+    const res = await subirAdjuntoTarea(fd);   // sube con la service key
     setSubiendo(false);
     e.target.value = '';
+    if (res.error) { setError(res.error); return; }
     router.refresh();
   }
 

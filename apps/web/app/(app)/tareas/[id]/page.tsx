@@ -1,4 +1,5 @@
 import { fechaHora } from '@/lib/fechas';
+import { urlFirmadaAdmin } from '@/lib/storage';
 import Link from 'next/link';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -50,8 +51,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   // Firmar URLs de archivos (bucket privado); los enlaces se revalidan en render.
   const adjuntosConUrl = await Promise.all((adjuntos ?? []).map(async (a: any) => {
     if (a.tipo === 'enlace') return { ...a, href: hrefSeguro(a.url) };
-    const { data: firma } = await supabase.storage.from('adjuntos').createSignedUrl(a.url, 3600);
-    return { ...a, href: firma?.signedUrl ?? null };
+    return { ...a, href: await urlFirmadaAdmin('adjuntos', a.url, 3600) };
   }));
 
   const puedeEditar =

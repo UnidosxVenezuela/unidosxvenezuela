@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { subirArchivoPieza } from './actions';
 import Icono from '@/components/Icono';
 
 /**
@@ -24,15 +25,12 @@ export default function SubirPiezaArchivo({ piezaId, urlActual, nombreActual }: 
     if (!file) return;
     if (file.size > 25 * 1024 * 1024) { setError('El archivo no debe superar 25 MB. Para videos pesados, usa el enlace.'); return; }
     setError(null); setTrabajando(true);
-    const supabase = createClient();
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
-    const ruta = `${piezaId}/pieza_${Date.now()}.${ext}`;
-    const up = await supabase.storage.from('contenido').upload(ruta, file, { upsert: true, contentType: file.type });
-    if (up.error) { setError('No se pudo subir: ' + up.error.message); setTrabajando(false); return; }
-    const { data: pub } = supabase.storage.from('contenido').getPublicUrl(ruta);
-    const upd = await supabase.from('piezas_contenido').update({ adjunto_url: pub.publicUrl, adjunto_nombre: file.name }).eq('id', piezaId);
-    if (upd.error) { setError('No se pudo guardar: ' + upd.error.message); setTrabajando(false); return; }
-    setUrl(pub.publicUrl); setNombre(file.name); setTrabajando(false); router.refresh();
+    const fd = new FormData();
+    fd.set('pieza_id', piezaId);
+    fd.set('file', file);
+    const res = await subirArchivoPieza(fd);   // sube con la service key
+    if (res.error) { setError(res.error); setTrabajando(false); return; }
+    setUrl(res.url ?? null); setNombre(res.nombre ?? file.name); setTrabajando(false); router.refresh();
   }
 
   async function quitar() {
