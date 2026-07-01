@@ -7,6 +7,7 @@ const ENLACES = [
   { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
   { href: '/tareas', etiqueta: 'Tareas', icono: 'tareas' },
   { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
+  { href: '/acceso', etiqueta: 'Solicitar acceso', icono: 'llave' },
   { href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' },
   { href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' },
   { href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' },
@@ -22,6 +23,7 @@ export default function NavLateral({ coord, aliados, verificacion, contenido, es
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
   if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
+  if (coord) enlaces.push({ href: '/admin/solicitudes', etiqueta: 'Solicitudes de acceso', icono: 'usuario' });
   if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
   if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
   enlaces.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
