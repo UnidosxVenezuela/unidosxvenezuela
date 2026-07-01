@@ -16,10 +16,11 @@ const ENLACES = [
   { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
 ] as const;
 
-export default function NavLateral({ coord, aliados, verificacion, contenido, espacios }: { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean; espacios?: boolean }) {
+export default function NavLateral({ coord, aliados, verificacion, contenido, espacios, psicosocial }: { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean; espacios?: boolean; psicosocial?: boolean }) {
   const ruta = usePathname();
   let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
   if (espacios) enlaces.push({ href: '/espacios', etiqueta: 'Espacios de trabajo', icono: 'pizarra' });
+  if (psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
   if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });

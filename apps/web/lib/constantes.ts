@@ -1,4 +1,4 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo } from '@unidos/types';
 
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
@@ -83,6 +83,8 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   edicion_video: 'Edición de Videos',
   redes_sociales: 'Redes Sociales',
   logistica: 'Logística',
+  apoyo_psicosocial: 'Apoyo Psicosocial',
+  coordinador_psicosocial: 'Coordinación Psicosocial',
 };
 
 // ── Insumos / Logística ──
@@ -187,6 +189,34 @@ export function siguienteEtapa(etapa: EtapaContenido, destino: DestinoContenido 
   if (etapa === 'redes') return 'publicado';
   return null; // publicado = fin del flujo
 }
+
+// ── Apoyo Psicosocial (área confidencial) ──
+export const ETIQUETA_TIPO_APOYO: Record<TipoApoyo, string> = {
+  duelo: 'Duelo', ansiedad: 'Ansiedad', estres_agudo: 'Estrés agudo',
+  crisis: 'Crisis', familiar: 'Familiar', infantil: 'Infantil', otro: 'Otro',
+};
+export const TIPOS_APOYO: TipoApoyo[] = Object.keys(ETIQUETA_TIPO_APOYO) as TipoApoyo[];
+
+export const ETIQUETA_ESTADO_ACOMP: Record<EstadoAcompanamiento, string> = {
+  solicitado: 'Solicitado', asignado: 'Asignado', en_acompanamiento: 'En acompañamiento',
+  seguimiento: 'Seguimiento', cerrado: 'Cerrado', cancelado: 'Cancelado',
+};
+/** Columnas del tablero (sin 'cancelado', que se lista aparte). */
+export const ESTADOS_ACOMP: EstadoAcompanamiento[] = ['solicitado', 'asignado', 'en_acompanamiento', 'seguimiento', 'cerrado'];
+export function claseEstadoAcomp(e: EstadoAcompanamiento): string {
+  if (e === 'cerrado') return 'ok';
+  if (e === 'seguimiento') return 'info';
+  if (e === 'en_acompanamiento') return 'aviso';
+  if (e === 'cancelado') return 'critica';
+  return ''; // solicitado / asignado → neutro
+}
+/** Siguiente estado del acompañamiento (avance lineal; 'cerrado' es el fin). */
+export function siguienteEstadoAcomp(e: EstadoAcompanamiento): EstadoAcompanamiento | null {
+  const orden: EstadoAcompanamiento[] = ['solicitado', 'asignado', 'en_acompanamiento', 'seguimiento', 'cerrado'];
+  const i = orden.indexOf(e);
+  return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
+}
+export const TIPOS_CONTACTO_PSICO = ['Llamada', 'Presencial', 'Mensaje', 'Videollamada', 'Otro'];
 
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {
   pendiente: 'Pendiente', asignada: 'Asignada', en_progreso: 'En progreso',

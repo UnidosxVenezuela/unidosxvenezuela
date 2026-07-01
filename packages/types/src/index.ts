@@ -17,7 +17,10 @@ export type Rol =
   | 'diseno_grafico'          // Diseña la pieza gráfica
   | 'edicion_video'           // Edita el video/reel
   | 'redes_sociales'          // Publica la pieza final
-  | 'logistica';              // Insumos / logística de acopio (envíos, proveedores, donaciones)
+  | 'logistica'               // Insumos / logística de acopio (envíos, proveedores, donaciones)
+  // Área confidencial de salud mental
+  | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
+  | 'coordinador_psicosocial'; // Coordina el área psicosocial (ve todo, asigna)
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer
@@ -254,5 +257,47 @@ export interface Notificacion {
   cuerpo: string | null;
   leida: boolean;
   enlace: string | null;
+  creado_en: string;
+}
+
+// ── Apoyo Psicosocial (área confidencial de salud mental) ──
+export type EstadoAcompanamiento =
+  | 'solicitado' | 'asignado' | 'en_acompanamiento' | 'seguimiento' | 'cerrado' | 'cancelado';
+export type TipoApoyo =
+  | 'duelo' | 'ansiedad' | 'estres_agudo' | 'crisis' | 'familiar' | 'infantil' | 'otro';
+
+export interface Acompanamiento {
+  id: string;
+  numero: number;
+  persona: string;             // nombre o alias de quien recibe apoyo
+  contacto: string | null;
+  tipo: TipoApoyo;
+  motivo: string | null;
+  riesgo: Prioridad;           // nivel de riesgo (baja/media/alta/critica)
+  estado: EstadoAcompanamiento;
+  asignado_a: string | null;
+  notas_cierre: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+  cerrado_en: string | null;
+}
+
+export interface BitacoraPsicosocial {
+  id: string;
+  acompanamiento_id: string;
+  autor_id: string | null;
+  contenido: string;
+  tipo_contacto: string | null;
+  creado_en: string;
+}
+
+export interface RecursoPsicosocial {
+  id: string;
+  titulo: string;
+  descripcion: string | null;
+  telefono: string | null;
+  url: string | null;
+  orden: number;
   creado_en: string;
 }

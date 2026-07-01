@@ -98,3 +98,14 @@ export function puedePipeline(e?: EntradaRoles) {
 export function puedeLogistica(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'coordinador', 'logistica']);
 }
+
+// Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige
+// por admin/coordinación general: solo el equipo psicosocial entra al módulo.
+export function puedePsicosocial(e?: EntradaRoles) {
+  return tieneAlguno(e, ['apoyo_psicosocial', 'coordinador_psicosocial']);
+}
+
+// Coordinación del área psicosocial: ve todos los casos, asigna y gestiona recursos.
+export function esCoordPsicosocial(e?: EntradaRoles) {
+  return tieneAlguno(e, ['coordinador_psicosocial']);
+}
