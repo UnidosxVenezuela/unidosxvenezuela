@@ -1,6 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
@@ -57,6 +58,13 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
+
+  // Privacidad del grupo: quien NO es miembro (ni coordinación/líder) no entra al
+  // detalle ni ve el WhatsApp. Para grupos abiertos, primero debe unirse desde la
+  // lista. La RLS restringe además a nivel de datos.
+  if (!soyMiembro && !puedeGestionar) {
+    redirect('/grupos?ok=' + encodeURIComponent('Únete al grupo para ver su información y su WhatsApp.'));
+  }
   // ¿A quién puede un líder sumar al flujo de contenido? A voluntarios (no a
   // otros mandos) o a sí mismo. La autorización real la impone la RLS/función.
   const MANDOS: Rol[] = ['admin', 'coordinador', 'lider_grupo', 'lider_plataforma_aliada'];

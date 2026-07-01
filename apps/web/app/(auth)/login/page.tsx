@@ -72,6 +72,9 @@ export default function LoginPage() {
         </form>
         <p className="muted" style={{ textAlign: 'center', marginBottom: 4 }}><Link href="/recuperar">¿Olvidaste tu contraseña?</Link></p>
         <p className="muted" style={{ textAlign: 'center' }}>¿No tienes cuenta? <Link href="/registro">Crear cuenta</Link></p>
+        <p className="muted" style={{ textAlign: 'center', fontSize: '.82rem', marginTop: 10 }}>
+          <Link href="/legal/terminos">Términos</Link> · <Link href="/legal/privacidad">Privacidad</Link> · <Link href="/legal/descargo">Descargo</Link>
+        </p>
       </div>
     </main>
   );

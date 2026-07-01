@@ -450,3 +450,18 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 /* Página de Ayuda (guía de uso) */
 .ayuda-lista { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
 .ayuda-lista li { line-height: 1.45; }
+
+/* Documentos legales (páginas /legal/*) */
+.legal-doc { max-width: 780px; }
+.legal-doc h1 { color: var(--azul); font-size: 1.5rem; }
+.legal-doc h2 { color: var(--azul-osc); margin-top: 1.4rem; }
+.legal-doc h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
+.legal-doc p, .legal-doc li { text-align: justify; }
+.legal-doc ul { padding-left: 20px; }
+.legal-doc li { margin-bottom: 5px; }
+.legal-doc hr { border: 0; border-top: 1px solid var(--borde); margin: 18px 0; }
+.legal-doc code { background: #f1f5f9; border-radius: 4px; padding: 1px 6px; font-size: .92em; }
+.legal-doc blockquote {
+  margin: 14px 0; padding: 11px 15px; border-radius: 10px;
+  background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; color: #7c2d12;
+}

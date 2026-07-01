@@ -13,7 +13,7 @@ export default async function GruposPage() {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
   const [{ data }, { data: conteos }, { data: mis }] = await Promise.all([
-    supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, whatsapp, abierto').order('nombre'),
+    supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, abierto').order('nombre'),
     supabase.rpc('conteo_miembros_grupo'),
     supabase.from('miembros_grupo').select('grupo_id').eq('perfil_id', user!.id),
   ]);
@@ -56,6 +56,8 @@ export default async function GruposPage() {
       <div className="grid grid-2">
         {grupos.map((g) => {
           const soyMiembro = misIds.has(g.id);
+          // Solo miembros y coordinación entran al detalle (y ven el WhatsApp).
+          const puedeEntrar = soyMiembro || coord;
           return (
             <div key={g.id} className="tarjeta">
               <div className="fila" style={{ justifyContent: 'space-between' }}>
@@ -68,7 +70,9 @@ export default async function GruposPage() {
                 </span>
               </div>
               <h2 style={{ margin: '8px 0 4px' }}>
-                <Link href={'/grupos/' + g.id} style={{ textDecoration: 'none', color: 'inherit' }}>{g.nombre}</Link>
+                {puedeEntrar
+                  ? <Link href={'/grupos/' + g.id} style={{ textDecoration: 'none', color: 'inherit' }}>{g.nombre}</Link>
+                  : g.nombre}
               </h2>
               <p className="muted" style={{ margin: 0 }}>{g.descripcion || 'Sin descripción'}</p>
               <div className="fila muted" style={{ gap: 4, margin: '6px 0 0', fontSize: '.85rem' }}>
@@ -78,15 +82,17 @@ export default async function GruposPage() {
                   : <span>Sin líder asignado</span>}
               </div>
               <div className="fila" style={{ marginTop: 10 }}>
-                <Link className="btn" href={'/grupos/' + g.id}>Ver</Link>
+                {puedeEntrar && <Link className="btn" href={'/grupos/' + g.id}>Ver</Link>}
                 {soyMiembro
                   ? <Pill tono="ok">Miembro</Pill>
-                  : (g.abierto && perfil?.rol !== 'observador' && (
+                  : g.abierto && perfil?.rol !== 'observador'
+                    ? (
                       <form action={unirmeGrupo}>
                         <input type="hidden" name="grupo_id" value={g.id} />
                         <button className="btn btn-acento">Unirme</button>
                       </form>
-                    ))}
+                    )
+                    : !coord && <Pill tono="aviso" punto={false}>Solo miembros</Pill>}
               </div>
             </div>
           );

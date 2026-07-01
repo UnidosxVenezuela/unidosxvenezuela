@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import Icono from './Icono';
 import NavLateral from './NavLateral';
 import CampanaNotificaciones from './CampanaNotificaciones';
@@ -57,6 +58,9 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
           </div>
         </header>
         <main className="contenedor">{children}</main>
+        <footer className="muted" style={{ textAlign: 'center', fontSize: '.8rem', padding: '10px 24px 24px' }}>
+          <Link href="/legal/terminos">Términos</Link> · <Link href="/legal/privacidad">Privacidad</Link> · <Link href="/legal/descargo">Descargo de responsabilidad</Link>
+        </footer>
       </div>
     </div>
   );

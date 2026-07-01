@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { LEGAL_VERSION } from '@/lib/legal-version';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 
@@ -14,6 +15,7 @@ export default function RegistroPage() {
   const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [acepto, setAcepto] = useState(false);
   const [cargando, setCargando] = useState(false);
 
   function set(k: keyof typeof form, v: string) { setForm((f) => ({ ...f, [k]: v })); }
@@ -23,6 +25,7 @@ export default function RegistroPage() {
     e.preventDefault();
     setError(null);
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
+    if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
     setCargando(true);
     const { error } = await supabase.auth.signUp({
       email: form.email,
@@ -34,6 +37,7 @@ export default function RegistroPage() {
           telefono: form.telefono,
           organizacion: form.organizacion,
           motivo: form.motivo,
+          terminos_version: LEGAL_VERSION,
         },
       },
     });
@@ -97,7 +101,17 @@ export default function RegistroPage() {
           <InputContrasena id="password" autoComplete="new-password" minLength={8} value={form.password} onChange={(e) => set('password', e.target.value)} required />
         </div>
         <Captcha key={captchaNonce} onToken={onToken} />
-        <button className="btn btn-primario" type="submit" disabled={cargando}>
+        <label className="fila" style={{ gap: 8, alignItems: 'flex-start', fontWeight: 500, margin: '4px 0 10px' }}>
+          <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)}
+                 style={{ width: 'auto', minHeight: 0, marginTop: 3 }} />
+          <span className="muted" style={{ fontSize: '.9rem' }}>
+            He leído y acepto los{' '}
+            <Link href="/legal/terminos" target="_blank">Términos</Link>, el{' '}
+            <Link href="/legal/privacidad" target="_blank">Aviso de Privacidad</Link> y el{' '}
+            <Link href="/legal/descargo" target="_blank">Descargo de Responsabilidad</Link>.
+          </span>
+        </label>
+        <button className="btn btn-primario" type="submit" disabled={cargando || !acepto}>
           {cargando ? 'Creando…' : 'Crear cuenta'}
         </button>
           {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
