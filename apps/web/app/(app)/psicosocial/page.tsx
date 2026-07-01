@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { requireUsuario, puedePsicosocial, esCoordPsicosocial } from '@/lib/auth';
+import { requireUsuario, puedeSupervisarPsicosocial, puedePsicosocial, esCoordPsicosocial } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_TIPO_APOYO, ETIQUETA_ESTADO_ACOMP, ESTADOS_ACOMP, claseEstadoAcomp, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
+import { ETIQUETA_TIPO_APOYO, ETIQUETA_ESTADO_ACOMP, ESTADOS_ACOMP, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -12,7 +12,74 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 
 export default async function PsicosocialPage({ searchParams }: { searchParams: { vista?: string } }) {
   const { user, perfil } = await requireUsuario();
-  if (!puedePsicosocial(perfil)) redirect('/dashboard');
+  if (!puedeSupervisarPsicosocial(perfil)) redirect('/dashboard');
+  const equipoPsico = puedePsicosocial(perfil);
+
+  // ── Admin (no es del equipo): SOLO supervisión con indicadores agregados ──
+  // No ve casos ni bitácoras (la confidencialidad la mantiene la RLS; aquí solo
+  // se piden números vía una función SECURITY DEFINER).
+  if (!equipoPsico) {
+    const supabase = await createClient();
+    const { data: resumenData } = await supabase.rpc('resumen_psicosocial');
+    const r: any = (Array.isArray(resumenData) ? resumenData[0] : resumenData) ?? {};
+    const n = (k: string) => Number(r?.[k] ?? 0);
+    const tarjetas = [
+      { etq: 'Casos en total', val: n('total'), icono: 'corazon' },
+      { etq: 'Sin asignar', val: n('sin_asignar'), icono: 'avisos', alerta: n('sin_asignar') > 0 },
+      { etq: 'Profesionales', val: n('profesionales'), icono: 'grupos' },
+      { etq: 'Nuevos (7 días)', val: n('nuevos_7d'), icono: 'mas' },
+    ];
+    const estados: [string, string][] = [
+      ['solicitados', 'Solicitados'], ['asignados', 'Asignados'], ['en_acompanamiento', 'En acompañamiento'],
+      ['seguimiento', 'Seguimiento'], ['cerrados', 'Cerrados'], ['cancelados', 'Cancelados'],
+    ];
+    return (
+      <AnimarEntrada>
+        <div className="pagina-cab">
+          <div>
+            <h1 className="fila" style={{ gap: 8 }}><Icono nombre="corazon" size={24} /> Apoyo Psicosocial · Supervisión</h1>
+            <p className="muted sub">Vista de administración: revisa que el área funcione. Por confidencialidad no se muestran los casos ni las bitácoras.</p>
+          </div>
+          <div className="fila"><BotonActualizar /></div>
+        </div>
+
+        <div className="tarjeta fila" style={{ gap: 10, alignItems: 'flex-start', background: '#eff6ff', borderColor: '#bfdbfe' }}>
+          <Icono nombre="admin" size={18} />
+          <p className="muted" style={{ margin: 0 }}>
+            Como administración ves solo indicadores agregados. El contenido de cada caso
+            (persona, motivo, bitácora) es confidencial: solo lo ven el profesional asignado
+            y la coordinación psicosocial.
+          </p>
+        </div>
+
+        <div className="grid grid-2" style={{ marginTop: 16 }}>
+          {tarjetas.map((t) => (
+            <div key={t.etq} className="tarjeta fila" style={{ gap: 12, alignItems: 'center' }}>
+              <span className="flujo-chip" style={t.alerta ? { background: '#fee2e2', color: 'var(--critica)' } : undefined}>
+                <Icono nombre={t.icono} size={16} />
+              </span>
+              <div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1 }}>{t.val}</div>
+                <div className="muted" style={{ fontSize: '.85rem' }}>{t.etq}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h2 style={{ marginTop: 20 }}>Casos por estado</h2>
+        <div className="grid grid-2">
+          {estados.map(([k, etq]) => (
+            <div key={k} className="tarjeta fila" style={{ justifyContent: 'space-between' }}>
+              <span>{etq}</span>
+              <span className="insignia">{n(k)}</span>
+            </div>
+          ))}
+        </div>
+      </AnimarEntrada>
+    );
+  }
+
+  // ── Equipo psicosocial: tablero de casos ──
   const coord = esCoordPsicosocial(perfil);
   const soloMias = searchParams.vista === 'mia';
 

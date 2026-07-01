@@ -9,7 +9,7 @@ import { crearRecurso, eliminarRecurso } from '../actions';
 
 export default async function RecursosPsicoPage() {
   const { perfil } = await requireUsuario();
-  if (!puedePsicosocial(perfil)) redirect('/dashboard');
+  if (!puedePsicosocial(perfil)) redirect('/psicosocial');
   const coord = esCoordPsicosocial(perfil);
   const supabase = await createClient();
   const { data } = await supabase.from('recursos_psicosocial').select('*').order('orden').order('creado_en');

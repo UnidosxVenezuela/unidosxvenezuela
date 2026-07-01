@@ -1,4 +1,4 @@
-import { requireUsuario, esCoordinacion, puedeVerAliados, puedeRecopilar, puedePipeline, puedePsicosocial, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, puedeVerAliados, puedeRecopilar, puedePipeline, puedeSupervisarPsicosocial, rolesDe } from '@/lib/auth';
 import CerrarSesion from '@/components/CerrarSesion';
 import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
@@ -45,7 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
         }}
-        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil), espacios, psicosocial: puedePsicosocial(perfil) }}
+        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil), espacios, psicosocial: puedeSupervisarPsicosocial(perfil) }}
       >
         {children}
       </Shell>

@@ -109,3 +109,10 @@ export function puedePsicosocial(e?: EntradaRoles) {
 export function esCoordPsicosocial(e?: EntradaRoles) {
   return tieneAlguno(e, ['coordinador_psicosocial']);
 }
+
+// Quién puede ENTRAR al área psicosocial: el equipo (ve/atiende casos) y el
+// admin, pero el admin SOLO en modo supervisión (resumen agregado, sin ver los
+// casos ni la bitácora). La confidencialidad de los casos la mantiene la RLS.
+export function puedeSupervisarPsicosocial(e?: EntradaRoles) {
+  return esAdministrador(e) || puedePsicosocial(e);
+}

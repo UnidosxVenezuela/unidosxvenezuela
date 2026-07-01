@@ -7,7 +7,8 @@ import { crearAcompanamiento } from '../actions';
 
 export default async function NuevaSolicitudPsicoPage() {
   const { perfil } = await requireUsuario();
-  if (!puedePsicosocial(perfil)) redirect('/dashboard');
+  // Solo el equipo psicosocial. El admin (supervisión) va a su panel del área.
+  if (!puedePsicosocial(perfil)) redirect('/psicosocial');
 
   return (
     <div>

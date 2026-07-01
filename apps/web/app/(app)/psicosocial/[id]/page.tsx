@@ -18,7 +18,8 @@ import {
 
 export default async function AcompanamientoPage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
-  if (!puedePsicosocial(perfil)) redirect('/dashboard');
+  // Solo el equipo psicosocial ve un caso. El admin (supervisión) no entra aquí.
+  if (!puedePsicosocial(perfil)) redirect('/psicosocial');
   const supabase = await createClient();
   const id = params.id;
 
