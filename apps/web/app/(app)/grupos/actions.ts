@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
-import { subirArchivoAdmin, borrarArchivoAdmin } from '@/lib/storage';
+import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import type { Rol } from '@unidos/types';
 
 function whatsappOpcional(v: FormDataEntryValue | null): string | null {
@@ -69,13 +69,13 @@ export async function fijarMensaje(formData: FormData) {
   if (!contenido) throw new Error('El mensaje no puede estar vacío.');
   if (contenido.length > 2000) throw new Error('El mensaje es demasiado largo (máx. 2000).');
 
-  // Adjunto opcional: se sube con la service key (salta la RLS de Storage).
+  // Adjunto opcional: se sube con la sesión del usuario (RLS de Storage en 0053).
   let adjPath: string | null = null, adjTipo: string | null = null, adjNombre: string | null = null;
   const file = formData.get('file');
   if (file instanceof File && file.size > 0) {
     if (file.size > 10 * 1024 * 1024) throw new Error('El archivo supera 10 MB.');
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
-    const { path } = await subirArchivoAdmin('grupos', `${grupoId}/${Date.now()}-${safe}`, file, { publico: false, upsert: false });
+    const { path } = await subirArchivo(supabase, 'grupos', `${grupoId}/${Date.now()}-${safe}`, file, { publico: false, upsert: false });
     adjPath = path;
     adjTipo = file.type.startsWith('image/') ? 'imagen' : 'archivo';
     adjNombre = file.name;
@@ -87,7 +87,7 @@ export async function fijarMensaje(formData: FormData) {
     adjunto_path: adjPath, adjunto_tipo: adjTipo, adjunto_nombre: adjNombre,
   });
   if (error) {
-    if (adjPath) await borrarArchivoAdmin('grupos', [adjPath]);
+    if (adjPath) await borrarArchivo(supabase, 'grupos', [adjPath]);
     throw new Error('No se pudo fijar el mensaje: ' + error.message);
   }
   revalidatePath('/grupos/' + grupoId);
@@ -101,7 +101,7 @@ export async function desfijarMensaje(formData: FormData) {
     .select('adjunto_path').eq('id', mensajeId).single();
   const { error } = await supabase.from('mensajes_fijados').delete().eq('id', mensajeId);
   if (error) throw new Error('No se pudo quitar el mensaje: ' + error.message);
-  if (row?.adjunto_path) await borrarArchivoAdmin('grupos', [row.adjunto_path]);
+  if (row?.adjunto_path) await borrarArchivo(supabase, 'grupos', [row.adjunto_path]);
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Anuncio quitado');
 }

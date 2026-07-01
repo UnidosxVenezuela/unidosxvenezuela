@@ -4,13 +4,13 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
 import { siguienteEtapa } from '@/lib/constantes';
-import { subirArchivoAdmin } from '@/lib/storage';
+import { subirArchivo } from '@/lib/storage';
 import type { EtapaContenido, DestinoContenido } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 
-// Sube el archivo final de la pieza con la service key (salta la RLS de Storage)
-// y guarda la URL pública en piezas_contenido.
+// Sube el archivo final de la pieza con la sesión del usuario (RLS de Storage en
+// 0053) y guarda la URL pública en piezas_contenido.
 export async function subirArchivoPieza(formData: FormData): Promise<{ url?: string; nombre?: string; error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -21,7 +21,7 @@ export async function subirArchivoPieza(formData: FormData): Promise<{ url?: str
   if (file.size > 25 * 1024 * 1024) return { error: 'El archivo no debe superar 25 MB.' };
   const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
   try {
-    const { publicUrl } = await subirArchivoAdmin('contenido', `${piezaId}/pieza_${Date.now()}.${ext}`, file, { publico: true });
+    const { publicUrl } = await subirArchivo(supabase, 'contenido', `${piezaId}/pieza_${Date.now()}.${ext}`, file, { publico: true });
     const { error } = await supabase.from('piezas_contenido').update({ adjunto_url: publicUrl, adjunto_nombre: file.name }).eq('id', piezaId);
     if (error) return { error: 'No se pudo guardar: ' + error.message };
     revalidatePath('/contenido');

@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizarWhatsapp } from '@/lib/whatsapp';
-import { subirArchivoAdmin } from '@/lib/storage';
+import { subirArchivo } from '@/lib/storage';
 
 export async function actualizarPerfil(formData: FormData) {
   const supabase = await createClient();
@@ -38,8 +38,8 @@ export async function actualizarPerfil(formData: FormData) {
   redirect('/perfil?guardado=1');
 }
 
-// Sube la foto de perfil con la service key (salta la RLS de Storage) y guarda
-// la URL. Devuelve la URL o un error para que el componente lo muestre.
+// Sube la foto de perfil con la sesión del usuario (RLS de Storage en 0053) y
+// guarda la URL. Devuelve la URL o un error para que el componente lo muestre.
 export async function subirAvatar(formData: FormData): Promise<{ url?: string; error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +50,7 @@ export async function subirAvatar(formData: FormData): Promise<{ url?: string; e
   if (file.size > 5 * 1024 * 1024) return { error: 'La imagen no debe superar 5 MB.' };
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
   try {
-    const { publicUrl } = await subirArchivoAdmin('avatares', `${user.id}/avatar.${ext}`, file, { publico: true });
+    const { publicUrl } = await subirArchivo(supabase, 'avatares', `${user.id}/avatar.${ext}`, file, { publico: true });
     const urlFinal = (publicUrl ?? '') + '?t=' + Date.now();
     const { error } = await supabase.from('perfiles').update({ avatar_url: urlFinal }).eq('id', user.id);
     if (error) return { error: 'No se pudo guardar la foto: ' + error.message };

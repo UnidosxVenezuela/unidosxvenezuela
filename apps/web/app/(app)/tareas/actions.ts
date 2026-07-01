@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
-import { subirArchivoAdmin, borrarArchivoAdmin } from '@/lib/storage';
+import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import type { EstadoTarea, Prioridad } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null): string { return String(v ?? '').trim(); }
@@ -114,8 +114,8 @@ export async function agregarEnlace(formData: FormData) {
   revalidatePath('/tareas/' + id);
 }
 
-// Sube un adjunto de tarea con la service key (salta la RLS de Storage) y crea
-// la fila en adjuntos_tarea. clase: 'material' | 'entregable'.
+// Sube un adjunto de tarea con la sesión del usuario (RLS de Storage en 0053) y
+// crea la fila en adjuntos_tarea. clase: 'material' | 'entregable'.
 export async function subirAdjuntoTarea(formData: FormData): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -128,14 +128,14 @@ export async function subirAdjuntoTarea(formData: FormData): Promise<{ error?: s
   const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
   const path = `${tareaId}/${Date.now()}-${safe}`;
   try {
-    await subirArchivoAdmin('adjuntos', path, file, { publico: false, upsert: false });
+    await subirArchivo(supabase, 'adjuntos', path, file, { publico: false, upsert: false });
   } catch (e) { return { error: 'No se pudo subir: ' + ((e as Error)?.message ?? 'error') }; }
   const tipo = file.type.startsWith('image/') ? 'imagen' : 'documento';
   const { error } = await supabase.from('adjuntos_tarea').insert({
     tarea_id: tareaId, tipo, clase, url: path, nombre: file.name, mime: file.type || null, creado_por: user.id,
   });
   if (error) {
-    await borrarArchivoAdmin('adjuntos', [path]);
+    await borrarArchivo(supabase, 'adjuntos', [path]);
     return { error: 'No se pudo registrar: ' + error.message };
   }
   revalidatePath('/tareas/' + tareaId);
@@ -152,9 +152,9 @@ export async function eliminarAdjunto(formData: FormData) {
   const { data: adj } = await supabase.from('adjuntos_tarea')
     .select('tipo, url').eq('id', adjuntoId).single();
 
-  // Borrar el OBJETO con la service key.
+  // Borrar el OBJETO con la sesión del usuario.
   if (adj && adj.tipo !== 'enlace' && adj.url) {
-    await borrarArchivoAdmin('adjuntos', [adj.url]);
+    await borrarArchivo(supabase, 'adjuntos', [adj.url]);
   }
   const { error } = await supabase.from('adjuntos_tarea').delete().eq('id', adjuntoId);
   if (error) throw new Error('No se pudo eliminar: ' + error.message);
