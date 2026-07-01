@@ -93,6 +93,7 @@ Un usuario **puede tener más de un rol** (p. ej. verificar *y* redactar). La co
 
 | Doc | Contenido |
 |-----|-----------|
+| [docs/DOCUMENTO-DEL-PROYECTO.md](docs/DOCUMENTO-DEL-PROYECTO.md) | **Documento del proyecto**: funciones y características en detalle (visión, flujo, secciones, seguridad, arquitectura). |
 | [docs/GUIA-DE-USO.md](docs/GUIA-DE-USO.md) | **Guía de uso por rol y funcionalidades** (también abajo y dentro de la app en *Ayuda*). |
 | [docs/ROLES.md](docs/ROLES.md) | **Funciones de cada rol y a qué grupos entra** — referencia simple para organizadores. |
 | [docs/01-PLAN.md](docs/01-PLAN.md) | Visión, objetivos, alcance, roles, features, casos de uso. |
