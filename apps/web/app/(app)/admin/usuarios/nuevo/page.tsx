@@ -2,11 +2,14 @@ import Link from 'next/link';
 import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import Icono from '@/components/Icono';
+import { createClient } from '@/lib/supabase/server';
 import { crearUsuario } from '../actions';
 
 export default async function CrearUsuarioPage() {
   const { perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
+  const supabase = await createClient();
+  const { data: grupos } = await supabase.from('grupos').select('id, nombre').order('nombre');
   // "admin" solo lo asigna un superadmin; "aliado" va por doble aprobación (no acá).
   const rolesAsignables = ROLES.filter((r) =>
     r !== 'lider_plataforma_aliada' && (r !== 'admin' || esSuper));
@@ -44,9 +47,18 @@ export default async function CrearUsuarioPage() {
         <p className="muted" style={{ fontSize: '.82rem', marginTop: 0 }}>
           Indica <strong>correo o WhatsApp</strong> (al menos uno). Sin correo, la persona entra con su <strong>número de WhatsApp</strong> y la contraseña temporal.
         </p>
-        <div className="campo">
-          <label htmlFor="organizacion">Organización (opcional)</label>
-          <input id="organizacion" name="organizacion" className="input" />
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="organizacion">Organización (opcional)</label>
+            <input id="organizacion" name="organizacion" className="input" />
+          </div>
+          <div className="campo">
+            <label htmlFor="grupo_id">Grupo (opcional)</label>
+            <select id="grupo_id" name="grupo_id" className="input" defaultValue="">
+              <option value="">— Ninguno —</option>
+              {(grupos ?? []).map((g: { id: string; nombre: string }) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+            </select>
+          </div>
         </div>
         <div className="grid grid-2">
           <div className="campo">

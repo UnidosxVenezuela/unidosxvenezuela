@@ -67,6 +67,7 @@ export async function crearUsuario(formData: FormData) {
   const password = String(formData.get('password') ?? '');
   const rol = String(formData.get('rol') ?? 'voluntario') as Rol;
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
+  const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
 
   if (!nombre) throw new Error('El nombre es obligatorio.');
   if (emailReal && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailReal)) throw new Error('Correo inválido.');
@@ -96,8 +97,14 @@ export async function crearUsuario(formData: FormData) {
     .eq('id', creado.user.id);
   if (e2) throw new Error('Usuario creado, pero no se pudo completar el perfil: ' + e2.message);
 
+  // Sumar al grupo elegido (si se eligió). No rompe la creación si falla.
+  if (grupoId) {
+    const { error: eg } = await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: creado.user.id });
+    if (eg) console.error('Usuario creado, pero no se pudo sumar al grupo', eg);
+  }
+
   await supabase.rpc('registrar_auditoria', {
-    p_accion: 'crear_usuario', p_entidad_id: creado.user.id, p_metadata: { email: emailReal || null, whatsapp, rol },
+    p_accion: 'crear_usuario', p_entidad_id: creado.user.id, p_metadata: { email: emailReal || null, whatsapp, rol, grupo: grupoId },
   });
 
   // Correo de bienvenida SOLO si dio un correo real (a los de WhatsApp se les
