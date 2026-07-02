@@ -30,8 +30,10 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   }
   enlaces.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   enlaces.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });
+  enlaces.push({ href: '/verificacion', etiqueta: 'Verificación', icono: 'llave' });
   if (flags.admin) {
     enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
+    enlaces.push({ href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'llave' });
     enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
   }
   enlaces.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
