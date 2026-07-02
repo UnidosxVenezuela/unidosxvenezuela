@@ -6,6 +6,7 @@ import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import Pill from '@/components/Pill';
 import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -25,12 +26,49 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
   const waFuente = hrefSeguro(caso.fuente_url);
+  const etiquetaEstado = (e?: string) => (e ? (ETIQUETA_ESTADO_CASO[e as keyof typeof ETIQUETA_ESTADO_CASO] ?? e) : '');
 
+  // Texto largo para la línea de tiempo del historial.
   const describir = (accion: string, meta: any) => {
     if (accion === 'casos:insert') return 'Caso creado';
-    if (accion === 'casos:update') return meta?.estado ? `Actualizado · estado: ${ETIQUETA_ESTADO_CASO[meta.estado as keyof typeof ETIQUETA_ESTADO_CASO] ?? meta.estado}` : 'Caso actualizado';
+    if (accion === 'casos:delete') return 'Caso eliminado';
+    if (accion === 'casos:update') {
+      switch (meta?.estado) {
+        case 'confirmado': return 'Confirmado';
+        case 'falso': return 'Descartado (falso / resuelto)';
+        case 'enviado_redaccion': return 'Enviado a Redacción';
+        default: return meta?.estado ? `Actualizado · estado: ${etiquetaEstado(meta.estado)}` : 'Notas / datos actualizados';
+      }
+    }
     return accion;
   };
+
+  // Texto corto de lo que hizo cada persona (resumen de participantes).
+  const accionCorta = (accion: string, meta: any): string => {
+    if (accion === 'casos:insert') return 'Creó el caso';
+    if (accion === 'casos:delete') return 'Eliminó el caso';
+    if (accion === 'casos:update') {
+      switch (meta?.estado) {
+        case 'confirmado': return 'Confirmó';
+        case 'falso': return 'Descartó';
+        case 'enviado_redaccion': return 'Envió a Redacción';
+        case 'en_proceso': return 'Reabrió / actualizó';
+        default: return 'Actualizó';
+      }
+    }
+    return accion;
+  };
+
+  // Quién ha intervenido: el creador + cada actor del historial, con lo que hizo.
+  const participantes = new Map<string, { acciones: string[] }>();
+  const sumar = (actorId: string | null | undefined, etiqueta: string) => {
+    if (!actorId) return;
+    const p = participantes.get(actorId) ?? { acciones: [] };
+    if (!p.acciones.includes(etiqueta)) p.acciones.push(etiqueta);
+    participantes.set(actorId, p);
+  };
+  if (caso.creado_por) sumar(caso.creado_por, 'Creó el caso');
+  for (const h of (historial ?? [])) sumar(h.actor_id, accionCorta(h.accion, h.metadata));
 
   return (
     <div>
@@ -49,6 +87,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
+          <div style={{ gridColumn: '1 / -1' }}><strong>Creado por:</strong> {caso.creado_por ? (nombres.get(caso.creado_por) ?? '—') : '—'}{caso.creado_en ? ' · ' + fechaHora(caso.creado_en) : ''}</div>
         </div>
         {(caso.adjuntos ?? []).length > 0 && (
           <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
@@ -60,6 +99,25 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
       </div>
+
+      {participantes.size > 0 && (
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="grupos" size={16} /> Quién ha intervenido</h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
+            {[...participantes.entries()].map(([actorId, p]) => (
+              <li key={actorId} className="fila" style={{ gap: 10, alignItems: 'center' }}>
+                <Avatar nombre={nombres.get(actorId) ?? 'Usuario'} url={avatares.get(actorId) ?? null} size={30} />
+                <div>
+                  <div style={{ fontWeight: 600 }}>{nombres.get(actorId) ?? 'Usuario'}</div>
+                  <div className="fila" style={{ gap: 4, flexWrap: 'wrap' }}>
+                    {p.acciones.map((a) => <Pill key={a} tono="neutra" punto={false}>{a}</Pill>)}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {puedeEditar && caso.estado === 'enviado_redaccion' && (
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>

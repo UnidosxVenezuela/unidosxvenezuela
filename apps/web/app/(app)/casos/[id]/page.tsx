@@ -13,7 +13,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
 
   const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
   const { data: caso } = await supabase.from('casos')
-    .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas, creado_en, actualizado_en')
+    .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas, creado_por, creado_en, actualizado_en')
     .eq('id', id).single() as any;
   if (!caso) return <div className="tarjeta"><h2>Caso no encontrado</h2><Link href="/casos">Volver</Link></div>;
 
@@ -24,7 +24,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   })));
 
   const [{ data: perfiles }, { data: historial }] = await Promise.all([
-    supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
+    supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
       .eq('entidad', 'casos').eq('entidad_id', id).order('creado_en', { ascending: false }).limit(50),
   ]);

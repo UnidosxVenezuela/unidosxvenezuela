@@ -17,17 +17,29 @@ const ENTIDADES: Record<string, string> = {
   adjuntos_tarea: 'un adjunto', grupos: 'un grupo', miembros_grupo: 'una membresía de grupo',
   miembros_baneados: 'un veto de grupo', mensajes_fijados: 'un anuncio', publicaciones: 'una publicación',
   registro_horas: 'horas', puntos_acopio: 'un centro de acopio', reuniones: 'una reunión',
-  endpoints_aliados: 'un contacto aliado',
+  endpoints_aliados: 'un contacto aliado', casos: 'un caso', casos_adjuntos: 'un adjunto de caso',
+  acopio_responsables: 'un responsable de acopio', perfiles: 'un perfil', piezas_contenido: 'una pieza de contenido',
 };
 const SEMANTICAS: Record<string, string> = {
   cambio_rol: 'cambió un rol', cambio_verificacion: 'cambió una verificación', crear_usuario: 'creó un usuario',
 };
 
-function describir(accion: string, entidad: string): string {
+function describir(accion: string, entidad: string, meta?: any): string {
   const partes = accion.split(':');
   if (partes.length === 2) {
     const tabla = partes[0]!;
     const op = partes[1]!;
+    // Casos: describir por lo que significa el cambio de estado, no solo "editó".
+    if (tabla === 'casos') {
+      if (op === 'insert') return 'creó un caso';
+      if (op === 'delete') return 'eliminó un caso';
+      switch (meta?.estado) {
+        case 'confirmado': return 'confirmó un caso';
+        case 'falso': return 'descartó un caso';
+        case 'enviado_redaccion': return 'envió un caso a Redacción';
+        default: return 'actualizó un caso';
+      }
+    }
     return `${OPS[op] ?? op} ${ENTIDADES[tabla] ?? entidad ?? tabla}`;
   }
   return SEMANTICAS[accion] ?? accion;
@@ -55,7 +67,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
       actorNombre: actor?.nombre_completo ?? (l.actor_id ? '—' : 'Sistema'),
       actorRol: actor?.rol ?? null,
       actorAvatar: actor?.avatar_url ?? null,
-      desc: describir(l.accion, l.entidad),
+      desc: describir(l.accion, l.entidad, l.metadata),
     };
   });
   if (rolFiltro) logs = logs.filter((l) => l.actorRol === rolFiltro);
@@ -101,7 +113,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
             <thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th></tr></thead>
             <tbody>
               {logs.map((l: any) => {
-                const extra = l.metadata?.titulo || l.metadata?.nombre;
+                const extra = l.metadata?.titulo || l.metadata?.nombre || l.metadata?.nombre_completo;
                 return (
                   <tr key={l.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{fechaHora(l.creado_en)}</td>

@@ -9,7 +9,6 @@ import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Avatar from '@/components/Avatar';
-import MenuFila from '@/components/MenuFila';
 import Kpi from '@/components/Kpi';
 import Pill from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
@@ -67,7 +66,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
     ]);
@@ -115,7 +114,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <label>Categoría</label>
             <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
-              {[...CATEGORIAS_CASO, 'Casos de Niños', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras Informaciones Relevantes'].map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
@@ -161,7 +160,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           )
         ) : (
           <div className="tabla-scroll"><table>
-            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
+            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Estado</th><th>Actualización</th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
                 <tr key={c.id}>
@@ -181,12 +180,6 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
                   <td><EstadoCaso estado={c.estado} /></td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <MenuFila etiqueta={'Acciones del caso ' + c.titulo}>
-                      <Link href={hrefCaso(c.id)}><Icono nombre="panel" size={16} /> Abrir panel</Link>
-                      <Link href={'/casos/' + c.id}><Icono nombre="enlace" size={16} /> Abrir en página</Link>
-                    </MenuFila>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -215,7 +208,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       ) : (
         <Carrusel>
           {(listos ?? []).map((c: any) => (
-            <Link key={c.id} href={'/casos/' + c.id} className="tarjeta carrusel-item" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link key={c.id} href={hrefCaso(c.id)} className="tarjeta carrusel-item" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')}</div>
               <strong>{c.titulo}</strong>
               <div style={{ margin: '8px 0' }} />
