@@ -176,7 +176,10 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
           <p className="muted sub">Registra los puntos y su ubicación. Entra a «Inventario» para llevar las existencias y marcar necesidades — desde el teléfono o con el código QR del centro.</p>
         </div>
         {editando === null && (
-          <button className="btn btn-primario" onClick={() => abrir('nuevo')}><Icono nombre="mas" /> Nuevo centro</button>
+          <div className="fila" style={{ gap: 8 }}>
+            <a className="btn" href="/acopio/necesidades" style={{ textDecoration: 'none' }}><Icono nombre="avisos" size={16} /> Panel de necesidades</a>
+            <button className="btn btn-primario" onClick={() => abrir('nuevo')}><Icono nombre="mas" /> Nuevo centro</button>
+          </div>
         )}
       </div>
 
