@@ -20,8 +20,22 @@ jobs:
         with:
           version: latest
 
-      - name: Levantar Supabase local (aplica migraciones)
-        run: supabase start
+      # Arrancamos SIN migraciones y luego las aplicamos con psql en autocommit
+      # (una sentencia = una transacción). Así `alter type ... add value` queda
+      # confirmado antes de usarse, evitando el error 55P04 "unsafe use of new
+      # value" que da la CLI al aplicar cada migración dentro de una transacción.
+      - name: Levantar Supabase local (sin migraciones)
+        run: |
+          mkdir -p /tmp/migs
+          mv supabase/migrations/*.sql /tmp/migs/
+          supabase start
+
+      - name: Aplicar migraciones por sentencia (autocommit, enum-safe)
+        run: |
+          for f in $(ls /tmp/migs/*.sql | sort); do
+            echo "== Aplicando $(basename "$f") =="
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
 
       - name: Conceder privilegios a authenticated (como en Supabase cloud)
         run: |
