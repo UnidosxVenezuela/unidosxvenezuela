@@ -18,7 +18,7 @@ import { crearPieza } from './actions';
 type SP = { pieza?: string };
 
 export default async function ContenidoPage({ searchParams }: { searchParams: SP }) {
-  const { perfil } = await requireUsuario();
+  const { user, perfil } = await requireUsuario();
   if (!puedePipeline(perfil)) redirect('/dashboard');
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
@@ -42,14 +42,16 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
   };
 
   const hrefPieza = (id: string) => '/contenido?pieza=' + id;
-  let drawerPieza: any = null; let drawerHist: any[] = []; let drawerPuedeEtapa = false;
+  let drawerPieza: any = null; let drawerHist: any[] = []; let drawerAdjuntos: any[] = []; let drawerPuedeEtapa = false;
   if (searchParams.pieza) {
-    const [{ data: dp }, { data: dh }] = await Promise.all([
+    const [{ data: dp }, { data: dh }, { data: da }] = await Promise.all([
       supabase.from('piezas_contenido').select('*').eq('id', searchParams.pieza).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
         .eq('entidad', 'piezas_contenido').eq('entidad_id', searchParams.pieza).order('creado_en', { ascending: false }).limit(50),
+      supabase.from('piezas_adjuntos').select('id, url, nombre, mime, creado_por, creado_en')
+        .eq('pieza_id', searchParams.pieza).order('creado_en'),
     ]);
-    drawerPieza = dp; drawerHist = dh ?? [];
+    drawerPieza = dp; drawerHist = dh ?? []; drawerAdjuntos = da ?? [];
     if (dp) {
       const rolEtapa = ROL_DE_ETAPA[dp.etapa as EtapaContenido];
       // El influencer puede actuar en cualquier etapa; el resto en la suya.
@@ -125,8 +127,9 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
             <Link href="/contenido" className="drawer-backdrop" aria-label="Cerrar detalle" />
             <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle de la pieza ' + drawerPieza.titulo}>
               <DetallePieza
-                pieza={drawerPieza} perfiles={perfilesData ?? []} historial={drawerHist}
+                pieza={drawerPieza} perfiles={perfilesData ?? []} historial={drawerHist} adjuntos={drawerAdjuntos}
                 volver={hrefPieza(drawerPieza.id)} cerrarHref="/contenido" puedeEtapa={drawerPuedeEtapa}
+                miId={user!.id} esCoord={esAdmin}
                 nombres={nombres} avatares={avatares}
               />
             </aside>
