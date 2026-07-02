@@ -95,7 +95,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
       </div>}
 
-      {puedeVerif && <>
+      {esAdministrador(perfil) && <>
       <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>El flujo · toca una etapa para abrirla</p>
       <FlujoTrabajo pasos={pasos} />
       </>}

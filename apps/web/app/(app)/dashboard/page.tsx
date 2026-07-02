@@ -31,9 +31,10 @@ export default async function Dashboard() {
   const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
   const totalComunidad = Number(totalCom.data ?? 0);
 
-  // La tira del flujo (Verificación → Confirmados → Envío a Redacción) solo la
-  // ven quienes participan de él; la RLS limita además los conteos.
-  const mostrarFlujo = flags.admin || flags.verificacion || flags.envioRedaccion;
+  // La tira del flujo (Verificación → Confirmados → Envío a Redacción) es una
+  // vista de conjunto: solo la ve el admin. Cada rol hace su función sin
+  // necesitar el mapa completo del flujo.
+  const mostrarFlujo = flags.admin;
   const pasos = mostrarFlujo ? pasosFlujo(await contarFlujo(supabase)) : [];
 
   const acciones: Accion[] = [];
