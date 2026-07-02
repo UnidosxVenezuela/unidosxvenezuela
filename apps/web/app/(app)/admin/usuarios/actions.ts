@@ -14,10 +14,9 @@ async function exigirCoordinacion() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
-  if (!yo || !['admin', 'coordinador'].includes(yo.rol)) {
-    throw new Error('No tienes permisos de coordinación.');
-  }
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const rolesYo = [yo?.rol, ...((yo?.roles_extra as string[] | null) ?? [])];
+  if (!rolesYo.includes('admin')) throw new Error('Solo administración puede gestionar usuarios.');
   return supabase;
 }
 
@@ -58,8 +57,9 @@ export async function crearUsuario(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, super_admin').eq('id', user.id).single();
-  if (!yo || !['admin', 'coordinador'].includes(yo.rol)) throw new Error('No tienes permisos de coordinación.');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
+  const rolesYo0 = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!yo || !rolesYo0.includes('admin')) throw new Error('Solo administración puede crear usuarios.');
 
   const nombre = String(formData.get('nombre_completo') ?? '').trim();
   const emailReal = String(formData.get('email') ?? '').trim().toLowerCase();
@@ -162,8 +162,8 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const rolesYo = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!rolesYo.includes('admin') && !rolesYo.includes('coordinador')) {
-    return { ok: false, mensaje: 'No tienes permisos de coordinación.', filas: [] };
+  if (!rolesYo.includes('admin')) {
+    return { ok: false, mensaje: 'Solo administración puede importar usuarios.', filas: [] };
   }
 
   const rol = String(formData.get('rol') ?? 'voluntario') as Rol;

@@ -115,7 +115,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <label>Categoría</label>
             <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
-              {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
+              {[...CATEGORIAS_CASO, 'Casos de Niños', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras Informaciones Relevantes'].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>

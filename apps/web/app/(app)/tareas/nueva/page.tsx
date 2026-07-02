@@ -1,14 +1,21 @@
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeGestionarTareas } from '@/lib/auth';
+import { requireUsuario, puedeGestionarTareas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from '@/lib/constantes';
 import { crearTarea } from '../actions';
 import CapturarUbicacion from './CapturarUbicacion';
 
 export default async function NuevaTareaPage({ searchParams }: { searchParams: { grupo?: string } }) {
-  const { perfil } = await requireUsuario();
-  if (!puedeGestionarTareas(perfil)) redirect('/tareas');
+  const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
+  // Pasa: roles de gestión o ser líder real de algún grupo (grupos.lider_id).
+  let autorizado = puedeGestionarTareas(perfil);
+  if (!autorizado) {
+    const { count } = await supabase.from('grupos').select('*', { count: 'exact', head: true }).eq('lider_id', user!.id);
+    autorizado = (count ?? 0) > 0;
+  }
+  if (!autorizado) redirect('/grupos');
+  const esAdmin = esAdministrador(perfil);
   const [{ data: grupos }, { data: perfiles }] = await Promise.all([
     supabase.from('grupos').select('id, nombre').order('nombre'),
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
@@ -54,8 +61,8 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
           </div>
           <div className="campo">
             <label htmlFor="grupo_id">Grupo</label>
-            <select id="grupo_id" name="grupo_id" className="input" defaultValue={searchParams.grupo ?? ''}>
-              <option value="">Sin grupo</option>
+            <select id="grupo_id" name="grupo_id" className="input" defaultValue={searchParams.grupo ?? ''} required={!esAdmin}>
+              {esAdmin ? <option value="">Sin grupo</option> : <option value="" disabled>Elige tu grupo…</option>}
               {(grupos ?? []).map((g: any) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
             </select>
           </div>

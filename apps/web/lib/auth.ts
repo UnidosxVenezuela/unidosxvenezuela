@@ -81,7 +81,7 @@ export function puedeVerAliados(e?: EntradaRoles) {
 
 // Módulo de verificación de casos: coordinación o rol verificador.
 export function puedeVerificar(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'coordinador', 'verificador']);
+  return tieneAlguno(e, ['admin', 'verificador']);
 }
 
 // Quién puede ENVIAR/crear y ver casos: verificación + el rol de recopilación
@@ -92,14 +92,14 @@ export function puedeRecopilar(e?: EntradaRoles) {
 
 // Pipeline de producción de contenido (ve y trabaja en /contenido): coordinación
 // o un rol de producción. Cada rol actúa solo en la etapa que le corresponde.
-const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+const PIPELINE: Rol[] = ['admin', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
 export function puedePipeline(e?: EntradaRoles) {
   return tieneAlguno(e, PIPELINE);
 }
 
 // Módulo de insumos / logística: coordinación o rol logística gestiona el flujo.
 export function puedeLogistica(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'coordinador', 'logistica']);
+  return tieneAlguno(e, ['admin', 'logistica']);
 }
 
 // Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige

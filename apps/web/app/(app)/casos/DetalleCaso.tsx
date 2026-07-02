@@ -61,7 +61,12 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         )}
       </div>
 
-      {puedeEditar ? (
+      {puedeEditar && caso.estado === 'enviado_redaccion' && (
+        <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
+          <p className="muted" style={{ margin: 0 }}>Este caso ya fue <strong>enviado a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
+        </div>
+      )}
+      {puedeEditar && caso.estado !== 'enviado_redaccion' ? (
         <>
           <form action={cambiarEstadoCaso} className="tarjeta">
             <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Estado del caso</h3>

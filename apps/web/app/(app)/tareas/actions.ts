@@ -17,11 +17,17 @@ export async function crearTarea(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Solo admin/coordinador/líder pueden crear tareas.
-  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
-  if (!yo || !['admin', 'coordinador', 'lider_grupo'].includes(yo.rol)) {
-    throw new Error('No tienes permisos para crear tareas.');
+  // Crear: admin, coordinador o líder (por conjunto de roles), o el líder real
+  // del grupo elegido (grupos.lider_id). La RLS exige además grupo propio.
+  const grupoElegido = opt(formData.get('grupo_id'));
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const rolesYo = [yo?.rol, ...(((yo?.roles_extra as (Prioridad | string)[] | null) ?? []))] as string[];
+  let autorizado = ['admin', 'coordinador', 'lider_grupo'].some((r) => rolesYo.includes(r));
+  if (!autorizado && grupoElegido) {
+    const { data: g } = await supabase.from('grupos').select('lider_id').eq('id', grupoElegido).single();
+    autorizado = g?.lider_id === user.id;
   }
+  if (!autorizado) throw new Error('No tienes permisos para crear tareas.');
 
   const asignadoA = opt(formData.get('asignado_a'));
   const { data, error } = await supabase.from('tareas').insert({

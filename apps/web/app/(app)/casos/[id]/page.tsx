@@ -11,10 +11,17 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   const supabase = await createClient();
   const id = params.id;
 
+  const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
   const { data: caso } = await supabase.from('casos')
     .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas, creado_en, actualizado_en')
     .eq('id', id).single() as any;
   if (!caso) return <div className="tarjeta"><h2>Caso no encontrado</h2><Link href="/casos">Volver</Link></div>;
+
+  // Adjuntos de respaldo con URL firmada (misma vista que el panel lateral).
+  const { urlFirmada } = await import('@/lib/storage');
+  caso.adjuntos = await Promise.all(((adjRaw ?? []) as any[]).map(async (a) => ({
+    ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
+  })));
 
   const [{ data: perfiles }, { data: historial }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
@@ -25,7 +32,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   return (
     <div style={{ maxWidth: 720 }}>
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
-      <Link href="/casos" className="muted">← Verificación</Link>
+      <Link href="/casos" className="muted">← Casos</Link>
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil)} esAdmin={esAdministrador(perfil)} />
       </div>

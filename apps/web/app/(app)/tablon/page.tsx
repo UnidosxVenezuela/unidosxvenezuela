@@ -1,5 +1,6 @@
 import { fechaHora } from '@/lib/fechas';
-import { requireUsuario } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { SENSIBILIDADES, ETIQUETA_SENSIBILIDAD, claseSensibilidad } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -9,6 +10,8 @@ import { crearPublicacion, comentarPublicacion } from './actions';
 
 export default async function TablonPage({ searchParams }: { searchParams: { grupo?: string } }) {
   const { perfil } = await requireUsuario();
+  // Sección reservada a administración en el modelo por función.
+  if (!esAdministrador(perfil)) redirect('/dashboard');
   const puedeParticipar = true;
   const supabase = await createClient();
 

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -7,7 +8,10 @@ import Icono from '@/components/Icono';
 import type { PuntoAcopio } from '@unidos/types';
 
 export default async function MapaPage() {
-  await requireUsuario();
+  const { perfil } = await requireUsuario();
+  const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
+  if (!rolesG.includes('admin') && !rolesG.includes('logistica')) redirect('/dashboard');
+
   const supabase = await createClient();
 
   const [{ data: puntosData }, { data: tareasData }] = await Promise.all([

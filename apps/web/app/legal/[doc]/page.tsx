@@ -7,12 +7,12 @@ export function generateStaticParams() {
 }
 
 export function generateMetadata({ params }: { params: { doc: string } }) {
-  const d = DOCS_LEGALES[params.doc];
+  const d = Object.hasOwn(DOCS_LEGALES, params.doc) ? DOCS_LEGALES[params.doc] : undefined;
   return { title: (d?.titulo ?? 'Legal') + ' — Apoyo por Venezuela' };
 }
 
 export default function DocLegalPage({ params }: { params: { doc: string } }) {
-  const d = DOCS_LEGALES[params.doc];
+  const d = Object.hasOwn(DOCS_LEGALES, params.doc) ? DOCS_LEGALES[params.doc] : undefined;
   if (!d) notFound();
   const html = renderLegalHtml(d.md);
   return (
