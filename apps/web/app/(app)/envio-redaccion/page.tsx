@@ -12,11 +12,11 @@ import Pill from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import { enviarCasoRedaccion } from '../casos/actions';
 
-/** El grupo "Envío a Redacción" toma los casos CONFIRMADOS y los pasa al estado
+/** El grupo Redacción toma los casos CONFIRMADOS y los pasa al estado
  *  final del flujo de verificación: «Enviado a Redacción». */
 export default async function EnvioRedaccionPage() {
   const { perfil } = await requireUsuario();
-  const puede = esAdministrador(perfil) || rolesDe(perfil).includes('envio_redaccion');
+  const puede = esAdministrador(perfil) || rolesDe(perfil).includes('redaccion');
   if (!puede) redirect('/dashboard');
   const supabase = await createClient();
 

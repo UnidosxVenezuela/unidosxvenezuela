@@ -133,7 +133,7 @@ rollback;
 begin;
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_conf', 'confirmado', null);
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_proc', 'en_proceso', null);
-  update public.perfiles set rol = 'voluntario', roles_extra = '{envio_redaccion}' where id = :'admin';
+  update public.perfiles set rol = 'voluntario', roles_extra = '{redaccion}' where id = :'admin';
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
   do $$

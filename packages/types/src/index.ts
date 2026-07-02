@@ -12,12 +12,9 @@ export type Rol =
   | 'verificador'             // Revisa y aprueba casos sensibles (módulo de verificación)
   // Pipeline de contenido (grupos exclusivos por rol)
   | 'recopilacion'            // Envía información/casos para verificar (no verifica)
-  | 'redaccion'               // Redacta contenido y copy a partir de casos confirmados
-  | 'diseno_grafico'          // Diseña la pieza gráfica
-  | 'edicion_video'           // Edita el video/reel
-  | 'redes_sociales'          // Publica la pieza final
+  | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
+  | 'redes_sociales'          // Diseño y Redes Sociales (diseño, video y publicación)
   | 'logistica'               // Insumos / logística de acopio (envíos, proveedores, donaciones)
-  | 'envio_redaccion'          // Pasa casos confirmados a "enviado a redacción"
   // Área confidencial de salud mental
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
   | 'coordinador_psicosocial'; // Coordina el área psicosocial (ve todo, asigna)

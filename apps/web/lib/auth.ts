@@ -92,7 +92,7 @@ export function puedeRecopilar(e?: EntradaRoles) {
 
 // Pipeline de producción de contenido (ve y trabaja en /contenido): coordinación
 // o un rol de producción. Cada rol actúa solo en la etapa que le corresponde.
-const PIPELINE: Rol[] = ['admin', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+const PIPELINE: Rol[] = ['admin', 'redaccion', 'redes_sociales'];
 export function puedePipeline(e?: EntradaRoles) {
   return tieneAlguno(e, PIPELINE);
 }

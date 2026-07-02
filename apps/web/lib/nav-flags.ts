@@ -25,7 +25,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     admin,
     gestionCasos: admin || claves.has('gestion_casos') || roles.includes('recopilacion'),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
-    envioRedaccion: admin || claves.has('envio_redaccion') || roles.includes('envio_redaccion'),
+    envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),
     acopio: admin || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),

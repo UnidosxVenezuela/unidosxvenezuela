@@ -2,7 +2,7 @@ import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, esCoordPsicosocial, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
@@ -21,7 +21,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const grupoId = params.id;
 
   const { data: grupo } = await supabase.from('grupos')
-    .select('id, nombre, area, descripcion, lider_id, whatsapp, abierto').eq('id', grupoId).single();
+    .select('id, nombre, area, descripcion, lider_id, whatsapp, abierto, clave').eq('id', grupoId).single();
 
   if (!grupo) {
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
@@ -56,6 +56,10 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   // El coordinador (miembro) publica en su grupo: tareas y anuncios fijados,
   // sin gestionar miembros ni el grupo. La RLS (0056) lo hace cumplir.
   const puedePublicar = puedeGestionar || (soyMiembro && rolesDe(perfil).includes('coordinador'));
+  // El coordinador psicosocial es la autoridad del área (bajo admin): gestiona
+  // la MEMBRESÍA de su grupo Apoyo Psicosocial (la RLS 0059 lo hace cumplir).
+  const puedeGestionarMiembros = puedeGestionar
+    || (esCoordPsicosocial(perfil) && grupo.clave === 'apoyo_psicosocial');
 
   // Privacidad del grupo: quien NO es miembro (ni coordinación/líder) no entra al
   // detalle ni ve el WhatsApp. Para grupos abiertos, primero debe unirse desde la
@@ -230,7 +234,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           <h2 className="fila" style={{ gap: 6 }}><Icono nombre="grupos" size={20} /> Miembros ({miembros.length})</h2>
           <div className="tarjeta">
             <div className="tabla-scroll"><table>
-              <thead><tr><th>Nombre</th><th>En grupo</th>{puedeGestionar && <th></th>}</tr></thead>
+              <thead><tr><th>Nombre</th><th>En grupo</th>{puedeGestionarMiembros && <th></th>}</tr></thead>
               <tbody>
                 {miembros.map((m) => (
                   <tr key={m.perfil_id}>
@@ -242,7 +246,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                       </span>
                     </td>
                     <td>{m.rol_en_grupo}</td>
-                    {puedeGestionar && (
+                    {puedeGestionarMiembros && (
                       <td className="fila">
                         {grupo.lider_id !== m.perfil_id && (
                           <form action={asignarLider}>
@@ -310,7 +314,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         </div>
 
         {/* ── Columna derecha: publicar (líder/admin/coordinador) + gestión (líder/admin) ── */}
-        {puedePublicar && (
+        {(puedePublicar || puedeGestionarMiembros) && (
           <aside className="grupo-aside">
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="tablon" size={16} /> Fijar anuncio</h3>
@@ -329,17 +333,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               </form>
             </div>
 
-            {puedeGestionar && (<>
-            <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
-              <form action={guardarWhatsappGrupo}>
-                <input type="hidden" name="grupo_id" value={grupoId} />
-                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
-                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
-                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
-              </form>
-            </div>
-
+            {puedeGestionarMiembros && (
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="mas" size={16} /> Agregar miembro</h3>
               <form action={agregarMiembro}>
@@ -351,6 +345,19 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Agregar</button>
               </form>
             </div>
+            )}
+
+            {puedeGestionar && (<>
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
+              <form action={guardarWhatsappGrupo}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
+                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
+                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
+              </form>
+            </div>
+
 
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Líder del grupo</h3>

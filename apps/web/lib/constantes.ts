@@ -78,11 +78,8 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   verificador: 'Verificación',
   recopilacion: 'Recopilación',
   redaccion: 'Redacción',
-  diseno_grafico: 'Diseño Gráfico',
-  edicion_video: 'Edición de Videos',
-  redes_sociales: 'Redes Sociales',
+  redes_sociales: 'Diseño y Redes Sociales',
   logistica: 'Logística',
-  envio_redaccion: 'Envío a Redacción',
   apoyo_psicosocial: 'Apoyo Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
 };
@@ -123,7 +120,7 @@ export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón
 // Roles de la "cadena de contenido" (de la información a la publicación). Los
 // coordinadores y líderes pueden asignarlos como roles ADICIONALES a voluntarios
 // o a sí mismos, para sumarlos al flujo de trabajo (no a otros mandos).
-export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
+export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 'redaccion', 'redes_sociales'];
 
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
   en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
@@ -143,7 +140,7 @@ export const DESTINOS: DestinoContenido[] = ['diseno', 'video'];
 
 /** Rol responsable de cada etapa (para asignar y permitir acciones). */
 export const ROL_DE_ETAPA: Record<EtapaContenido, Rol | null> = {
-  redaccion: 'redaccion', diseno: 'diseno_grafico', video: 'edicion_video', redes: 'redes_sociales', publicado: null,
+  redaccion: 'redaccion', diseno: 'redes_sociales', video: 'redes_sociales', redes: 'redes_sociales', publicado: null,
 };
 
 // ── Habilidades del perfil ──
