@@ -23,6 +23,7 @@ const ORDEN: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: string; esCoord: boolean; esAdmin: boolean }) {
   const [centros, setCentros] = useState<PuntoAcopio[]>([]);
   const [responsables, setResponsables] = useState<Map<string, Resp[]>>(new Map());
+  const [necCount, setNecCount] = useState<Map<string, number>>(new Map());
   const [candidatos, setCandidatos] = useState<{ id: string; nombre_completo: string | null; rol: Rol | null }[]>([]);
   const [cargando, setCargando] = useState(true);
   const [editando, setEditando] = useState<PuntoAcopio | 'nuevo' | null>(null);
@@ -35,10 +36,15 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
 
   const cargar = useCallback(async () => {
     const supabase = createClient();
-    const [{ data }, resp] = await Promise.all([
+    const [{ data }, resp, nec] = await Promise.all([
       supabase.from('puntos_acopio').select('*'),
       supabase.from('acopio_responsables').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
+      supabase.from('necesidades_acopio').select('punto_id').eq('resuelta', false),
     ]);
+    // Necesidades abiertas por centro (vacío si la tabla aún no existe).
+    const nmap = new Map<string, number>();
+    for (const n of (nec.data ?? []) as any[]) nmap.set(n.punto_id, (nmap.get(n.punto_id) ?? 0) + 1);
+    setNecCount(nmap);
     const arr = ((data ?? []) as PuntoAcopio[]).sort((a, b) =>
       ((ORDEN[a.urgencia] ?? 1) - (ORDEN[b.urgencia] ?? 1)) || a.nombre.localeCompare(b.nombre));
     setCentros(arr);
@@ -204,7 +210,10 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
             <div key={c.id} className="tarjeta" style={{ borderLeft: '5px solid ' + (c.urgencia === 'alta' ? '#CF142B' : c.urgencia === 'baja' ? '#0A7D2C' : '#E6A100'), opacity: c.activo ? 1 : 0.55 }}>
               <div className="fila" style={{ justifyContent: 'space-between' }}>
                 <strong>{c.nombre}</strong>
-                <Pill tono={tonoDeClase(claseUrgencia(c.urgencia))}>{ETIQUETA_URGENCIA[c.urgencia]}</Pill>
+                <span className="fila" style={{ gap: 6 }}>
+                  {(necCount.get(c.id) ?? 0) > 0 && <Pill tono="aviso" punto={false}>{necCount.get(c.id)} necesidades</Pill>}
+                  <Pill tono={tonoDeClase(claseUrgencia(c.urgencia))}>{ETIQUETA_URGENCIA[c.urgencia]}</Pill>
+                </span>
               </div>
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}
               {c.direccion && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="ubicacion" size={14} /> {c.direccion}</div>}
