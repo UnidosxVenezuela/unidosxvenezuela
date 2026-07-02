@@ -61,6 +61,21 @@ export async function enviarARedaccion(formData: FormData) {
   redirigirOk('/contenido?pieza=' + data!.id, 'Enviado a Redacción');
 }
 
+/** Crear una pieza nueva directamente (los grupos de contenido suben contenido).
+ *  La RLS (0064) solo deja crear a quien participa del pipeline. */
+export async function crearPieza(formData: FormData) {
+  const { supabase, user } = await sesion();
+  const titulo = txt(formData.get('titulo'));
+  if (!titulo) throw new Error('Ponle un título a la pieza.');
+  const { data, error } = await supabase.from('piezas_contenido').insert({
+    titulo, etapa: 'redaccion', creado_por: user.id,
+    contenido: opt(formData.get('contenido')), descripcion: opt(formData.get('descripcion')),
+  }).select('id').single();
+  if (error) throw new Error('No se pudo crear la pieza: ' + error.message);
+  revalidatePath('/contenido');
+  redirigirOk('/contenido?pieza=' + data!.id, 'Pieza creada');
+}
+
 /** Redacción: contenido + descripción + destino (Diseño o Video). */
 export async function guardarRedaccion(formData: FormData) {
   const { supabase } = await sesion();
@@ -114,12 +129,12 @@ export async function avanzarEtapa(formData: FormData) {
   if (pieza.etapa === 'redaccion' && !pieza.destino) throw new Error('Elige el destino (Diseño o Video) antes de avanzar.');
   const sig = siguienteEtapa(pieza.etapa as EtapaContenido, (pieza.destino ?? null) as DestinoContenido | null);
   if (!sig) throw new Error('La pieza ya está publicada.');
-  const { error } = await supabase.from('piezas_contenido').update({
-    etapa: sig, asignado_a: null, actualizado_en: new Date().toISOString(),
-  }).eq('id', id);
+  const patch: Record<string, unknown> = { etapa: sig, asignado_a: null, actualizado_en: new Date().toISOString() };
+  if (sig === 'publicado') patch.publicado_en = new Date().toISOString();
+  const { error } = await supabase.from('piezas_contenido').update(patch).eq('id', id);
   if (error) throw new Error('No se pudo avanzar: ' + error.message);
   revalidatePath('/contenido');
-  redirigirOk(volverDe(formData, id), 'La pieza avanzó de etapa');
+  redirigirOk(volverDe(formData, id), sig === 'publicado' ? '¡Publicado! ✅' : 'La pieza avanzó de etapa');
 }
 
 /** Eliminar una pieza (coordinación). */

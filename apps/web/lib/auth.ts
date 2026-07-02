@@ -90,9 +90,9 @@ export function puedeRecopilar(e?: EntradaRoles) {
   return puedeVerificar(e) || tieneAlguno(e, ['recopilacion']);
 }
 
-// Pipeline de producción de contenido (ve y trabaja en /contenido): coordinación
-// o un rol de producción. Cada rol actúa solo en la etapa que le corresponde.
-const PIPELINE: Rol[] = ['admin', 'redaccion', 'redes_sociales'];
+// Pipeline de producción de contenido (ve y trabaja en /contenido): admin o un
+// rol de producción. Cada rol actúa en su etapa; el influencer, en cualquiera.
+const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'];
 export function puedePipeline(e?: EntradaRoles) {
   return tieneAlguno(e, PIPELINE);
 }

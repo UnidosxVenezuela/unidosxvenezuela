@@ -1,35 +1,45 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, puedePipeline, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, puedePipeline, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import BotonActualizar from '@/components/BotonActualizar';
+import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
-import FlujoTrabajo from '@/components/FlujoTrabajo';
 import EstadoVacio from '@/components/EstadoVacio';
-import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetallePieza from './DetallePieza';
+import LineamientosMarca from './LineamientosMarca';
+import { crearPieza } from './actions';
 
 type SP = { pieza?: string };
 
 export default async function ContenidoPage({ searchParams }: { searchParams: SP }) {
   const { perfil } = await requireUsuario();
   if (!puedePipeline(perfil)) redirect('/dashboard');
+  const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
 
-  const [{ data: piezasData }, { data: perfilesData }] = await Promise.all([
+  const [{ data: piezasData }, { data: perfilesData }, { data: marca }] = await Promise.all([
     supabase.from('piezas_contenido').select('*').order('actualizado_en', { ascending: false }),
     supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
+    supabase.from('lineamientos_marca').select('*').eq('id', 1).maybeSingle(),
   ]);
   const piezas = (piezasData ?? []) as any[];
   const nombres = new Map<string, string>((perfilesData ?? []).map((p: any) => [p.id, p.nombre_completo]));
   const avatares = new Map<string, string | null>((perfilesData ?? []).map((p: any) => [p.id, p.avatar_url]));
   const porEtapa = (e: EtapaContenido) => piezas.filter((p) => p.etapa === e);
-  const pasos = pasosFlujo(await contarFlujo(supabase));
+
+  // Pie de autoría: creador + quienes la modificaron (uno o varios).
+  const autoria = (p: any) => {
+    const creador = p.creado_por ? (nombres.get(p.creado_por) ?? '—') : null;
+    const otros = ((p.colaboradores ?? []) as string[])
+      .filter((id) => id !== p.creado_por).map((id) => nombres.get(id)).filter(Boolean) as string[];
+    return { creador, otros };
+  };
 
   const hrefPieza = (id: string) => '/contenido?pieza=' + id;
   let drawerPieza: any = null; let drawerHist: any[] = []; let drawerPuedeEtapa = false;
@@ -42,7 +52,9 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
     drawerPieza = dp; drawerHist = dh ?? [];
     if (dp) {
       const rolEtapa = ROL_DE_ETAPA[dp.etapa as EtapaContenido];
-      drawerPuedeEtapa = esCoordinacion(perfil) || (!!rolEtapa && rolesDe(perfil).includes(rolEtapa));
+      // El influencer puede actuar en cualquier etapa; el resto en la suya.
+      drawerPuedeEtapa = esCoordinacion(perfil) || rolesDe(perfil).includes('influencers')
+        || (!!rolEtapa && rolesDe(perfil).includes(rolEtapa));
     }
   }
 
@@ -52,22 +64,30 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
       <div className="pagina-cab">
         <div>
           <h1>Producción de Contenido</h1>
-          <p className="muted sub">Casos confirmados que avanzan de Redacción a Diseño/Video y luego a Redes.</p>
+          <p className="muted sub">Redacción escribe el contenido y el caption → Diseño/Video producen la pieza → Redes la publica.</p>
         </div>
         <BotonActualizar />
       </div>
 
-      <p className="muted" style={{ margin: '12px 0 6px', fontWeight: 600 }}>Del caso a la publicación · toca una etapa para abrirla</p>
-      <FlujoTrabajo pasos={pasos} />
+      <LineamientosMarca m={marca} esAdmin={esAdmin} />
+
+      <details className="tarjeta" style={{ margin: '12px 0' }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 600 }} className="fila"><Icono nombre="mas" size={16} /> Nueva pieza de contenido</summary>
+        <form action={crearPieza} style={{ marginTop: 12 }}>
+          <div className="campo"><label>Título</label><input name="titulo" className="input" required placeholder="Ej. Campaña de recolección — semana 1" /></div>
+          <div className="campo"><label>Contenido (texto para el diseño o el video) — opcional</label><textarea name="contenido" className="input" rows={3} /></div>
+          <div className="campo"><label>Descripción (caption para redes) — opcional</label><textarea name="descripcion" className="input" rows={2} /></div>
+          <button className="btn btn-primario" type="submit"><Icono nombre="mas" size={16} /> Crear pieza</button>
+        </form>
+      </details>
 
       <div>
         <div className="grupo-main">
           {piezas.length === 0 ? (
             <EstadoVacio
-              icono="documento"
-              titulo="Todavía no hay piezas en producción"
-              texto="Cuando un caso se confirme en Verificación y se envíe a Redacción, aparecerá aquí para producir el contenido."
-              accion={{ href: '/casos?estado=confirmado', etiqueta: 'Ver casos confirmados', icono: 'ok' }}
+              icono="imagen"
+              titulo="Todavía no hay piezas"
+              texto="Crea una con «Nueva pieza»: Redacción escribe el contenido y la descripción, pasa a Diseño o Video para producir la pieza, y termina en Redes Sociales para publicar."
             />
           ) : (
             <div className="tablero">
@@ -77,17 +97,23 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
                     <Pill tono={tonoDeClase(claseEtapa(e))}>{ETIQUETA_ETAPA[e]}</Pill>
                     <span className="muted" style={{ fontWeight: 700 }}>{porEtapa(e).length}</span>
                   </div>
-                  {porEtapa(e).map((p) => (
-                    <Link key={p.id} href={hrefPieza(p.id)} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0, display: 'block' }}>
-                      <strong style={{ display: 'block' }}>{p.titulo}</strong>
-                      <div style={{ marginTop: 8, fontSize: '.82rem' }}>
-                        {p.asignado_a
-                          ? <span className="celda-persona"><Avatar nombre={nombres.get(p.asignado_a)} url={avatares.get(p.asignado_a)} size={20} /> {nombres.get(p.asignado_a) ?? '—'}</span>
-                          : <span className="muted">Sin asignar</span>}
-                      </div>
-                      {e === 'redaccion' && p.destino && <div className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>→ {ETIQUETA_DESTINO[p.destino as keyof typeof ETIQUETA_DESTINO]}</div>}
-                    </Link>
-                  ))}
+                  {porEtapa(e).map((p) => {
+                    const a = autoria(p);
+                    return (
+                      <Link key={p.id} href={hrefPieza(p.id)} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0, display: 'block' }}>
+                        <strong style={{ display: 'block' }}>{p.titulo}</strong>
+                        <div style={{ marginTop: 8, fontSize: '.82rem' }}>
+                          {p.asignado_a
+                            ? <span className="celda-persona"><Avatar nombre={nombres.get(p.asignado_a)} url={avatares.get(p.asignado_a)} size={20} /> {nombres.get(p.asignado_a) ?? '—'}</span>
+                            : <span className="muted">Sin asignar</span>}
+                        </div>
+                        {e === 'redaccion' && p.destino && <div className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>→ {ETIQUETA_DESTINO[p.destino as keyof typeof ETIQUETA_DESTINO]}</div>}
+                        <div className="muted" style={{ fontSize: '.72rem', marginTop: 6, borderTop: '1px solid var(--borde)', paddingTop: 4 }}>
+                          {a.creador ? <>Hecho por <strong style={{ color: 'var(--texto)' }}>{a.creador}</strong>{a.otros.length ? ' · editado por ' + a.otros.join(', ') : ''}</> : 'Sin autor'}
+                        </div>
+                      </Link>
+                    );
+                  })}
                   {porEtapa(e).length === 0 && <p className="muted" style={{ fontSize: '.82rem', margin: '2px 4px' }}>—</p>}
                 </div>
               ))}

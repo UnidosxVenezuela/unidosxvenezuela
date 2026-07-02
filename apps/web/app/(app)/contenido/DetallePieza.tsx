@@ -60,6 +60,14 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
           {pieza.enlace_pieza && hrefSeguro(pieza.enlace_pieza) && (
             <div style={{ gridColumn: '1 / -1' }}><strong>Enlace:</strong> <a href={hrefSeguro(pieza.enlace_pieza)!} target="_blank" rel="noopener noreferrer">Abrir entregable ↗</a></div>
           )}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <strong>Autoría:</strong> {pieza.creado_por ? (nombres.get(pieza.creado_por) ?? '—') : '—'}
+            {(() => {
+              const otros = ((pieza.colaboradores ?? []) as string[]).filter((id) => id !== pieza.creado_por).map((id) => nombres.get(id)).filter(Boolean);
+              return otros.length ? ' · editado por ' + otros.join(', ') : '';
+            })()}
+          </div>
+          {pieza.publicado_en && <div style={{ gridColumn: '1 / -1' }}><strong>Publicado:</strong> {fechaHora(pieza.publicado_en)} ✅</div>}
         </div>
       </div>
 
@@ -101,6 +109,23 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
             <div className="campo">
               <label>…o pega un enlace (Drive, Figma, WeTransfer…)</label>
               <input name="enlace_pieza" className="input" type="url" defaultValue={pieza.enlace_pieza ?? ''} placeholder="https://…" />
+            </div>
+            <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar enlace</button>
+          </form>
+        </div>
+      )}
+
+      {/* Redes Sociales: publica en la cuenta correcta y pega el enlace + ✅ */}
+      {puedeEtapa && etapa === 'redes' && (
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="cohete" size={16} /> Publicación</h3>
+          <p className="muted" style={{ marginTop: 0, fontSize: '.85rem' }}>Publica en la cuenta correcta y pega el enlace de la publicación. Al marcar como publicado se guarda la hora. ✅</p>
+          <form action={guardarEnlacePieza}>
+            <input type="hidden" name="pieza_id" value={pieza.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <div className="campo">
+              <label>Enlace de la publicación</label>
+              <input name="enlace_pieza" className="input" type="url" defaultValue={pieza.enlace_pieza ?? ''} placeholder="https://instagram.com/p/…" />
             </div>
             <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar enlace</button>
           </form>
