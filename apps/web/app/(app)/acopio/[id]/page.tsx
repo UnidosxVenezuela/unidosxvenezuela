@@ -12,7 +12,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import EscanearProducto from '../EscanearProducto';
 import {
-  agregarProducto, registrarDonacion, registrarSalida, traspasarStock,
+  agregarProducto, registrarDonacion, registrarSalida, traspasarStock, importarInventario,
   ajustarCantidad, fijarCantidad, fijarMinimo, eliminarProducto, agregarNecesidad, resolverNecesidad,
 } from './actions';
 
@@ -42,7 +42,7 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
   const gestor = !!puedeGestionar;
 
   const [{ data: centro }, { data: inv }, { data: nec }, { data: mov }, { data: centros }] = await Promise.all([
-    supabase.from('puntos_acopio').select('id, nombre, direccion, telefono, horario, activo').eq('id', id).single(),
+    supabase.from('puntos_acopio').select('id, nombre, direccion, telefono, horario, activo, camas_total, camas_ocupadas').eq('id', id).single(),
     supabase.from('inventario_acopio').select('*').eq('punto_id', id).order('producto'),
     supabase.from('necesidades_acopio').select('*').eq('punto_id', id).eq('resuelta', false).order('creado_en', { ascending: false }),
     supabase.from('movimientos_acopio').select('*, perfiles(nombre_completo)').eq('punto_id', id).order('creado_en', { ascending: false }).limit(30),
@@ -82,6 +82,10 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
             {[centro.direccion, centro.horario, centro.telefono].filter(Boolean).join(' · ') || 'Inventario y necesidades del centro.'}
             {!gestor && <> · <strong>Voluntario</strong>: puedes registrar entradas y donaciones.</>}
           </p>
+          {Number(centro.camas_total) > 0 && (() => {
+            const total = Number(centro.camas_total); const ocup = Math.max(0, Math.min(Number(centro.camas_ocupadas), total)); const libres = total - ocup;
+            return <p className="sub" style={{ margin: '2px 0 0' }}>🛏 Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres</p>;
+          })()}
         </div>
         {gestor && (
           <div className="fila" style={{ gap: 8 }}>
@@ -122,6 +126,26 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
               <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>Si el producto ya existe, se suma a su cantidad.</p>
             </form>
           </div>
+
+          {gestor && (
+            <div className="tarjeta" style={{ marginTop: 10 }}>
+              <h3 className="aside-titulo" style={{ marginTop: 0 }}><Icono nombre="documento" size={16} /> Importar inventario (CSV)</h3>
+              <form action={importarInventario}>
+                <input type="hidden" name="punto_id" value={id} />
+                <div className="grid grid-2">
+                  <div className="campo"><label>Archivo CSV</label><input name="archivo" className="input" type="file" accept=".csv,text/csv" required /></div>
+                  <div className="campo"><label>Modo</label>
+                    <select name="modo" className="input" defaultValue="sumar">
+                      <option value="sumar">Sumar a lo existente</option>
+                      <option value="reemplazar">Reemplazar cantidades</option>
+                    </select>
+                  </div>
+                </div>
+                <button className="btn" type="submit"><Icono nombre="documento" size={16} /> Importar</button>
+                <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>Encabezados reconocidos: <strong>Producto</strong>, Cantidad, Unidad, Categoría, Código, Mínimo. Tip: usa «Descargar CSV» (en Imprimir) para ver el formato exacto.</p>
+              </form>
+            </div>
+          )}
 
           {/* Donación / Salida / Traspaso */}
           <div className="grid grid-2" style={{ marginTop: 10 }}>

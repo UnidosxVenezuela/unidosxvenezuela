@@ -12,6 +12,7 @@ import Avatar from './Avatar';
 import type { PuntoAcopio, UrgenciaAcopio, Rol } from '@unidos/types';
 
 type Resp = { perfil_id: string; nombre: string | null; avatar: string | null; rol: Rol | null };
+type CentroLider = PuntoAcopio & { creador?: { nombre_completo: string | null; telefono: string | null } | null };
 
 const ESTILO: StyleSpecification = {
   version: 8,
@@ -20,8 +21,8 @@ const ESTILO: StyleSpecification = {
 };
 const ORDEN: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 
-export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: string; esCoord: boolean; esAdmin: boolean }) {
-  const [centros, setCentros] = useState<PuntoAcopio[]>([]);
+export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esAdmin: boolean }) {
+  const [centros, setCentros] = useState<CentroLider[]>([]);
   const [responsables, setResponsables] = useState<Map<string, Resp[]>>(new Map());
   const [voluntarios, setVoluntarios] = useState<Map<string, Resp[]>>(new Map());
   const [necCount, setNecCount] = useState<Map<string, number>>(new Map());
@@ -38,7 +39,7 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
   const cargar = useCallback(async () => {
     const supabase = createClient();
     const [{ data }, resp, vol, nec] = await Promise.all([
-      supabase.from('puntos_acopio').select('*'),
+      supabase.from('puntos_acopio').select('*, creador:perfiles!creado_por(nombre_completo, telefono)'),
       supabase.from('acopio_responsables').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
       supabase.from('acopio_voluntarios').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
       supabase.from('necesidades_acopio').select('punto_id').eq('resuelta', false),
@@ -47,7 +48,7 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
     const nmap = new Map<string, number>();
     for (const n of (nec.data ?? []) as any[]) nmap.set(n.punto_id, (nmap.get(n.punto_id) ?? 0) + 1);
     setNecCount(nmap);
-    const arr = ((data ?? []) as PuntoAcopio[]).sort((a, b) =>
+    const arr = ((data ?? []) as CentroLider[]).sort((a, b) =>
       ((ORDEN[a.urgencia] ?? 1) - (ORDEN[b.urgencia] ?? 1)) || a.nombre.localeCompare(b.nombre));
     setCentros(arr);
     // Agrupa responsables por centro (vacío si la tabla aún no existe).
@@ -117,6 +118,8 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
     const payload = {
       nombre,
       capacidad: str(fd.get('capacidad')),
+      camas_total: intOf(fd.get('camas_total')),
+      camas_ocupadas: intOf(fd.get('camas_ocupadas')),
       urgencia: (String(fd.get('urgencia') || 'media') as UrgenciaAcopio),
       direccion: str(fd.get('direccion')),
       responsable: str(fd.get('responsable')),
@@ -167,6 +170,9 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
   }
 
   const ed = editando !== null && editando !== 'nuevo' ? editando : null;
+  // ¿El usuario LIDERA este centro? (admin, su creador o un responsable). Solo
+  // los líderes gestionan; el resto lo ve para coordinarse (contacto del líder).
+  const lidero = (c: CentroLider) => esAdmin || c.creado_por === userId || (responsables.get(c.id) ?? []).some((r) => r.perfil_id === userId);
 
   return (
     <div>
@@ -207,6 +213,10 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
                 </div>
               )}
               <div className="campo"><label>Capacidad / aforo</label><input name="capacidad" className="input" placeholder="ej: 200 personas · 60% lleno" defaultValue={ed?.capacidad ?? ''} /></div>
+              <div className="grid grid-2">
+                <div className="campo"><label>Camas de albergue (total)</label><input name="camas_total" className="input" type="number" min={0} step={1} placeholder="0 si no es albergue" defaultValue={ed?.camas_total ?? 0} /></div>
+                <div className="campo"><label>Camas ocupadas</label><input name="camas_ocupadas" className="input" type="number" min={0} step={1} defaultValue={ed?.camas_ocupadas ?? 0} /></div>
+              </div>
               <div className="campo"><label>Dirección</label><input name="direccion" className="input" defaultValue={ed?.direccion ?? ''} /></div>
               <div className="grid grid-2">
                 <div className="campo"><label>Contacto en el sitio</label><input name="responsable" className="input" placeholder="nombre de quien atiende" defaultValue={ed?.responsable ?? ''} /></div>
@@ -240,8 +250,20 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
                 </span>
               </div>
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}
+              {Number(c.camas_total) > 0 && (() => {
+                const total = Number(c.camas_total); const ocup = Math.max(0, Math.min(Number(c.camas_ocupadas), total)); const libres = total - ocup;
+                const pct = total > 0 ? Math.round((ocup / total) * 100) : 0;
+                const color = pct >= 90 ? '#CF142B' : pct >= 60 ? '#E6A100' : '#0A7D2C';
+                return (
+                  <div style={{ margin: '4px 0' }}>
+                    <div className="fila" style={{ fontSize: '.9rem', gap: 6 }}>🛏 <span>Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres</span></div>
+                    <div style={{ height: 6, borderRadius: 6, background: 'var(--borde)', overflow: 'hidden', marginTop: 2 }}><div style={{ width: pct + '%', height: '100%', background: color }} /></div>
+                  </div>
+                );
+              })()}
               {c.direccion && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="ubicacion" size={14} /> {c.direccion}</div>}
-              {(c.responsable || c.telefono) && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Contacto: {[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
+              {c.creador?.nombre_completo && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Líder: {c.creador.nombre_completo}{c.creador.telefono ? ' · ' + c.creador.telefono : ''}</div>}
+              {(c.responsable || c.telefono) && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Contacto en sitio: {[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
               {c.horario && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="reloj" size={14} /> {c.horario}</div>}
 
               <div className="acopio-resp">
@@ -300,16 +322,18 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
                 </div>
               )}
 
-              <div className="fila" style={{ marginTop: 10 }}>
-                <a className="btn btn-primario" href={'/acopio/' + c.id} style={{ minHeight: 34, padding: '4px 12px', textDecoration: 'none' }}><Icono nombre="caja" size={16} /> Inventario</a>
-                <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => abrir(c)}>Editar</button>
-                {(esCoord || c.creado_por === userId) && (
-                  <>
-                    <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => alternarActivo(c)}>{c.activo ? 'Desactivar' : 'Activar'}</button>
-                    <button className="btn btn-peligro" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => eliminar(c)}><Icono nombre="basura" size={16} /></button>
-                  </>
-                )}
-              </div>
+              {lidero(c) ? (
+                <div className="fila" style={{ marginTop: 10 }}>
+                  <a className="btn btn-primario" href={'/acopio/' + c.id} style={{ minHeight: 34, padding: '4px 12px', textDecoration: 'none' }}><Icono nombre="caja" size={16} /> Inventario</a>
+                  <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => abrir(c)}>Editar</button>
+                  <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => alternarActivo(c)}>{c.activo ? 'Desactivar' : 'Activar'}</button>
+                  <button className="btn btn-peligro" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => eliminar(c)}><Icono nombre="basura" size={16} /></button>
+                </div>
+              ) : (
+                <p className="muted" style={{ marginTop: 10, marginBottom: 0, fontSize: '.85rem' }}>
+                  <Icono nombre="usuario" size={14} /> Lo gestiona su líder. Usa su contacto para coordinar un envío o una solicitud de traspaso.
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -319,3 +343,4 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
 }
 
 function str(v: FormDataEntryValue | null): string | null { const s = String(v ?? '').trim(); return s || null; }
+function intOf(v: FormDataEntryValue | null): number { const n = parseInt(String(v ?? '').trim(), 10); return Number.isFinite(n) && n > 0 ? n : 0; }
