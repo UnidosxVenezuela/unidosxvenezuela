@@ -13,7 +13,12 @@ insert into public.areas (clave, nombre, descripcion) values
   ('busqueda_rescate',   'Búsqueda y Rescate',        'Rescate en estructuras colapsadas, primeros auxilios en zona.'),
   ('telecomunicaciones', 'Telecomunicaciones',        'Conectividad de emergencia, radios, enlaces satelitales.'),
   ('proteccion',         'Protección',                'Protección de menores, personas vulnerables, datos sensibles.'),
-  ('gestion_informacion','Gestión de Información',    'Mapeo, reportes de situación (3W: quién hace qué y dónde).')
+  ('gestion_informacion','Gestión de Información',    'Mapeo, reportes de situación (3W: quién hace qué y dónde).'),
+  ('programacion',       'Programación',              'Desarrollo y soporte técnico de la plataforma.'),
+  ('diseno',             'Diseño',                    'Diseño gráfico y piezas visuales.'),
+  ('marketing',          'Marketing',                 'Redes sociales, difusión y campañas.'),
+  ('transcripcion',      'Transcripción',             'Transcripción y organización de información.'),
+  ('comunicaciones',     'Comunicaciones y producción','Recopilación y producción de contenido.')
 on conflict (clave) do nothing;
 
 -- ------------------------------------------------------------
