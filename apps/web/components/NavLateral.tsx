@@ -24,9 +24,9 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
   }
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
+  if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
   if (flags.admin) {
     enlaces.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
-    enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
   }
   enlaces.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   enlaces.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });
