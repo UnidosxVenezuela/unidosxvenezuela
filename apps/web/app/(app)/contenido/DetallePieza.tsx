@@ -7,7 +7,7 @@ import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
 import SubirPiezaArchivo from './SubirPiezaArchivo';
-import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa } from './actions';
+import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa, subirAdjuntoPieza, eliminarAdjuntoPieza } from './actions';
 
 const EXPLICA_ETAPA: Record<string, string> = {
   redaccion: 'Se redacta el contenido y la descripción, y se elige el destino (Diseño o Video).',
@@ -18,9 +18,9 @@ const EXPLICA_ETAPA: Record<string, string> = {
 };
 
 /** Cuerpo de una pieza de contenido para el panel lateral en /contenido?pieza=ID. */
-export default function DetallePieza({ pieza, perfiles, historial, volver, cerrarHref, puedeEtapa, nombres, avatares }: {
-  pieza: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEtapa: boolean;
-  nombres: Map<string, string>; avatares: Map<string, string | null>;
+export default function DetallePieza({ pieza, perfiles, historial, adjuntos, volver, cerrarHref, puedeEtapa, miId, esCoord, nombres, avatares }: {
+  pieza: any; perfiles: any[]; historial: any[]; adjuntos?: any[]; volver: string; cerrarHref: string; puedeEtapa: boolean;
+  miId?: string; esCoord?: boolean; nombres: Map<string, string>; avatares: Map<string, string | null>;
 }) {
   const etapa = pieza.etapa as string;
   const sig = siguienteEtapa(pieza.etapa, pieza.destino ?? null);
@@ -69,6 +69,43 @@ export default function DetallePieza({ pieza, perfiles, historial, volver, cerra
           </div>
           {pieza.publicado_en && <div style={{ gridColumn: '1 / -1' }}><strong>Publicado:</strong> {fechaHora(pieza.publicado_en)} ✅</div>}
         </div>
+      </div>
+
+      {/* Archivos / entregables: varios, cada uno con quién lo compartió */}
+      <div className="tarjeta">
+        <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Archivos / entregables</h3>
+        {(adjuntos ?? []).length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>Aún no hay archivos. {puedeEtapa ? 'Adjunta tus entregables abajo.' : ''}</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 8 }}>
+            {(adjuntos ?? []).map((a) => (
+              <div key={a.id} className="fila" style={{ justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                <a className="adjunto-chip" href={a.url} target="_blank" rel="noopener noreferrer">
+                  <Icono nombre={String(a.mime || '').startsWith('image/') ? 'imagen' : 'documento'} size={16} /> {a.nombre}
+                </a>
+                <span className="fila" style={{ gap: 6 }}>
+                  <span className="muted" style={{ fontSize: '.75rem' }}>Compartido por {nombres.get(a.creado_por) ?? '—'}</span>
+                  {(esCoord || a.creado_por === miId) && (
+                    <form action={eliminarAdjuntoPieza}>
+                      <input type="hidden" name="pieza_id" value={pieza.id} />
+                      <input type="hidden" name="volver" value={volver} />
+                      <input type="hidden" name="adjunto_id" value={a.id} />
+                      <button className="btn btn-peligro" style={{ minHeight: 30, padding: '2px 8px' }} aria-label="Quitar adjunto"><Icono nombre="basura" size={14} /></button>
+                    </form>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        {puedeEtapa && (
+          <form action={subirAdjuntoPieza} style={{ marginTop: 10 }}>
+            <input type="hidden" name="pieza_id" value={pieza.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <input type="file" name="archivos" className="input" multiple />
+            <button className="btn btn-primario" type="submit" style={{ marginTop: 8 }}><Icono nombre="mas" size={16} /> Adjuntar archivo(s)</button>
+          </form>
+        )}
       </div>
 
       {/* Contenido y descripción: editable en Redacción; referencia en el resto */}

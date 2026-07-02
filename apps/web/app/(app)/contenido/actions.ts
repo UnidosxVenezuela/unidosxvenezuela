@@ -146,3 +146,36 @@ export async function eliminarPieza(formData: FormData) {
   revalidatePath('/contenido');
   redirigirOk('/contenido', 'Pieza eliminada');
 }
+
+/** Adjuntar uno o varios archivos a una pieza (entregables del equipo). */
+export async function subirAdjuntoPieza(formData: FormData) {
+  const { supabase, user } = await sesion();
+  const piezaId = txt(formData.get('pieza_id'));
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  if (archivos.length === 0) throw new Error('Selecciona al menos un archivo.');
+  const { data: pieza } = await supabase.from('piezas_contenido').select('etapa').eq('id', piezaId).single();
+  for (let i = 0; i < archivos.length && i < 10; i++) {
+    const file = archivos[i]!;
+    if (file.size > 25 * 1024 * 1024) continue; // omite > 25 MB
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+    try {
+      const { publicUrl } = await subirArchivo(supabase, 'contenido', `${piezaId}/adj_${Date.now()}_${i}.${ext}`, file, { publico: true });
+      await supabase.from('piezas_adjuntos').insert({
+        pieza_id: piezaId, url: publicUrl, nombre: file.name, mime: file.type || null,
+        etapa: (pieza?.etapa as string) ?? null, creado_por: user.id,
+      });
+    } catch { /* un adjunto fallido no bloquea el resto */ }
+  }
+  revalidatePath('/contenido');
+  redirigirOk(volverDe(formData, piezaId), 'Archivo(s) adjuntado(s)');
+}
+
+/** Quitar un adjunto (el autor o la coordinación). */
+export async function eliminarAdjuntoPieza(formData: FormData) {
+  const { supabase } = await sesion();
+  const piezaId = txt(formData.get('pieza_id'));
+  const { error } = await supabase.from('piezas_adjuntos').delete().eq('id', txt(formData.get('adjunto_id')));
+  if (error) throw new Error('No se pudo eliminar el adjunto: ' + error.message);
+  revalidatePath('/contenido');
+  redirigirOk(volverDe(formData, piezaId), 'Adjunto eliminado');
+}
