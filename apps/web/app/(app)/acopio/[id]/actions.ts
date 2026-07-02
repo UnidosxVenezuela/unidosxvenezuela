@@ -26,22 +26,34 @@ export async function agregarProducto(formData: FormData) {
   const producto = txt(formData.get('producto'));
   if (!producto) throw new Error('Indica el nombre del producto.');
   const cantidad = Math.max(0, num(formData.get('cantidad')));
+  const minimo = Math.max(0, num(formData.get('minimo')));
   const { data: existente } = await supabase.from('inventario_acopio')
     .select('id, cantidad').eq('punto_id', puntoId).eq('producto', producto).maybeSingle();
   if (existente) {
     const { error } = await supabase.from('inventario_acopio').update({
       cantidad: Number(existente.cantidad) + cantidad,
       categoria: opt(formData.get('categoria')), unidad: opt(formData.get('unidad')),
-      codigo: opt(formData.get('codigo')), actualizado_por: user.id, actualizado_en: new Date().toISOString(),
+      codigo: opt(formData.get('codigo')), ...(minimo > 0 ? { minimo } : {}),
+      actualizado_por: user.id, actualizado_en: new Date().toISOString(),
     }).eq('id', existente.id);
     if (error) throw new Error('No se pudo actualizar: ' + error.message);
   } else {
     const { error } = await supabase.from('inventario_acopio').insert({
       punto_id: puntoId, producto, categoria: opt(formData.get('categoria')),
-      unidad: opt(formData.get('unidad')), cantidad, codigo: opt(formData.get('codigo')), actualizado_por: user.id,
+      unidad: opt(formData.get('unidad')), cantidad, minimo, codigo: opt(formData.get('codigo')), actualizado_por: user.id,
     });
     if (error) throw new Error('No se pudo agregar: ' + error.message);
   }
+  rev(puntoId);
+}
+
+/** Fija el mínimo (alerta de bajo stock) de un producto. */
+export async function fijarMinimo(formData: FormData) {
+  const puntoId = txt(formData.get('punto_id'));
+  const { supabase, user } = await ctx(puntoId);
+  const { error } = await supabase.from('inventario_acopio')
+    .update({ minimo: Math.max(0, num(formData.get('minimo'))), actualizado_por: user.id }).eq('id', txt(formData.get('item_id')));
+  if (error) throw new Error('No se pudo guardar el mínimo: ' + error.message);
   rev(puntoId);
 }
 

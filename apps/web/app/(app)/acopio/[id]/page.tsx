@@ -11,12 +11,12 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import EscanearProducto from '../EscanearProducto';
-import { agregarProducto, ajustarCantidad, fijarCantidad, eliminarProducto, agregarNecesidad, resolverNecesidad } from './actions';
+import { agregarProducto, ajustarCantidad, fijarCantidad, fijarMinimo, eliminarProducto, agregarNecesidad, resolverNecesidad } from './actions';
 
 const UNIDADES = ['unidades', 'cajas', 'paquetes', 'kg', 'litros', 'bolsas'];
 const fmt = (n: any) => { const x = Number(n); return Number.isInteger(x) ? String(x) : x.toFixed(1).replace('.', ','); };
 
-export default async function CentroAcopioPage({ params }: { params: { id: string } }) {
+export default async function CentroAcopioPage({ params, searchParams }: { params: { id: string }; searchParams: { q?: string } }) {
   await requireUsuario();
   const supabase = await createClient();
   const id = params.id;
@@ -31,9 +31,15 @@ export default async function CentroAcopioPage({ params }: { params: { id: strin
   ]);
   if (!centro) return <div className="tarjeta"><h2>Centro no encontrado</h2><Link href="/acopio">Volver</Link></div>;
 
-  const inventario = (inv ?? []) as any[];
+  const inventarioAll = (inv ?? []) as any[];
+  const q = (searchParams.q ?? '').trim().toLowerCase();
+  const inventario = q
+    ? inventarioAll.filter((i) => String(i.producto).toLowerCase().includes(q) || String(i.codigo ?? '').toLowerCase().includes(q))
+    : inventarioAll;
   const necesidades = (nec ?? []) as any[];
-  const totalItems = inventario.reduce((s, i) => s + Number(i.cantidad || 0), 0);
+  const totalItems = inventarioAll.reduce((s, i) => s + Number(i.cantidad || 0), 0);
+  const esBajo = (i: any) => Number(i.minimo) > 0 && Number(i.cantidad) <= Number(i.minimo);
+  const bajoStock = inventarioAll.filter(esBajo);
 
   // QR que abre ESTE inventario en el teléfono.
   const host = headers().get('host') || 'unidosxvnezuela.com';
@@ -58,7 +64,7 @@ export default async function CentroAcopioPage({ params }: { params: { id: strin
       <div className="grupo-grid">
         <div className="grupo-main">
           {/* Inventario */}
-          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="caja" size={20} /> Inventario <Pill tono="neutra" punto={false}>{inventario.length} productos · {fmt(totalItems)} uds.</Pill></h2>
+          <h2 className="fila" style={{ gap: 6, flexWrap: 'wrap' }}><Icono nombre="caja" size={20} /> Inventario <Pill tono="neutra" punto={false}>{inventarioAll.length} productos · {fmt(totalItems)} uds.</Pill>{bajoStock.length > 0 && <Pill tono="critica" punto={false}>{bajoStock.length} bajo stock</Pill>}</h2>
 
           <div className="tarjeta">
             <h3 className="aside-titulo" style={{ marginTop: 0 }}><Icono nombre="mas" size={16} /> Agregar / ingresar producto</h3>
@@ -80,21 +86,29 @@ export default async function CentroAcopioPage({ params }: { params: { id: strin
                   </select>
                 </div>
                 <div className="campo"><label>Cantidad a ingresar</label><input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={1} /></div>
+                <div className="campo"><label>Mínimo (alerta, opcional)</label><input name="minimo" className="input" type="number" min={0} step="any" defaultValue={0} /></div>
               </div>
               <button className="btn btn-primario" type="submit"><Icono nombre="mas" size={16} /> Ingresar al inventario</button>
               <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>Si el producto ya existe, se suma a su cantidad.</p>
             </form>
           </div>
 
+          {inventarioAll.length > 0 && (
+            <form method="get" className="fila" style={{ gap: 8, margin: '10px 0' }}>
+              <input name="q" className="input crece" placeholder="Buscar producto o código…" defaultValue={searchParams.q ?? ''} />
+              <button className="btn" type="submit"><Icono nombre="buscar" size={16} /></button>
+              {q && <a className="btn" href={'/acopio/' + id}>Limpiar</a>}
+            </form>
+          )}
           {inventario.length === 0 ? (
-            <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Sin productos todavía. Agrega el primero arriba (o escanea su código).</p></div>
+            <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>{q ? 'Sin resultados para «' + searchParams.q + '».' : 'Sin productos todavía. Agrega el primero arriba (o escanea su código).'}</p></div>
           ) : (
             <div className="tarjeta"><div className="tabla-scroll"><table>
               <thead><tr><th>Producto</th><th>Categoría</th><th>Cantidad</th><th aria-label="Acciones"></th></tr></thead>
               <tbody>
                 {inventario.map((it) => (
                   <tr key={it.id}>
-                    <td><strong>{it.producto}</strong>{it.codigo && <div className="muted" style={{ fontSize: '.75rem' }}>{it.codigo}</div>}</td>
+                    <td><strong>{it.producto}</strong> {esBajo(it) && <Pill tono="critica" punto={false}>Bajo</Pill>}{it.codigo && <div className="muted" style={{ fontSize: '.75rem' }}>{it.codigo}</div>}{Number(it.minimo) > 0 && <div className="muted" style={{ fontSize: '.72rem' }}>mín: {fmt(it.minimo)}</div>}</td>
                     <td>{it.categoria ? (ETIQUETA_TIPO_INSUMO[it.categoria] ?? it.categoria) : '—'}</td>
                     <td>
                       <div className="fila" style={{ gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -106,6 +120,11 @@ export default async function CentroAcopioPage({ params }: { params: { id: strin
                           <input type="hidden" name="punto_id" value={id} /><input type="hidden" name="item_id" value={it.id} />
                           <input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={fmt(it.cantidad)} style={{ width: 72, minHeight: 32 }} aria-label="Fijar cantidad" />
                           <button className="btn" style={{ minHeight: 32, padding: '2px 8px' }}>Fijar</button>
+                        </form>
+                        <form action={fijarMinimo} className="fila" style={{ gap: 4 }}>
+                          <input type="hidden" name="punto_id" value={id} /><input type="hidden" name="item_id" value={it.id} />
+                          <input name="minimo" className="input" type="number" min={0} step="any" defaultValue={fmt(it.minimo)} style={{ width: 60, minHeight: 32 }} aria-label="Mínimo" title="Mínimo para alerta de bajo stock" />
+                          <button className="btn" style={{ minHeight: 32, padding: '2px 8px' }} title="Guardar mínimo">mín</button>
                         </form>
                       </div>
                     </td>
