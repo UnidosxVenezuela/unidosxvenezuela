@@ -13,6 +13,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import EscanearProducto from '../EscanearProducto';
 import {
   agregarProducto, registrarDonacion, registrarSalida, traspasarStock, importarInventario,
+  solicitarTraspaso, aprobarSolicitud, resolverSolicitud,
   ajustarCantidad, fijarCantidad, fijarMinimo, eliminarProducto, agregarNecesidad, resolverNecesidad,
 } from './actions';
 
@@ -41,12 +42,15 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
   if (!puedeSumar) redirect('/acopio');
   const gestor = !!puedeGestionar;
 
-  const [{ data: centro }, { data: inv }, { data: nec }, { data: mov }, { data: centros }] = await Promise.all([
+  const [{ data: centro }, { data: inv }, { data: nec }, { data: mov }, { data: centros }, { data: sol }] = await Promise.all([
     supabase.from('puntos_acopio').select('id, nombre, direccion, telefono, horario, activo, camas_total, camas_ocupadas').eq('id', id).single(),
     supabase.from('inventario_acopio').select('*').eq('punto_id', id).order('producto'),
     supabase.from('necesidades_acopio').select('*').eq('punto_id', id).eq('resuelta', false).order('creado_en', { ascending: false }),
     supabase.from('movimientos_acopio').select('*, perfiles(nombre_completo)').eq('punto_id', id).order('creado_en', { ascending: false }).limit(30),
     supabase.from('puntos_acopio').select('id, nombre, activo').order('nombre'),
+    supabase.from('solicitudes_traspaso')
+      .select('*, origen:puntos_acopio!origen_id(nombre), destino:puntos_acopio!destino_id(nombre), solicitante:perfiles!solicitante_id(nombre_completo)')
+      .or(`origen_id.eq.${id},destino_id.eq.${id}`).eq('estado', 'pendiente').order('creado_en', { ascending: false }),
   ]);
   if (!centro) return <div className="tarjeta"><h2>Centro no encontrado</h2><Link href="/acopio">Volver</Link></div>;
 
@@ -59,6 +63,9 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
   const movimientos = (mov ?? []) as any[];
   const otrosCentros = ((centros ?? []) as any[]).filter((c) => c.id !== id);
   const nombrePunto = new Map<string, string>(((centros ?? []) as any[]).map((c) => [c.id, c.nombre]));
+  const solicitudes = (sol ?? []) as any[];
+  const solRecibidas = solicitudes.filter((s) => s.origen_id === id); // otros me piden (yo decido)
+  const solEnviadas = solicitudes.filter((s) => s.destino_id === id); // yo pedí a otros
   const totalItems = inventarioAll.reduce((s, i) => s + Number(i.cantidad || 0), 0);
   const esBajo = (i: any) => Number(i.minimo) > 0 && Number(i.cantidad) <= Number(i.minimo);
   const bajoStock = inventarioAll.filter(esBajo);
@@ -74,6 +81,8 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
       <RealtimeRefrescar tabla="inventario_acopio" filtro={'punto_id=eq.' + id} />
       <RealtimeRefrescar tabla="necesidades_acopio" filtro={'punto_id=eq.' + id} />
       <RealtimeRefrescar tabla="movimientos_acopio" filtro={'punto_id=eq.' + id} />
+      <RealtimeRefrescar tabla="solicitudes_traspaso" filtro={'origen_id=eq.' + id} />
+      <RealtimeRefrescar tabla="solicitudes_traspaso" filtro={'destino_id=eq.' + id} />
       <Link href="/acopio" className="muted">← Centros de acopio</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
@@ -213,6 +222,66 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
                 <button className="btn btn-primario" type="submit" style={{ width: '100%' }}><Icono nombre="enlace" size={16} /> Traspasar</button>
                 <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>Descuenta aquí y suma en el destino, dejando registro en ambos.</p>
               </form>
+            </div>
+          )}
+
+          {gestor && (solRecibidas.length > 0 || solEnviadas.length > 0 || otrosCentros.length > 0) && (
+            <div style={{ marginTop: 14 }}>
+              <h2 className="fila" style={{ gap: 6 }}><Icono nombre="enlace" size={20} /> Solicitudes de traspaso {solRecibidas.length > 0 && <Pill tono="aviso" punto={false}>{solRecibidas.length} por responder</Pill>}</h2>
+
+              {solRecibidas.length > 0 && (
+                <div className="tarjeta">
+                  <h3 className="aside-titulo" style={{ marginTop: 0 }}>Solicitudes recibidas (deciden aquí)</h3>
+                  {solRecibidas.map((s) => (
+                    <div key={s.id} className="fila" style={{ justifyContent: 'space-between', gap: 8, borderBottom: '1px solid var(--borde)', padding: '8px 0', flexWrap: 'wrap' }}>
+                      <div>
+                        <strong>{s.destino?.nombre ?? 'Un centro'}</strong> pide <strong>{fmt(s.cantidad)}</strong> de <strong>{s.producto}</strong>
+                        {s.solicitante?.nombre_completo && <div className="muted" style={{ fontSize: '.8rem' }}>Solicita: {s.solicitante.nombre_completo}</div>}
+                        {s.nota && <div className="muted" style={{ fontSize: '.8rem' }}>{s.nota}</div>}
+                      </div>
+                      <div className="fila" style={{ gap: 6 }}>
+                        <form action={aprobarSolicitud}><input type="hidden" name="punto_id" value={id} /><input type="hidden" name="solicitud_id" value={s.id} /><button className="btn btn-primario" style={{ minHeight: 32, padding: '2px 10px' }}><Icono nombre="ok" size={15} /> Aprobar</button></form>
+                        <form action={resolverSolicitud}><input type="hidden" name="punto_id" value={id} /><input type="hidden" name="solicitud_id" value={s.id} /><input type="hidden" name="estado" value="rechazada" /><button className="btn" style={{ minHeight: 32, padding: '2px 10px' }}>Rechazar</button></form>
+                      </div>
+                    </div>
+                  ))}
+                  <p className="muted" style={{ fontSize: '.8rem', margin: '8px 0 0' }}>Al aprobar se descuenta de aquí y se suma en el centro solicitante (queda en la bitácora).</p>
+                </div>
+              )}
+
+              {solEnviadas.length > 0 && (
+                <div className="tarjeta" style={{ marginTop: 10 }}>
+                  <h3 className="aside-titulo" style={{ marginTop: 0 }}>Mis solicitudes (esperando respuesta)</h3>
+                  {solEnviadas.map((s) => (
+                    <div key={s.id} className="fila" style={{ justifyContent: 'space-between', gap: 8, borderBottom: '1px solid var(--borde)', padding: '8px 0', flexWrap: 'wrap' }}>
+                      <div>Pediste <strong>{fmt(s.cantidad)}</strong> de <strong>{s.producto}</strong> a <strong>{s.origen?.nombre ?? 'un centro'}</strong> <Pill tono="neutra" punto={false}>pendiente</Pill></div>
+                      <form action={resolverSolicitud}><input type="hidden" name="punto_id" value={id} /><input type="hidden" name="solicitud_id" value={s.id} /><input type="hidden" name="estado" value="cancelada" /><button className="btn" style={{ minHeight: 32, padding: '2px 10px' }}>Cancelar</button></form>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {otrosCentros.length > 0 && (
+                <div className="tarjeta" style={{ marginTop: 10 }}>
+                  <h3 className="aside-titulo" style={{ marginTop: 0 }}><Icono nombre="mas" size={16} /> Solicitar a otro centro</h3>
+                  <form action={solicitarTraspaso}>
+                    <input type="hidden" name="punto_id" value={id} />
+                    <div className="grid grid-2">
+                      <div className="campo"><label>Pedir a</label>
+                        <select name="origen" className="input" required defaultValue="">
+                          <option value="" disabled>Elige el centro…</option>
+                          {otrosCentros.map((c) => <option key={c.id} value={c.id}>{c.nombre}{c.activo ? '' : ' (inactivo)'}</option>)}
+                        </select>
+                      </div>
+                      <div className="campo"><label>Producto</label><input name="producto" className="input" required placeholder="Ej. Agua 5L" /></div>
+                      <div className="campo"><label>Cantidad</label><input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={1} /></div>
+                      <div className="campo"><label>Nota (opcional)</label><input name="nota" className="input" placeholder="para qué / urgencia" /></div>
+                    </div>
+                    <button className="btn btn-acento" type="submit" style={{ width: '100%' }}><Icono nombre="enlace" size={16} /> Enviar solicitud</button>
+                    <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>El líder de ese centro recibe la solicitud y decide si la aprueba.</p>
+                  </form>
+                </div>
+              )}
             </div>
           )}
 

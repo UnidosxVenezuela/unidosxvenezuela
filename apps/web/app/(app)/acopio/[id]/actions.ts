@@ -105,6 +105,45 @@ export async function traspasarStock(formData: FormData) {
   rev(origen); rev(destino);
 }
 
+// ── Solicitudes de traspaso (pedir stock a otro centro) ──
+/** Crea una solicitud: pido `producto` al centro `origen`; lo recibe ESTE centro. */
+export async function solicitarTraspaso(formData: FormData) {
+  const puntoId = txt(formData.get('punto_id')); // destino (recibe) = este centro
+  const { supabase, user } = await ctx(puntoId);
+  const origen = txt(formData.get('origen'));
+  const producto = txt(formData.get('producto'));
+  const cantidad = Math.max(0, num(formData.get('cantidad')));
+  if (!origen) throw new Error('Elige a qué centro se lo pides.');
+  if (origen === puntoId) throw new Error('El origen y el destino deben ser distintos.');
+  if (!producto) throw new Error('Indica el producto.');
+  if (cantidad <= 0) throw new Error('Indica la cantidad.');
+  const { error } = await supabase.from('solicitudes_traspaso').insert({
+    origen_id: origen, destino_id: puntoId, producto, cantidad,
+    nota: opt(formData.get('nota')), solicitante_id: user.id,
+  });
+  if (error) throw new Error('No se pudo enviar la solicitud: ' + error.message);
+  rev(puntoId);
+}
+
+/** Aprueba una solicitud recibida (ejecuta el traspaso). Solo el líder del origen. */
+export async function aprobarSolicitud(formData: FormData) {
+  const puntoId = txt(formData.get('punto_id'));
+  const { supabase } = await ctx(puntoId);
+  const { error } = await supabase.rpc('aprobar_solicitud_traspaso', { p_solicitud: txt(formData.get('solicitud_id')) });
+  if (error) throw new Error('No se pudo aprobar: ' + error.message);
+  rev(puntoId);
+}
+
+/** Rechaza (origen) o cancela (solicitante) una solicitud pendiente. */
+export async function resolverSolicitud(formData: FormData) {
+  const puntoId = txt(formData.get('punto_id'));
+  const { supabase } = await ctx(puntoId);
+  const estado = txt(formData.get('estado')) === 'cancelada' ? 'cancelada' : 'rechazada';
+  const { error } = await supabase.rpc('resolver_solicitud_traspaso', { p_solicitud: txt(formData.get('solicitud_id')), p_estado: estado });
+  if (error) throw new Error('No se pudo actualizar: ' + error.message);
+  rev(puntoId);
+}
+
 // ── Importar inventario desde CSV (solo gestores del centro) ──
 function normH(h: string) { return h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
 function pick(rec: Record<string, string>, keys: string[]) { for (const k of keys) { const v = rec[k]; if (v != null && v.trim() !== '') return v.trim(); } return ''; }
