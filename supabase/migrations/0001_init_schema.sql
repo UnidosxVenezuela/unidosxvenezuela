@@ -19,7 +19,9 @@ create type public.rol_usuario as enum
 -- Áreas inspiradas en el sistema de clusters humanitarios (IASC/OCHA).
 create type public.area_clave as enum
   ('salud', 'agua_saneamiento', 'refugio', 'alimentacion', 'logistica',
-   'busqueda_rescate', 'telecomunicaciones', 'proteccion', 'gestion_informacion');
+   'busqueda_rescate', 'telecomunicaciones', 'proteccion', 'gestion_informacion',
+   -- Áreas de producción/soporte que usan grupos posteriores (0044, 0055, 0062…).
+   'programacion', 'diseno', 'marketing', 'transcripcion', 'comunicaciones');
 
 create type public.estado_tarea as enum
   ('pendiente', 'asignada', 'en_progreso', 'bloqueada', 'completada', 'cancelada');
