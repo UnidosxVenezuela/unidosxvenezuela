@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
+import ActivarNotificaciones from '@/components/ActivarNotificaciones';
 import { marcarLeida, marcarTodasLeidas } from './actions';
 
 export default async function NotificacionesPage() {
@@ -27,6 +28,8 @@ export default async function NotificacionesPage() {
           <button className="btn" type="submit"><Icono nombre="ok" size={16} /> Marcar todas como leídas</button>
         </form>
       </div>
+
+      <ActivarNotificaciones />
 
       {items.length === 0 ? (
         <div className="tarjeta vacio">
