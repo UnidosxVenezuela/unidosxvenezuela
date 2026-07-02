@@ -2,7 +2,7 @@ import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador, esCoordPsicosocial, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, esMandoPsicosocial, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
@@ -53,18 +53,19 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
+  // Mando del grupo Psicosocial (Coordinador o Líder): gestiona miembros y
+  // publica en SU grupo, aunque no sea su líder formal. La RLS (0062) lo cumple.
+  const esMandoPsico = esMandoPsicosocial(perfil) && grupo.clave === 'apoyo_psicosocial';
   // El coordinador (miembro) publica en su grupo: tareas y anuncios fijados,
   // sin gestionar miembros ni el grupo. La RLS (0056) lo hace cumplir.
-  const puedePublicar = puedeGestionar || (soyMiembro && rolesDe(perfil).includes('coordinador'));
-  // El coordinador psicosocial es la autoridad del área (bajo admin): gestiona
-  // la MEMBRESÍA de su grupo Apoyo Psicosocial (la RLS 0059 lo hace cumplir).
-  const puedeGestionarMiembros = puedeGestionar
-    || (esCoordPsicosocial(perfil) && grupo.clave === 'apoyo_psicosocial');
+  const puedePublicar = puedeGestionar || esMandoPsico || (soyMiembro && rolesDe(perfil).includes('coordinador'));
+  // Gestión de miembros: líder/admin del grupo, y los mandos del área psicosocial.
+  const puedeGestionarMiembros = puedeGestionar || esMandoPsico;
 
-  // Privacidad del grupo: quien NO es miembro (ni coordinación/líder) no entra al
-  // detalle ni ve el WhatsApp. Para grupos abiertos, primero debe unirse desde la
-  // lista. La RLS restringe además a nivel de datos.
-  if (!soyMiembro && !puedeGestionar) {
+  // Privacidad del grupo: quien NO es miembro (ni coordinación/líder/mando del
+  // área) no entra al detalle ni ve el WhatsApp. Para grupos abiertos, primero
+  // debe unirse desde la lista. La RLS restringe además a nivel de datos.
+  if (!soyMiembro && !puedeGestionar && !esMandoPsico) {
     redirect('/grupos?ok=' + encodeURIComponent('Únete al grupo para ver su información y su WhatsApp.'));
   }
   // ¿A quién puede un líder sumar al flujo de contenido? A voluntarios (no a

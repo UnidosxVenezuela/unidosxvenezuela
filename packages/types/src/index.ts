@@ -13,10 +13,14 @@ export type Rol =
   // Pipeline de contenido (grupos exclusivos por rol)
   | 'recopilacion'            // Envía información/casos para verificar (no verifica)
   | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
-  | 'redes_sociales'          // Diseño y Redes Sociales (diseño, video y publicación)
+  | 'redes_sociales'          // Redes Sociales (publicación)
+  | 'diseno_grafico'          // Diseño Gráfico
+  | 'edicion_video'           // Edición de Videos
+  | 'influencers'             // Influencers
   | 'logistica'               // Insumos / logística de acopio (envíos, proveedores, donaciones)
   // Área confidencial de salud mental
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
+  | 'lider_psicosocial'        // Líder del grupo Psicosocial (gestiona el grupo, no ve casos)
   | 'coordinador_psicosocial'; // Coordina el área psicosocial (ve todo, asigna)
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.

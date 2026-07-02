@@ -14,8 +14,10 @@ export default async function CrearUsuarioPage() {
   // Rol funcional → id de su grupo (para autoseleccionar el grupo al elegir rol).
   const CLAVE_DE_ROL: Record<string, string> = {
     recopilacion: 'gestion_casos', verificador: 'verificacion', redaccion: 'redaccion',
-    redes_sociales: 'redes_sociales', apoyo_psicosocial: 'apoyo_psicosocial',
-    coordinador_psicosocial: 'apoyo_psicosocial', logistica: 'gestion_acopio',
+    redes_sociales: 'redes_sociales', diseno_grafico: 'diseno_grafico', edicion_video: 'edicion_video',
+    influencers: 'influencers', apoyo_psicosocial: 'apoyo_psicosocial',
+    coordinador_psicosocial: 'apoyo_psicosocial', lider_psicosocial: 'apoyo_psicosocial',
+    logistica: 'gestion_acopio',
   };
   const mapaRolGrupo: Record<string, string> = {};
   (grupos ?? []).forEach((g: any) => {

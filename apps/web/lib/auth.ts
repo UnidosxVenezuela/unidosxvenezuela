@@ -113,6 +113,13 @@ export function esCoordPsicosocial(e?: EntradaRoles) {
   return tieneAlguno(e, ['coordinador_psicosocial']);
 }
 
+// Mando del grupo Psicosocial (Coordinador o Líder): gestiona la membresía y
+// publica en SU grupo. El Líder NO ve los casos confidenciales (eso queda para
+// el Coordinador y el profesional asignado): solo gestiona el grupo.
+export function esMandoPsicosocial(e?: EntradaRoles) {
+  return tieneAlguno(e, ['coordinador_psicosocial', 'lider_psicosocial']);
+}
+
 // Quién puede ENTRAR al área psicosocial: el equipo (ve/atiende casos) y el
 // admin, pero el admin SOLO en modo supervisión (resumen agregado, sin ver los
 // casos ni la bitácora). La confidencialidad de los casos la mantiene la RLS.
