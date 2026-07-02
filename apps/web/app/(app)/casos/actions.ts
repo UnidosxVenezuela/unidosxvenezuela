@@ -10,7 +10,7 @@ function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
 
 // soloVerificar=true → admin/verificador (cambiar estado, notas).
-// soloVerificar=false → también recopilación (Gestión de casos: crear).
+// soloVerificar=false → crear: SOLO Gestión de casos (recopilación) o admin.
 // Se evalúa el CONJUNTO de roles (principal + adicionales, sincronizados por grupo).
 async function exigirCasos(soloVerificar: boolean) {
   const supabase = await createClient();
@@ -20,7 +20,7 @@ async function exigirCasos(soloVerificar: boolean) {
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const permitidos = soloVerificar
     ? ['admin', 'verificador']
-    : ['admin', 'verificador', 'recopilacion'];
+    : ['admin', 'recopilacion'];
   if (!yo?.verificado || !roles.some((r) => permitidos.includes(r as string))) {
     throw new Error('No tienes permisos para esta acción.');
   }

@@ -12,7 +12,7 @@ export default async function NuevoGrupoPage() {
       <div className="pagina-cab">
         <div>
           <h1>Nuevo grupo</h1>
-          <p className="muted sub">Asigna un área, un líder y la visibilidad (abierto o privado).</p>
+          <p className="muted sub">Asigna un área y un líder; a los miembros los agrega la administración o el líder.</p>
         </div>
       </div>
       <form action={crearGrupo} className="tarjeta" style={{ marginTop: 12 }}>
@@ -35,13 +35,6 @@ export default async function NuevoGrupoPage() {
           <label htmlFor="whatsapp">Enlace de WhatsApp (opcional)</label>
           <input id="whatsapp" name="whatsapp" className="input" type="url"
             placeholder="https://chat.whatsapp.com/..." />
-        </div>
-        <div className="campo">
-          <label htmlFor="visibilidad">Visibilidad</label>
-          <select id="visibilidad" name="visibilidad" className="input" defaultValue="abierto">
-            <option value="abierto">Abierto — cualquiera puede verlo y unirse</option>
-            <option value="privado">Privado — solo miembros invitados lo ven</option>
-          </select>
         </div>
         <button className="btn btn-primario" type="submit">Crear grupo</button>
       </form>

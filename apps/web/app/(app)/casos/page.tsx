@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -26,6 +26,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const { perfil } = await requireUsuario();
   if (!puedeRecopilar(perfil)) redirect('/dashboard');
   const puedeVerif = puedeVerificar(perfil);
+  const puedeCrear = esAdministrador(perfil) || rolesDe(perfil).includes('recopilacion');
   const supabase = await createClient();
 
   const cnt = (estado?: string) => {
@@ -83,20 +84,22 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     <AnimarEntrada>
       <div className="pagina-cab">
         <div>
-          <h1>Panel de Verificación</h1>
-          <p className="muted sub">Gestiona y da seguimiento a toda la información enviada por el equipo de recopilación.</p>
+          <h1>Casos</h1>
+          <p className="muted sub">{puedeVerif ? 'Verifica la información que llega: confírmala o descártala.' : 'Registra casos y da seguimiento a los tuyos.'}</p>
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
+      {puedeVerif && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub="Todos los registros" color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
         <Kpi etiqueta="En proceso" valor={enProc.count ?? 0} sub="Siendo verificados" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
         <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub="Listos para redacción" color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado" />
         <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
-      </div>
+      </div>}
 
-      <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>Del caso a la publicación · toca una etapa para abrirla</p>
+      {puedeVerif && <>
+      <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>El flujo · toca una etapa para abrirla</p>
       <FlujoTrabajo pasos={pasos} />
+      </>}
 
       <div className="toolbar" style={{ marginTop: 14 }}>
         <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
@@ -120,14 +123,14 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </form>
         <div className="toolbar-acciones">
           <BotonActualizar />
-          <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>
+          {puedeCrear && <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>}
         </div>
       </div>
 
       {/* Filtro rápido por sub-área de verificación */}
       <div className="fila" style={{ gap: 8, marginBottom: 14 }}>
         <span className="muted" style={{ fontSize: '.82rem' }}>Sub-áreas:</span>
-        {['Desaparecidos', 'Casos de Niños', 'Otras Informaciones Relevantes'].map((cat) => {
+        {['Desaparecidos', 'Otras informaciones'].map((cat) => {
           const activo = searchParams.categoria === cat;
           const p = new URLSearchParams();
           if (searchParams.q) p.set('q', searchParams.q);
@@ -201,6 +204,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         )}
       </div>
 
+      {puedeVerif && <>
       <h2 className="fila" style={{ gap: 8 }}>
         <span className="kpi-ico" style={{ width: 32, height: 32, background: '#d1fae5', color: '#16a34a' }}><Icono nombre="ok" size={18} /></span>
         Listos para redacción <Pill tono="ok" punto={false}>{conf.count ?? 0}</Pill>
@@ -220,6 +224,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           ))}
         </Carrusel>
       )}
+</>}
     </AnimarEntrada>
   );
 }

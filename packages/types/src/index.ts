@@ -8,7 +8,6 @@ export type Rol =
   | 'coordinador'             // Líder de un área (cluster)
   | 'lider_grupo'             // Líder de un grupo operativo
   | 'voluntario'              // Miembro de campo
-  | 'observador'              // Solo lectura (donantes, prensa autorizada)
   | 'lider_plataforma_aliada' // Comparte endpoints de su plataforma (base de datos compartida)
   | 'verificador'             // Revisa y aprueba casos sensibles (módulo de verificación)
   // Pipeline de contenido (grupos exclusivos por rol)

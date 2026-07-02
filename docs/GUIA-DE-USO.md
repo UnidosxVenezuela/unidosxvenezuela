@@ -1,5 +1,13 @@
 # Guía de uso — UnidosXVenezuela
 
+> **⚠️ Actualización (jul 2026):** la plataforma pasó a llamarse **Apoyo por
+> Venezuela** y cambió su modelo: jerarquía **admin → líder → coordinador** (el
+> coordinador publica en su grupo pero no gestiona miembros), **grupos solo
+> visibles para sus miembros** (sin auto-unirse ni solicitudes), tareas dentro de
+> cada grupo, menú por función según el grupo, flujo **Verificación → Confirmados
+> → Envío a Redacción** (sección "Casos"), y sin rol Observador. Esta guía se
+> está actualizando a la nueva estructura.
+
 Guía simple para todo el equipo. Explica **qué hace cada rol** y **cómo usar cada parte** de la plataforma. No necesitas saber de tecnología: si sabes usar WhatsApp, puedes usar esto.
 
 > La plataforma coordina la respuesta al terremoto: reportar información, verificarla, convertirla en contenido y publicarla, además de tareas, grupos y centros de acopio.

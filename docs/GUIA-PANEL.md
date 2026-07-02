@@ -1,5 +1,13 @@
 # Guía completa del panel — UnidosXVenezuela
 
+> **⚠️ Actualización (jul 2026):** la plataforma pasó a llamarse **Apoyo por
+> Venezuela** y cambió su modelo: jerarquía **admin → líder → coordinador** (el
+> coordinador publica en su grupo pero no gestiona miembros), **grupos solo
+> visibles para sus miembros** (sin auto-unirse ni solicitudes), tareas dentro de
+> cada grupo, menú por función según el grupo, flujo **Verificación → Confirmados
+> → Envío a Redacción** (sección "Casos"), y sin rol Observador. Esta guía se
+> está actualizando a la nueva estructura.
+
 Guía detallada de la plataforma: los **roles**, **cómo se asignan**, **quién los
 asigna** y los **flujos de trabajo** de cada módulo. Pensada para coordinación y
 administración.

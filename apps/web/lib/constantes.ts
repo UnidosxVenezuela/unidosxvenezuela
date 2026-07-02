@@ -74,7 +74,6 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   coordinador: 'Coordinador',
   lider_grupo: 'Líder de grupo',
   voluntario: 'Voluntario',
-  observador: 'Observador',
   lider_plataforma_aliada: 'Líder de plataforma aliada',
   verificador: 'Verificación',
   recopilacion: 'Recopilación',

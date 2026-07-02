@@ -59,7 +59,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     tarea.asignado_a === user!.id ||
     tarea.creado_por === user!.id ||
     tarea.grupos?.lider_id === user!.id;
-  const puedeParticipar = perfil?.rol !== 'observador';
+  const puedeParticipar = true;
   // Solo coordinación o el líder del grupo dan una tarea por completada.
   const esGestorTarea = esCoordinacion(perfil) || tarea.grupos?.lider_id === user!.id;
   const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');

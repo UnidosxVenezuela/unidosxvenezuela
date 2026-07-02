@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeRecopilar } from '@/lib/auth';
+import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
 import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeRecopilar(perfil)) redirect('/dashboard');
+  if (!esAdministrador(perfil) && !rolesDe(perfil).includes('recopilacion')) redirect('/casos');
 
   return (
     <div style={{ maxWidth: 640 }}>

@@ -13,7 +13,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, cambiarVisibilidadGrupo, asignarRolesContenido, eliminarGrupo } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -317,17 +317,6 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               <FijarAnuncio grupoId={grupoId} />
             </div>
 
-            {puedeGestionar && (<>
-            <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
-              <form action={guardarWhatsappGrupo}>
-                <input type="hidden" name="grupo_id" value={grupoId} />
-                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
-                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
-                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
-              </form>
-            </div>
-
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="video" size={16} /> Programar videollamada</h3>
               <form action={programarReunion}>
@@ -337,6 +326,17 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 <div className="campo"><label>Inicio</label><input name="inicio" className="input" type="datetime-local" required /></div>
                 <div className="campo"><label>Duración (min)</label><input name="duracion_min" className="input" type="number" min={1} max={1440} defaultValue={60} /></div>
                 <button className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="video" size={16} /> Programar</button>
+              </form>
+            </div>
+
+            {puedeGestionar && (<>
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
+              <form action={guardarWhatsappGrupo}>
+                <input type="hidden" name="grupo_id" value={grupoId} />
+                <input name="whatsapp" className="input" type="url" defaultValue={grupo.whatsapp ?? ''}
+                  placeholder="https://chat.whatsapp.com/…" style={{ width: '100%' }} />
+                <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar</button>
               </form>
             </div>
 
@@ -364,24 +364,6 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   {(todosPerfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar como líder</button>
-              </form>
-            </div>
-
-            <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="grupos" size={16} /> Visibilidad</h3>
-              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
-                {grupo.abierto ? 'Abierto: cualquiera lo ve y puede unirse.' : 'Privado: solo lo ven sus miembros; alta por invitación.'}
-              </p>
-              <form action={cambiarVisibilidadGrupo}>
-                <input type="hidden" name="grupo_id" value={grupoId} />
-                <input type="hidden" name="abierto" value={(!grupo.abierto).toString()} />
-                <BotonConfirmar
-                  mensaje={grupo.abierto
-                    ? '¿Hacer este grupo privado? Dejará de ser visible para quienes no son miembros.'
-                    : '¿Hacer este grupo abierto? Cualquiera podrá verlo y unirse.'}
-                  className="btn" style={{ width: '100%' }}>
-                  {grupo.abierto ? 'Hacer privado' : 'Hacer abierto'}
-                </BotonConfirmar>
               </form>
             </div>
 

@@ -204,7 +204,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
                   <Icono nombre="grupos" size={15} /> Cupos: {(conteo.get(t.id) ?? 0)}/{t.cupo}
                 </p>
               )}
-              {perfil?.rol !== 'observador' && (
+              {(
                 <form action={tomarTarea}>
                   <input type="hidden" name="tarea_id" value={t.id} />
                   <BotonConfirmar mensaje={t.cupo ? '¿Sumarte a esta tarea?' : '¿Tomar esta tarea? Quedarás como responsable de realizarla.'} className="btn btn-acento"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</BotonConfirmar>

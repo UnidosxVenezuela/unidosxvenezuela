@@ -14,8 +14,8 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
     { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
   ];
-  if (flags.gestionCasos && !flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Gestión de casos', icono: 'documento' });
-  if (flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
+  if (flags.gestionCasos && !flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: 'documento' });
+  if (flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: 'ok' });
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio) {
@@ -23,10 +23,10 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
   }
+  if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.admin) {
     enlaces.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
     enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
-    enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   }
   enlaces.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   enlaces.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });

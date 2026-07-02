@@ -54,8 +54,8 @@ export default async function AyudaPage() {
       )}
 
       {f.envioRedaccion && (
-        <S icono="cohete" titulo="Envío a Redacción (tu función)">
-          <li>En <strong>Envío a Redacción</strong> ves los casos <strong>confirmados</strong> por Verificación.</li>
+        <S icono="cohete" titulo="Redacción · Envío a Redacción (tu función)">
+          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves los casos <strong>confirmados</strong> por Verificación.</li>
           <li>Revisa y toca <strong>«Enviar a Redacción»</strong>: el caso queda marcado y el flujo de verificación termina.</li>
         </S>
       )}

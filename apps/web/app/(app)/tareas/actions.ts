@@ -96,8 +96,6 @@ export async function agregarEnlace(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
-  if (yo?.rol === 'observador') throw new Error('Los observadores no pueden agregar adjuntos.');
 
   const id = txt(formData.get('tarea_id'));
   let url = txt(formData.get('url'));

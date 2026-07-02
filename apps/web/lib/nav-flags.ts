@@ -10,6 +10,7 @@ export type NavFlags = {
   envioRedaccion: boolean; // pasa confirmados a "enviado a redacción"
   acopio: boolean;         // mapa + centros de acopio + insumos
   psicosocial: boolean;    // área confidencial (o supervisión si admin)
+  aliados: boolean;        // base de datos de plataformas aliadas
 };
 
 export async function flagsDeNavegacion(supabase: any, userId: string, perfil: Perfil | null): Promise<NavFlags> {
@@ -27,5 +28,6 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     envioRedaccion: admin || claves.has('envio_redaccion') || roles.includes('envio_redaccion'),
     acopio: admin || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
+    aliados: admin || roles.includes('lider_plataforma_aliada'),
   };
 }

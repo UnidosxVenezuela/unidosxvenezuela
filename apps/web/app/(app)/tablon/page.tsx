@@ -9,7 +9,7 @@ import { crearPublicacion, comentarPublicacion } from './actions';
 
 export default async function TablonPage({ searchParams }: { searchParams: { grupo?: string } }) {
   const { perfil } = await requireUsuario();
-  const puedeParticipar = perfil?.rol !== 'observador';
+  const puedeParticipar = true;
   const supabase = await createClient();
 
   const { data: grupos } = await supabase.from('grupos').select('id, nombre').order('nombre');

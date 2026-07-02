@@ -21,7 +21,7 @@ export async function crearGrupo(formData: FormData) {
     area: String(formData.get('area') ?? ''),
     descripcion: (String(formData.get('descripcion') ?? '') || null),
     whatsapp: whatsappOpcional(formData.get('whatsapp')),
-    abierto: String(formData.get('visibilidad')) !== 'privado',
+    abierto: false, // los grupos son solo de sus miembros
   }).select('id').single();
 
   if (error) throw new Error('No se pudo crear el grupo: ' + error.message);
