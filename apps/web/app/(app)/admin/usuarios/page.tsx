@@ -10,7 +10,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Avatar from '@/components/Avatar';
 import Pill from '@/components/Pill';
 
-export default async function AdminUsuariosPage() {
+export default async function AdminUsuariosPage({ searchParams }: { searchParams: { q?: string; frol?: string; fest?: string } }) {
   const { user, perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
   const esAdmin = esAdministrador(yo);
@@ -18,7 +18,17 @@ export default async function AdminUsuariosPage() {
   const { data } = await supabase.from('perfiles')
     .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
-  const perfiles = (data ?? []) as Perfil[];
+  let perfiles = (data ?? []) as Perfil[];
+  // Buscador y filtros (sobre la lista completa ya cargada).
+  const q = (searchParams.q ?? '').trim().toLowerCase();
+  if (q) perfiles = perfiles.filter((p) =>
+    (p.nombre_completo ?? '').toLowerCase().includes(q)
+    || (p.organizacion ?? '').toLowerCase().includes(q)
+    || (p.whatsapp ?? '').includes(q.replace(/\D/g, '') || q)
+    || (p.telefono ?? '').includes(q));
+  if (searchParams.frol) perfiles = perfiles.filter((p) => p.rol === searchParams.frol || (p.roles_extra ?? []).includes(searchParams.frol as any));
+  if (searchParams.fest === 'verificado') perfiles = perfiles.filter((p) => p.verificado);
+  if (searchParams.fest === 'pendiente') perfiles = perfiles.filter((p) => !p.verificado);
   const pendientes = perfiles.filter((p) => !p.verificado);
 
   // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
@@ -200,6 +210,24 @@ export default async function AdminUsuariosPage() {
 
       {/* Listado general */}
       <h2>Todos los usuarios</h2>
+      <form method="get" className="toolbar" style={{ marginBottom: 10 }}>
+        <input name="q" className="input crece" placeholder="Buscar por nombre, WhatsApp, teléfono u organización…" defaultValue={searchParams.q ?? ''} style={{ minHeight: 42 }} />
+        <div className="campo-filtro"><label>Rol</label>
+          <select name="frol" className="input" defaultValue={searchParams.frol ?? ''} style={{ width: 'auto' }}>
+            <option value="">Todos</option>
+            {ROLES.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
+          </select>
+        </div>
+        <div className="campo-filtro"><label>Estado</label>
+          <select name="fest" className="input" defaultValue={searchParams.fest ?? ''} style={{ width: 'auto' }}>
+            <option value="">Todos</option>
+            <option value="verificado">Verificados</option>
+            <option value="pendiente">Sin verificar</option>
+          </select>
+        </div>
+        <button className="btn" type="submit"><Icono nombre="buscar" size={16} /> Buscar</button>
+        {(searchParams.q || searchParams.frol || searchParams.fest) && <Link className="btn" href="/admin/usuarios">Limpiar</Link>}
+      </form>
       <div className="tarjeta">
         <div className="tabla-scroll"><table>
           <thead>

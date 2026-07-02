@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import RolGrupoSync from './RolGrupoSync';
 import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -9,7 +10,17 @@ export default async function CrearUsuarioPage() {
   const { perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
   const supabase = await createClient();
-  const { data: grupos } = await supabase.from('grupos').select('id, nombre').order('nombre');
+  const { data: grupos } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
+  // Rol funcional → id de su grupo (para autoseleccionar el grupo al elegir rol).
+  const CLAVE_DE_ROL: Record<string, string> = {
+    recopilacion: 'gestion_casos', verificador: 'verificacion', redaccion: 'redaccion',
+    redes_sociales: 'redes_sociales', apoyo_psicosocial: 'apoyo_psicosocial',
+    coordinador_psicosocial: 'apoyo_psicosocial', logistica: 'gestion_acopio',
+  };
+  const mapaRolGrupo: Record<string, string> = {};
+  (grupos ?? []).forEach((g: any) => {
+    Object.entries(CLAVE_DE_ROL).forEach(([rol, clave]) => { if (g.clave === clave) mapaRolGrupo[rol] = g.id; });
+  });
   // "admin" solo lo asigna un superadmin; "aliado" va por doble aprobación (no acá).
   const rolesAsignables = ROLES.filter((r) =>
     r !== 'lider_plataforma_aliada' && (r !== 'admin' || esSuper));
@@ -63,6 +74,7 @@ export default async function CrearUsuarioPage() {
         <div className="grid grid-2">
           <div className="campo">
             <label htmlFor="rol">Rol</label>
+            <RolGrupoSync mapa={mapaRolGrupo} />
             <select id="rol" name="rol" className="input" defaultValue="voluntario">
               {rolesAsignables.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
             </select>
