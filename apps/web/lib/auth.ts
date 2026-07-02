@@ -67,7 +67,8 @@ export function esSuperadmin(perfil?: { super_admin?: boolean } | null) {
 
 // Quién puede crear y asignar tareas. El resto (voluntario, observador)
 // solo ve las tareas que le fueron asignadas.
-const GESTION_TAREAS: Rol[] = ['admin', 'lider_grupo'];
+// El coordinador también crea tareas (la RLS lo limita a SU grupo).
+const GESTION_TAREAS: Rol[] = ['admin', 'lider_grupo', 'coordinador'];
 
 export function puedeGestionarTareas(e?: EntradaRoles) {
   return tieneAlguno(e, GESTION_TAREAS);

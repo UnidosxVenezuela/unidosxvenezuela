@@ -63,6 +63,8 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   // Solo coordinación o el líder del grupo dan una tarea por completada.
   const esGestorTarea = esCoordinacion(perfil) || tarea.grupos?.lider_id === user!.id;
   const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');
+  // Etiqueta de autoría: quién compartió cada archivo.
+  const nombreDe = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
 
   return (
     <div>
@@ -176,6 +178,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               <Icono nombre={iconoAdjunto(a.tipo)} size={18} />
               {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
               <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
+              {a.creado_por && <span className="muted" style={{ fontSize: '.78rem' }}>· compartido por <strong style={{ color: 'var(--texto)' }}>{nombreDe.get(a.creado_por) ?? '—'}</strong></span>}
             </span>
             {(a.creado_por === user!.id || esCoordinacion(perfil)) && (
               <form action={eliminarAdjunto}>
@@ -210,6 +213,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               <Icono nombre={iconoAdjunto(a.tipo)} size={18} />
               {a.href ? <a href={a.href} target="_blank" rel="noopener noreferrer">{a.nombre}</a> : <span>{a.nombre}</span>}
               <span className="muted" style={{ fontSize: '.8rem' }}>{ETIQUETA_TIPO_ADJUNTO[a.tipo as keyof typeof ETIQUETA_TIPO_ADJUNTO]}</span>
+              {a.creado_por && <span className="muted" style={{ fontSize: '.78rem' }}>· compartido por <strong style={{ color: 'var(--texto)' }}>{nombreDe.get(a.creado_por) ?? '—'}</strong></span>}
             </span>
             {(a.creado_por === user!.id || esCoordinacion(perfil)) && (
               <form action={eliminarAdjunto}>

@@ -2,7 +2,7 @@ import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
@@ -53,6 +53,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
+  // El coordinador (miembro) publica en su grupo: tareas y anuncios fijados,
+  // sin gestionar miembros ni el grupo. La RLS (0056) lo hace cumplir.
+  const puedePublicar = puedeGestionar || (soyMiembro && rolesDe(perfil).includes('coordinador'));
 
   // Privacidad del grupo: quien NO es miembro (ni coordinación/líder) no entra al
   // detalle ni ve el WhatsApp. Para grupos abiertos, primero debe unirse desde la
@@ -129,7 +132,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         </div>
       )}
 
-      <div className={puedeGestionar ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
+      <div className={puedePublicar ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
         {/* ── Columna principal: contenido del grupo ── */}
         <div className="grupo-main">
           {/* Anuncios fijados */}
@@ -153,11 +156,17 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   )}
                 </div>
                 {m.adjunto_path && firma && (
-                  m.adjunto_tipo === 'imagen'
-                    ? <a href={firma} target="_blank" rel="noopener noreferrer"><img className="anuncio-img" src={firma} alt={m.adjunto_nombre || 'imagen'} /></a>
-                    : <a className="adjunto-chip" href={firma} target="_blank" rel="noopener noreferrer">
-                        <Icono nombre="documento" size={18} /> {m.adjunto_nombre || 'Archivo'}
-                      </a>
+                  <div>
+                    {m.adjunto_tipo === 'imagen'
+                      ? <a href={firma} target="_blank" rel="noopener noreferrer"><img className="anuncio-img" src={firma} alt={m.adjunto_nombre || 'imagen'} /></a>
+                      : <a className="adjunto-chip" href={firma} target="_blank" rel="noopener noreferrer">
+                          <Icono nombre="documento" size={18} /> {m.adjunto_nombre || 'Archivo'}
+                        </a>}
+                    {/* Etiqueta de autoría bajo cada foto/documento compartido */}
+                    <div className="muted fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4 }}>
+                      <Icono nombre="usuario" size={12} /> Compartido por <strong style={{ color: 'var(--texto)' }}>{m.perfiles?.nombre_completo || '—'}</strong>
+                    </div>
+                  </div>
                 )}
                 <div className="muted" style={{ fontSize: '.8rem', marginTop: 8 }}>
                   {m.perfiles?.nombre_completo || '—'} · {fechaHora(m.creado_en)}
@@ -187,7 +196,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             )}
             <div className="fila" style={{ marginTop: 10, justifyContent: 'space-between' }}>
               <Link className="muted" href={'/tareas?grupo=' + grupoId}>Ver todas →</Link>
-              {puedeGestionar && <Link className="btn" href="/tareas/nueva"><Icono nombre="mas" size={16} /> Nueva tarea</Link>}
+              {puedePublicar && <Link className="btn" href={'/tareas/nueva?grupo=' + grupoId}><Icono nombre="mas" size={16} /> Nueva tarea</Link>}
             </div>
           </div>
 
@@ -300,14 +309,15 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           )}
         </div>
 
-        {/* ── Columna derecha: gestión (líder/coordinación) ── */}
-        {puedeGestionar && (
+        {/* ── Columna derecha: publicar (líder/admin/coordinador) + gestión (líder/admin) ── */}
+        {puedePublicar && (
           <aside className="grupo-aside">
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="tablon" size={16} /> Fijar anuncio</h3>
               <FijarAnuncio grupoId={grupoId} />
             </div>
 
+            {puedeGestionar && (<>
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> WhatsApp del grupo</h3>
               <form action={guardarWhatsappGrupo}>
@@ -391,6 +401,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 </form>
               </div>
             )}
+            </>)}
           </aside>
         )}
       </div>

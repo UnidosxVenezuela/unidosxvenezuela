@@ -5,7 +5,7 @@ import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from 
 import { crearTarea } from '../actions';
 import CapturarUbicacion from './CapturarUbicacion';
 
-export default async function NuevaTareaPage() {
+export default async function NuevaTareaPage({ searchParams }: { searchParams: { grupo?: string } }) {
   const { perfil } = await requireUsuario();
   if (!puedeGestionarTareas(perfil)) redirect('/tareas');
   const supabase = await createClient();
@@ -54,7 +54,7 @@ export default async function NuevaTareaPage() {
           </div>
           <div className="campo">
             <label htmlFor="grupo_id">Grupo</label>
-            <select id="grupo_id" name="grupo_id" className="input" defaultValue="">
+            <select id="grupo_id" name="grupo_id" className="input" defaultValue={searchParams.grupo ?? ''}>
               <option value="">Sin grupo</option>
               {(grupos ?? []).map((g: any) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
             </select>
