@@ -465,3 +465,25 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   margin: 14px 0; padding: 11px 15px; border-radius: 10px;
   background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c; color: #7c2d12;
 }
+
+/* Impresión (inventario y etiquetas QR) */
+.solo-impresion { display: none; }
+.etiquetas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.etiqueta-qr {
+  border: 1px dashed var(--borde); border-radius: 10px; padding: 10px; text-align: center;
+  break-inside: avoid; page-break-inside: avoid;
+}
+.etiqueta-qr img { width: 100%; max-width: 150px; height: auto; }
+.etiqueta-qr .et-nombre { font-weight: 700; margin-top: 6px; font-size: .95rem; }
+.etiqueta-qr .et-sub { color: var(--muted); font-size: .78rem; }
+@media print {
+  .no-print { display: none !important; }
+  .solo-impresion { display: block; }
+  body { background: #fff; }
+  .app-shell, .barra-superior, .sidebar, nav, aside.grupo-aside { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
+  .tarjeta { border: none !important; box-shadow: none !important; padding: 0 !important; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px 8px; font-size: .85rem; }
+  .etiquetas-grid { grid-template-columns: repeat(3, 1fr); }
+}

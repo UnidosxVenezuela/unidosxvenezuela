@@ -23,6 +23,7 @@ const ORDEN: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: string; esCoord: boolean; esAdmin: boolean }) {
   const [centros, setCentros] = useState<PuntoAcopio[]>([]);
   const [responsables, setResponsables] = useState<Map<string, Resp[]>>(new Map());
+  const [voluntarios, setVoluntarios] = useState<Map<string, Resp[]>>(new Map());
   const [necCount, setNecCount] = useState<Map<string, number>>(new Map());
   const [candidatos, setCandidatos] = useState<{ id: string; nombre_completo: string | null; rol: Rol | null }[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -36,9 +37,10 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
 
   const cargar = useCallback(async () => {
     const supabase = createClient();
-    const [{ data }, resp, nec] = await Promise.all([
+    const [{ data }, resp, vol, nec] = await Promise.all([
       supabase.from('puntos_acopio').select('*'),
       supabase.from('acopio_responsables').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
+      supabase.from('acopio_voluntarios').select('punto_id, perfil_id, perfiles(nombre_completo, avatar_url, rol)'),
       supabase.from('necesidades_acopio').select('punto_id').eq('resuelta', false),
     ]);
     // Necesidades abiertas por centro (vacío si la tabla aún no existe).
@@ -56,6 +58,14 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
       map.set(r.punto_id, lista);
     }
     setResponsables(map);
+    // Agrupa voluntarios por centro (vacío si la tabla aún no existe).
+    const vmap = new Map<string, Resp[]>();
+    for (const r of (vol.data ?? []) as any[]) {
+      const lista = vmap.get(r.punto_id) ?? [];
+      lista.push({ perfil_id: r.perfil_id, nombre: r.perfiles?.nombre_completo ?? null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
+      vmap.set(r.punto_id, lista);
+    }
+    setVoluntarios(vmap);
     setCargando(false);
   }, []);
   useEffect(() => { cargar(); }, [cargar]);
@@ -141,6 +151,17 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
   }
   async function quitarResp(puntoId: string, perfilId: string) {
     const { error } = await createClient().from('acopio_responsables').delete().eq('punto_id', puntoId).eq('perfil_id', perfilId);
+    if (error) { alert(error.message); return; }
+    cargar();
+  }
+  async function asignarVol(puntoId: string, perfilId: string) {
+    if (!perfilId) return;
+    const { error } = await createClient().from('acopio_voluntarios').insert({ punto_id: puntoId, perfil_id: perfilId, asignado_por: userId });
+    if (error) { alert(error.message); return; }
+    cargar();
+  }
+  async function quitarVol(puntoId: string, perfilId: string) {
+    const { error } = await createClient().from('acopio_voluntarios').delete().eq('punto_id', puntoId).eq('perfil_id', perfilId);
     if (error) { alert(error.message); return; }
     cargar();
   }
@@ -246,6 +267,35 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
                   </select>
                 )}
               </div>
+
+              {(esAdmin || (voluntarios.get(c.id) ?? []).length > 0) && (
+                <div className="acopio-resp">
+                  <div className="acopio-resp-tit">Voluntarios (solo suman)</div>
+                  {(voluntarios.get(c.id) ?? []).length === 0
+                    ? <span className="muted" style={{ fontSize: '.88rem' }}>Sin voluntarios asignados.</span>
+                    : (
+                      <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+                        {(voluntarios.get(c.id) ?? []).map((r) => (
+                          <span key={r.perfil_id} className="chip-resp" title={r.rol ? ETIQUETA_ROL[r.rol] : undefined}>
+                            <Avatar nombre={r.nombre} url={r.avatar} size={20} /> {r.nombre ?? '—'}
+                            {esAdmin && <button type="button" className="chip-x" onClick={() => quitarVol(c.id, r.perfil_id)} aria-label={'Quitar a ' + (r.nombre ?? 'voluntario')}>✕</button>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  {esAdmin && (
+                    <select className="input" style={{ minHeight: 36, marginTop: 8 }} value=""
+                      onChange={(e) => { const v = e.target.value; e.currentTarget.value = ''; asignarVol(c.id, v); }}>
+                      <option value="">+ Asignar voluntario (solo suma)…</option>
+                      {candidatos
+                        .filter((p) => !(voluntarios.get(c.id) ?? []).some((r) => r.perfil_id === p.id))
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>{(p.nombre_completo || p.id) + (p.rol ? ' · ' + ETIQUETA_ROL[p.rol] : '')}</option>
+                        ))}
+                    </select>
+                  )}
+                </div>
+              )}
 
               <div className="fila" style={{ marginTop: 10 }}>
                 <a className="btn btn-primario" href={'/acopio/' + c.id} style={{ minHeight: 34, padding: '4px 12px', textDecoration: 'none' }}><Icono nombre="caja" size={16} /> Inventario</a>
