@@ -102,8 +102,6 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
       nombre,
       capacidad: str(fd.get('capacidad')),
       urgencia: (String(fd.get('urgencia') || 'media') as UrgenciaAcopio),
-      necesita: str(fd.get('necesita')),
-      recibe: str(fd.get('recibe')),
       direccion: str(fd.get('direccion')),
       responsable: str(fd.get('responsable')),
       telefono: str(fd.get('telefono')),
@@ -148,7 +146,7 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
       <div className="pagina-cab">
         <div>
           <h1>Centros de acopio</h1>
-          <p className="muted sub">Registra los puntos, su capacidad, qué necesitan y su ubicación exacta. Aparecen en el mapa coloreados por urgencia.</p>
+          <p className="muted sub">Registra los puntos y su ubicación. Entra a «Inventario» para llevar las existencias y marcar necesidades — desde el teléfono o con el código QR del centro.</p>
         </div>
         {editando === null && (
           <button className="btn btn-primario" onClick={() => abrir('nuevo')}><Icono nombre="mas" /> Nuevo centro</button>
@@ -171,14 +169,14 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
             </div>
             <div>
               <div className="campo"><label>Nombre del centro</label><input name="nombre" className="input" required defaultValue={ed?.nombre ?? ''} /></div>
-              <div className="campo"><label>Urgencia</label>
-                <select name="urgencia" className="input" defaultValue={ed?.urgencia ?? 'media'}>
-                  {URGENCIAS.map((u) => <option key={u} value={u}>{ETIQUETA_URGENCIA[u]}</option>)}
-                </select>
-              </div>
-              <div className="campo"><label>¿Qué necesita ahora?</label><input name="necesita" className="input" placeholder="agua, pañales, medicinas…" defaultValue={ed?.necesita ?? ''} /></div>
+              {ed && (
+                <div className="campo"><label>Urgencia (en el mapa)</label>
+                  <select name="urgencia" className="input" defaultValue={ed?.urgencia ?? 'media'}>
+                    {URGENCIAS.map((u) => <option key={u} value={u}>{ETIQUETA_URGENCIA[u]}</option>)}
+                  </select>
+                </div>
+              )}
               <div className="campo"><label>Capacidad / aforo</label><input name="capacidad" className="input" placeholder="ej: 200 personas · 60% lleno" defaultValue={ed?.capacidad ?? ''} /></div>
-              <div className="campo"><label>Qué recibe</label><input name="recibe" className="input" defaultValue={ed?.recibe ?? ''} /></div>
               <div className="campo"><label>Dirección</label><input name="direccion" className="input" defaultValue={ed?.direccion ?? ''} /></div>
               <div className="grid grid-2">
                 <div className="campo"><label>Contacto en el sitio</label><input name="responsable" className="input" placeholder="nombre de quien atiende" defaultValue={ed?.responsable ?? ''} /></div>
@@ -208,9 +206,7 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
                 <strong>{c.nombre}</strong>
                 <Pill tono={tonoDeClase(claseUrgencia(c.urgencia))}>{ETIQUETA_URGENCIA[c.urgencia]}</Pill>
               </div>
-              {c.necesita && <p style={{ margin: '6px 0' }}><strong>Necesita:</strong> {c.necesita}</p>}
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}
-              {c.recibe && <div className="muted" style={{ fontSize: '.9rem' }}>Recibe: {c.recibe}</div>}
               {c.direccion && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="ubicacion" size={14} /> {c.direccion}</div>}
               {(c.responsable || c.telefono) && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Contacto: {[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
               {c.horario && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="reloj" size={14} /> {c.horario}</div>}
@@ -243,6 +239,7 @@ export default function CentrosAcopio({ userId, esCoord, esAdmin }: { userId: st
               </div>
 
               <div className="fila" style={{ marginTop: 10 }}>
+                <a className="btn btn-primario" href={'/acopio/' + c.id} style={{ minHeight: 34, padding: '4px 12px', textDecoration: 'none' }}><Icono nombre="caja" size={16} /> Inventario</a>
                 <button className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={() => abrir(c)}>Editar</button>
                 {(esCoord || c.creado_por === userId) && (
                   <>
