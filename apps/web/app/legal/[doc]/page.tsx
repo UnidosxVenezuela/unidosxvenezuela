@@ -8,7 +8,7 @@ export function generateStaticParams() {
 
 export function generateMetadata({ params }: { params: { doc: string } }) {
   const d = DOCS_LEGALES[params.doc];
-  return { title: (d?.titulo ?? 'Legal') + ' — UnidosXVenezuela' };
+  return { title: (d?.titulo ?? 'Legal') + ' — Apoyo por Venezuela' };
 }
 
 export default function DocLegalPage({ params }: { params: { doc: string } }) {
@@ -18,7 +18,7 @@ export default function DocLegalPage({ params }: { params: { doc: string } }) {
   return (
     <main className="contenedor" style={{ maxWidth: 820 }}>
       <div className="fila" style={{ justifyContent: 'space-between', margin: '4px 0 10px' }}>
-        <span className="auth-marca" style={{ fontSize: '1.05rem', margin: 0 }}><span className="punto" /> UnidosXVenezuela</span>
+        <span className="auth-marca" style={{ fontSize: '1.05rem', margin: 0 }}><span className="punto" /> Apoyo por Venezuela</span>
         <Link href="/legal" className="muted">← Documentos legales</Link>
       </div>
       <div className="tricolor" style={{ marginBottom: 18 }} />

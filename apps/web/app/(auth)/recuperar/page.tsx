@@ -36,7 +36,7 @@ export default function RecuperarPage() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja">
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <h1 style={{ textAlign: 'center' }}>Recuperar contraseña</h1>
         {enviado ? (
           <div className="tarjeta">

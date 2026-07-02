@@ -83,6 +83,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   edicion_video: 'Edición de Videos',
   redes_sociales: 'Redes Sociales',
   logistica: 'Logística',
+  envio_redaccion: 'Envío a Redacción',
   apoyo_psicosocial: 'Apoyo Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
 };
@@ -127,9 +128,11 @@ export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 're
 
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
   en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
+  enviado_redaccion: 'Enviado a Redacción',
 };
-export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso'];
-export const CATEGORIAS_CASO = ['Desaparecidos', 'Casos de Niños', 'Refugio / albergue', 'Alimentación', 'Salud', 'Otras informaciones', 'Otras Informaciones Relevantes'];
+export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso', 'enviado_redaccion'];
+// Categorías vigentes al crear/verificar (los casos viejos conservan la suya).
+export const CATEGORIAS_CASO = ['Desaparecidos', 'Otras informaciones'];
 
 // ── Pipeline de producción de contenido ──
 export const ETIQUETA_ETAPA: Record<EtapaContenido, string> = {

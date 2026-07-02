@@ -49,7 +49,7 @@ export default function LoginPage() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja">
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <p className="muted" style={{ textAlign: 'center', marginTop: 0 }}>Coordinación de respuesta — Venezuela</p>
         <h1 style={{ textAlign: 'center' }}>Iniciar sesión</h1>
         <form onSubmit={onSubmit} className="tarjeta">

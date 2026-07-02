@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja" style={{ textAlign: 'center' }}>
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <h1>Coordinación de respuesta — Venezuela</h1>
         <p className="muted">
           Equipos, tareas y recursos para la respuesta al terremoto. Identifícate para continuar.

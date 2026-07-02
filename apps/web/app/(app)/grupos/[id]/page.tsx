@@ -13,8 +13,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, unirmeGrupo, cambiarVisibilidadGrupo, asignarRolesContenido, eliminarGrupo } from '../actions';
-import { resolverSolicitud } from '../../acceso/actions';
+import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, cambiarVisibilidadGrupo, asignarRolesContenido, eliminarGrupo } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -28,7 +27,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
-  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }, { data: solicRaw }] = await Promise.all([
+  const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
@@ -43,15 +42,11 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
       .not('estado', 'in', '(completada,cancelada)'),
     supabase.from('miembros_baneados')
       .select('perfil_id, perfiles(nombre_completo)').eq('grupo_id', grupoId),
-    supabase.from('solicitudes_acceso')
-      .select('id, mensaje, perfiles!solicitudes_acceso_perfil_id_fkey(nombre_completo, avatar_url)')
-      .eq('grupo_id', grupoId).eq('estado', 'pendiente'),
   ]);
   const miembros = (miembrosRaw ?? []) as any[];
   const reuniones = (reunionesRaw ?? []) as any[];
   const fijados = (fijadosRaw ?? []) as any[];
   const baneados = (baneadosRaw ?? []) as any[];
-  const solicitudesIngreso = (solicRaw ?? []) as any[];
   // Solo pendientes por completar, ordenadas por prioridad (crítica primero).
   const tareas = ((tareasRaw ?? []) as any[])
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
@@ -125,12 +120,6 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         <Link className="btn" href={'/grupos/' + grupoId + '/pizarra'}>
           <Icono nombre="pizarra" /> Pizarra
         </Link>
-        {grupo.abierto && !soyMiembro && perfil?.rol !== 'observador' && (
-          <form action={unirmeGrupo}>
-            <input type="hidden" name="grupo_id" value={grupoId} />
-            <button className="btn btn-acento"><Icono nombre="mas" /> Unirme</button>
-          </form>
-        )}
       </div>
 
       {esCoordinacion(perfil) && !soyMiembro && (
@@ -314,33 +303,6 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         {/* ── Columna derecha: gestión (líder/coordinación) ── */}
         {puedeGestionar && (
           <aside className="grupo-aside">
-            {solicitudesIngreso.length > 0 && (
-              <div className="tarjeta">
-                <h3 className="aside-titulo"><Icono nombre="avisos" size={16} /> Solicitudes de ingreso ({solicitudesIngreso.length})</h3>
-                {solicitudesIngreso.map((r: any) => (
-                  <div key={r.id} className="fila" style={{ justifyContent: 'space-between', gap: 6, padding: '6px 0', borderBottom: '1px solid var(--borde)' }}>
-                    <span className="celda-persona">
-                      <Avatar nombre={r.perfiles?.nombre_completo} url={r.perfiles?.avatar_url} size={24} />
-                      {r.perfiles?.nombre_completo || '—'}
-                    </span>
-                    <span className="fila" style={{ gap: 4 }}>
-                      <form action={resolverSolicitud}>
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="hidden" name="aprobar" value="true" />
-                        <input type="hidden" name="volver" value={'/grupos/' + grupoId} />
-                        <button className="btn btn-acento" style={{ minHeight: 30, padding: '2px 8px' }} aria-label="Aprobar"><Icono nombre="ok" size={14} /></button>
-                      </form>
-                      <form action={resolverSolicitud}>
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="hidden" name="aprobar" value="false" />
-                        <input type="hidden" name="volver" value={'/grupos/' + grupoId} />
-                        <button className="btn" style={{ minHeight: 30, padding: '2px 8px' }} aria-label="Rechazar"><Icono nombre="cerrar" size={14} /></button>
-                      </form>
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="tablon" size={16} /> Fijar anuncio</h3>
               <FijarAnuncio grupoId={grupoId} />

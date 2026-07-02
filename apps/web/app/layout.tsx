@@ -3,7 +3,7 @@ import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'UnidosXVenezuela',
+  title: 'Apoyo por Venezuela',
   description: 'Coordinación de equipos para la respuesta al terremoto de Venezuela.',
   manifest: '/manifest.json',
 };

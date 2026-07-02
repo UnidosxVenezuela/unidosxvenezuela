@@ -6,7 +6,7 @@ import { Resend } from 'resend';
 const API_KEY = process.env.RESEND_API_KEY;
 // Hasta verificar un dominio propio en Resend, 'onboarding@resend.dev' solo
 // puede enviar al correo dueño de la cuenta. Configura RESEND_FROM con tu dominio.
-const FROM = process.env.RESEND_FROM || 'UnidosXVenezuela <onboarding@resend.dev>';
+const FROM = process.env.RESEND_FROM || 'Apoyo por Venezuela <onboarding@resend.dev>';
 
 export function emailActivo() {
   return !!API_KEY;

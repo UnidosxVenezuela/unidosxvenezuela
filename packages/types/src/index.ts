@@ -18,6 +18,7 @@ export type Rol =
   | 'edicion_video'           // Edita el video/reel
   | 'redes_sociales'          // Publica la pieza final
   | 'logistica'               // Insumos / logística de acopio (envíos, proveedores, donaciones)
+  | 'envio_redaccion'          // Pasa casos confirmados a "enviado a redacción"
   // Área confidencial de salud mental
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
   | 'coordinador_psicosocial'; // Coordina el área psicosocial (ve todo, asigna)
@@ -128,7 +129,7 @@ export interface AdjuntoTarea {
   creado_en: string;
 }
 
-export type EstadoCaso = 'en_proceso' | 'confirmado' | 'falso';
+export type EstadoCaso = 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion';
 
 export interface Caso {
   id: string;

@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { LISTA_LEGAL } from '@/lib/legal';
 
-export const metadata = { title: 'Documentos legales — UnidosXVenezuela' };
+export const metadata = { title: 'Documentos legales — Apoyo por Venezuela' };
 
 export default function LegalIndex() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja" style={{ maxWidth: 620 }}>
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <div className="tarjeta">
           <h1>Documentos legales</h1>
           <p className="muted">Términos de uso, privacidad y descargo de responsabilidad de la plataforma.</p>

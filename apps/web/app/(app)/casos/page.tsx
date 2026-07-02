@@ -65,11 +65,18 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
   let drawerCaso: any = null; let drawerHist: any[] = [];
   if (searchParams.caso) {
-    const [{ data: dc }, { data: dh }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas').eq('id', searchParams.caso).single(),
+    const [{ data: dc }, { data: dh }, { data: dAdj }] = await Promise.all([
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
+      supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
     ]);
     drawerCaso = dc; drawerHist = dh ?? [];
+    if (drawerCaso) {
+      const { urlFirmada } = await import('@/lib/storage');
+      drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
+        ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
+      })));
+    }
   }
 
   return (
@@ -151,7 +158,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           )
         ) : (
           <div className="tabla-scroll"><table>
-            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Asignado a</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
+            <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Estado</th><th>Actualización</th><th aria-label="Acciones"></th></tr></thead>
             <tbody>
               {(casos ?? []).map((c: any) => (
                 <tr key={c.id}>
@@ -169,11 +176,6 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   </td>
                   <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
                   <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
-                  <td>
-                    {c.asignado_a
-                      ? <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }}><Avatar nombre={nombres.get(c.asignado_a)} url={avatares.get(c.asignado_a)} /> {nombres.get(c.asignado_a) ?? '—'}</span>
-                      : <span className="muted">Sin asignar</span>}
-                  </td>
                   <td><EstadoCaso estado={c.estado} /></td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                   <td style={{ textAlign: 'right' }}>
@@ -212,9 +214,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <Link key={c.id} href={'/casos/' + c.id} className="tarjeta carrusel-item" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')}</div>
               <strong>{c.titulo}</strong>
-              <div className="fila" style={{ gap: 6, margin: '8px 0', fontSize: '.85rem' }}>
-                <Avatar nombre={nombres.get(c.asignado_a)} url={avatares.get(c.asignado_a)} size={22} /> {nombres.get(c.asignado_a) ?? 'Sin asignar'}
-              </div>
+              <div style={{ margin: '8px 0' }} />
               <EstadoCaso estado="confirmado" />
             </Link>
           ))}

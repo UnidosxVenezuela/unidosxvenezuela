@@ -57,7 +57,7 @@ export default function RegistroPage() {
     return (
       <main className="auth-pantalla">
         <div className="auth-caja">
-          <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+          <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
           <div className="tarjeta">
             <h1>Cuenta creada</h1>
             <p>Tu cuenta queda <strong>pendiente de verificación</strong>: tendrás acceso limitado (podrás tomar tareas abiertas) hasta que la coordinación confirme tu identidad. Revisa tu correo si la confirmación está activada.</p>
@@ -71,7 +71,7 @@ export default function RegistroPage() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja">
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <h1 style={{ textAlign: 'center' }}>Crear cuenta</h1>
         <form onSubmit={onSubmit} className="tarjeta">
         <div className="campo">

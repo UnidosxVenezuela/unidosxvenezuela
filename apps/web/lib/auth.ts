@@ -24,7 +24,9 @@ export async function requireUsuario() {
   return res;
 }
 
-const COORDINACION: Rol[] = ['admin', 'coordinador'];
+// Nueva jerarquía: el COORDINADOR pertenece a un grupo y NO gestiona la
+// plataforma. "Coordinación" (mando global) ahora es SOLO el admin.
+const COORDINACION: Rol[] = ['admin'];
 
 /**
  * Las funciones de permiso aceptan un rol suelto (compatibilidad) o el perfil
@@ -65,7 +67,7 @@ export function esSuperadmin(perfil?: { super_admin?: boolean } | null) {
 
 // Quién puede crear y asignar tareas. El resto (voluntario, observador)
 // solo ve las tareas que le fueron asignadas.
-const GESTION_TAREAS: Rol[] = ['admin', 'coordinador', 'lider_grupo'];
+const GESTION_TAREAS: Rol[] = ['admin', 'lider_grupo'];
 
 export function puedeGestionarTareas(e?: EntradaRoles) {
   return tieneAlguno(e, GESTION_TAREAS);

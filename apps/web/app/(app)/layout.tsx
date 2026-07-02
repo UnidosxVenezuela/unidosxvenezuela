@@ -1,4 +1,6 @@
-import { requireUsuario, esCoordinacion, puedeVerAliados, puedeRecopilar, puedePipeline, puedeSupervisarPsicosocial, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { flagsDeNavegacion } from '@/lib/nav-flags';
+import { createClient } from '@/lib/supabase/server';
 import CerrarSesion from '@/components/CerrarSesion';
 import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
@@ -9,9 +11,8 @@ import { Suspense } from 'react';
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, perfil } = await requireUsuario();
   const coord = esCoordinacion(perfil);
-  // Quién tiene un espacio de trabajo por rol (recopilación/producción) o lo gestiona.
-  const ROLES_ESPACIO = ['recopilacion', 'redaccion', 'diseno_grafico', 'edicion_video', 'redes_sociales'];
-  const espacios = coord || rolesDe(perfil).some((r) => ROLES_ESPACIO.includes(r));
+  const supabase = await createClient();
+  const flags = await flagsDeNavegacion(supabase, user!.id, perfil);
 
   // Bloqueo total: una cuenta sin verificar (y que no sea coordinación) solo
   // ve una pantalla de espera, sin navegación ni contenido, hasta su aprobación.
@@ -19,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     return (
       <main className="auth-pantalla">
         <div className="auth-caja" style={{ textAlign: 'center' }}>
-          <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+          <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
           <div className="tarjeta">
             <Icono nombre="reloj" size={44} />
             <h1 style={{ marginTop: 8 }}>Cuenta pendiente de aprobación</h1>
@@ -45,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
         }}
-        nav={{ coord, aliados: puedeVerAliados(perfil), verificacion: puedeRecopilar(perfil), contenido: puedePipeline(perfil), espacios, psicosocial: puedeSupervisarPsicosocial(perfil) }}
+        nav={flags}
       >
         {children}
       </Shell>

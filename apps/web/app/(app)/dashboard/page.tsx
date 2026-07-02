@@ -1,6 +1,7 @@
-import { requireUsuario, puedeRecopilar, puedeVerificar, puedePipeline, esCoordinacion } from '@/lib/auth';
+import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { formatoHoras, ETIQUETA_ROL, ETAPAS_CONTENIDO, ROL_DE_ETAPA, ETIQUETA_ETAPA } from '@/lib/constantes';
+import { flagsDeNavegacion } from '@/lib/nav-flags';
+import { formatoHoras, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Kpi from '@/components/Kpi';
@@ -10,16 +11,15 @@ import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 
 type Accion = { href: string; titulo: string; descripcion: string; icono: string; color: string; tinte: string };
 
+/**
+ * Panel por función: cada quien ve SOLO las acciones y datos de su ámbito
+ * (su grupo). La tira del flujo la ven quienes participan del flujo de casos.
+ */
 export default async function Dashboard() {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
+  const flags = await flagsDeNavegacion(supabase, user!.id, perfil);
   const rol = perfil?.rol as Rol | undefined;
-
-  const recopila = puedeRecopilar(perfil);
-  const verifica = puedeVerificar(perfil);
-  const pipeline = puedePipeline(perfil);
-  const coord = esCoordinacion(perfil);
-  const mostrarFlujo = recopila || pipeline;
 
   const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom] = await Promise.all([
     supabase.from('tareas').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'asignada']),
@@ -28,33 +28,26 @@ export default async function Dashboard() {
     supabase.from('registro_horas').select('horas').eq('perfil_id', user!.id),
     supabase.rpc('total_horas_comunidad'),
   ]);
-
   const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
   const totalComunidad = Number(totalCom.data ?? 0);
 
-  // Conteos del flujo (solo si el rol participa; la RLS limita lo que ve cada quien).
-  const conteo = mostrarFlujo ? await contarFlujo(supabase) : null;
+  // La tira del flujo (Verificación → Confirmados → Envío a Redacción) solo la
+  // ven quienes participan de él; la RLS limita además los conteos.
+  const mostrarFlujo = flags.admin || flags.verificacion || flags.envioRedaccion;
+  const pasos = mostrarFlujo ? pasosFlujo(await contarFlujo(supabase)) : [];
 
-  // Acciones rápidas según el rol (se muestran las primeras 4).
   const acciones: Accion[] = [];
-  if (rol === 'recopilacion') {
+  if (flags.gestionCasos && !flags.verificacion) {
     acciones.push({ href: '/casos/nuevo', titulo: 'Reportar un caso', descripcion: 'Envía información para verificar', icono: 'mas', color: 'var(--azul)', tinte: '#eef2ff' });
     acciones.push({ href: '/casos', titulo: 'Mis casos', descripcion: 'Da seguimiento a su estado', icono: 'documento', color: 'var(--azul)', tinte: '#eef2ff' });
   }
-  if (verifica) {
-    acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Verificar casos', descripcion: conteo?.enProceso ? `${conteo.enProceso} en proceso ahora` : 'Revisa lo que llega', icono: 'ok', color: '#16a34a', tinte: '#dcfce7' });
-  }
-  if (pipeline) {
-    const miEtapa = ETAPAS_CONTENIDO.find((e) => ROL_DE_ETAPA[e] === rol);
-    acciones.push({ href: '/contenido', titulo: 'Producción de contenido', descripcion: miEtapa ? `Tu etapa: ${ETIQUETA_ETAPA[miEtapa]}` : 'Avanza las piezas por el flujo', icono: 'cohete', color: '#9d2463', tinte: '#fce7f3' });
-  }
-  acciones.push({ href: '/tareas', titulo: 'Tareas abiertas', descripcion: 'Toma una y colabora', icono: 'tareas', color: '#a16207', tinte: '#fef9c3' });
+  if (flags.verificacion) acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Verificar casos', descripcion: 'Confirma o descarta lo que llega', icono: 'ok', color: '#16a34a', tinte: '#dcfce7' });
+  if (flags.envioRedaccion) acciones.push({ href: '/envio-redaccion', titulo: 'Envío a Redacción', descripcion: 'Pasa los confirmados a Redacción', icono: 'cohete', color: '#9d2463', tinte: '#fce7f3' });
+  if (flags.psicosocial) acciones.push({ href: '/psicosocial', titulo: 'Apoyo Psicosocial', descripcion: flags.admin ? 'Supervisa el área' : 'Acompaña tus casos', icono: 'corazon', color: '#b91c1c', tinte: '#fee2e2' });
+  if (flags.acopio) acciones.push({ href: '/insumos', titulo: 'Insumos y acopio', descripcion: 'Gestiona la ayuda en camino', icono: 'camion', color: '#a16207', tinte: '#fef9c3' });
+  acciones.push({ href: '/grupos', titulo: 'Mis grupos', descripcion: 'Tu equipo, tareas y anuncios', icono: 'grupos', color: '#16a34a', tinte: '#dcfce7' });
   acciones.push({ href: '/horas', titulo: 'Registrar mis horas', descripcion: 'Suma tu tiempo de voluntariado', icono: 'reloj', color: '#9d2463', tinte: '#fce7f3' });
-  acciones.push({ href: '/grupos', titulo: 'Mis grupos', descripcion: 'Coordina con tu equipo', icono: 'grupos', color: '#16a34a', tinte: '#dcfce7' });
-  acciones.push({ href: '/tablon', titulo: 'Tablón', descripcion: 'Lee los anuncios del equipo', icono: 'tablon', color: 'var(--azul)', tinte: '#eef2ff' });
   const accionesTop = acciones.slice(0, 4);
-
-  const pasos = conteo ? pasosFlujo(conteo) : [];
 
   const primerNombre = (perfil?.nombre_completo || user?.email || '').split(' ')[0];
   const rolEtq = rol ? ETIQUETA_ROL[rol] : '';
@@ -78,14 +71,14 @@ export default async function Dashboard() {
       {mostrarFlujo && (
         <>
           <h2>El flujo de trabajo</h2>
-          <p className="muted" style={{ marginTop: -4 }}>Así avanza la información hasta publicarse. Toca una etapa para abrirla.</p>
+          <p className="muted" style={{ marginTop: -4 }}>Verificación → Confirmados → Envío a Redacción. Toca una etapa para abrirla.</p>
           <FlujoTrabajo pasos={pasos} />
         </>
       )}
 
       <h2>Tu resumen</h2>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' }}>
-        <Kpi etiqueta="Tareas por atender" valor={pendientes.count ?? 0} sub="pendientes y asignadas" icono="tareas" tinte="#eef2ff" color="var(--azul)" href="/tareas" />
+        <Kpi etiqueta="Tareas de tus grupos" valor={pendientes.count ?? 0} sub="pendientes y asignadas" icono="tareas" tinte="#eef2ff" color="var(--azul)" href="/grupos" />
         <Kpi etiqueta="Mis grupos" valor={misGrupos.count ?? 0} sub="donde participas" icono="grupos" tinte="#dcfce7" color="#16a34a" href="/grupos" />
         <Kpi etiqueta="Avisos sin leer" valor={noLeidas.count ?? 0} sub="por revisar" icono="avisos" tinte="#fef9c3" color="#a16207" href="/notificaciones" />
         <Kpi etiqueta="Tus horas" valor={formatoHoras(misHoras)} sub="de voluntariado" icono="reloj" tinte="#fce7f3" color="#9d2463" href="/horas" />

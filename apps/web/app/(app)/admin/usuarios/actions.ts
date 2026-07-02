@@ -40,8 +40,8 @@ export async function cambiarVerificacion(formData: FormData) {
       if (email) {
         await enviarEmail({
           to: email,
-          subject: 'Tu cuenta fue verificada — UnidosXVenezuela',
-          html: `<p>¡Hola! La coordinación verificó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
+          subject: 'Tu cuenta fue verificada — Apoyo por Venezuela',
+          html: `<p>¡Hola! La coordinación verificó tu cuenta en <strong>Apoyo por Venezuela</strong>.</p>
                  <p>Ya tienes acceso operativo completo. Gracias por sumarte a la respuesta. 💛💙❤️</p>
                  <p><a href="https://unidosxvenezuela-web.vercel.app/dashboard">Entrar a la plataforma</a></p>`,
         });
@@ -113,8 +113,8 @@ export async function crearUsuario(formData: FormData) {
     try {
       await enviarEmail({
         to: emailReal,
-        subject: 'Tu cuenta en UnidosXVenezuela',
-        html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>UnidosXVenezuela</strong>.</p>
+        subject: 'Tu cuenta en Apoyo por Venezuela',
+        html: `<p>¡Hola, ${nombre}! La coordinación creó tu cuenta en <strong>Apoyo por Venezuela</strong>.</p>
                <p>Ingresa con tu correo y la contraseña temporal que te compartieron, y cámbiala al entrar.</p>
                <p><a href="https://unidosxvnezuela.com/login">Entrar a la plataforma</a></p>`,
       });
@@ -219,15 +219,15 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       try {
         await enviarEmail({
           to: p.email,
-          subject: 'Tu cuenta en UnidosXVenezuela',
-          html: `<p>¡Hola, ${p.nombre}! Te sumamos a <strong>UnidosXVenezuela</strong>.</p>
+          subject: 'Tu cuenta en Apoyo por Venezuela',
+          html: `<p>¡Hola, ${p.nombre}! Te sumamos a <strong>Apoyo por Venezuela</strong>.</p>
                  <p>Ingresa con tu correo y esta contraseña temporal: <strong>${password}</strong> (cámbiala al entrar).</p>
                  <p><a href="https://unidosxvnezuela.com/login">Entrar a la plataforma</a></p>`,
         });
       } catch (e) { console.error('No se pudo enviar el email de bienvenida', e); }
     }
     const waLink = p.whatsapp
-      ? linkWaMe(p.whatsapp, `Hola ${p.nombre} 👋 Te sumamos a UnidosXVenezuela. Entra en https://unidosxvnezuela.com con tu WhatsApp +${p.whatsapp} y esta clave temporal: ${password} (cámbiala al entrar). 💛`)
+      ? linkWaMe(p.whatsapp, `Hola ${p.nombre} 👋 Te sumamos a Apoyo por Venezuela. Entra en https://unidosxvnezuela.com con tu WhatsApp +${p.whatsapp} y esta clave temporal: ${password} (cámbiala al entrar). 💛`)
       : undefined;
     filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'creado', password, waLink });
   }
@@ -335,8 +335,8 @@ export async function restablecerContrasena(formData: FormData) {
 
   await enviarEmail({
     to: email,
-    subject: 'Tu contraseña fue restablecida — UnidosXVenezuela',
-    html: `<p>Hola${objetivo.nombre_completo ? ', ' + objetivo.nombre_completo : ''}. Un administrador restableció tu contraseña en <strong>UnidosXVenezuela</strong>.</p>
+    subject: 'Tu contraseña fue restablecida — Apoyo por Venezuela',
+    html: `<p>Hola${objetivo.nombre_completo ? ', ' + objetivo.nombre_completo : ''}. Un administrador restableció tu contraseña en <strong>Apoyo por Venezuela</strong>.</p>
            <p>Tu nueva contraseña temporal es:</p>
            <p style="font-size:1.25rem;font-weight:700;letter-spacing:.5px">${temporal}</p>
            <p>Ingresa con ella y <strong>cámbiala apenas entres</strong>, desde <em>Mi perfil</em>.</p>

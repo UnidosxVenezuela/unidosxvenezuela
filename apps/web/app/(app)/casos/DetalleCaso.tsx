@@ -7,12 +7,12 @@ import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
-import { enviarARedaccion } from '../contenido/actions';
 
 const EXPLICA_ESTADO: Record<string, string> = {
-  en_proceso: 'Ya hay una persona verificando el caso. Nadie más debe revisarlo.',
-  confirmado: 'La información fue validada y está lista para Redacción de Contenido.',
+  en_proceso: 'El equipo de Verificación está revisando el caso.',
+  confirmado: 'La información fue validada; el equipo de Envío a Redacción lo tomará.',
   falso: 'La información es falsa, antigua o el caso ya fue resuelto. No continúa en el flujo.',
+  enviado_redaccion: 'El caso fue enviado a Redacción: el flujo de verificación terminó.',
 };
 
 /**
@@ -49,11 +49,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
-          <div className="fila" style={{ gap: 6 }}>
-            <strong>Asignado a:</strong>
-            {caso.asignado_a ? <><Avatar nombre={nombres.get(caso.asignado_a)} url={avatares.get(caso.asignado_a)} size={22} /> {nombres.get(caso.asignado_a) ?? '—'}</> : <span className="muted">Sin asignar</span>}
-          </div>
         </div>
+        {(caso.adjuntos ?? []).length > 0 && (
+          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            {(caso.adjuntos as any[]).map((a) => a.href ? (
+              <a key={a.id} className="adjunto-chip" href={a.href} target="_blank" rel="noopener noreferrer">
+                <Icono nombre="documento" size={15} /> {a.nombre}
+              </a>
+            ) : null)}
+          </div>
+        )}
       </div>
 
       {puedeEditar ? (
@@ -63,22 +68,15 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
             <input type="hidden" name="caso_id" value={caso.id} />
             <input type="hidden" name="volver" value={volver} />
             <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }}>
-              {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
+              {ESTADOS_CASO.filter((e) => e !== 'enviado_redaccion').map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
             </select>
             <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
           </form>
 
           <form action={actualizarCaso} className="tarjeta">
-            <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Asignación y notas</h3>
+            <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Notas</h3>
             <input type="hidden" name="caso_id" value={caso.id} />
             <input type="hidden" name="volver" value={volver} />
-            <div className="campo">
-              <label>Asignar a (verificador)</label>
-              <select name="asignado_a" className="input" defaultValue={caso.asignado_a ?? ''} style={{ width: '100%' }}>
-                <option value="">Sin asignar</option>
-                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
-              </select>
-            </div>
             <div className="campo">
               <label>Notas / observaciones</label>
               <textarea name="notas" className="input" rows={3} defaultValue={caso.notas ?? ''} />
@@ -88,17 +86,8 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </>
       ) : (
         <div className="tarjeta">
-          <p className="muted" style={{ margin: 0 }}>Enviaste este caso para verificación. Solo coordinación o verificadores pueden cambiar su estado o asignación.</p>
+          <p className="muted" style={{ margin: 0 }}>Enviaste este caso para verificación. El equipo de Verificación decidirá si se confirma o se descarta.</p>
         </div>
-      )}
-
-      {puedeEditar && caso.estado === 'confirmado' && (
-        <form action={enviarARedaccion} className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
-          <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Pasar a producción</h3>
-          <input type="hidden" name="caso_id" value={caso.id} />
-          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Confirmado y activo. Envíalo al equipo de Redacción para producir el contenido.</p>
-          <button className="btn btn-acento" type="submit" style={{ width: '100%' }}><Icono nombre="ok" size={16} /> Enviar a Redacción</button>
-        </form>
       )}
 
       <div className="tarjeta">

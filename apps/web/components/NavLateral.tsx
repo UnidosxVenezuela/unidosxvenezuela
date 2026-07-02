@@ -2,31 +2,38 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icono from './Icono';
+import type { NavFlags } from '@/lib/nav-flags';
 
-const ENLACES = [
-  { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
-  { href: '/tareas', etiqueta: 'Tareas', icono: 'tareas' },
-  { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
-  { href: '/acceso', etiqueta: 'Solicitar acceso', icono: 'llave' },
-  { href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' },
-  { href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' },
-  { href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' },
-  { href: '/insumos', etiqueta: 'Insumos', icono: 'camion' },
-  { href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' },
-  { href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' },
-] as const;
-
-export default function NavLateral({ coord, aliados, verificacion, contenido, espacios, psicosocial }: { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean; espacios?: boolean; psicosocial?: boolean }) {
+/**
+ * Menú por función: cada quien ve SOLO sus herramientas (según su grupo/rol).
+ * Base para todos: Panel, Grupos, Mis horas, Avisos y Ayuda. El admin ve todo.
+ */
+export default function NavLateral({ flags }: { flags: NavFlags }) {
   const ruta = usePathname();
-  let enlaces: { href: string; etiqueta: string; icono: string }[] = [...ENLACES];
-  if (espacios) enlaces.push({ href: '/espacios', etiqueta: 'Espacios de trabajo', icono: 'pizarra' });
-  if (psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
-  if (aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
-  if (verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
-  if (contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
-  if (coord) enlaces.push({ href: '/admin/solicitudes', etiqueta: 'Solicitudes de acceso', icono: 'usuario' });
-  if (coord) enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
-  if (coord) enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
+  const enlaces: { href: string; etiqueta: string; icono: string }[] = [
+    { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
+    { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
+  ];
+  if (flags.gestionCasos && !flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Gestión de casos', icono: 'documento' });
+  if (flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Verificación de casos', icono: 'ok' });
+  if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
+  if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
+  if (flags.acopio) {
+    enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
+    enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
+    enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
+  }
+  if (flags.admin) {
+    enlaces.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
+    enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'documento' });
+    enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
+  }
+  enlaces.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
+  enlaces.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });
+  if (flags.admin) {
+    enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
+    enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
+  }
   enlaces.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
 
   return (
@@ -34,7 +41,7 @@ export default function NavLateral({ coord, aliados, verificacion, contenido, es
       {enlaces.map((e) => {
         const activo = ruta === e.href || ruta.startsWith(e.href + '/');
         return (
-          <Link key={e.href} href={e.href} className={activo ? 'activo' : undefined}>
+          <Link key={e.href + e.etiqueta} href={e.href} className={activo ? 'activo' : undefined}>
             <Icono nombre={e.icono} />
             {e.etiqueta}
           </Link>

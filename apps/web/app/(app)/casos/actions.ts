@@ -2,24 +2,27 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
-import type { EstadoCaso } from '@unidos/types';
+import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
 
-// soloVerificar=true → solo coordinación/verificador (cambiar estado, asignar).
-// soloVerificar=false → también recopilación (enviar/crear casos).
+// soloVerificar=true → admin/verificador (cambiar estado, notas).
+// soloVerificar=false → también recopilación (Gestión de casos: crear).
+// Se evalúa el CONJUNTO de roles (principal + adicionales, sincronizados por grupo).
 async function exigirCasos(soloVerificar: boolean) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, verificado').eq('id', user.id).single();
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const permitidos = soloVerificar
-    ? ['admin', 'coordinador', 'verificador']
-    : ['admin', 'coordinador', 'verificador', 'recopilacion'];
-  if (!yo || !yo.verificado || !permitidos.includes(yo.rol)) {
-    throw new Error('No tienes permisos del módulo de verificación.');
+    ? ['admin', 'verificador']
+    : ['admin', 'verificador', 'recopilacion'];
+  if (!yo?.verificado || !roles.some((r) => permitidos.includes(r as string))) {
+    throw new Error('No tienes permisos para esta acción.');
   }
   return { supabase, user };
 }
@@ -35,33 +38,62 @@ export async function crearCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: opt(formData.get('fuente_url')),
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
-    asignado_a: opt(formData.get('asignado_a')),
     estado: 'en_proceso',
     creado_por: user.id,
   }).select('id').single();
   if (error) throw new Error('No se pudo crear el caso: ' + error.message);
+  const casoId = data!.id as string;
+
+  // Adjuntos de respaldo (opcional): al bucket privado 'adjuntos', carpeta casos/<id>.
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of archivos.slice(0, 10)) {
+    if (file.size > 10 * 1024 * 1024) continue; // omite los que superan 10 MB
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    const ruta = `casos/${casoId}/${Date.now()}-${safe}`;
+    try {
+      await subirArchivo(supabase, 'adjuntos', ruta, file, { publico: false, upsert: false });
+      const { error: eAdj } = await supabase.from('casos_adjuntos').insert({
+        caso_id: casoId, url: ruta, nombre: file.name, mime: file.type || null, creado_por: user.id,
+      });
+      if (eAdj) await borrarArchivo(supabase, 'adjuntos', [ruta]);
+    } catch { /* un adjunto fallido no bloquea el caso */ }
+  }
+
   revalidatePath('/casos');
-  redirigirOk('/casos/' + data!.id, 'Caso creado');
+  redirigirOk('/casos?caso=' + casoId, 'Caso creado');
 }
 
 export async function cambiarEstadoCaso(formData: FormData) {
   const { supabase } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
   const estado = txt(formData.get('estado')) as EstadoCaso;
+  if (estado === 'enviado_redaccion') throw new Error('El paso a Redacción lo hace el equipo de Envío a Redacción.');
   const { error } = await supabase.from('casos')
     .update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
-  revalidatePath('/casos/' + id);
-  redirigirOk(opt(formData.get('volver')) || ('/casos/' + id), 'Estado actualizado');
+  redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
+}
+
+// El grupo "Envío a Redacción" pasa un caso confirmado al estado final del flujo.
+export async function enviarCasoRedaccion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('enviar_caso_redaccion', { p_caso: id });
+  if (error) throw new Error('No se pudo enviar a Redacción: ' + error.message);
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk('/envio-redaccion', 'Caso enviado a Redacción');
 }
 
 export async function eliminarCaso(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol').eq('id', user.id).single();
-  if (yo?.rol !== 'admin') throw new Error('Solo un administrador puede eliminar casos.');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede eliminar casos.');
   const id = txt(formData.get('caso_id'));
   const { error } = await supabase.from('casos').delete().eq('id', id);
   if (error) throw new Error('No se pudo eliminar el caso: ' + error.message);
@@ -73,12 +105,10 @@ export async function actualizarCaso(formData: FormData) {
   const { supabase } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
   const { error } = await supabase.from('casos').update({
-    asignado_a: opt(formData.get('asignado_a')),
     notas: opt(formData.get('notas')),
     actualizado_en: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el caso: ' + error.message);
   revalidatePath('/casos');
-  revalidatePath('/casos/' + id);
-  redirigirOk(opt(formData.get('volver')) || ('/casos/' + id), 'Caso actualizado');
+  redirigirOk(opt(formData.get('volver')) || '/casos', 'Caso actualizado');
 }

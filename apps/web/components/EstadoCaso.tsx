@@ -5,6 +5,7 @@ const COLOR: Record<TEstadoCaso, { bg: string; fg: string }> = {
   en_proceso: { bg: '#fef9c3', fg: '#854d0e' },
   confirmado: { bg: '#d1fae5', fg: '#065f46' },
   falso: { bg: '#fee2e2', fg: '#b91c1c' },
+  enviado_redaccion: { bg: '#dbeafe', fg: '#1e40af' },
 };
 
 /** Insignia de estado de caso (punto + color), estilo panel de verificación. */

@@ -8,15 +8,16 @@ import CampanaNotificaciones from './CampanaNotificaciones';
 import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
 
+import type { NavFlags } from '@/lib/nav-flags';
+
 type Usuario = { nombre: string; rol?: string | null; email?: string | null; avatarUrl?: string | null };
-type Nav = { coord: boolean; aliados?: boolean; verificacion?: boolean; contenido?: boolean; espacios?: boolean; psicosocial?: boolean };
 
 /**
  * Shell de la app: barra lateral (colapsable en escritorio, cajón off-canvas en
  * móvil) + barra superior (hamburguesa + campana + chip de usuario). Mantiene el
  * contenido (children) como Server Component; solo el cromo es cliente.
  */
-export default function Shell({ usuario, nav, children }: { usuario: Usuario; nav: Nav; children: React.ReactNode }) {
+export default function Shell({ usuario, nav, children }: { usuario: Usuario; nav: NavFlags; children: React.ReactNode }) {
   const [colapsada, setColapsada] = useState(false); // escritorio
   const [cajon, setCajon] = useState(false);          // móvil
   const ruta = usePathname();
@@ -38,8 +39,8 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
       <SonidoBotones />
       <aside className="sidebar">
         <div className="tricolor" />
-        <div className="marca"><span className="punto" /> UnidosXVenezuela</div>
-        <NavLateral coord={nav.coord} aliados={nav.aliados} verificacion={nav.verificacion} contenido={nav.contenido} espacios={nav.espacios} psicosocial={nav.psicosocial} />
+        <div className="marca"><span className="punto" /> Apoyo por Venezuela</div>
+        <NavLateral flags={nav} />
       </aside>
 
       {cajon && <button className="backdrop" aria-label="Cerrar menú" onClick={() => setCajon(false)} />}
@@ -50,7 +51,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
             <button className="icono-btn" aria-label="Mostrar u ocultar el menú" aria-expanded={cajon} onClick={alternar}>
               <Icono nombre="menu" size={22} />
             </button>
-            <span className="topbar-marca"><span className="punto" /> UnidosXVenezuela</span>
+            <span className="topbar-marca"><span className="punto" /> Apoyo por Venezuela</span>
           </div>
           <div className="topbar-der">
             <CampanaNotificaciones />

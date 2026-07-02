@@ -81,7 +81,7 @@ export default function ActualizarClavePage() {
   return (
     <main className="auth-pantalla">
       <div className="auth-caja">
-        <div className="auth-marca"><span className="punto" /> UnidosXVenezuela</div>
+        <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <h1 style={{ textAlign: 'center' }}>Nueva contraseña</h1>
 
         {fase.t === 'verificando' && (

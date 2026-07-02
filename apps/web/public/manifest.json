@@ -1,6 +1,6 @@
 {
-  "name": "UnidosXVenezuela",
-  "short_name": "UnidosXVzla",
+  "name": "Apoyo por Venezuela",
+  "short_name": "ApoyoxVzla",
   "description": "Coordinación de respuesta a emergencias.",
   "start_url": "/dashboard",
   "display": "standalone",
