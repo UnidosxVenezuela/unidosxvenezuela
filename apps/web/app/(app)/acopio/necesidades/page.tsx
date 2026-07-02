@@ -15,10 +15,12 @@ const ORDEN: Record<string, number> = { alta: 0, media: 1, baja: 2 };
 // necesidades urgentes marcadas en los centros y los productos bajo mínimo.
 export default async function NecesidadesGlobalPage() {
   const { perfil } = await requireUsuario();
-  const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  if (!rolesG.includes('admin') && !rolesG.includes('logistica')) redirect('/dashboard');
-
   const supabase = await createClient();
+  const { data: lider, error } = await supabase.rpc('es_lider_acopio');
+  const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
+  const acceso = error ? (rolesG.includes('admin') || rolesG.includes('logistica')) : !!lider;
+  if (!acceso) redirect('/dashboard');
+
   const [{ data: nec }, { data: inv }] = await Promise.all([
     supabase.from('necesidades_acopio').select('*, puntos_acopio(nombre)').eq('resuelta', false),
     supabase.from('inventario_acopio').select('*, puntos_acopio(nombre)').gt('minimo', 0),

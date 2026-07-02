@@ -105,6 +105,91 @@ export async function traspasarStock(formData: FormData) {
   rev(origen); rev(destino);
 }
 
+// ── Importar inventario desde CSV (solo gestores del centro) ──
+function normH(h: string) { return h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
+function pick(rec: Record<string, string>, keys: string[]) { for (const k of keys) { const v = rec[k]; if (v != null && v.trim() !== '') return v.trim(); } return ''; }
+function numRec(v: string) { const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(',', '.')); return Number.isFinite(n) ? n : 0; }
+
+/** Divide el CSV en filas respetando comillas ("a,b" y "" escapado). */
+function parseFilas(s: string, delim: string): string[][] {
+  const rows: string[][] = []; let row: string[] = []; let field = ''; let q = false; let i = 0;
+  while (i < s.length) {
+    const ch = s[i];
+    if (q) {
+      if (ch === '"') { if (s[i + 1] === '"') { field += '"'; i += 2; continue; } q = false; i++; continue; }
+      field += ch; i++; continue;
+    }
+    if (ch === '"') { q = true; i++; continue; }
+    if (ch === delim) { row.push(field); field = ''; i++; continue; }
+    if (ch === '\r') { i++; continue; }
+    if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+    field += ch; i++;
+  }
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim() !== ''));
+}
+
+function parseCsv(text: string): Record<string, string>[] {
+  const s = text.replace(/^﻿/, '');
+  const nl = s.indexOf('\n'); const first = nl >= 0 ? s.slice(0, nl) : s;
+  const c = (first.match(/,/g) ?? []).length, sc = (first.match(/;/g) ?? []).length, tab = (first.match(/\t/g) ?? []).length;
+  const delim = sc > c && sc >= tab ? ';' : tab > c ? '\t' : ',';
+  const rows = parseFilas(s, delim);
+  if (rows.length < 2) return [];
+  const header = (rows[0] ?? []).map(normH);
+  return rows.slice(1).map((r) => { const rec: Record<string, string> = {}; header.forEach((h, i) => { rec[h] = (r[i] ?? '').trim(); }); return rec; });
+}
+
+export async function importarInventario(formData: FormData) {
+  const puntoId = txt(formData.get('punto_id'));
+  const { supabase, user } = await ctx(puntoId);
+  const file = formData.get('archivo');
+  if (!(file instanceof File) || file.size === 0) throw new Error('Elige un archivo CSV.');
+  if (file.size > 2_000_000) throw new Error('El archivo es demasiado grande (máx 2 MB).');
+  const modo = txt(formData.get('modo')) === 'reemplazar' ? 'reemplazar' : 'sumar';
+  const filas = parseCsv(await file.text());
+  if (filas.length === 0) throw new Error('El CSV está vacío o le falta el encabezado (p. ej. Producto, Cantidad, Unidad…).');
+  let n = 0;
+  for (const rec of filas.slice(0, 2000)) {
+    const producto = pick(rec, ['producto', 'nombre']);
+    if (!producto) continue;
+    const cantidad = Math.max(0, numRec(pick(rec, ['cantidad', 'cant', 'existencia', 'stock'])));
+    const categoria = pick(rec, ['categoria']) || null;
+    const unidad = pick(rec, ['unidad']) || null;
+    const codigo = pick(rec, ['codigo']) || null;
+    const minimo = Math.max(0, numRec(pick(rec, ['minimo', 'min'])));
+    const { data: ex } = await supabase.from('inventario_acopio')
+      .select('id, cantidad').eq('punto_id', puntoId).eq('producto', producto).maybeSingle();
+    const prev = Number(ex?.cantidad ?? 0);
+    const finalCant = modo === 'reemplazar' ? cantidad : prev + cantidad;
+    let itemId = (ex?.id as string | undefined) ?? undefined;
+    if (ex) {
+      await supabase.from('inventario_acopio').update({
+        cantidad: finalCant,
+        ...(categoria ? { categoria } : {}), ...(unidad ? { unidad } : {}),
+        ...(codigo ? { codigo } : {}), ...(minimo > 0 ? { minimo } : {}),
+        actualizado_por: user.id, actualizado_en: new Date().toISOString(),
+      }).eq('id', ex.id);
+    } else {
+      const { data: ins } = await supabase.from('inventario_acopio').insert({
+        punto_id: puntoId, producto, categoria, unidad: unidad || 'unidades',
+        codigo, cantidad: finalCant, minimo, actualizado_por: user.id,
+      }).select('id').single();
+      itemId = ins?.id;
+    }
+    const mag = modo === 'reemplazar' ? Math.abs(finalCant - prev) : cantidad;
+    if (mag > 0 || !ex) {
+      await supabase.from('movimientos_acopio').insert({
+        punto_id: puntoId, item_id: itemId ?? null, producto,
+        tipo: modo === 'reemplazar' ? 'ajuste' : 'entrada',
+        cantidad: mag, unidad, nota: 'importación CSV', actor_id: user.id,
+      });
+    }
+    n++;
+  }
+  rev(puntoId);
+}
+
 /** Fija el mínimo (alerta de bajo stock) de un producto. Solo gestores. */
 export async function fijarMinimo(formData: FormData) {
   const puntoId = txt(formData.get('punto_id'));

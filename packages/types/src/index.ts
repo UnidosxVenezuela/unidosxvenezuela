@@ -241,6 +241,8 @@ export interface PuntoAcopio {
   necesita: string | null;
   horario: string | null;
   capacidad: string | null;
+  camas_total: number;
+  camas_ocupadas: number;
   urgencia: UrgenciaAcopio;
   lat: number;
   lng: number;
