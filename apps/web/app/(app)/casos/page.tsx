@@ -18,6 +18,7 @@ import Carrusel from '@/components/Carrusel';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
+import PanelCedula from './PanelCedula';
 import Consejo from '@/components/Consejos';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -35,8 +36,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   // 2ª verificación obligatoria para Recopilación y Búsqueda (Verificación y admin
   // quedan exentos). Sin identidad aprobada, se oculta el acceso a Casos.
   const necesita2a = !esAdmin && !puedeVerif && (rolesU.includes('recopilacion') || rolesU.includes('busqueda'));
-  let identidadOK = true;
-  if (necesita2a) {
+  // La identidad (2ª verificación) se consulta para cualquier rol de casos no-admin:
+  // decide el gate de acceso y también quién ve la herramienta de cédula.
+  let identidadOK = esAdmin;
+  if (!esAdmin && (rolesU.includes('recopilacion') || rolesU.includes('busqueda'))) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     identidadOK = (vi as any)?.estado === 'aprobada';
   }
@@ -58,6 +61,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const soloBusqueda = accesoBusqueda && !puedeVerif && !esAdmin; // ve solo Desaparecidos
   const soloVerif = puedeVerif && !accesoBusqueda && !esAdmin;    // ve solo Otras informaciones
   const subAreas = soloBusqueda ? ['Desaparecidos'] : soloVerif ? ['Otras informaciones'] : CATEGORIAS_CASO;
+  // Herramienta de consulta de cédula (CNE): admin o Búsqueda con 2ª verificación.
+  const mostrarCedula = esAdmin || (rolesU.includes('busqueda') && identidadOK);
 
   // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
   // sin describirle acciones de otros roles.
@@ -184,7 +189,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         })}
       </div>}
 
-      <div>
+      <div className={mostrarCedula ? 'grupo-grid' : undefined}>
         <div className="grupo-main">
       <div className="tarjeta">
         {(casos ?? []).length === 0 ? (
@@ -227,6 +232,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         )}
       </div>
         </div>
+        {mostrarCedula && (
+          <aside className="grupo-aside"><PanelCedula /></aside>
+        )}
         {drawerCaso && (
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
