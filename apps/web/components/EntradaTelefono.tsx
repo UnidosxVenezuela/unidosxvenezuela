@@ -20,12 +20,25 @@ const PAISES: Pais[] = [
   { code: 'OT', nombre: 'Otro país', dial: '', min: 6, max: 15 },
 ];
 
-export default function EntradaTelefono({ name, requerido = false, defaultDial = '58', onChange }: {
-  name: string; requerido?: boolean; defaultDial?: string; onChange?: (full: string) => void;
+/** Descompone un número guardado (+<código><nacional>) en país + nacional. */
+function parsear(full: string, fallbackDial: string): { dial: string; nac: string; otro: string } {
+  const s = (full ?? '').replace(/[^\d+]/g, '');
+  if (s.startsWith('+')) {
+    const d = s.slice(1);
+    const dials = PAISES.filter((p) => p.dial).map((p) => p.dial).sort((a, b) => b.length - a.length);
+    for (const dc of dials) if (d.startsWith(dc)) return { dial: dc, nac: d.slice(dc.length), otro: '' };
+    return { dial: '', nac: '', otro: '' }; // no coincide: queda vacío para reingresar
+  }
+  return s ? { dial: fallbackDial, nac: s.replace(/\D/g, ''), otro: '' } : { dial: fallbackDial, nac: '', otro: '' };
+}
+
+export default function EntradaTelefono({ name, requerido = false, defaultDial = '58', defaultValue = '', onChange }: {
+  name: string; requerido?: boolean; defaultDial?: string; defaultValue?: string; onChange?: (full: string) => void;
 }) {
-  const [dial, setDial] = useState(defaultDial);
-  const [nac, setNac] = useState('');
-  const [otro, setOtro] = useState(''); // código manual cuando es "Otro país"
+  const inicial = parsear(defaultValue, defaultDial);
+  const [dial, setDial] = useState(inicial.dial || defaultDial);
+  const [nac, setNac] = useState(inicial.nac);
+  const [otro, setOtro] = useState(inicial.otro); // código manual cuando es "Otro país"
   const pais = PAISES.find((p) => p.dial === dial) ?? PAISES[PAISES.length - 1]!;
   const esOtro = pais.code === 'OT';
   const codigo = esOtro ? otro.replace(/\D/g, '').slice(0, 4) : pais.dial;

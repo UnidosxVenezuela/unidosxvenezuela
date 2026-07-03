@@ -6,6 +6,7 @@ import { esEmailInternoWhatsapp, mostrarWhatsapp } from '@/lib/whatsapp';
 import CambiarContrasena from '@/components/CambiarContrasena';
 import SubirAvatar from '@/components/SubirAvatar';
 import SelectorHabilidades from '@/components/SelectorHabilidades';
+import EntradaTelefono from '@/components/EntradaTelefono';
 import Pill from '@/components/Pill';
 
 export default async function PerfilPage({
@@ -43,8 +44,8 @@ export default async function PerfilPage({
         </div>
         <div className="grid grid-2">
           <div className="campo">
-            <label htmlFor="telefono">Teléfono</label>
-            <input id="telefono" name="telefono" className="input" type="tel" defaultValue={perfil?.telefono ?? ''} />
+            <label htmlFor="telefono">WhatsApp / Teléfono</label>
+            <EntradaTelefono name="telefono" defaultValue={perfil?.telefono ?? ''} />
           </div>
           <div className="campo">
             <label htmlFor="whatsapp">WhatsApp (con código de país)</label>

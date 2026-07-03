@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
+import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
@@ -31,12 +32,22 @@ export async function crearCaso(formData: FormData) {
   const { supabase, user } = await exigirCasos(false);
   const titulo = txt(formData.get('titulo'));
   if (!titulo) throw new Error('El título es obligatorio.');
+  // Validar el enlace de la fuente (formato + seguridad heurística).
+  const fuenteUrl = opt(formData.get('fuente_url'));
+  const an = analizarUrl(fuenteUrl);
+  if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
+  // Validar los archivos ANTES de crear el caso (tipo permitido + tamaño).
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of archivos.slice(0, 10)) {
+    const v = validarArchivo(file.name, file.size, 10);
+    if (!v.ok) throw new Error(v.motivo || 'Archivo no admitido.');
+  }
   const { data, error } = await supabase.from('casos').insert({
     titulo,
     descripcion: opt(formData.get('descripcion')),
     categoria: opt(formData.get('categoria')),
     fuente: opt(formData.get('fuente')),
-    fuente_url: opt(formData.get('fuente_url')),
+    fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     estado: 'en_proceso',
     creado_por: user.id,
@@ -45,9 +56,7 @@ export async function crearCaso(formData: FormData) {
   const casoId = data!.id as string;
 
   // Adjuntos de respaldo (opcional): al bucket privado 'adjuntos', carpeta casos/<id>.
-  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
   for (const file of archivos.slice(0, 10)) {
-    if (file.size > 10 * 1024 * 1024) continue; // omite los que superan 10 MB
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
     const ruta = `casos/${casoId}/${Date.now()}-${safe}`;
     try {
@@ -124,12 +133,15 @@ export async function editarCaso(formData: FormData) {
   const id = txt(formData.get('caso_id'));
   const titulo = txt(formData.get('titulo'));
   if (!titulo) throw new Error('El título es obligatorio.');
+  const fuenteUrl = opt(formData.get('fuente_url'));
+  const an = analizarUrl(fuenteUrl);
+  if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
   const { error } = await supabase.from('casos').update({
     titulo,
     descripcion: opt(formData.get('descripcion')),
     categoria: opt(formData.get('categoria')),
     fuente: opt(formData.get('fuente')),
-    fuente_url: opt(formData.get('fuente_url')),
+    fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     actualizado_en: new Date().toISOString(),
   }).eq('id', id);

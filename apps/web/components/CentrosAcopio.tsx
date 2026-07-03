@@ -11,6 +11,7 @@ import Pill, { tonoDeClase } from './Pill';
 import Avatar from './Avatar';
 import type { PuntoAcopio, UrgenciaAcopio, Rol } from '@unidos/types';
 import { nombreMostrado } from '@/lib/nombre';
+import EntradaTelefono from './EntradaTelefono';
 
 type Resp = { perfil_id: string; nombre: string | null; avatar: string | null; rol: Rol | null };
 type CentroLider = PuntoAcopio & { creador?: { nombre_completo: string | null; telefono: string | null } | null };
@@ -221,7 +222,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
               <div className="campo"><label>Dirección</label><input name="direccion" className="input" defaultValue={ed?.direccion ?? ''} /></div>
               <div className="grid grid-2">
                 <div className="campo"><label>Contacto en el sitio</label><input name="responsable" className="input" placeholder="nombre de quien atiende" defaultValue={ed?.responsable ?? ''} /></div>
-                <div className="campo"><label>Teléfono</label><input name="telefono" className="input" type="tel" defaultValue={ed?.telefono ?? ''} /></div>
+                <div className="campo"><label>Teléfono (WhatsApp)</label><EntradaTelefono name="telefono" defaultValue={ed?.telefono ?? ''} /></div>
               </div>
               <div className="campo"><label>Horario</label><input name="horario" className="input" placeholder="8:00–18:00" defaultValue={ed?.horario ?? ''} /></div>
             </div>

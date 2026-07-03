@@ -4,6 +4,7 @@ import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
 import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
+import AvisoEnlace from '@/components/AvisoEnlace';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
@@ -41,7 +42,7 @@ export default async function NuevoCasoPage() {
           </div>
           <div className="campo">
             <label htmlFor="fuente_url">Enlace de la fuente (opcional)</label>
-            <input id="fuente_url" name="fuente_url" className="input" type="url" placeholder="https://…" />
+            <AvisoEnlace name="fuente_url" />
           </div>
         </div>
         <div className="campo">
