@@ -134,7 +134,9 @@ export async function editarCaso(formData: FormData) {
     actualizado_en: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw new Error('No se pudo editar el caso: ' + error.message);
-  revalidatePath('/casos');
+  // Registro explícito de la edición (además del trigger de auditoría).
+  await supabase.rpc('registrar_evento_caso', { p_caso: id, p_accion: 'edicion' });
+  revalidatePath('/casos'); revalidatePath('/envio-redaccion');
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso actualizado');
 }
 
