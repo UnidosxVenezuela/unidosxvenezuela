@@ -8,12 +8,12 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
  * feedback en conexiones lentas (útil en campo). Debe renderizarse DENTRO del form.
  */
 export default function BotonEnviar(
-  { children, cargando = 'Guardando…', className = 'btn btn-primario', ...rest }:
+  { children, cargando = 'Guardando…', className = 'btn btn-primario', disabled, ...rest }:
   { children: ReactNode; cargando?: string } & ButtonHTMLAttributes<HTMLButtonElement>,
 ) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" {...rest} className={className} disabled={pending} aria-busy={pending}>
+    <button type="submit" {...rest} className={className} disabled={pending || disabled} aria-busy={pending}>
       {pending ? cargando : children}
     </button>
   );

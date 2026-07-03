@@ -97,6 +97,13 @@ export function puedeBusqueda(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'busqueda']);
 }
 
+// Digitalización de listados de personas (OCR): Búsqueda (hospitales/heridos),
+// Logística (acopio) y admin. La 2ª verificación para Búsqueda y la frontera por
+// tipo de lugar las imponen la página/acción y la RLS (0080).
+export function puedeDigitalizar(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'busqueda', 'logistica']);
+}
+
 // Pipeline de producción de contenido (ve y trabaja en /contenido): admin o un
 // rol de producción. Cada rol actúa en su etapa; el influencer, en cualquiera.
 const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'];

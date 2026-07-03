@@ -25,6 +25,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
   }
+  if (flags.digitalizacion) enlaces.push({ href: '/digitalizacion', etiqueta: 'Digitalización', icono: 'imagen' });
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
   if (flags.admin) {
