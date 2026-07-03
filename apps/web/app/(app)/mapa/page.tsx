@@ -10,21 +10,26 @@ import type { PuntoAcopio } from '@unidos/types';
 export default async function MapaPage() {
   const { perfil } = await requireUsuario();
   const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  if (!rolesG.includes('admin') && !rolesG.includes('logistica')) redirect('/dashboard');
+  if (!rolesG.includes('admin') && !rolesG.includes('logistica') && !rolesG.includes('digitalizador')) redirect('/dashboard');
 
   const supabase = await createClient();
 
-  const [{ data: puntosData }, { data: tareasData }] = await Promise.all([
+  const [{ data: puntosData }, { data: tareasData }, { data: lugaresData }] = await Promise.all([
     supabase.from('puntos_acopio')
       .select('id, nombre, direccion, responsable, telefono, recibe, necesita, horario, capacidad, urgencia, lat, lng, activo, creado_por, creado_en, actualizado_en')
       .eq('activo', true),
     supabase.from('tareas')
       .select('id, titulo, lat, lng, categoria')
       .not('lat', 'is', null).not('lng', 'is', null),
+    // Lugares digitalizados (la RLS los muestra a admin y digitalización).
+    supabase.from('lugares')
+      .select('id, tipo, nombre, lat, lng, estado')
+      .not('lat', 'is', null).not('lng', 'is', null),
   ]);
 
   const puntos = (puntosData ?? []) as PuntoAcopio[];
   const tareas = (tareasData ?? []) as any[];
+  const lugares = (lugaresData ?? []) as any[];
 
   return (
     <div>
@@ -38,10 +43,13 @@ export default async function MapaPage() {
         <span className="leyenda-pin" style={{ background: '#CF142B' }} /> urgente,{' '}
         <span className="leyenda-pin" style={{ background: '#E6A100' }} /> necesita,{' '}
         <span className="leyenda-pin" style={{ background: '#0A7D2C' }} /> cubierto) y
-        tareas con ubicación (<span className="leyenda-pin" style={{ background: '#0033A0' }} /> azul).
+        tareas con ubicación (<span className="leyenda-pin" style={{ background: '#0033A0' }} /> azul)
+        {lugares.length > 0 && <> y lugares digitalizados (
+          <span className="leyenda-pin" style={{ background: '#7C3AED' }} /> verificado,{' '}
+          <span className="leyenda-pin" style={{ background: '#DB2777' }} /> pendiente)</>}.
         Para crear o editar centros, entra a <strong>Centros de acopio</strong>.
       </p>
-      <Mapa puntos={puntos} tareas={tareas} />
+      <Mapa puntos={puntos} tareas={tareas} lugares={lugares} />
     </div>
   );
 }

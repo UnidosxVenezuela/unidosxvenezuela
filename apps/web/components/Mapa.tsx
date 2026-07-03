@@ -7,6 +7,13 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { PuntoAcopio } from '@unidos/types';
 
 type TareaUbic = { id: string; titulo: string; lat: number; lng: number; categoria: string };
+type LugarPunto = { id: string; tipo: string; nombre: string; lat: number; lng: number; estado: string; personas?: number };
+
+const ETIQ_TIPO_LUGAR: Record<string, string> = { hospital: 'Hospital', albergue: 'Albergue', acopio: 'Centro de acopio', otro: 'Lugar' };
+const ETIQ_ESTADO_LUGAR: Record<string, string> = { pendiente_llenado: 'Pendiente de llenado', pendiente_verificar: 'Pendiente de verificar', verificado: 'Verificado' };
+function colorLugar(estado: string): string {
+  return estado === 'verificado' ? '#7C3AED' : '#DB2777'; // morado verificado · rosa pendiente
+}
 
 const ESTILO: StyleSpecification = {
   version: 8,
@@ -22,7 +29,7 @@ function colorAcopio(u: string): string {
   return '#E6A100';                      // necesita
 }
 
-export default function Mapa({ puntos, tareas }: { puntos: PuntoAcopio[]; tareas: TareaUbic[] }) {
+export default function Mapa({ puntos, tareas, lugares = [] }: { puntos: PuntoAcopio[]; tareas: TareaUbic[]; lugares?: LugarPunto[] }) {
   const cont = useRef<HTMLDivElement>(null);
   const mapa = useRef<MapLibreMap | null>(null);
 
@@ -55,8 +62,17 @@ export default function Mapa({ puntos, tareas }: { puntos: PuntoAcopio[]; tareas
       const popup = new maplibregl.Popup({ offset: 18 }).setHTML(`<strong>${esc(t.titulo)}</strong><br/>Tarea · ${esc(t.categoria)}`);
       marcadores.push(new maplibregl.Marker({ color: '#0033A0' }).setLngLat([t.lng, t.lat]).setPopup(popup).addTo(m));
     }
+    for (const l of lugares) {
+      const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
+        `<strong>${esc(l.nombre)}</strong>` +
+        `<br/>${esc(ETIQ_TIPO_LUGAR[l.tipo] ?? l.tipo)}` +
+        (l.personas ? ` · ${l.personas} personas` : '') +
+        `<br/><b>${esc(ETIQ_ESTADO_LUGAR[l.estado] ?? l.estado)}</b>`
+      );
+      marcadores.push(new maplibregl.Marker({ color: colorLugar(l.estado) }).setLngLat([l.lng, l.lat]).setPopup(popup).addTo(m));
+    }
     return () => { marcadores.forEach((mk) => mk.remove()); };
-  }, [puntos, tareas]);
+  }, [puntos, tareas, lugares]);
 
   return <div ref={cont} style={{ height: 560, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--borde)' }} />;
 }

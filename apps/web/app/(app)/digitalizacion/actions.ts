@@ -59,20 +59,32 @@ export async function guardarListado(formData: FormData) {
     .slice(0, 300);
   if (personas.length === 0) throw new Error('No hay personas confirmadas para guardar.');
 
-  // 1) Crear el listado.
+  const lat = numOpt(txt(formData.get('lat')));
+  const lng = numOpt(txt(formData.get('lng')));
+  const punto = tipoLugar === 'acopio' ? opt(formData.get('punto_acopio_id')) : null;
+
+  // 1) Resolver el LUGAR (punto del mapa): lo crea si no existe (pendiente de
+  //    llenado) o lo asocia (pendiente de verificar). Devuelve el id del lugar.
+  let lugarId: string | null = null;
+  const { data: lid } = await supabase.rpc('resolver_lugar', {
+    p_tipo: tipoLugar, p_nombre: lugarNombre, p_lat: lat, p_lng: lng, p_punto_acopio_id: punto,
+  });
+  if (typeof lid === 'string') lugarId = lid;
+
+  // 2) Crear el listado (anclado a su lugar).
   const { data: creado, error: eL } = await supabase.from('listados_digitalizados').insert({
     tipo_lugar: tipoLugar,
     lugar_nombre: lugarNombre,
-    punto_acopio_id: tipoLugar === 'acopio' ? opt(formData.get('punto_acopio_id')) : null,
-    lat: numOpt(txt(formData.get('lat'))),
-    lng: numOpt(txt(formData.get('lng'))),
+    lugar_id: lugarId,
+    punto_acopio_id: punto,
+    lat, lng,
     notas: opt(formData.get('notas')),
     creado_por: user.id,
   }).select('id').single();
   if (eL) throw new Error('No se pudo crear el listado: ' + eL.message);
   const listadoId = creado!.id as string;
 
-  // 2) Subir el documento escaneado (respaldo; no bloquea el guardado).
+  // 3) Subir el documento escaneado (respaldo; no bloquea el guardado).
   const doc = formData.get('documento');
   if (doc instanceof File && doc.size > 0) {
     const v = validarArchivo(doc.name, doc.size, 15);
@@ -86,7 +98,7 @@ export async function guardarListado(formData: FormData) {
     }
   }
 
-  // 3) Insertar las personas confirmadas.
+  // 4) Insertar las personas confirmadas.
   const { error: eP } = await supabase.from('personas_listado').insert(
     personas.map((p) => ({ ...p, listado_id: listadoId, creado_por: user.id })),
   );
@@ -94,4 +106,50 @@ export async function guardarListado(formData: FormData) {
 
   revalidatePath('/digitalizacion');
   redirigirOk('/digitalizacion', `Guardado: ${personas.length} personas en ${lugarNombre}`);
+}
+
+// ── Moderación de lugares (solo admin) ──
+const TIPOS_LUGAR_MOD = ['hospital', 'albergue', 'acopio', 'otro'];
+
+async function exigirAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede moderar lugares.');
+  return { supabase, user };
+}
+
+// Admin completa/corrige los datos de un lugar (nombre, tipo, ubicación, dirección).
+export async function actualizarLugar(formData: FormData) {
+  const { supabase } = await exigirAdmin();
+  const id = txt(formData.get('id'));
+  const tipo = txt(formData.get('tipo'));
+  const nombre = txt(formData.get('nombre'));
+  if (!id || !nombre) throw new Error('Faltan datos del lugar.');
+  const { error } = await supabase.from('lugares').update({
+    tipo: TIPOS_LUGAR_MOD.includes(tipo) ? tipo : 'otro',
+    nombre,
+    direccion: opt(formData.get('direccion')),
+    lat: numOpt(txt(formData.get('lat'))),
+    lng: numOpt(txt(formData.get('lng'))),
+    notas: opt(formData.get('notas')),
+    actualizado_en: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw new Error('No se pudo guardar el lugar: ' + error.message);
+  revalidatePath('/digitalizacion/lugares'); revalidatePath('/mapa');
+  redirigirOk('/digitalizacion/lugares', 'Lugar actualizado');
+}
+
+// Admin da por verificado un lugar (datos correctos y la data corresponde).
+export async function verificarLugar(formData: FormData) {
+  const { supabase, user } = await exigirAdmin();
+  const id = txt(formData.get('id'));
+  const { error } = await supabase.from('lugares').update({
+    estado: 'verificado', verificado_por: user.id, verificado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw new Error('No se pudo verificar el lugar: ' + error.message);
+  revalidatePath('/digitalizacion/lugares'); revalidatePath('/mapa');
+  redirigirOk('/digitalizacion/lugares', 'Lugar verificado');
 }

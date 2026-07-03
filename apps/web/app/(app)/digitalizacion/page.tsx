@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_TIPO_LUGAR } from '@/lib/constantes';
+import { ETIQUETA_TIPO_LUGAR, ETIQUETA_ESTADO_LUGAR } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -37,7 +37,7 @@ export default async function DigitalizacionPage() {
   }
 
   const { data: listadosRaw } = await supabase.from('listados_digitalizados')
-    .select('id, tipo_lugar, lugar_nombre, documento_path, lat, lng, creado_en, personas_listado(count)')
+    .select('id, tipo_lugar, lugar_nombre, documento_path, lat, lng, creado_en, personas_listado(count), lugares(estado)')
     .order('creado_en', { ascending: false }).limit(100);
   const listados = (listadosRaw ?? []) as any[];
   const conteo = (l: any) => Number(l?.personas_listado?.[0]?.count ?? 0);
@@ -53,7 +53,10 @@ export default async function DigitalizacionPage() {
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="imagen" size={24} /> Digitalización</h1>
           <p className="muted sub">Convierte listas de personas en registros verificados. {totalPersonas > 0 && <>Ya hay <strong>{totalPersonas}</strong> personas digitalizadas.</>}</p>
         </div>
-        <Link className="btn btn-primario" href="/digitalizacion/nueva"><Icono nombre="mas" /> Nueva digitalización</Link>
+        <div className="fila" style={{ gap: 8 }}>
+          {esAdmin && <Link className="btn" href="/digitalizacion/lugares"><Icono nombre="mapa" /> Moderar lugares</Link>}
+          <Link className="btn btn-primario" href="/digitalizacion/nueva"><Icono nombre="mas" /> Nueva digitalización</Link>
+        </div>
       </div>
 
       {listados.length === 0 ? (
@@ -73,7 +76,7 @@ export default async function DigitalizacionPage() {
               <div className="fila muted" style={{ gap: 8, fontSize: '.82rem', flexWrap: 'wrap' }}>
                 <span>{fechaHora(l.creado_en)}</span>
                 {l.documento_path && <Pill tono="neutra" punto={false}>con documento</Pill>}
-                {l.lat && l.lng ? <Pill tono="ok" punto={false}>ubicado</Pill> : <Pill tono="aviso" punto={false}>sin ubicación</Pill>}
+                {(() => { const est = (l as any).lugares?.estado; return est ? <Pill tono={est === 'verificado' ? 'ok' : 'aviso'} punto={false}>{ETIQUETA_ESTADO_LUGAR[est] ?? est}</Pill> : null; })()}
               </div>
             </div>
           ))}
