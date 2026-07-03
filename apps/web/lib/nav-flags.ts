@@ -8,6 +8,7 @@ export type NavFlags = {
   gestionCasos: boolean;   // crea casos (ve solo los suyos)
   verificacion: boolean;   // verifica casos (Otras informaciones)
   busqueda: boolean;       // verifica casos de desaparecidos (Grupo de Búsqueda)
+  digitalizacion: boolean; // digitaliza listados de personas (OCR)
   envioRedaccion: boolean; // pasa confirmados a "enviado a redacción"
   contenido: boolean;      // produce y publica contenido (Redacción→Diseño→Redes)
   acopio: boolean;         // mapa + centros de acopio + insumos
@@ -43,6 +44,8 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     gestionCasos: admin || (esRecopilacion && identidadOK),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
     busqueda: admin || (esBusqueda && identidadOK),
+    // Digitalización: Búsqueda (con 2ª verif) para hospitales/heridos, Logística para acopio.
+    digitalizacion: admin || (esBusqueda && identidadOK) || roles.includes('logistica'),
     envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || CONTENIDO.some((c) => clavesLidero.has(c)),

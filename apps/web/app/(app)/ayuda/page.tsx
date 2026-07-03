@@ -61,6 +61,14 @@ export default async function AyudaPage() {
         </S>
       )}
 
+      {f.digitalizacion && (
+        <S icono="imagen" titulo="Digitalización de listados (tu función)">
+          <li>Sube o <strong>fotografía</strong> una lista de personas (hospital, albergue o centro de acopio). El texto se reconoce <strong>en tu propio dispositivo</strong> — la imagen no se envía a terceros.</li>
+          <li><strong>Confirma línea por línea</strong>: corrige nombre, cédula, edad y condición; las líneas de baja confianza aparecen resaltadas. Desmarca lo que no sean personas.</li>
+          <li>Al guardar, la data queda en la base de datos y (con ubicación) podrá verse en el mapa.</li>
+        </S>
+      )}
+
       {f.envioRedaccion && (
         <S icono="cohete" titulo="Redacción · Envío a Redacción (tu función)">
           <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves los casos <strong>confirmados</strong> por Verificación.</li>

@@ -39,6 +39,9 @@ export default function PanelCedula() {
       <p className="muted" style={{ margin: '0 0 10px', fontSize: '.82rem' }}>
         Contrasta la cédula de un caso con el registro oficial. Búsqueda <strong>solo por cédula</strong>. Cada consulta queda registrada.
       </p>
+      <p className="muted" style={{ margin: '0 0 10px', fontSize: '.78rem', borderLeft: '3px solid var(--aviso, #E6A100)', paddingLeft: 8 }}>
+        ⚠️ El registro del CNE solo cubre a <strong>mayores de edad</strong>: no encontrará a menores. Que no aparezca no significa que la persona no exista.
+      </p>
       <form onSubmit={consultar}>
         <div className="fila" style={{ gap: 6, alignItems: 'flex-end' }}>
           <div className="campo" style={{ margin: 0 }}>

@@ -135,6 +135,24 @@ export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso', 
 // Categorías vigentes al crear/verificar (los casos viejos conservan la suya).
 export const CATEGORIAS_CASO = ['Desaparecidos', 'Otras informaciones'];
 
+// ── Digitalización de listados de personas (OCR) ──
+export const TIPOS_LUGAR = ['hospital', 'albergue', 'acopio', 'otro'] as const;
+export const ETIQUETA_TIPO_LUGAR: Record<string, string> = {
+  hospital: 'Hospital',
+  albergue: 'Albergue',
+  acopio: 'Centro de acopio',
+  otro: 'Otro lugar',
+};
+export const CONDICIONES_PERSONA = ['herido', 'refugiado', 'fallecido', 'sano', 'desconocida', 'otro'] as const;
+export const ETIQUETA_CONDICION: Record<string, string> = {
+  herido: 'Herido',
+  refugiado: 'Refugiado / Damnificado',
+  fallecido: 'Fallecido',
+  sano: 'Sano y salvo',
+  desconocida: 'Desconocida',
+  otro: 'Otro',
+};
+
 // ── Pipeline de producción de contenido ──
 export const ETIQUETA_ETAPA: Record<EtapaContenido, string> = {
   redaccion: 'Redacción', diseno: 'Diseño Gráfico', video: 'Edición de Videos', redes: 'Redes Sociales', publicado: 'Publicado',
