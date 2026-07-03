@@ -17,21 +17,24 @@ async function exigirAdmin() {
 
 export async function aprobarVerificacion(formData: FormData) {
   const { supabase, user } = await exigirAdmin();
-  const { error } = await supabase.from('verificaciones_identidad').update({
+  const { data: fila, error } = await supabase.from('verificaciones_identidad').update({
     estado: 'aprobada', nota_revision: null,
     revisado_por: user.id, revisado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(),
-  }).eq('id', String(formData.get('id')));
+  }).eq('id', String(formData.get('id'))).select('perfil_id').single();
   if (error) throw new Error('No se pudo aprobar: ' + error.message);
+  // La notificación a la persona la dispara el trigger (0077); aquí, la auditoría.
+  if (fila?.perfil_id) await supabase.rpc('registrar_auditoria', { p_accion: 'verificacion_aprobada', p_entidad_id: fila.perfil_id, p_metadata: {} });
   revalidatePath('/admin/verificaciones');
 }
 
 export async function rechazarVerificacion(formData: FormData) {
   const { supabase, user } = await exigirAdmin();
   const nota = String(formData.get('nota') ?? '').trim() || null;
-  const { error } = await supabase.from('verificaciones_identidad').update({
+  const { data: fila, error } = await supabase.from('verificaciones_identidad').update({
     estado: 'rechazada', nota_revision: nota,
     revisado_por: user.id, revisado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(),
-  }).eq('id', String(formData.get('id')));
+  }).eq('id', String(formData.get('id'))).select('perfil_id').single();
   if (error) throw new Error('No se pudo rechazar: ' + error.message);
+  if (fila?.perfil_id) await supabase.rpc('registrar_auditoria', { p_accion: 'verificacion_rechazada', p_entidad_id: fila.perfil_id, p_metadata: { nota } });
   revalidatePath('/admin/verificaciones');
 }

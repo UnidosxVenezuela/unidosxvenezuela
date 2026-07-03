@@ -19,6 +19,9 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
+  // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
+  const { data: idsVerif } = await supabase.from('verificaciones_identidad').select('perfil_id').eq('estado', 'aprobada');
+  const identidadOK = new Set<string>((idsVerif ?? []).map((v: any) => v.perfil_id));
   // Buscador y filtros (sobre la lista completa ya cargada).
   const q = (searchParams.q ?? '').trim().toLowerCase();
   if (q) perfiles = perfiles.filter((p) =>
@@ -266,6 +269,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                       {p.verificado ? 'Quitar' : 'Verificar'}
                     </button>
                   </form>
+                  {identidadOK.has(p.id) && <div style={{ marginTop: 6 }}><Pill tono="ok" icono="llave">Identidad verificada</Pill></div>}
                   {esAdmin && p.id !== user!.id && !(p.rol === 'admin' || (p.roles_extra ?? []).includes('admin') || p.super_admin) && (
                     <form action={restablecerContrasena} style={{ marginTop: 6 }}>
                       <input type="hidden" name="perfil_id" value={p.id} />
