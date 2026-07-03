@@ -97,11 +97,11 @@ export function puedeBusqueda(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'busqueda']);
 }
 
-// Digitalización de listados de personas (OCR): Búsqueda (hospitales/heridos),
-// Logística (acopio) y admin. La 2ª verificación para Búsqueda y la frontera por
-// tipo de lugar las imponen la página/acción y la RLS (0080).
+// Digitalización de listados de personas (OCR): rol propio 'digitalizador'
+// (Grupo de Digitalización) y admin. La 2ª verificación obligatoria para el
+// digitalizador la imponen la página/acción y la RLS (0081).
 export function puedeDigitalizar(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'busqueda', 'logistica']);
+  return tieneAlguno(e, ['admin', 'digitalizador']);
 }
 
 // Pipeline de producción de contenido (ve y trabaja en /contenido): admin o un

@@ -39,13 +39,14 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
   const esRecopilacion = claves.has('gestion_casos') || roles.includes('recopilacion');
   const esBusqueda = claves.has('busqueda') || roles.includes('busqueda');
+  const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
   return {
     admin,
     gestionCasos: admin || (esRecopilacion && identidadOK),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
     busqueda: admin || (esBusqueda && identidadOK),
-    // Digitalización: Búsqueda (con 2ª verif) para hospitales/heridos, Logística para acopio.
-    digitalizacion: admin || (esBusqueda && identidadOK) || roles.includes('logistica'),
+    // Digitalización: rol/grupo propio con 2ª verificación (identidad) obligatoria.
+    digitalizacion: admin || (esDigitalizador && identidadOK),
     envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || CONTENIDO.some((c) => clavesLidero.has(c)),

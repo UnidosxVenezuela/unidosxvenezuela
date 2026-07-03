@@ -13,31 +13,24 @@ import type { Rol } from '@unidos/types';
 
 const TIPOS = ['hospital', 'albergue', 'acopio', 'otro'];
 const COND = ['herido', 'refugiado', 'fallecido', 'sano', 'desconocida', 'otro'];
-const TIPOS_BUSQUEDA = ['hospital', 'albergue', 'otro'];
-const TIPOS_LOGISTICA = ['acopio', 'albergue'];
 
 function txt(v: FormDataEntryValue | null | undefined) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null | undefined) { const s = txt(v); return s ? s : null; }
 function numOpt(v: string) { const n = Number(v); return Number.isFinite(n) && n !== 0 ? n : null; }
 
-async function exigirDigitalizar(tipoLugar: string) {
+async function exigirDigitalizar() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const esAdmin = roles.includes('admin');
-  const esBusq = roles.includes('busqueda');
-  const esLog = roles.includes('logistica');
-  if (!yo?.verificado || (!esAdmin && !esBusq && !esLog)) throw new Error('No tienes permiso para digitalizar.');
+  const esDig = roles.includes('digitalizador');
+  if (!yo?.verificado || (!esAdmin && !esDig)) throw new Error('No tienes permiso para digitalizar.');
+  // El digitalizador necesita la 2ª verificación (identidad) aprobada; admin exento.
   if (!esAdmin) {
-    let permitido = false;
-    if (esBusq && TIPOS_BUSQUEDA.includes(tipoLugar)) {
-      const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
-      permitido = (vi as any)?.estado === 'aprobada';
-    }
-    if (esLog && TIPOS_LOGISTICA.includes(tipoLugar)) permitido = true;
-    if (!permitido) throw new Error('No puedes digitalizar listados de ese tipo de lugar (o te falta la segunda verificación).');
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') throw new Error('Necesitas tu segunda verificación aprobada para digitalizar.');
   }
   return { supabase, user };
 }
@@ -45,7 +38,7 @@ async function exigirDigitalizar(tipoLugar: string) {
 export async function guardarListado(formData: FormData) {
   const tipoLugar = txt(formData.get('tipo_lugar')) || 'otro';
   if (!TIPOS.includes(tipoLugar)) throw new Error('Tipo de lugar no válido.');
-  const { supabase, user } = await exigirDigitalizar(tipoLugar);
+  const { supabase, user } = await exigirDigitalizar();
 
   const lugarNombre = txt(formData.get('lugar_nombre'));
   if (!lugarNombre) throw new Error('Indica el nombre del lugar.');

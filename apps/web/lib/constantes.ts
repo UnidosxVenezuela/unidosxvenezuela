@@ -78,6 +78,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   verificador: 'Verificación',
   recopilacion: 'Recopilación',
   busqueda: 'Búsqueda',
+  digitalizador: 'Digitalización',
   redaccion: 'Envío a Redacción',
   redes_sociales: 'Community Manager',
   diseno_grafico: 'Diseño Gráfico',

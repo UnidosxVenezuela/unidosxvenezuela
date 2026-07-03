@@ -15,13 +15,12 @@ export default async function DigitalizacionPage() {
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
-  const esBusq = roles.includes('busqueda');
-  const esLog = roles.includes('logistica');
-  if (!esAdmin && !esBusq && !esLog) redirect('/dashboard');
+  const esDig = roles.includes('digitalizador');
+  if (!esAdmin && !esDig) redirect('/dashboard');
   const supabase = await createClient();
 
-  // Búsqueda (sin ser logística) necesita 2ª verificación aprobada.
-  if (!esAdmin && esBusq && !esLog) {
+  // El rol digitalizador necesita la 2ª verificación (identidad) aprobada.
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       return (
