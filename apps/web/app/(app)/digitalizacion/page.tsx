@@ -65,7 +65,7 @@ export default async function DigitalizacionPage() {
       ) : (
         <div className="grid grid-2">
           {listados.map((l) => (
-            <div key={l.id} className="tarjeta">
+            <Link key={l.id} href={'/digitalizacion/' + l.id} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
               <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
                 <BadgeCategoria>{ETIQUETA_TIPO_LUGAR[l.tipo_lugar] ?? l.tipo_lugar}</BadgeCategoria>
                 <span className="fila muted" style={{ gap: 4, fontSize: '.85rem' }}>
@@ -78,7 +78,7 @@ export default async function DigitalizacionPage() {
                 {l.documento_path && <Pill tono="neutra" punto={false}>con documento</Pill>}
                 {(() => { const est = (l as any).lugares?.estado; return est ? <Pill tono={est === 'verificado' ? 'ok' : 'aviso'} punto={false}>{ETIQUETA_ESTADO_LUGAR[est] ?? est}</Pill> : null; })()}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
