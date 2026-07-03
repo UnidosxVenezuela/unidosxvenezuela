@@ -112,10 +112,14 @@ begin;
   end $$;
 rollback;
 
-\echo '== Test 7: Gestión de casos (recopilación) ve SOLO sus casos =='
+\echo '== Test 7: Gestión de casos (recopilación con 2ª verif) ve SOLO sus casos =='
 begin;
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_mio', 'en_proceso', :'admin');
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_ajeno', 'en_proceso', null);
+  -- La recopilación EXIGE 2ª verificación (identidad) aprobada para ver/crear casos (0078).
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
   update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}' where id = :'admin';
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
@@ -124,8 +128,22 @@ begin;
   begin
     select count(*) into n_mio from public.casos where titulo = '_TEST_mio';
     select count(*) into n_ajeno from public.casos where titulo = '_TEST_ajeno';
-    if n_mio <> 1 then raise exception 'FALLO: recopilación no ve su propio caso'; end if;
+    if n_mio <> 1 then raise exception 'FALLO: recopilación (verificada) no ve su propio caso'; end if;
     if n_ajeno <> 0 then raise exception 'FALLO: recopilación ve casos ajenos'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 7b: recopilación SIN 2ª verificación NO ve sus casos =='
+begin;
+  insert into public.casos (titulo, estado, creado_por) values ('_TEST_mio2', 'en_proceso', :'admin');
+  update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.casos where titulo = '_TEST_mio2';
+    if n <> 0 then raise exception 'FALLO: recopilación sin identidad aprobada vio su caso'; end if;
   end $$;
 rollback;
 
@@ -190,6 +208,57 @@ begin;
     update public.casos set estado = 'en_proceso' where titulo = '_TEST_env';
     get diagnostics n = row_count;
     if n <> 0 then raise exception 'FALLO: un verificador regresó un caso ya enviado a Redacción'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 12: Verificación ve «Otras informaciones» pero NO «Desaparecidos» =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_otras', 'en_proceso', 'Otras informaciones', null);
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_desap', 'en_proceso', 'Desaparecidos', null);
+  update public.perfiles set rol = 'voluntario', roles_extra = '{verificador}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_otras int; n_desap int;
+  begin
+    select count(*) into n_otras from public.casos where titulo = '_TEST_otras';
+    select count(*) into n_desap from public.casos where titulo = '_TEST_desap';
+    if n_otras <> 1 then raise exception 'FALLO: verificador no ve un caso de Otras informaciones'; end if;
+    if n_desap <> 0 then raise exception 'FALLO: verificador vio un caso de Desaparecidos'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 13: Búsqueda (con 2ª verif) ve «Desaparecidos» pero NO «Otras informaciones» =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_desap2', 'en_proceso', 'Desaparecidos', null);
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_otras2', 'en_proceso', 'Otras informaciones', null);
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
+  update public.perfiles set rol = 'voluntario', roles_extra = '{busqueda}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_desap int; n_otras int;
+  begin
+    select count(*) into n_desap from public.casos where titulo = '_TEST_desap2';
+    select count(*) into n_otras from public.casos where titulo = '_TEST_otras2';
+    if n_desap <> 1 then raise exception 'FALLO: búsqueda no ve un caso de Desaparecidos'; end if;
+    if n_otras <> 0 then raise exception 'FALLO: búsqueda vio un caso de Otras informaciones'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 14: Búsqueda SIN 2ª verificación NO ve «Desaparecidos» =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_desap3', 'en_proceso', 'Desaparecidos', null);
+  update public.perfiles set rol = 'voluntario', roles_extra = '{busqueda}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.casos where titulo = '_TEST_desap3';
+    if n <> 0 then raise exception 'FALLO: búsqueda sin identidad aprobada vio un desaparecido'; end if;
   end $$;
 rollback;
 

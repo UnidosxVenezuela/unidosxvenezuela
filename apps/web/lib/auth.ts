@@ -90,6 +90,13 @@ export function puedeRecopilar(e?: EntradaRoles) {
   return puedeVerificar(e) || tieneAlguno(e, ['recopilacion']);
 }
 
+// Grupo de Búsqueda: verifica los casos de personas DESAPARECIDAS (los casos
+// «Otras informaciones» quedan para Verificación). La RLS aplica la frontera por
+// categoría y exige 2ª verificación (identidad aprobada) para este rol.
+export function puedeBusqueda(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'busqueda']);
+}
+
 // Pipeline de producción de contenido (ve y trabaja en /contenido): admin o un
 // rol de producción. Cada rol actúa en su etapa; el influencer, en cualquiera.
 const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'];

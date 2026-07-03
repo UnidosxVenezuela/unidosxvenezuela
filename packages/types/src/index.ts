@@ -12,6 +12,7 @@ export type Rol =
   | 'verificador'             // Revisa y aprueba casos sensibles (módulo de verificación)
   // Pipeline de contenido (grupos exclusivos por rol)
   | 'recopilacion'            // Envía información/casos para verificar (no verifica)
+  | 'busqueda'                // Verifica casos de personas desaparecidas (Grupo de Búsqueda)
   | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
   | 'redes_sociales'          // Redes Sociales (publicación)
   | 'diseno_grafico'          // Diseño Gráfico

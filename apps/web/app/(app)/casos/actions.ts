@@ -21,9 +21,11 @@ async function exigirEnlaceSeguro(url: string | null | undefined) {
   }
 }
 
-// soloVerificar=true → admin/verificador (cambiar estado, notas).
+// soloVerificar=true → admin/verificador/busqueda (cambiar estado, notas, tomar).
 // soloVerificar=false → crear: SOLO Gestión de casos (recopilación) o admin.
 // Se evalúa el CONJUNTO de roles (principal + adicionales, sincronizados por grupo).
+// La RLS aplica la frontera por categoría (verificador↔Otras, búsqueda↔Desaparecidos)
+// y la 2ª verificación obligatoria; aquí solo filtramos el rol de forma temprana.
 async function exigirCasos(soloVerificar: boolean) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -31,7 +33,7 @@ async function exigirCasos(soloVerificar: boolean) {
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const permitidos = soloVerificar
-    ? ['admin', 'verificador']
+    ? ['admin', 'verificador', 'busqueda']
     : ['admin', 'recopilacion'];
   if (!yo?.verificado || !roles.some((r) => permitidos.includes(r as string))) {
     throw new Error('No tienes permisos para esta acción.');
@@ -94,6 +96,19 @@ export async function cambiarEstadoCaso(formData: FormData) {
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
   redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
+}
+
+// «Tomar» un caso para trabajarlo (se lo asigna a sí mismo). Pensado para el
+// Grupo de Búsqueda con los casos de desaparecidos, pero también sirve a
+// Verificación. La RLS decide sobre qué casos puede (por categoría + 2ª verif).
+export async function tomarCaso(formData: FormData) {
+  const { supabase, user } = await exigirCasos(true);
+  const id = txt(formData.get('caso_id'));
+  const { error } = await supabase.from('casos')
+    .update({ asignado_a: user.id, actualizado_en: new Date().toISOString() }).eq('id', id);
+  if (error) throw new Error('No se pudo tomar el caso: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso tomado');
 }
 
 // El grupo "Envío a Redacción" pasa un caso confirmado al estado final del flujo.

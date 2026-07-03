@@ -47,9 +47,17 @@ export default async function AyudaPage() {
 
       {f.verificacion && (
         <S icono="ok" titulo="Verificación (tu función)">
-          <li>En <strong>Verificación de casos</strong> revisas lo que llega y decides: <strong>Confirmado y activo</strong> si es verídico, o <strong>Falso / resuelto</strong> si no procede.</li>
+          <li>Verificas los casos de <strong>«Otras informaciones»</strong> (los <em>desaparecidos</em> los atiende el Grupo de Búsqueda): decides <strong>Confirmado y activo</strong> si es verídico, o <strong>Falso / resuelto</strong> si no procede.</li>
           <li>Abre cada caso para ver su descripción, fuente, adjuntos y dejar <strong>notas</strong>.</li>
           <li>Los confirmados pasan al equipo de <strong>Envío a Redacción</strong> (tú no los envías).</li>
+        </S>
+      )}
+
+      {f.busqueda && (
+        <S icono="buscar" titulo="Grupo de Búsqueda (tu función)">
+          <li>Atiendes los casos de <strong>personas desaparecidas</strong>: a medida que llegan, <strong>tómalos</strong> y verifícalos (<strong>Confirmado</strong> o <strong>Falso / resuelto</strong>).</li>
+          <li>Estos casos <strong>no pasan a Redacción</strong>: su información la gestiona el propio Grupo de Búsqueda.</li>
+          <li>Necesitas tener aprobada tu <strong>segunda verificación</strong> (identidad) para acceder.</li>
         </S>
       )}
 

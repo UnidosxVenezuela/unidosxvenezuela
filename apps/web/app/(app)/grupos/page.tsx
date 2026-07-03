@@ -18,10 +18,18 @@ export default async function GruposPage() {
   const supabase = await createClient();
   const coord = esCoordinacion(perfil); // solo admin
   const [{ data }, { data: conteos }] = await Promise.all([
-    supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, abierto').order('nombre'),
+    supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, abierto, clave').order('nombre'),
     supabase.rpc('conteo_miembros_grupo'),
   ]);
-  const grupos = (data ?? []) as any[];
+  let grupos = (data ?? []) as any[];
+  // Recopilación / Búsqueda sin 2ª verificación aprobada: se oculta su grupo de
+  // casos (igual que la sección Casos) hasta que la administración lo apruebe.
+  if (!esAdministrador(perfil)) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') {
+      grupos = grupos.filter((g) => g.clave !== 'gestion_casos' && g.clave !== 'busqueda');
+    }
+  }
   const totalPorGrupo = new Map<string, number>((conteos ?? []).map((c: any) => [c.grupo_id, Number(c.total)]));
 
   const liderIds = Array.from(new Set(grupos.map((g) => g.lider_id).filter(Boolean)));

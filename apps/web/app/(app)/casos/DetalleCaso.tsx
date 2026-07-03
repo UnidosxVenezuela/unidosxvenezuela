@@ -7,7 +7,7 @@ import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
-import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
+import { cambiarEstadoCaso, actualizarCaso, eliminarCaso, tomarCaso } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -22,8 +22,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, puedeTomar = false, miId }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; puedeTomar?: boolean; miId?: string;
 }) {
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
@@ -133,6 +133,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
           <p className="muted" style={{ margin: 0 }}>Este caso ya fue <strong>enviado a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
         </div>
+      )}
+      {puedeTomar && caso.estado !== 'enviado_redaccion' && caso.asignado_a !== miId && (
+        <form action={tomarCaso} className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <input type="hidden" name="volver" value={volver} />
+          <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span className="muted" style={{ fontSize: '.9rem' }}>¿Vas a trabajar este caso? <strong>Tómalo</strong> para dejar constancia de que lo estás verificando.</span>
+            <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Tomar caso</button>
+          </div>
+        </form>
       )}
       {puedeEditar && caso.estado !== 'enviado_redaccion' ? (
         <>
