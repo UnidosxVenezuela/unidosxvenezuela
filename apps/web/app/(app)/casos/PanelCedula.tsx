@@ -44,7 +44,7 @@ export default function PanelCedula({ activa, esAdmin }: { activa: boolean; esAd
         </p>
         <p className="muted" style={{ margin: 0, fontSize: '.8rem', borderLeft: '3px solid var(--aviso, #E6A100)', paddingLeft: 8 }}>
           {esAdmin ? (
-            <>Aún no está <strong>configurada</strong>. Define <code>CEDULA_VE_API_URL</code> con un proveedor compatible con CedulaVE (el script auto-hospedado o un espejo vigente) y vuelve a desplegar. El host público anterior fue discontinuado.</>
+            <>Aún no está <strong>configurada</strong>. Usa <strong>cedula.com.ve</strong> (<code>CEDULA_COM_VE_APP_ID</code> + <code>CEDULA_COM_VE_TOKEN</code>) o un proveedor compatible con CedulaVE auto-hospedado (<code>CEDULA_VE_API_URL</code>), y vuelve a desplegar. El host público anterior fue discontinuado.</>
           ) : (
             <>Aún no está disponible. Pídele a un <strong>administrador</strong> que la configure.</>
           )}

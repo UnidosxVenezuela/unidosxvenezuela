@@ -212,7 +212,7 @@ export async function consultarCedula(nac: string, cedula: string): Promise<
   // avisamos con claridad (distinto de una caída puntual del servicio).
   if (!cedulaVeActivo()) {
     return { ok: false, error: esAdmin
-      ? 'La consulta de cédula no está configurada. Define la variable de entorno CEDULA_VE_API_URL con un proveedor compatible con CedulaVE (el script auto-hospedado o un espejo vigente) y vuelve a desplegar. El host público anterior (api.megacreativo.com) fue discontinuado.'
+      ? 'La consulta de cédula no está configurada. Opción A: cedula.com.ve (define CEDULA_COM_VE_APP_ID y CEDULA_COM_VE_TOKEN). Opción B: un proveedor compatible con CedulaVE auto-hospedado o espejo (define CEDULA_VE_API_URL). Vuelve a desplegar tras configurarlo. El host público anterior (api.megacreativo.com) fue discontinuado.'
       : 'La consulta de cédula aún no está disponible. Pídele a un administrador que la configure.' };
   }
 
