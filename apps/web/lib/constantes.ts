@@ -144,6 +144,11 @@ export const ETIQUETA_TIPO_LUGAR: Record<string, string> = {
   acopio: 'Centro de acopio',
   otro: 'Otro lugar',
 };
+export const ETIQUETA_ESTADO_LUGAR: Record<string, string> = {
+  pendiente_llenado: 'Pendiente de llenado',
+  pendiente_verificar: 'Pendiente de verificar',
+  verificado: 'Verificado',
+};
 export const CONDICIONES_PERSONA = ['herido', 'refugiado', 'fallecido', 'sano', 'desconocida', 'otro'] as const;
 export const ETIQUETA_CONDICION: Record<string, string> = {
   herido: 'Herido',

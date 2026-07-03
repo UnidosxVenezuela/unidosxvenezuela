@@ -20,8 +20,8 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   }
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
+  if (flags.acopio || flags.digitalizacion) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
   if (flags.acopio) {
-    enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
   }
