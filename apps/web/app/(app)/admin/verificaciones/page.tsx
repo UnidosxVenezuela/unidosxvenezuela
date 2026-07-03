@@ -27,14 +27,15 @@ export default async function AdminVerificacionesPage() {
     : { data: [] as any[] };
   const perfiles = new Map<string, any>((perfilesRaw ?? []).map((p: any) => [p.id, p]));
 
-  const conFotos = await Promise.all(filas.map(async (f) => ({
+  // Solo se firman las imágenes de las PENDIENTES (las revisadas no muestran
+  // fotos), y con expiración corta: son cédulas + selfies.
+  const pendientes = await Promise.all(filas.filter((f) => f.estado === 'pendiente').map(async (f) => ({
     ...f,
     persona: perfiles.get(f.perfil_id),
-    selfieUrl: await urlFirmada(supabase, 'identidad', f.selfie_path, 3600),
-    docUrl: await urlFirmada(supabase, 'identidad', f.documento_path, 3600),
+    selfieUrl: await urlFirmada(supabase, 'identidad', f.selfie_path, 180),
+    docUrl: await urlFirmada(supabase, 'identidad', f.documento_path, 180),
   })));
-  const pendientes = conFotos.filter((f) => f.estado === 'pendiente');
-  const revisadas = conFotos.filter((f) => f.estado !== 'pendiente');
+  const revisadas = filas.filter((f) => f.estado !== 'pendiente').map((f) => ({ ...f, persona: perfiles.get(f.perfil_id) }));
 
   const Fotos = ({ f }: { f: any }) => (
     <div className="fila" style={{ gap: 10, flexWrap: 'wrap', marginTop: 8 }}>

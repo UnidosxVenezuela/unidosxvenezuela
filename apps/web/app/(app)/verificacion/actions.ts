@@ -6,8 +6,10 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
+import { LEGAL_VERSION } from '@/lib/legal-version';
 
 const MAX = 8 * 1024 * 1024; // 8 MB por imagen
+const TIPOS_IMG = ['image/jpeg', 'image/png', 'image/webp'];
 
 export async function enviarVerificacion(formData: FormData) {
   const supabase = await createClient();
@@ -23,6 +25,10 @@ export async function enviarVerificacion(formData: FormData) {
   if (!(selfie instanceof File) || selfie.size === 0) return { ok: false as const, error: 'Falta la foto en vivo (rostro + documento).' };
   if (!(documento instanceof File) || documento.size === 0) return { ok: false as const, error: 'Falta la foto del documento.' };
   if (selfie.size > MAX || documento.size > MAX) return { ok: false as const, error: 'Cada imagen debe pesar menos de 8 MB.' };
+  // Validación de tipo en el SERVIDOR (el accept del cliente es esquivable): solo
+  // imágenes; el documento también admite PDF. Evita HTML/scripts disfrazados.
+  if (!TIPOS_IMG.includes(selfie.type)) return { ok: false as const, error: 'La foto en vivo debe ser una imagen (JPG, PNG o WEBP).' };
+  if (![...TIPOS_IMG, 'application/pdf'].includes(documento.type)) return { ok: false as const, error: 'El documento debe ser una imagen (JPG, PNG, WEBP) o un PDF.' };
 
   const ts = Date.now();
   const selfiePath = `${user.id}/selfie-${ts}.jpg`;
@@ -52,6 +58,11 @@ export async function enviarVerificacion(formData: FormData) {
     await borrarArchivo(supabase, 'identidad', [selfiePath, docPath]).catch(() => {});
     return { ok: false as const, error: 'No se pudo guardar la verificación: ' + error.message };
   }
+  // (S5) Consentimiento con versión + fecha — best-effort: si aún no se aplicó la
+  // migración 0077, no rompe el envío.
+  await supabase.from('verificaciones_identidad')
+    .update({ consent_version: LEGAL_VERSION, consent_en: new Date().toISOString() })
+    .eq('perfil_id', user.id).then(() => {}, () => {});
   revalidatePath('/verificacion');
   return { ok: true as const };
 }

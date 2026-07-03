@@ -1,4 +1,5 @@
 import { requireUsuario } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ROL, HABILIDADES_SUGERIDAS } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 import { actualizarPerfil } from './actions';
@@ -14,6 +15,10 @@ export default async function PerfilPage({
 }: { searchParams: { guardado?: string } }) {
   const { user, perfil } = await requireUsuario();
   const avatarUrl = perfil?.avatar_url ?? null;
+  // Sello de identidad verificada (2ª verificación aprobada), aparte del acceso.
+  const supabase = await createClient();
+  const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+  const identidadVerificada = (vi as any)?.estado === 'aprobada';
 
   return (
     <div style={{ maxWidth: 560 }}>
@@ -25,6 +30,7 @@ export default async function PerfilPage({
               <Pill key={r} tono="neutra" punto={false}>{ETIQUETA_ROL[r as Rol] ?? r}</Pill>
             ))}
             <Pill tono={perfil?.verificado ? 'ok' : 'aviso'}>{perfil?.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
+            {identidadVerificada && <Pill tono="ok" icono="llave">Identidad verificada</Pill>}
           </div>
         </div>
       </div>
