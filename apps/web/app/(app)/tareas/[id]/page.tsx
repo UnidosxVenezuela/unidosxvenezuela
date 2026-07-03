@@ -12,6 +12,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import SubirAdjunto from './SubirAdjunto';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import BotonEnviar from '@/components/BotonEnviar';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, eliminarAdjunto, tomarTarea, liberarTarea } from '../actions';
 
@@ -117,7 +118,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
             ) : (
               <form action={tomarTarea}>
                 <input type="hidden" name="tarea_id" value={id} />
-                <BotonConfirmar mensaje="¿Tomar esta tarea? Quedarás como responsable de realizarla." className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="ok" size={16} /> Unirme</BotonConfirmar>
+                <BotonEnviar className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }} cargando="Sumándote…"><Icono nombre="ok" size={16} /> Unirme</BotonEnviar>
               </form>
             )
           )}

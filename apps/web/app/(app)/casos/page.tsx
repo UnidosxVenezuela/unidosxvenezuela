@@ -28,6 +28,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   if (!puedeRecopilar(perfil)) redirect('/dashboard');
   const puedeVerif = puedeVerificar(perfil);
   const puedeCrear = esAdministrador(perfil) || rolesDe(perfil).includes('recopilacion');
+  // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
+  // sin describirle acciones de otros roles.
+  const tipCasos = esAdministrador(perfil)
+    ? { t: 'El flujo de un caso', c: <>Recopilación <strong>reporta</strong> → Verificación <strong>confirma o descarta</strong> → Envío a Redacción lo <strong>pasa a contenido</strong>. Toca un caso para ver su historial y quién intervino.</> }
+    : puedeVerif
+      ? { t: 'Verificar casos', c: <>Revisa lo reportado y <strong>confírmalo o descártalo</strong>. Toca un caso para ver su fuente, su detalle y quién intervino.</> }
+      : { t: 'Reportar y seguir casos', c: <>Reporta con <strong>«Nuevo caso»</strong> lo que llega para verificar; el equipo de verificación lo confirmará o descartará. Toca un caso para seguir su estado.</> };
   const supabase = await createClient();
 
   const cnt = (estado?: string) => {
@@ -81,9 +88,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
   return (
     <AnimarEntrada>
-      <Consejo id="casos" titulo="El flujo de un caso">
-        Recopilación <strong>reporta</strong> → Verificación <strong>confirma o descarta</strong> → Envío a Redacción lo <strong>pasa a contenido</strong>. Toca un caso para ver su detalle, su historial y quién intervino.
-      </Consejo>
+      <Consejo id="casos" titulo={tipCasos.t}>{tipCasos.c}</Consejo>
       <div className="pagina-cab">
         <div>
           <h1>Casos</h1>

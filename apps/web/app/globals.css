@@ -195,6 +195,18 @@ a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
   .btn, .icono-btn, .btn-consejos, .user-chip { min-height: 44px !important; }
 }
 
+/* Diálogo de confirmación in-app (reemplaza el window.confirm nativo). */
+.confirm-backdrop {
+  position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, .5); padding: 16px; animation: drawerFade .15s ease;
+}
+.confirm-caja {
+  background: var(--fondo); border: 1px solid var(--borde); border-radius: 14px;
+  padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(16, 24, 40, .3);
+}
+.confirm-msg { margin: 0 0 16px; font-size: .98rem; line-height: 1.5; }
+.confirm-acciones { display: flex; gap: 10px; justify-content: flex-end; }
+
 /* Formularios */
 .campo { display: grid; gap: 6px; margin-bottom: 14px; }
 label { font-weight: 600; color: var(--texto-suave); }
