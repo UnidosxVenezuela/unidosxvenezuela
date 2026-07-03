@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
+import EditorImagen from './EditorImagen';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_CONDICION, CONDICIONES_PERSONA } from '@/lib/constantes';
 import { guardarListado } from './actions';
 
@@ -39,7 +40,9 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [notas, setNotas] = useState('');
-  const [preview, setPreview] = useState<string | null>(null);
+  const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
+  const [archivoEditado, setArchivoEditado] = useState<File | null>(null);
+  const [pickId, setPickId] = useState(0);
   const [estado, setEstado] = useState<'idle' | 'procesando' | 'listo'>('idle');
   const [progreso, setProgreso] = useState(0);
   const [filas, setFilas] = useState<Fila[]>([]);
@@ -63,14 +66,32 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
     );
   }
 
+  // Deja el archivo (editado) dentro del input para que viaje al servidor.
+  function escribirEnInput(file: File) {
+    if (!fileRef.current) return;
+    try {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileRef.current.files = dt.files;
+    } catch { /* si el navegador no lo permite, se envía la foto original */ }
+  }
+
   function alElegirArchivo(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
-    setPreview(f ? URL.createObjectURL(f) : null);
+    const f = e.target.files?.[0] ?? null;
+    setArchivoOriginal(f);
+    setArchivoEditado(f);
+    setPickId((n) => n + 1);
     setFilas([]); setEstado('idle'); setError(null);
   }
 
+  // Cada recorte/rotación reemplaza la imagen usada para OCR y para el envío.
+  function alEditarImagen(file: File) {
+    setArchivoEditado(file);
+    escribirEnInput(file);
+  }
+
   async function escanear() {
-    const f = fileRef.current?.files?.[0];
+    const f = archivoEditado;
     if (!f) { setError('Primero elige o toma una foto de la lista.'); return; }
     setError(null); setEstado('procesando'); setProgreso(0);
     try {
@@ -140,14 +161,17 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
       <div className="tarjeta">
         <h3 className="aside-titulo"><Icono nombre="imagen" size={16} /> Foto o escaneo de la lista</h3>
         <input ref={fileRef} type="file" name="documento" accept="image/*" capture="environment" className="input" onChange={alElegirArchivo} />
-        {preview && <img src={preview} alt="Vista previa" style={{ maxWidth: '100%', maxHeight: 240, borderRadius: 8, marginTop: 10, display: 'block' }} />}
+        {archivoOriginal && <EditorImagen key={pickId} file={archivoOriginal} onCambio={alEditarImagen} />}
         <div className="fila" style={{ gap: 8, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <button type="button" className="btn btn-primario" onClick={escanear} disabled={estado === 'procesando'}>
             {estado === 'procesando' ? `Reconociendo… ${progreso}%` : <><Icono nombre="buscar" size={16} /> Reconocer texto</>}
           </button>
           {estado === 'listo' && <span className="muted" style={{ fontSize: '.85rem' }}>{filas.length} líneas detectadas · revisa y corrige abajo</span>}
         </div>
-        <p className="muted" style={{ fontSize: '.8rem', margin: '8px 0 0' }}>El reconocimiento ocurre <strong>en tu dispositivo</strong>; la imagen no se envía a terceros.</p>
+        <p className="muted" style={{ fontSize: '.8rem', margin: '8px 0 0' }}>
+          {archivoOriginal && <>Endereza (<strong>girar</strong>) y <strong>recorta</strong> la foto para dejar solo la lista: mejora mucho el reconocimiento. </>}
+          El reconocimiento ocurre <strong>en tu dispositivo</strong>; la imagen no se envía a terceros.
+        </p>
       </div>
 
       {/* 3) Revisión línea por línea */}
