@@ -7,7 +7,7 @@ export default function BarraBusqueda({ name = 'q', placeholder = 'Buscar…', d
   return (
     <div className={'buscador' + (className ? ' ' + className : '')}>
       <Icono nombre="buscar" size={18} />
-      <input name={name} className="input" placeholder={placeholder} defaultValue={defaultValue} />
+      <input name={name} className="input" placeholder={placeholder} aria-label={placeholder} defaultValue={defaultValue} />
     </div>
   );
 }

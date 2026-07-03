@@ -37,6 +37,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
 
   return (
     <div className={'app-shell' + (colapsada ? ' lateral-colapsada' : '') + (cajon ? ' lateral-movil' : '')}>
+      <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
       <SonidoBotones />
       <aside className="sidebar">
         <div className="tricolor" />
@@ -60,7 +61,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
             <UserChip nombre={usuario.nombre} rol={usuario.rol} email={usuario.email} avatarUrl={usuario.avatarUrl} />
           </div>
         </header>
-        <main className="contenedor">{children}</main>
+        <main id="contenido-principal" tabIndex={-1} className="contenedor">{children}</main>
         <footer className="muted" style={{ textAlign: 'center', fontSize: '.8rem', padding: '10px 24px 24px' }}>
           <Link href="/legal/terminos">Términos</Link> · <Link href="/legal/privacidad">Privacidad</Link> · <Link href="/legal/descargo">Descargo de responsabilidad</Link>
         </footer>

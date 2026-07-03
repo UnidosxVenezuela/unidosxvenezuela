@@ -10,7 +10,7 @@
   --primario-osc: var(--azul-osc);
   --acento: var(--amarillo);
   --texto: #0f172a;
-  --texto-suave: #64748b;
+  --texto-suave: #556074;
   --borde: #e6e9f0;
   --fondo: #f6f8fb;
   --tarjeta: #ffffff;
@@ -167,6 +167,25 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
 .btn-peligro { background: var(--critica); border-color: var(--critica); color: #fff; }
 .btn-peligro:hover { background: #991b1b; }
 .btn:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; }
+
+/* Foco visible para elementos interactivos que no tenían ninguno (tarjetas-enlace,
+   chips, pills, resúmenes, acciones): anillo azul con separación, legible sobre
+   fondos claros. Los enlaces del menú lateral van sobre azul → anillo amarillo. */
+a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
+.chip-hab:focus-visible, summary:focus-visible, .accion-rapida:focus-visible,
+.flujo-paso:focus-visible, .drawer-backdrop:focus-visible, .backdrop:focus-visible {
+  outline: 3px solid var(--azul); outline-offset: 2px; border-radius: 8px;
+}
+.nav-lateral a:focus-visible { outline: 3px solid var(--amarillo); outline-offset: -3px; }
+
+/* Saltar al contenido: oculto hasta enfocarlo con el teclado. */
+.skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 200;
+  background: var(--azul); color: #fff; padding: 9px 15px; border-radius: 8px;
+  font-weight: 700; text-decoration: none; transform: translateY(-160%);
+  transition: transform .15s ease;
+}
+.skip-link:focus { transform: none; outline: 3px solid var(--amarillo); outline-offset: 2px; }
 
 /* Formularios */
 .campo { display: grid; gap: 6px; margin-bottom: 14px; }
@@ -514,6 +533,12 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   .consejo { left: 12px; right: 12px; bottom: 12px; max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
   .consejo { animation: none; }
 }
 .consejo-icono { font-size: 1.1rem; line-height: 1.4; flex-shrink: 0; }

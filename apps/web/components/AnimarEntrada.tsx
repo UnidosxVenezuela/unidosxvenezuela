@@ -13,16 +13,25 @@ export default function AnimarEntrada({
     if (!cont) return;
     const targets = Array.from(cont.querySelectorAll<HTMLElement>(selector));
     if (!targets.length) return;
+    // Respeta la preferencia del sistema: sin movimiento, contenido visible ya.
+    const sinMovimiento = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (sinMovimiento) { targets.forEach((t) => { t.style.opacity = '1'; }); return; }
     // Estado inicial antes de pintar → sin parpadeo.
     targets.forEach((t) => { t.style.opacity = '0'; });
-    anime({
-      targets,
-      opacity: [0, 1],
-      translateY: [14, 0],
-      delay: anime.stagger(55),
-      duration: 480,
-      easing: 'easeOutCubic',
-    });
+    try {
+      anime({
+        targets,
+        opacity: [0, 1],
+        translateY: [14, 0],
+        delay: anime.stagger(55),
+        duration: 480,
+        easing: 'easeOutCubic',
+      });
+    } catch {
+      // Si la animación falla, nunca dejamos las tarjetas invisibles.
+      targets.forEach((t) => { t.style.opacity = '1'; });
+    }
   }, [selector]);
 
   return <div ref={ref}>{children}</div>;
