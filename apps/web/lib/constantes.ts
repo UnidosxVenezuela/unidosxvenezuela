@@ -77,6 +77,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   lider_plataforma_aliada: 'Líder de plataforma aliada',
   verificador: 'Verificación',
   recopilacion: 'Recopilación',
+  busqueda: 'Búsqueda',
   redaccion: 'Envío a Redacción',
   redes_sociales: 'Community Manager',
   diseno_grafico: 'Diseño Gráfico',

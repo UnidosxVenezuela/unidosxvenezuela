@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -25,17 +25,49 @@ const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fe
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
-  if (!puedeRecopilar(perfil)) redirect('/dashboard');
-  const puedeVerif = puedeVerificar(perfil);
-  const puedeCrear = esAdministrador(perfil) || rolesDe(perfil).includes('recopilacion');
+  const esAdmin = esAdministrador(perfil);
+  const rolesU = rolesDe(perfil);
+  const puedeVerif = puedeVerificar(perfil);              // Verificación → «Otras informaciones»
+  const accesoBusqueda = puedeBusqueda(perfil);           // Búsqueda → «Desaparecidos» (incluye admin)
+  if (!puedeRecopilar(perfil) && !accesoBusqueda) redirect('/dashboard');
+  const supabase = await createClient();
+
+  // 2ª verificación obligatoria para Recopilación y Búsqueda (Verificación y admin
+  // quedan exentos). Sin identidad aprobada, se oculta el acceso a Casos.
+  const necesita2a = !esAdmin && !puedeVerif && (rolesU.includes('recopilacion') || rolesU.includes('busqueda'));
+  let identidadOK = true;
+  if (necesita2a) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    identidadOK = (vi as any)?.estado === 'aprobada';
+  }
+  if (necesita2a && !identidadOK) {
+    return (
+      <AnimarEntrada>
+        <div className="pagina-cab"><div><h1>Casos</h1></div></div>
+        <div className="tarjeta" style={{ maxWidth: 560 }}>
+          <h2 className="fila" style={{ gap: 8, marginTop: 0 }}><Icono nombre="llave" size={20} /> Completa tu segunda verificación</h2>
+          <p className="muted">Para acceder a Casos necesitas aprobar la <strong>verificación de identidad</strong> (foto en vivo + documento). Es un paso obligatorio para tu rol; cuando la aprueben, verás la sección de Casos y tu grupo.</p>
+          <Link href="/verificacion" className="btn btn-primario"><Icono nombre="llave" size={16} /> Ir a mi verificación</Link>
+        </div>
+      </AnimarEntrada>
+    );
+  }
+
+  const puedeCrear = esAdmin || rolesU.includes('recopilacion');
+  const verifica = puedeVerif || accesoBusqueda;                 // puede cambiar estado / tomar
+  const soloBusqueda = accesoBusqueda && !puedeVerif && !esAdmin; // ve solo Desaparecidos
+  const soloVerif = puedeVerif && !accesoBusqueda && !esAdmin;    // ve solo Otras informaciones
+  const subAreas = soloBusqueda ? ['Desaparecidos'] : soloVerif ? ['Otras informaciones'] : CATEGORIAS_CASO;
+
   // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
   // sin describirle acciones de otros roles.
-  const tipCasos = esAdministrador(perfil)
-    ? { t: 'El flujo de un caso', c: <>Recopilación <strong>reporta</strong> → Verificación <strong>confirma o descarta</strong> → Envío a Redacción lo <strong>pasa a contenido</strong>. Toca un caso para ver su historial y quién intervino.</> }
+  const tipCasos = esAdmin
+    ? { t: 'El flujo de un caso', c: <>Recopilación <strong>reporta</strong> → Verificación (otros casos) o el Grupo de Búsqueda (desaparecidos) <strong>confirma o descarta</strong> → Envío a Redacción <strong>pasa a contenido</strong> solo «Otras informaciones». Toca un caso para ver su historial.</> }
     : puedeVerif
-      ? { t: 'Verificar casos', c: <>Revisa lo reportado y <strong>confírmalo o descártalo</strong>. Toca un caso para ver su fuente, su detalle y quién intervino.</> }
-      : { t: 'Reportar y seguir casos', c: <>Reporta con <strong>«Nuevo caso»</strong> lo que llega para verificar; el equipo de verificación lo confirmará o descartará. Toca un caso para seguir su estado.</> };
-  const supabase = await createClient();
+      ? { t: 'Verificar casos', c: <>Revisa lo reportado (que no sean desaparecidos) y <strong>confírmalo o descártalo</strong>. Toca un caso para ver su fuente, su detalle y quién intervino.</> }
+      : accesoBusqueda
+        ? { t: 'Buscar y verificar desaparecidos', c: <>Toma los casos de <strong>personas desaparecidas</strong> y <strong>confírmalos o descártalos</strong>. Esta información la gestiona el Grupo de Búsqueda.</> }
+        : { t: 'Reportar y seguir casos', c: <>Reporta con <strong>«Nuevo caso»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca un caso para seguir su estado.</> };
 
   const cnt = (estado?: string) => {
     let q = supabase.from('casos').select('*', { count: 'exact', head: true });
@@ -73,7 +105,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en, asignado_a').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
     ]);
@@ -92,14 +124,14 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       <div className="pagina-cab">
         <div>
           <h1>Casos</h1>
-          <p className="muted sub">{puedeVerif ? 'Verifica la información que llega: confírmala o descártala.' : 'Registra casos y da seguimiento a los tuyos.'}</p>
+          <p className="muted sub">{puedeVerif ? 'Verifica la información que llega: confírmala o descártala.' : accesoBusqueda ? 'Verifica los casos de personas desaparecidas: confírmalos o descártalos.' : 'Registra casos y da seguimiento a los tuyos.'}</p>
         </div>
       </div>
 
-      {puedeVerif && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
-        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub="Todos los registros" color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
+      {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
+        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
         <Kpi etiqueta="En proceso" valor={enProc.count ?? 0} sub="Siendo verificados" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
-        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub="Listos para redacción" color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado" />
+        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Listos para redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado" />
         <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
       </div>}
 
@@ -122,7 +154,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <label>Categoría</label>
             <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
-              {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
+              {subAreas.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
@@ -134,10 +166,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
       </div>
 
-      {/* Filtro rápido por sub-área de verificación */}
-      <div className="fila" style={{ gap: 8, marginBottom: 14 }}>
+      {/* Filtro rápido por sub-área de verificación (solo si ve más de una) */}
+      {subAreas.length > 1 && <div className="fila" style={{ gap: 8, marginBottom: 14 }}>
         <span className="muted" style={{ fontSize: '.82rem' }}>Sub-áreas:</span>
-        {['Desaparecidos', 'Otras informaciones'].map((cat) => {
+        {subAreas.map((cat) => {
           const activo = searchParams.categoria === cat;
           const p = new URLSearchParams();
           if (searchParams.q) p.set('q', searchParams.q);
@@ -150,7 +182,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             </Link>
           );
         })}
-      </div>
+      </div>}
 
       <div>
         <div className="grupo-main">
@@ -199,9 +231,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
             <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle del caso ' + drawerCaso.titulo}>
-              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif}
-                puedeEditarDatos={esAdministrador(perfil) || (puedeVerif && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && drawerCaso.estado === 'en_proceso')}
-                esAdmin={esAdministrador(perfil)} />
+              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica}
+                puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && drawerCaso.estado === 'en_proceso')}
+                esAdmin={esAdmin} puedeTomar={verifica} miId={user!.id} />
             </DrawerModal>
           </>
         )}

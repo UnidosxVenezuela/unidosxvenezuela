@@ -14,8 +14,10 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
     { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
   ];
-  if (flags.gestionCasos && !flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: 'documento' });
-  if (flags.verificacion) enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: 'ok' });
+  if (flags.gestionCasos || flags.verificacion || flags.busqueda) {
+    const icono = flags.verificacion ? 'ok' : flags.busqueda ? 'buscar' : 'documento';
+    enlaces.push({ href: '/casos', etiqueta: 'Casos', icono });
+  }
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio) {
