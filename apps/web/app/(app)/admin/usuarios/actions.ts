@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
 import type { Rol } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
@@ -78,21 +78,25 @@ export async function crearUsuario(formData: FormData) {
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
   const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
 
-  if (!nombre) throw new Error('El nombre es obligatorio.');
-  if (emailReal && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailReal)) throw new Error('Correo inválido.');
-  if (!emailReal && !whatsapp) throw new Error('Indica un correo o un número de WhatsApp (con código de país, solo dígitos).');
-  if (password.length < 8) throw new Error('La contraseña temporal debe tener al menos 8 caracteres.');
+  // Errores previsibles → toast rojo (no crashear a la página de error).
+  const err = (m: string) => redirigirError('/admin/usuarios/nuevo', m);
+  if (!nombre) return err('El nombre es obligatorio.');
+  if (emailReal && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailReal)) return err('El correo no es válido.');
+  if (!emailReal && !whatsapp) return err('Indica un correo o un número de WhatsApp (con código de país, solo dígitos).');
+  if (password.length < 8) return err('La contraseña temporal debe tener al menos 8 caracteres.');
   // Regla de superadmin: el admin-client saltea el trigger, así que se valida aquí.
-  if (rol === 'admin' && !yo.super_admin) {
-    throw new Error('Solo un superadministrador puede crear administradores.');
-  }
+  if (rol === 'admin' && !yo.super_admin) return err('Solo un superadministrador puede crear administradores.');
   // El rol de aliado no se asigna directo: va por doble aprobación.
-  if (rol === 'lider_plataforma_aliada') {
-    throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: crea la cuenta con otro rol y luego proponla en "Aliados".');
-  }
+  if (rol === 'lider_plataforma_aliada') return err('El rol de líder de plataforma aliada se otorga con doble aprobación: crea la cuenta con otro rol y luego proponla en "Aliados".');
   // Los roles psicosociales (confidenciales) solo los otorga el coordinador psicosocial o el dueño.
   if (ROLES_PSICOSOCIAL.includes(rol) && !puedeOtorgarPsico(rolesYo0, yo.super_admin)) {
-    throw new Error('Los roles del área psicosocial solo los asigna un coordinador psicosocial (o el dueño). Crea la cuenta con otro rol.');
+    return err('Los roles del área psicosocial solo los asigna un coordinador psicosocial (o el dueño). Crea la cuenta con otro rol.');
+  }
+
+  // Evitar duplicados ANTES de crear la cuenta, para no dejar usuarios a medias.
+  if (whatsapp) {
+    const { data: dupW } = await supabase.from('perfiles').select('id').eq('whatsapp', whatsapp).maybeSingle();
+    if (dupW) return err('Ya existe una cuenta con ese número de WhatsApp.');
   }
 
   // Sin correo real: se usa un correo interno derivado del número (login por WhatsApp).
@@ -103,12 +107,20 @@ export async function crearUsuario(formData: FormData) {
   const { data: creado, error: e1 } = await admin.auth.admin.createUser({
     email, password, email_confirm: true, user_metadata: { nombre_completo: nombre },
   });
-  if (e1 || !creado?.user) throw new Error('No se pudo crear el usuario: ' + (e1?.message ?? 'desconocido'));
+  if (e1 || !creado?.user) {
+    const dup = /already|registered|exist|duplicate/i.test(e1?.message ?? '');
+    return err(dup ? 'Ya existe una cuenta con ese correo.' : 'No se pudo crear el usuario: ' + (e1?.message ?? 'desconocido'));
+  }
 
   const { error: e2 } = await supabase.from('perfiles')
     .update({ nombre_completo: nombre, rol, verificado: true, organizacion, whatsapp })
     .eq('id', creado.user.id);
-  if (e2) throw new Error('Usuario creado, pero no se pudo completar el perfil: ' + e2.message);
+  if (e2) {
+    // Revertir: borrar la cuenta recién creada para no dejar un usuario a medias (huérfano).
+    await admin.auth.admin.deleteUser(creado.user.id).catch(() => {});
+    const dupW = /idx_perfiles_whatsapp|whatsapp/i.test(e2.message);
+    return err(dupW ? 'Ya existe una cuenta con ese número de WhatsApp.' : 'No se pudo completar el perfil: ' + e2.message);
+  }
 
   // Sumar al grupo elegido (si se eligió). No rompe la creación si falla.
   if (grupoId) {
@@ -225,7 +237,10 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp })
       .eq('id', creado.user.id);
     if (e2) {
-      filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'error', detalle: e2.message });
+      // Revertir la cuenta a medias (p. ej. WhatsApp repetido) para no dejar huérfanos.
+      await admin.auth.admin.deleteUser(creado.user.id).catch(() => {});
+      const dupW = /idx_perfiles_whatsapp|whatsapp/i.test(e2.message);
+      filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: dupW ? 'duplicado' : 'error', detalle: dupW ? 'Ya hay una cuenta con ese WhatsApp' : e2.message });
       continue;
     }
     if (grupoId) {
@@ -433,11 +448,11 @@ export async function agregarAGrupo(formData: FormData) {
   const supabase = await exigirCoordinacion();
   const perfilId = String(formData.get('perfil_id'));
   const grupoId = String(formData.get('grupo_id'));
-  if (!grupoId) throw new Error('Elige un grupo.');
+  if (!grupoId) return redirigirError('/admin/usuarios', 'Elige un grupo.');
   const { error } = await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: perfilId });
   if (error) {
-    if ((error as { code?: string }).code === '23505') throw new Error('La persona ya está en ese grupo.');
-    throw new Error('No se pudo agregar al grupo: ' + error.message);
+    if ((error as { code?: string }).code === '23505') return redirigirError('/admin/usuarios', 'La persona ya está en ese grupo.');
+    return redirigirError('/admin/usuarios', 'No se pudo agregar al grupo: ' + error.message);
   }
   revalidatePath('/admin/usuarios');
   redirigirOk('/admin/usuarios', 'Agregado al grupo');
