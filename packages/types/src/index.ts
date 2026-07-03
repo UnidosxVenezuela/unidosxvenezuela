@@ -13,6 +13,7 @@ export type Rol =
   // Pipeline de contenido (grupos exclusivos por rol)
   | 'recopilacion'            // Envía información/casos para verificar (no verifica)
   | 'busqueda'                // Verifica casos de personas desaparecidas (Grupo de Búsqueda)
+  | 'digitalizador'           // Digitaliza listados de personas (Grupo de Digitalización)
   | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
   | 'redes_sociales'          // Redes Sociales (publicación)
   | 'diseno_grafico'          // Diseño Gráfico

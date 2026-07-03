@@ -31,7 +31,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   // Los grupos de casos (Gestión de Casos y Búsqueda) exigen 2ª verificación
   // (identidad) aprobada también a sus líderes y coordinadores para acceder.
-  if (!esAdministrador(perfil) && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos')) {
+  if (!esAdministrador(perfil) && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos' || grupo.clave === 'digitalizacion')) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       redirect('/grupos?ok=' + encodeURIComponent('Completa tu segunda verificación (identidad) para acceder a este grupo.'));

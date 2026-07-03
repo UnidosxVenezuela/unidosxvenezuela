@@ -10,30 +10,21 @@ export default async function NuevaDigitalizacionPage() {
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
-  const esBusq = roles.includes('busqueda');
-  const esLog = roles.includes('logistica');
-  if (!esAdmin && !esBusq && !esLog) redirect('/dashboard');
+  const esDig = roles.includes('digitalizador');
+  if (!esAdmin && !esDig) redirect('/dashboard');
   const supabase = await createClient();
 
-  let identidadOK = esAdmin;
-  if (!esAdmin && esBusq) {
+  // El digitalizador necesita 2ª verificación aprobada; admin exento.
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
-    identidadOK = (vi as any)?.estado === 'aprobada';
+    if ((vi as any)?.estado !== 'aprobada') redirect('/digitalizacion');
   }
 
-  // Tipos de lugar permitidos según el rol (D-Quién): Búsqueda con 2ª verif →
-  // hospital/albergue/otro; Logística → acopio/albergue; admin → todos.
-  const permitidos = new Set<string>();
-  if (esAdmin || (esBusq && identidadOK)) ['hospital', 'albergue', 'otro'].forEach((t) => permitidos.add(t));
-  if (esAdmin || esLog) ['acopio', 'albergue'].forEach((t) => permitidos.add(t));
-  const tiposPermitidos = ['hospital', 'albergue', 'acopio', 'otro'].filter((t) => permitidos.has(t));
-  if (tiposPermitidos.length === 0) redirect('/digitalizacion');
+  // El digitalizador trabaja todos los tipos de lugar (sin frontera).
+  const tiposPermitidos = ['hospital', 'albergue', 'acopio', 'otro'];
 
-  let centros: any[] = [];
-  if (permitidos.has('acopio')) {
-    const { data } = await supabase.from('puntos_acopio').select('id, nombre, lat, lng').eq('activo', true).order('nombre');
-    centros = data ?? [];
-  }
+  const { data: centrosData } = await supabase.from('puntos_acopio').select('id, nombre, lat, lng').eq('activo', true).order('nombre');
+  const centros = centrosData ?? [];
 
   return (
     <AnimarEntrada>

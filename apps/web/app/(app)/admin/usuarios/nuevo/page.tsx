@@ -13,7 +13,7 @@ export default async function CrearUsuarioPage() {
   const { data: grupos } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
   // Rol funcional → id de su grupo (para autoseleccionar el grupo al elegir rol).
   const CLAVE_DE_ROL: Record<string, string> = {
-    recopilacion: 'gestion_casos', verificador: 'verificacion', busqueda: 'busqueda', redaccion: 'redaccion',
+    recopilacion: 'gestion_casos', verificador: 'verificacion', busqueda: 'busqueda', digitalizador: 'digitalizacion', redaccion: 'redaccion',
     redes_sociales: 'redes_sociales', diseno_grafico: 'diseno_grafico', edicion_video: 'edicion_video',
     influencers: 'influencers', apoyo_psicosocial: 'apoyo_psicosocial',
     coordinador_psicosocial: 'apoyo_psicosocial', lider_psicosocial: 'apoyo_psicosocial',
