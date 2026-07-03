@@ -35,15 +35,28 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   if (searchParams.fest === 'pendiente') perfiles = perfiles.filter((p) => !p.verificado);
   const pendientes = perfiles.filter((p) => !p.verificado);
 
+  // Nombres por id (de la lista completa, sin filtrar) para mostrar quién lidera qué.
+  const nombrePorId = new Map<string, string>((data ?? []).map((p: any) => [p.id, p.nombre_completo ?? '']));
+
   // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
-  const { data: gruposData } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
-  const grupos = (gruposData ?? []) as { id: string; nombre: string; clave: string | null }[];
+  const { data: gruposData } = await supabase.from('grupos').select('id, nombre, clave, lider_id').order('nombre');
+  const grupos = (gruposData ?? []) as { id: string; nombre: string; clave: string | null; lider_id: string | null }[];
   // Para el selector de líder/coordinador: todos los grupos MENOS el psicosocial
-  // (que se gestiona con sus propios roles específicos).
-  const gruposParaLider = grupos.filter((g) => g.clave !== 'apoyo_psicosocial').map((g) => ({ id: g.id, nombre: g.nombre }));
-  const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupos(nombre)');
+  // (que se gestiona con sus propios roles específicos). Se incluye el líder actual
+  // de cada grupo para avisar si va a ser reemplazado.
+  const gruposParaLider = grupos
+    .filter((g) => g.clave !== 'apoyo_psicosocial')
+    .map((g) => ({ id: g.id, nombre: g.nombre, liderId: g.lider_id, liderNombre: g.lider_id ? (nombrePorId.get(g.lider_id) || 'otra persona') : null }));
+  // Qué grupo lidera cada persona (por grupos.lider_id, salvo el psicosocial).
+  const lideraPorPerfil = new Map<string, { id: string; nombre: string }>();
+  grupos.forEach((g) => { if (g.lider_id && g.clave !== 'apoyo_psicosocial') lideraPorPerfil.set(g.lider_id, { id: g.id, nombre: g.nombre }); });
+
+  const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupo_id, rol_en_grupo, grupos(nombre)');
   const gruposPorPerfil = new Map<string, string[]>();
+  // Qué grupo coordina cada persona (miembros_grupo con rol_en_grupo = 'coordinador').
+  const coordinaPorPerfil = new Map<string, { id: string; nombre: string }>();
   (membresias ?? []).forEach((m: any) => {
+    if (m.rol_en_grupo === 'coordinador' && m.grupos?.nombre) coordinaPorPerfil.set(m.perfil_id, { id: m.grupo_id, nombre: m.grupos.nombre });
     if (!m.grupos?.nombre) return;
     const arr = gruposPorPerfil.get(m.perfil_id) ?? [];
     arr.push(m.grupos.nombre);
@@ -76,7 +89,8 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
       return <span className="insignia">{ETIQUETA_ROL[p.rol]}</span>;
     }
     return (
-      <SelectorRolGrupo perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol} roles={rolesSelect} grupos={gruposParaLider} />
+      <SelectorRolGrupo perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol} roles={rolesSelect}
+        grupos={gruposParaLider} lideraActual={lideraPorPerfil.get(p.id) ?? null} coordinaActual={coordinaPorPerfil.get(p.id) ?? null} />
     );
   };
 
