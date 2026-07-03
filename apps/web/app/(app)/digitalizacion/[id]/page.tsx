@@ -31,6 +31,20 @@ export default async function ListadoDetallePage({ params }: { params: { id: str
     .eq('listado_id', params.id).order('nombre_completo');
   const personas = (personasRaw ?? []) as any[];
   const menores = personas.filter((p) => p.edad != null && p.edad < 18).length;
+
+  // Dedup: personas de este listado cuya cédula también aparece en OTROS lugares.
+  const cedulas = Array.from(new Set(personas.map((p) => (p.cedula || '').replace(/\D/g, '')).filter((c) => c.length >= 4)));
+  const dupPorCedula = new Map<string, Set<string>>();
+  if (cedulas.length) {
+    const { data: dups } = await supabase.from('personas_listado')
+      .select('cedula, listado_id, listados_digitalizados(lugar_nombre)')
+      .in('cedula', cedulas).neq('listado_id', params.id);
+    for (const d of (dups ?? []) as any[]) {
+      const c = (d.cedula || '').replace(/\D/g, '');
+      const nom = d.listados_digitalizados?.lugar_nombre;
+      if (c && nom) { const s = dupPorCedula.get(c) ?? new Set<string>(); s.add(nom); dupPorCedula.set(c, s); }
+    }
+  }
   const docUrl = (listado as any).documento_path ? await urlFirmada(supabase, 'digitalizacion', (listado as any).documento_path, 600) : null;
   const estadoLugar = (listado as any).lugares?.estado;
 
@@ -56,7 +70,10 @@ export default async function ListadoDetallePage({ params }: { params: { id: str
           <tbody>
             {personas.map((p) => (
               <tr key={p.id}>
-                <td><span className="fila" style={{ gap: 6 }}>{p.nombre_completo}{p.edad != null && p.edad < 18 && <Pill tono="critica" punto={false}>Menor</Pill>}</span></td>
+                <td>
+                  <span className="fila" style={{ gap: 6 }}>{p.nombre_completo}{p.edad != null && p.edad < 18 && <Pill tono="critica" punto={false}>Menor</Pill>}</span>
+                  {(() => { const c = (p.cedula || '').replace(/\D/g, ''); const s = c ? dupPorCedula.get(c) : null; return s && s.size ? <div className="muted" style={{ fontSize: '.76rem' }}><Icono nombre="enlace" size={11} /> También aparece en: {[...s].join(', ')}</div> : null; })()}
+                </td>
                 <td className="muted">{p.cedula || '—'}</td>
                 <td className="muted">{p.edad != null ? p.edad : '—'}</td>
                 <td>{ETIQUETA_CONDICION[p.condicion] ?? p.condicion}</td>
