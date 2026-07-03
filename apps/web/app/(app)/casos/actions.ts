@@ -5,10 +5,21 @@ import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
+import { revisarSafeBrowsing } from '@/lib/safe-browsing';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
+
+// Segunda línea de defensa para el enlace de la fuente: Google Safe Browsing
+// (solo servidor). Fail-open: si no hay clave o la API falla, no bloquea (se
+// apoya en el análisis heurístico local de analizarUrl).
+async function exigirEnlaceSeguro(url: string | null | undefined) {
+  const sb = await revisarSafeBrowsing(url);
+  if (sb.revisado && !sb.seguro) {
+    throw new Error(`El enlace de la fuente fue marcado como peligroso (${sb.amenaza}) por Google Safe Browsing. No se guardó; revisa la fuente antes de continuar.`);
+  }
+}
 
 // soloVerificar=true → admin/verificador (cambiar estado, notas).
 // soloVerificar=false → crear: SOLO Gestión de casos (recopilación) o admin.
@@ -36,6 +47,7 @@ export async function crearCaso(formData: FormData) {
   const fuenteUrl = opt(formData.get('fuente_url'));
   const an = analizarUrl(fuenteUrl);
   if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
+  await exigirEnlaceSeguro(an.url ?? fuenteUrl);
   // Validar los archivos ANTES de crear el caso (tipo permitido + tamaño).
   const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
   for (const file of archivos.slice(0, 10)) {
@@ -136,6 +148,7 @@ export async function editarCaso(formData: FormData) {
   const fuenteUrl = opt(formData.get('fuente_url'));
   const an = analizarUrl(fuenteUrl);
   if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
+  await exigirEnlaceSeguro(an.url ?? fuenteUrl);
   const { error } = await supabase.from('casos').update({
     titulo,
     descripcion: opt(formData.get('descripcion')),

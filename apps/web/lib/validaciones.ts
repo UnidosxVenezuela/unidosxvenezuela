@@ -1,6 +1,7 @@
 // Validación y análisis heurístico de enlaces y archivos (sin servicios externos).
-// Para escaneo profundo de malware/amenazas haría falta un servicio externo
-// (p. ej. Google Safe Browsing / VirusTotal) con su API key.
+// Es la PRIMERA línea de defensa. El escaneo profundo de amenazas con Google Safe
+// Browsing vive en `lib/safe-browsing.ts` (solo servidor) y se aplica al
+// crear/editar un caso, como segunda línea.
 
 const TLDS_SOSPECHOSOS = new Set(['zip', 'mov', 'xyz', 'top', 'tk', 'gq', 'ml', 'cf', 'ga', 'click', 'link', 'work', 'loan', 'review', 'country', 'kim', 'men']);
 const ACORTADORES = new Set(['bit.ly', 'tinyurl.com', 'goo.gl', 't.co', 'ow.ly', 'is.gd', 'buff.ly', 'cutt.ly', 'rebrand.ly', 'shorturl.at', 'rb.gy', 'acortar.link', 'wa.link']);
