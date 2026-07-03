@@ -21,18 +21,30 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   const admin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
   let claves = new Set<string>();
+  let clavesLidero = new Set<string>();  // grupos que LIDERO (grupos.lider_id = yo)
   if (!admin) {
-    const { data } = await supabase.from('miembros_grupo').select('grupos(clave)').eq('perfil_id', userId);
-    claves = new Set(((data ?? []) as any[]).map((m) => m.grupos?.clave).filter(Boolean));
+    const [{ data: mem }, { data: lid }] = await Promise.all([
+      supabase.from('miembros_grupo').select('grupos(clave)').eq('perfil_id', userId),
+      supabase.from('grupos').select('clave').eq('lider_id', userId),
+    ]);
+    claves = new Set(((mem ?? []) as any[]).map((m) => m.grupos?.clave).filter(Boolean));
+    clavesLidero = new Set(((lid ?? []) as any[]).map((g) => g.clave).filter(Boolean));
   }
   return {
     admin,
     gestionCasos: admin || claves.has('gestion_casos') || roles.includes('recopilacion'),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
     envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),
-    contenido: admin || CONTENIDO.some((c) => claves.has(c) || roles.includes(c as any)),
+    // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
+    contenido: admin || CONTENIDO.some((c) => clavesLidero.has(c)),
     acopio: admin || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
   };
+}
+
+// ¿El usuario lidera algún grupo de contenido? (para el acceso a /contenido).
+export async function esLiderContenido(supabase: any, userId: string): Promise<boolean> {
+  const { data } = await supabase.from('grupos').select('clave').eq('lider_id', userId).in('clave', CONTENIDO);
+  return ((data ?? []) as any[]).length > 0;
 }

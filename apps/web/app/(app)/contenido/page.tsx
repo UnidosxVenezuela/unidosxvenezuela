@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador, puedePipeline, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { esLiderContenido } from '@/lib/nav-flags';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -19,9 +20,10 @@ type SP = { pieza?: string };
 
 export default async function ContenidoPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
-  if (!puedePipeline(perfil)) redirect('/dashboard');
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
+  // El área de Contenido queda solo para el admin y los líderes de sus grupos.
+  if (!esAdmin && !(await esLiderContenido(supabase, user!.id))) redirect('/dashboard');
 
   const [{ data: piezasData }, { data: perfilesData }, { data: marca }] = await Promise.all([
     supabase.from('piezas_contenido').select('*').order('actualizado_en', { ascending: false }),
