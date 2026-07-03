@@ -73,7 +73,7 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
   const bajoStock = inventarioAll.filter(esBajo);
 
   // QR que abre ESTE inventario en el teléfono.
-  const host = headers().get('host') || 'unidosxvnezuela.com';
+  const host = headers().get('host') || 'unidosxvenezuela.com';
   const proto = host.includes('localhost') ? 'http' : 'https';
   const base = `${proto}://${host}`;
   const qr = await QRCode.toDataURL(`${base}/acopio/${id}`, { width: 220, margin: 1 });

@@ -38,8 +38,6 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     cnt(), cnt('en_proceso'), cnt('confirmado'), cnt('falso'),
     supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
   ]);
-  const nombres = new Map<string, string>((perfilesRes.data ?? []).map((p: any) => [p.id, p.nombre_completo]));
-  const avatares = new Map<string, string | null>((perfilesRes.data ?? []).map((p: any) => [p.id, p.avatar_url]));
 
   let q = supabase.from('casos').select(COLS).order('actualizado_en', { ascending: false }).limit(200);
   if (searchParams.estado) q = q.eq('estado', searchParams.estado);

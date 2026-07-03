@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
+import { rolesDe } from '@/lib/auth';
 import { siguienteEtapa } from '@/lib/constantes';
 import { subirArchivo } from '@/lib/storage';
 import type { EtapaContenido, DestinoContenido } from '@unidos/types';
@@ -36,16 +37,16 @@ async function sesion() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: perfil } = await supabase.from('perfiles').select('rol, verificado').eq('id', user.id).single();
-  return { supabase, user, rol: (perfil?.rol ?? '') as string, verificado: !!perfil?.verificado };
+  const { data: perfil } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
+  return { supabase, user, rol: (perfil?.rol ?? '') as string, roles: rolesDe(perfil as any), verificado: !!perfil?.verificado };
 }
 
 const volverDe = (fd: FormData, id: string) => opt(fd.get('volver')) || ('/contenido?pieza=' + id);
 
 /** Envía un caso CONFIRMADO Y ACTIVO al pipeline (etapa Redacción). Solo coordinación/verificador. */
 export async function enviarARedaccion(formData: FormData) {
-  const { supabase, user, rol, verificado } = await sesion();
-  if (!verificado || !['admin', 'coordinador', 'verificador'].includes(rol)) throw new Error('No tienes permisos para enviar a Redacción.');
+  const { supabase, user, roles, verificado } = await sesion();
+  if (!verificado || !roles.some((r) => ['admin', 'coordinador', 'verificador'].includes(r))) throw new Error('No tienes permisos para enviar a Redacción.');
   const casoId = txt(formData.get('caso_id'));
   const { data: caso } = await supabase.from('casos').select('titulo, estado').eq('id', casoId).single();
   if (!caso) throw new Error('Caso no encontrado.');

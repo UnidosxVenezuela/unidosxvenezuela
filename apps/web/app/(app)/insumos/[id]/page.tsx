@@ -1,5 +1,6 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUsuario, puedeLogistica, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
@@ -12,6 +13,8 @@ import { cambiarEstadoSolicitud, asignarProveedorSolicitud, crearEnvio, eliminar
 
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
+  // Módulo de logística: solo admin/logística (igual que la página principal).
+  if (!puedeLogistica(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const verFull = esAdministrador(perfil);
   const supabase = await createClient();

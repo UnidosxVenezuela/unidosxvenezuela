@@ -261,13 +261,13 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                         <form action={quitarMiembro}>
                           <input type="hidden" name="grupo_id" value={grupoId} />
                           <input type="hidden" name="perfil_id" value={m.perfil_id} />
-                          <BotonConfirmar mensaje={'¿Quitar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo?'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Quitar</BotonConfirmar>
+                          <BotonConfirmar mensaje={'¿Quitar a ' + (nombreMostrado(m.perfiles?.nombre_completo, verFull) || 'esta persona') + ' del grupo?'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Quitar</BotonConfirmar>
                         </form>
                         {grupo.lider_id !== m.perfil_id && (
                           <form action={banearMiembro}>
                             <input type="hidden" name="grupo_id" value={grupoId} />
                             <input type="hidden" name="perfil_id" value={m.perfil_id} />
-                            <BotonConfirmar mensaje={'¿Vetar a ' + (m.perfiles?.nombre_completo || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
+                            <BotonConfirmar mensaje={'¿Vetar a ' + (nombreMostrado(m.perfiles?.nombre_completo, verFull) || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
                           </form>
                         )}
                         {esAsignable(m) && (
@@ -303,7 +303,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               <div className="tarjeta">
                 {baneados.map((b) => (
                   <div key={b.perfil_id} className="fila" style={{ justifyContent: 'space-between', borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
-                    <span>{b.perfiles?.nombre_completo || '—'}</span>
+                    <span>{nombreMostrado(b.perfiles?.nombre_completo, verFull) || '—'}</span>
                     <form action={desbanearMiembro}>
                       <input type="hidden" name="grupo_id" value={grupoId} />
                       <input type="hidden" name="perfil_id" value={b.perfil_id} />
@@ -343,7 +343,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 <input type="hidden" name="grupo_id" value={grupoId} />
                 <select name="perfil_id" className="input" required defaultValue="" style={{ width: '100%' }}>
                   <option value="" disabled>Selecciona una persona…</option>
-                  {candidatos.map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                  {candidatos.map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Agregar</button>
               </form>
@@ -371,7 +371,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 <input type="hidden" name="grupo_id" value={grupoId} />
                 <select name="perfil_id" className="input" required defaultValue={grupo.lider_id ?? ''} style={{ width: '100%' }}>
                   <option value="" disabled>Elige a la persona…</option>
-                  {(todosPerfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                  {(todosPerfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar como líder</button>
               </form>

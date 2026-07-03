@@ -31,6 +31,7 @@ export default async function AcompanamientoPage({ params }: { params: { id: str
   if (!c) return <div className="tarjeta"><h2>Caso no encontrado</h2><p className="muted">No existe o no tienes acceso a este acompañamiento confidencial.</p><Link href="/psicosocial">← Apoyo Psicosocial</Link></div>;
 
   const coord = esCoordPsicosocial(perfil);
+  const verFull = esAdministrador(perfil);
   const esAsignado = c.asignado_a === user!.id;
   const puedeAtender = coord || esAsignado;         // ve bitácora, anota, gestiona
   const cerrado = c.estado === 'cerrado' || c.estado === 'cancelado';
@@ -194,7 +195,7 @@ export default async function AcompanamientoPage({ params }: { params: { id: str
                   <input type="hidden" name="id" value={id} />
                   <select name="asignado_a" className="input" defaultValue={c.asignado_a ?? ''} style={{ width: '100%' }}>
                     <option value="">— Sin asignar —</option>
-                    {equipo.map((p: any) => <option key={p.id} value={p.id}>{p.nombre || p.id}</option>)}
+                    {equipo.map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre, verFull) || p.id}</option>)}
                   </select>
                   <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar</button>
                 </form>
