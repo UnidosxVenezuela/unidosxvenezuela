@@ -18,6 +18,7 @@ import DetallePieza from './DetallePieza';
 import LineamientosMarca from './LineamientosMarca';
 import { crearPieza } from './actions';
 import BotonEnviar from '@/components/BotonEnviar';
+import DrawerModal from '@/components/DrawerModal';
 
 type SP = { pieza?: string };
 
@@ -133,14 +134,14 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
         {drawerPieza && (
           <>
             <Link href="/contenido" className="drawer-backdrop" aria-label="Cerrar detalle" />
-            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle de la pieza ' + drawerPieza.titulo}>
+            <DrawerModal cerrarHref="/contenido" etiqueta={'Detalle de la pieza ' + drawerPieza.titulo}>
               <DetallePieza
                 pieza={drawerPieza} perfiles={perfilesData ?? []} historial={drawerHist} adjuntos={drawerAdjuntos}
                 volver={hrefPieza(drawerPieza.id)} cerrarHref="/contenido" puedeEtapa={drawerPuedeEtapa}
                 miId={user!.id} esCoord={esAdmin}
                 nombres={nombres} avatares={avatares}
               />
-            </aside>
+            </DrawerModal>
           </>
         )}
       </div>

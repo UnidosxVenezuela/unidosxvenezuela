@@ -187,6 +187,14 @@ a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
 }
 .skip-link:focus { transform: none; outline: 3px solid var(--amarillo); outline-offset: 2px; }
 
+/* Áreas táctiles cómodas: en dispositivos táctiles cualquier botón/control mide
+   al menos 44px de alto (recomendación WCAG/móvil), sin agrandar en escritorio,
+   donde el ratón es preciso y prima la densidad. El !important supera los
+   min-height en línea de los botones compactos de tablas y tarjetas. */
+@media (pointer: coarse) {
+  .btn, .icono-btn, .btn-consejos, .user-chip { min-height: 44px !important; }
+}
+
 /* Formularios */
 .campo { display: grid; gap: 6px; margin-bottom: 14px; }
 label { font-weight: 600; color: var(--texto-suave); }
