@@ -33,6 +33,7 @@ function describir(accion: string, entidad: string, meta?: any): string {
     if (tabla === 'casos') {
       if (op === 'insert') return 'creó un caso';
       if (op === 'delete') return 'eliminó un caso';
+      if (op === 'edicion') return 'editó los datos de un caso';
       if (op === 'copia') return 'copió la información de un caso (Redacción)';
       if (op === 'descarga') return 'descargó la información de un caso (Redacción)';
       switch (meta?.estado) {

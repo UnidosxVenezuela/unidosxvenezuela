@@ -1,13 +1,14 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
-import { cambiarEstadoCaso, actualizarCaso, editarCaso, eliminarCaso } from './actions';
+import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
+import FormEditarCaso from './FormEditarCaso';
 
 const EXPLICA_ESTADO: Record<string, string> = {
   en_proceso: 'El equipo de Verificación está revisando el caso.',
@@ -32,6 +33,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   const describir = (accion: string, meta: any) => {
     if (accion === 'casos:insert') return 'Caso creado';
     if (accion === 'casos:delete') return 'Caso eliminado';
+    if (accion === 'casos:edicion') return 'Editó los datos del caso';
     if (accion === 'casos:copia') return 'Redacción copió la información';
     if (accion === 'casos:descarga') return 'Redacción descargó la información';
     if (accion === 'casos:update') {
@@ -49,6 +51,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   const accionCorta = (accion: string, meta: any): string => {
     if (accion === 'casos:insert') return 'Creó el caso';
     if (accion === 'casos:delete') return 'Eliminó el caso';
+    if (accion === 'casos:edicion') return 'Editó los datos';
     if (accion === 'casos:copia') return 'Copió (Redacción)';
     if (accion === 'casos:descarga') return 'Descargó (Redacción)';
     if (accion === 'casos:update') {
@@ -104,30 +107,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         )}
       </div>
 
-      {puedeEditarDatos && (
-        <details className="tarjeta">
-          <summary style={{ cursor: 'pointer', fontWeight: 600 }}><Icono nombre="pizarra" size={16} /> Editar datos del caso</summary>
-          <form action={editarCaso} style={{ marginTop: 10 }}>
-            <input type="hidden" name="caso_id" value={caso.id} />
-            <input type="hidden" name="volver" value={volver} />
-            <div className="campo"><label>Título</label><input name="titulo" className="input" required defaultValue={caso.titulo ?? ''} /></div>
-            <div className="campo"><label>Descripción</label><textarea name="descripcion" className="input" rows={3} defaultValue={caso.descripcion ?? ''} /></div>
-            <div className="grid grid-2">
-              <div className="campo"><label>Categoría</label>
-                <select name="categoria" className="input" defaultValue={caso.categoria ?? ''}>
-                  <option value="">—</option>
-                  {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="campo"><label>Fecha de publicación</label><input name="fecha_publicacion" type="date" className="input" defaultValue={caso.fecha_publicacion ?? ''} /></div>
-              <div className="campo"><label>Fuente</label><input name="fuente" className="input" defaultValue={caso.fuente ?? ''} /></div>
-              <div className="campo"><label>Enlace de la fuente</label><input name="fuente_url" type="url" className="input" defaultValue={caso.fuente_url ?? ''} /></div>
-            </div>
-            <button className="btn btn-primario" type="submit">Guardar cambios</button>
-            <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Corrige o completa la información. La edición queda registrada en el historial.</p>
-          </form>
-        </details>
-      )}
+      {puedeEditarDatos && <FormEditarCaso caso={caso} volver={volver} />}
 
       {participantes.size > 0 && (
         <div className="tarjeta">

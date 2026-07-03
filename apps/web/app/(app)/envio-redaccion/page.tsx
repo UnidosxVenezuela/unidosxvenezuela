@@ -12,6 +12,7 @@ import Pill from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import { enviarCasoRedaccion } from '../casos/actions';
 import AccionesRedaccionCaso from './AccionesRedaccionCaso';
+import FormEditarCaso from '../casos/FormEditarCaso';
 
 /** El grupo Redacción toma los casos CONFIRMADOS y los pasa al estado
  *  final del flujo de verificación: «Enviado a Redacción». */
@@ -60,6 +61,7 @@ export default async function EnvioRedaccionPage() {
               </form>
             </div>
             <AccionesRedaccionCaso caso={c} />
+            <FormEditarCaso caso={c} volver="/envio-redaccion" />
           </div>
         ))
       )}
@@ -78,6 +80,7 @@ export default async function EnvioRedaccionPage() {
               <Pill tono="ok">Enviado a Redacción</Pill>
             </div>
             <AccionesRedaccionCaso caso={c} />
+            <FormEditarCaso caso={c} volver="/envio-redaccion" />
           </div>
         ))
       )}
