@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
+import EntradaTelefono from '@/components/EntradaTelefono';
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function RegistroPage() {
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
     setCargando(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -45,7 +46,17 @@ export default function RegistroPage() {
     if (error) {
       setCaptchaToken(null);
       setCaptchaNonce((n) => n + 1);
-      return setError(error.message);
+      const yaUsado = /already\s*(been\s*)?registered|already exists|user already/i.test(error.message);
+      return setError(yaUsado
+        ? 'Ese correo ya está registrado. Inicia sesión o usa «¿Olvidaste tu contraseña?».'
+        : error.message);
+    }
+    // Con confirmación por correo activada, Supabase no da error si el correo ya
+    // existe (para no revelar cuentas): lo detectamos por identities vacío.
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      setCaptchaToken(null);
+      setCaptchaNonce((n) => n + 1);
+      return setError('Ese correo ya está registrado. Inicia sesión o usa «¿Olvidaste tu contraseña?».');
     }
     setOk(true);
     // Si la confirmación por email está desactivada (dev), entra directo.
@@ -79,8 +90,8 @@ export default function RegistroPage() {
           <input id="nombre" className="input" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
         </div>
         <div className="campo">
-          <label htmlFor="telefono">Teléfono</label>
-          <input id="telefono" className="input" type="tel" value={form.telefono} onChange={(e) => set('telefono', e.target.value)} />
+          <label htmlFor="telefono">WhatsApp / Teléfono</label>
+          <EntradaTelefono name="telefono" onChange={(full) => set('telefono', full)} />
         </div>
         <div className="campo">
           <label htmlFor="organizacion">Organización (opcional)</label>
