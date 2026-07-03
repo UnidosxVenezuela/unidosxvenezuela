@@ -12,6 +12,14 @@ import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 
 type Accion = { href: string; titulo: string; descripcion: string; icono: string; color: string; tinte: string };
 
+/** Saludo según la hora en Venezuela (America/Caracas), sin depender de la zona del servidor. */
+function saludoPorHora(): string {
+  const h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Caracas', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
+  if (h < 12) return 'Buenos días';
+  if (h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
 /**
  * Panel por función: cada quien ve SOLO las acciones y datos de su ámbito
  * (su grupo). La tira del flujo la ven quienes participan del flujo de casos.
@@ -61,7 +69,7 @@ export default async function Dashboard() {
       </Consejo>
       <div className="pagina-cab">
         <div>
-          <h1 style={{ marginBottom: 4 }}>¡Hola, {primerNombre}! 👋</h1>
+          <h1 style={{ marginBottom: 4 }}>¡{saludoPorHora()}, {primerNombre}! 👋</h1>
           <p className="muted sub" style={{ margin: 0 }}>
             {rolEtq ? <>Tu rol: <strong>{rolEtq}</strong>. </> : null}Esto es lo que puedes hacer hoy.
           </p>

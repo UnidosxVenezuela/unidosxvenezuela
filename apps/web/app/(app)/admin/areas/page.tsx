@@ -35,7 +35,7 @@ export default async function AdminAreasPage() {
       )}
 
       <div className="tarjeta">
-        <table>
+        <div className="tabla-scroll"><table>
           <thead><tr><th>Área</th><th>Clave</th><th>Descripción</th></tr></thead>
           <tbody>
             {(areas ?? []).map((a: any) => (
@@ -46,7 +46,7 @@ export default async function AdminAreasPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
