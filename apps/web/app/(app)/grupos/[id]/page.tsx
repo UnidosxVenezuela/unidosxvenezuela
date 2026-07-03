@@ -29,6 +29,15 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
+  // Los grupos de casos (Gestión de Casos y Búsqueda) exigen 2ª verificación
+  // (identidad) aprobada también a sus líderes y coordinadores para acceder.
+  if (!esAdministrador(perfil) && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos')) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') {
+      redirect('/grupos?ok=' + encodeURIComponent('Completa tu segunda verificación (identidad) para acceder a este grupo.'));
+    }
+  }
+
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
       .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra)').eq('grupo_id', grupoId),

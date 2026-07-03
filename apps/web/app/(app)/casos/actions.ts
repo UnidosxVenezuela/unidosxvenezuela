@@ -6,6 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
+import { consultarCedulaVE, normalizarCedula } from '@/lib/cedula-ve';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
@@ -178,6 +179,45 @@ export async function editarCaso(formData: FormData) {
   await supabase.rpc('registrar_evento_caso', { p_caso: id, p_accion: 'edicion' });
   revalidatePath('/casos'); revalidatePath('/envio-redaccion');
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso actualizado');
+}
+
+// Herramienta del Grupo de Búsqueda: contrastar la cédula de un caso contra el
+// registro del CNE (CedulaVE, solo servidor). Acceso: admin, o rol 'busqueda'
+// con 2ª verificación aprobada. Cada consulta queda AUDITADA (dato sensible).
+export async function consultarCedula(nac: string, cedula: string): Promise<
+  { ok: true; datos: import('@/lib/cedula-ve').DatosCedula } | { ok: false; error: string }
+> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Sesión no válida.' };
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  const esAdmin = roles.includes('admin');
+  const esBusq = roles.includes('busqueda');
+  if (!yo?.verificado || (!esAdmin && !esBusq)) {
+    return { ok: false, error: 'No tienes permiso para usar esta herramienta.' };
+  }
+  // Búsqueda EXIGE 2ª verificación (identidad) aprobada; admin exento.
+  if (!esAdmin) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') {
+      return { ok: false, error: 'Necesitas tu segunda verificación aprobada para usar esta herramienta.' };
+    }
+  }
+  const na = (String(nac).toUpperCase() === 'E' ? 'E' : 'V') as 'V' | 'E';
+  const dni = normalizarCedula(cedula);
+  if (!dni || dni.length < 4) return { ok: false, error: 'Escribe una cédula válida (solo dígitos).' };
+
+  const r = await consultarCedulaVE(na, dni);
+  // Auditoría del acceso al registro (best-effort: no interrumpe la consulta).
+  await supabase.rpc('registrar_consulta_cedula', { p_nac: na, p_cedula: dni, p_encontrada: r.ok }).then(() => {}, () => {});
+  if (!r.ok) {
+    const error = r.motivo === 'no_encontrada' ? 'No se encontró esa cédula en el registro del CNE.'
+      : r.motivo === 'entrada' ? 'Revisa la cédula: deben ser solo dígitos.'
+      : 'El servicio de consulta no está disponible ahora. Intenta de nuevo en un momento.';
+    return { ok: false, error };
+  }
+  return { ok: true, datos: r.datos };
 }
 
 // Registra que Redacción COPIÓ o DESCARGÓ un caso (monitoreo). Se invoca desde
