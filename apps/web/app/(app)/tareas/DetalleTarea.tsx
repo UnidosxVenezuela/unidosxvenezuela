@@ -6,6 +6,7 @@ import {
 import Icono from '@/components/Icono';
 import Avatar from '@/components/Avatar';
 import Pill, { tonoDeClase } from '@/components/Pill';
+import { nombreMostrado } from '@/lib/nombre';
 import { cambiarEstado, actualizarAsignacion } from './actions';
 
 /**
@@ -15,10 +16,10 @@ import { cambiarEstado, actualizarAsignacion } from './actions';
  * formularios. La autorización sigue en la RLS; esto es solo presentación.
  */
 export default function DetalleTarea({
-  tarea, personas, perfiles, puedeEditar, esGestorTarea, tieneEntregables, volver, cerrarHref,
+  tarea, personas, perfiles, puedeEditar, esGestorTarea, tieneEntregables, volver, cerrarHref, verFull = false,
 }: {
   tarea: any; personas: any[]; perfiles: any[]; puedeEditar: boolean; esGestorTarea: boolean;
-  tieneEntregables: boolean; volver: string; cerrarHref: string;
+  tieneEntregables: boolean; volver: string; cerrarHref: string; verFull?: boolean;
 }) {
   const cupo: number | null = tarea.cupo ?? null;
   const ocupados = personas.length;
@@ -43,7 +44,7 @@ export default function DetalleTarea({
           <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
           <div className="fila" style={{ gap: 6 }}>
             <strong>Asignado a:</strong>
-            {tarea.asignado_a ? <><Avatar nombre={tarea.asignado?.nombre_completo} url={tarea.asignado?.avatar_url} size={22} /> {tarea.asignado?.nombre_completo ?? '—'}</> : <span className="muted">Sin asignar</span>}
+            {tarea.asignado_a ? <><Avatar nombre={nombreMostrado(tarea.asignado?.nombre_completo, verFull)} url={tarea.asignado?.avatar_url} size={22} /> {nombreMostrado(tarea.asignado?.nombre_completo, verFull) || '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
           <div><strong>Personas:</strong> {cupo ? `${ocupados}/${cupo}` : ocupados}</div>
           <div><strong>Vence:</strong> {tarea.vence_en ? fechaHora(tarea.vence_en) : '—'}</div>
@@ -73,7 +74,7 @@ export default function DetalleTarea({
               <label>Asignar a</label>
               <select name="asignado_a" className="input" defaultValue={tarea.asignado_a ?? ''} style={{ width: '100%' }}>
                 <option value="">Sin asignar</option>
-                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
               </select>
             </div>
             <div className="campo">
@@ -93,8 +94,8 @@ export default function DetalleTarea({
           <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {personas.map((p: any) => (
               <li key={p.perfil_id} className="fila" style={{ gap: 8 }}>
-                <Avatar nombre={p.perfiles?.nombre_completo} url={p.perfiles?.avatar_url} size={22} />
-                {p.perfiles?.nombre_completo || '—'}
+                <Avatar nombre={nombreMostrado(p.perfiles?.nombre_completo, verFull)} url={p.perfiles?.avatar_url} size={22} />
+                {nombreMostrado(p.perfiles?.nombre_completo, verFull) || '—'}
                 {tarea.asignado_a === p.perfil_id && <Pill tono="ok" punto={false}>Responsable</Pill>}
               </li>
             ))}

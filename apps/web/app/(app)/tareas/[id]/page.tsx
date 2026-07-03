@@ -1,8 +1,9 @@
 import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { nombreMostrado } from '@/lib/nombre';
 import {
   ESTADOS, PRIORIDADES, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD,
   claseEstado, clasePrioridad, ETIQUETA_TIPO_ADJUNTO, iconoAdjunto, hrefSeguro,
@@ -16,6 +17,7 @@ import { cambiarEstado, actualizarAsignacion, agregarComentario, agregarEnlace, 
 
 export default async function TareaDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
+  const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
 
@@ -64,7 +66,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   const esGestorTarea = esCoordinacion(perfil) || tarea.grupos?.lider_id === user!.id;
   const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');
   // Etiqueta de autoría: quién compartió cada archivo.
-  const nombreDe = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
+  const nombreDe = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, verFull)]));
 
   return (
     <div>
@@ -86,8 +88,8 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         <div className="grid grid-2">
           <div><strong>Prioridad:</strong> <Pill tono={tonoDeClase(clasePrioridad(tarea.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[tarea.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill></div>
           <div><strong>Grupo:</strong> {tarea.grupos?.nombre ?? '—'}</div>
-          <div><strong>Asignado a:</strong> {tarea.asignado?.nombre_completo ?? 'Sin asignar'}</div>
-          <div><strong>Creada por:</strong> {tarea.creador?.nombre_completo ?? '—'}</div>
+          <div><strong>Asignado a:</strong> {nombreMostrado(tarea.asignado?.nombre_completo, verFull) || 'Sin asignar'}</div>
+          <div><strong>Creada por:</strong> {nombreMostrado(tarea.creador?.nombre_completo, verFull) || '—'}</div>
           <div><strong>Vence:</strong> {tarea.vence_en ? fechaHora(tarea.vence_en) : '—'}</div>
           <div><strong>Ubicación:</strong>{' '}
             {tarea.ubicacion || (tarea.lat != null && tarea.lng != null ? `${tarea.lat}, ${tarea.lng}` : '—')}
@@ -126,7 +128,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
           <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
             {personas.map((p) => (
               <li key={p.perfil_id}>
-                {p.perfiles?.nombre_completo || '—'}
+                {nombreMostrado(p.perfiles?.nombre_completo, verFull) || '—'}
                 {tarea.asignado_a === p.perfil_id && <span style={{ marginLeft: 8 }}><Pill tono="ok" punto={false}>Responsable</Pill></span>}
               </li>
             ))}
@@ -154,7 +156,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               <label>Asignar a</label>
               <select name="asignado_a" className="input" defaultValue={tarea.asignado_a ?? ''}>
                 <option value="">Sin asignar</option>
-                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
               </select>
             </div>
             <div className="campo">
@@ -245,7 +247,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
         {(comentarios ?? []).map((c: any) => (
           <div key={c.id} style={{ borderBottom: '1px solid var(--borde)', padding: '8px 0' }}>
             <div className="muted" style={{ fontSize: '.85rem' }}>
-              {c.autor?.nombre_completo ?? 'Anónimo'} · {fechaHora(c.creado_en)}
+              {nombreMostrado(c.autor?.nombre_completo, verFull) || 'Anónimo'} · {fechaHora(c.creado_en)}
             </div>
             <div>{c.contenido}</div>
           </div>

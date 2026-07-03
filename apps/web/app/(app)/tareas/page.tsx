@@ -1,6 +1,7 @@
 import { fechaCorta } from '@/lib/fechas';
 import Link from 'next/link';
-import { requireUsuario, puedeGestionarTareas, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, puedeGestionarTareas, esCoordinacion, esAdministrador } from '@/lib/auth';
+import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_CATEGORIA,
@@ -44,8 +45,8 @@ function Badges({ t }: { t: any }) {
   );
 }
 
-function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
-  tareas: any[]; conEntregables?: Set<string>; hrefDetalle: (id: string) => string;
+function TablaTareas({ tareas, conEntregables, hrefDetalle, verFull = false }: {
+  tareas: any[]; conEntregables?: Set<string>; hrefDetalle: (id: string) => string; verFull?: boolean;
 }) {
   return (
     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))' }}>
@@ -72,7 +73,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle }: {
           <div className="fila" style={{ justifyContent: 'space-between', gap: 8, fontSize: '.85rem' }}>
             <span className="celda-persona">
               {t.asignado_a
-                ? <><Avatar nombre={t.asignado?.nombre_completo} url={t.asignado?.avatar_url} size={22} /> {t.asignado?.nombre_completo ?? '—'}</>
+                ? <><Avatar nombre={nombreMostrado(t.asignado?.nombre_completo, verFull)} url={t.asignado?.avatar_url} size={22} /> {nombreMostrado(t.asignado?.nombre_completo, verFull) || '—'}</>
                 : <span className="muted">Sin asignar</span>}
             </span>
             {t.vence_en && <span className="muted" style={{ whiteSpace: 'nowrap' }}>Vence {fechaCorta(t.vence_en)}</span>}
@@ -89,6 +90,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
   const gestor = puedeGestionarTareas(perfil);
+  const verFull = esAdministrador(perfil);
 
   // Conteo de ocupados + mis participaciones (modelo de cupo).
   const [{ data: conteoData }, { data: misPartData }, { data: entregablesData }] = await Promise.all([
@@ -225,10 +227,10 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
             ? 'Toma una tarea abierta de arriba para empezar a colaborar.'
             : 'Toma una tarea abierta de arriba, o espera a que la coordinación te asigne una.'}
         />
-      ) : <TablaTareas tareas={mias} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} />}
+      ) : <TablaTareas tareas={mias} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} verFull={verFull} />}
 
       {/* Gestores: vista completa con filtros */}
-      {gestor && <GestorTodas searchParams={searchParams} />}
+      {gestor && <GestorTodas searchParams={searchParams} verFull={verFull} />}
 
         </div>
         {drawerTarea && (
@@ -240,6 +242,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
                 puedeEditar={drawerPuedeEditar} esGestorTarea={drawerEsGestorTarea}
                 tieneEntregables={drawerTieneEntregables}
                 volver={hrefDetalleTarea(searchParams, drawerTarea.id)} cerrarHref={cerrarHref}
+                verFull={verFull}
               />
             </aside>
           </>
@@ -249,7 +252,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   );
 }
 
-async function GestorTodas({ searchParams }: { searchParams: SP }) {
+async function GestorTodas({ searchParams, verFull = false }: { searchParams: SP; verFull?: boolean }) {
   const supabase = await createClient();
   const { data: grupos } = await supabase.from('grupos').select('id, nombre').order('nombre');
   let q = supabase.from('tareas').select(COLS).order('creado_en', { ascending: false });
@@ -284,7 +287,7 @@ async function GestorTodas({ searchParams }: { searchParams: SP }) {
       </form>
       {tareas.length === 0
         ? <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>No hay tareas con esos filtros.</p></div>
-        : <TablaTareas tareas={tareas} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} />}
+        : <TablaTareas tareas={tareas} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} verFull={verFull} />}
     </>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { esLiderContenido } from '@/lib/nav-flags';
+import { nombreMostrado } from '@/lib/nombre';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -31,7 +32,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
     supabase.from('lineamientos_marca').select('*').eq('id', 1).maybeSingle(),
   ]);
   const piezas = (piezasData ?? []) as any[];
-  const nombres = new Map<string, string>((perfilesData ?? []).map((p: any) => [p.id, p.nombre_completo]));
+  const nombres = new Map<string, string>((perfilesData ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
   const avatares = new Map<string, string | null>((perfilesData ?? []).map((p: any) => [p.id, p.avatar_url]));
   const porEtapa = (e: EtapaContenido) => piezas.filter((p) => p.etapa === e);
 

@@ -3,6 +3,7 @@ import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esCoordinacion, esAdministrador, esMandoPsicosocial, rolesDe } from '@/lib/auth';
+import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
@@ -17,6 +18,7 @@ import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, prog
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
+  const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const grupoId = params.id;
 
@@ -77,7 +79,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
-  const liderNombre = (todosPerfiles ?? []).find((p: any) => p.id === grupo.lider_id)?.nombre_completo;
+  const liderNombre = nombreMostrado((todosPerfiles ?? []).find((p: any) => p.id === grupo.lider_id)?.nombre_completo, verFull);
   const waHref = hrefSeguro(grupo.whatsapp);
   const ahora = Date.now();
 
@@ -169,12 +171,12 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                         </a>}
                     {/* Etiqueta de autoría bajo cada foto/documento compartido */}
                     <div className="muted fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4 }}>
-                      <Icono nombre="usuario" size={12} /> Compartido por <strong style={{ color: 'var(--texto)' }}>{m.perfiles?.nombre_completo || '—'}</strong>
+                      <Icono nombre="usuario" size={12} /> Compartido por <strong style={{ color: 'var(--texto)' }}>{nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}</strong>
                     </div>
                   </div>
                 )}
                 <div className="muted" style={{ fontSize: '.8rem', marginTop: 8 }}>
-                  {m.perfiles?.nombre_completo || '—'} · {fechaHora(m.creado_en)}
+                  {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'} · {fechaHora(m.creado_en)}
                 </div>
               </div>
             );
@@ -241,8 +243,8 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   <tr key={m.perfil_id}>
                     <td>
                       <span className="celda-persona">
-                        <Avatar nombre={m.perfiles?.nombre_completo} url={m.perfiles?.avatar_url} size={26} />
-                        {m.perfiles?.nombre_completo || '—'}
+                        <Avatar nombre={nombreMostrado(m.perfiles?.nombre_completo, verFull)} url={m.perfiles?.avatar_url} size={26} />
+                        {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}
                         {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
                       </span>
                     </td>

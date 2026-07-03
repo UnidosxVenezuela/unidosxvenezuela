@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ETIQUETA_ESTADO_CASO } from '@/lib/constantes';
+import { nombreMostrado } from '@/lib/nombre';
 
 type Match = { id: string; numero: number; titulo: string; estado: string; creado_por: string | null; creador?: { nombre_completo: string | null } | null };
 
@@ -11,7 +12,7 @@ type Match = { id: string; numero: number; titulo: string; estado: string; cread
  * parezcan (por palabras del título o por el MISMO enlace de fuente) para evitar
  * duplicados entre recopiladores. Muestra el estado y quién lo creó. RLS aplica.
  */
-export default function TituloConDuplicados() {
+export default function TituloConDuplicados({ esAdmin = false }: { esAdmin?: boolean }) {
   const [q, setQ] = useState('');
   const [fuenteUrl, setFuenteUrl] = useState('');
   const [matches, setMatches] = useState<Match[]>([]);
@@ -60,7 +61,7 @@ export default function TituloConDuplicados() {
           {matches.map((m) => (
             <div key={m.id} style={{ fontSize: '.85rem', marginBottom: 3 }}>
               <Link href={'/casos/' + m.id} target="_blank" rel="noopener noreferrer">#{String(m.numero).padStart(5, '0')} · {m.titulo}</Link>
-              <span className="muted"> — {ETIQUETA_ESTADO_CASO[m.estado as keyof typeof ETIQUETA_ESTADO_CASO] ?? m.estado}{m.creador?.nombre_completo ? ' · por ' + m.creador.nombre_completo : ''}</span>
+              <span className="muted"> — {ETIQUETA_ESTADO_CASO[m.estado as keyof typeof ETIQUETA_ESTADO_CASO] ?? m.estado}{m.creador?.nombre_completo ? ' · por ' + nombreMostrado(m.creador.nombre_completo, esAdmin) : ''}</span>
             </div>
           ))}
         </div>

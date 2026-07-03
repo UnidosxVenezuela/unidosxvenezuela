@@ -9,6 +9,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
 import { cambiarEstadoCaso, actualizarCaso, eliminarCaso } from './actions';
 import FormEditarCaso from './FormEditarCaso';
+import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
   en_proceso: 'El equipo de Verificación está revisando el caso.',
@@ -24,7 +25,7 @@ const EXPLICA_ESTADO: Record<string, string> = {
 export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false }: {
   caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean;
 }) {
-  const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, p.nombre_completo]));
+  const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
   const waFuente = hrefSeguro(caso.fuente_url);
   const etiquetaEstado = (e?: string) => (e ? (ETIQUETA_ESTADO_CASO[e as keyof typeof ETIQUETA_ESTADO_CASO] ?? e) : '');

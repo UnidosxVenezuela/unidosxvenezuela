@@ -2,9 +2,10 @@ import QRCode from 'qrcode';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { requireUsuario } from '@/lib/auth';
+import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { fechaHora } from '@/lib/fechas';
+import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -30,7 +31,8 @@ const MOV: Record<string, { etiqueta: string; signo: '+' | '−' | '='; clase: s
 };
 
 export default async function CentroAcopioPage({ params, searchParams }: { params: { id: string }; searchParams: { q?: string } }) {
-  await requireUsuario();
+  const { perfil } = await requireUsuario();
+  const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
 
@@ -236,7 +238,7 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
                     <div key={s.id} className="fila" style={{ justifyContent: 'space-between', gap: 8, borderBottom: '1px solid var(--borde)', padding: '8px 0', flexWrap: 'wrap' }}>
                       <div>
                         <strong>{s.destino?.nombre ?? 'Un centro'}</strong> pide <strong>{fmt(s.cantidad)}</strong> de <strong>{s.producto}</strong>
-                        {s.solicitante?.nombre_completo && <div className="muted" style={{ fontSize: '.8rem' }}>Solicita: {s.solicitante.nombre_completo}</div>}
+                        {s.solicitante?.nombre_completo && <div className="muted" style={{ fontSize: '.8rem' }}>Solicita: {nombreMostrado(s.solicitante.nombre_completo, esAdmin)}</div>}
                         {s.nota && <div className="muted" style={{ fontSize: '.8rem' }}>{s.nota}</div>}
                       </div>
                       <div className="fila" style={{ gap: 6 }}>
@@ -349,7 +351,7 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
                         <td><Pill tono={tonoDeClase(meta.clase)} punto={false}>{meta.etiqueta}</Pill>{otro && <div className="muted" style={{ fontSize: '.78rem' }}>{m.tipo === 'traspaso_salida' ? '→ ' : '← '}{otro}</div>}{m.donante && <div className="muted" style={{ fontSize: '.78rem' }}>de {m.donante}</div>}{m.nota && <div className="muted" style={{ fontSize: '.78rem' }}>{m.nota}</div>}</td>
                         <td>{m.producto}</td>
                         <td><strong>{meta.signo} {fmt(m.cantidad)}</strong> <span className="muted" style={{ fontSize: '.8rem' }}>{m.unidad || ''}</span></td>
-                        <td className="muted" style={{ fontSize: '.82rem' }}>{m.perfiles?.nombre_completo || '—'}</td>
+                        <td className="muted" style={{ fontSize: '.82rem' }}>{nombreMostrado(m.perfiles?.nombre_completo, esAdmin) || '—'}</td>
                       </tr>
                     );
                   })}
