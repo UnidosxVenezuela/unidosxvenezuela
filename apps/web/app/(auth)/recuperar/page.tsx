@@ -2,6 +2,7 @@
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { mensajeAuth } from '@/lib/mensajes-auth';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 
 export default function RecuperarPage() {
@@ -28,7 +29,7 @@ export default function RecuperarPage() {
     if (error) {
       setCaptchaToken(null);
       setCaptchaNonce((n) => n + 1);
-      return setError(error.message);
+      return setError(mensajeAuth(error.message));
     }
     setEnviado(true);
   }

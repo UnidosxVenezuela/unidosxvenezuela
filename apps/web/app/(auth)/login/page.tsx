@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { normalizarWhatsapp, emailInternoWhatsapp } from '@/lib/whatsapp';
+import { mensajeAuth } from '@/lib/mensajes-auth';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 
@@ -40,7 +41,7 @@ export default function LoginPage() {
       // El token de Turnstile es de un solo uso: tras fallar hay que pedir uno nuevo.
       setCaptchaToken(null);
       setCaptchaNonce((n) => n + 1);
-      return setError(error.message);
+      return setError(mensajeAuth(error.message));
     }
     router.push('/dashboard');
     router.refresh();

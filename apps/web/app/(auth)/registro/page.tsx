@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
+import { mensajeAuth } from '@/lib/mensajes-auth';
+import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -27,9 +29,14 @@ export default function RegistroPage() {
     setError(null);
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
+    const correo = form.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))
+      return setError('Escribe un correo válido (por ejemplo, nombre@correo.com).');
+    if (esEmailInternoWhatsapp(correo))
+      return setError('Usa tu correo personal. Si solo tienes WhatsApp, pídele a la coordinación que te cree la cuenta.');
     setCargando(true);
     const { data, error } = await supabase.auth.signUp({
-      email: form.email,
+      email: correo,
       password: form.password,
       options: {
         captchaToken: captchaToken ?? undefined,
@@ -46,10 +53,7 @@ export default function RegistroPage() {
     if (error) {
       setCaptchaToken(null);
       setCaptchaNonce((n) => n + 1);
-      const yaUsado = /already\s*(been\s*)?registered|already exists|user already/i.test(error.message);
-      return setError(yaUsado
-        ? 'Ese correo ya está registrado. Inicia sesión o usa «¿Olvidaste tu contraseña?».'
-        : error.message);
+      return setError(mensajeAuth(error.message));
     }
     // Con confirmación por correo activada, Supabase no da error si el correo ya
     // existe (para no revelar cuentas): lo detectamos por identities vacío.
@@ -59,9 +63,13 @@ export default function RegistroPage() {
       return setError('Ese correo ya está registrado. Inicia sesión o usa «¿Olvidaste tu contraseña?».');
     }
     setOk(true);
-    // Si la confirmación por email está desactivada (dev), entra directo.
-    router.push('/dashboard');
-    router.refresh();
+    // Solo entramos directo si Supabase abrió sesión (confirmación por correo
+    // desactivada). Si la confirmación está activada NO hay sesión: nos quedamos
+    // en la pantalla de «cuenta creada» para que la persona confirme su correo.
+    if (data?.session) {
+      router.push('/dashboard');
+      router.refresh();
+    }
   }
 
   if (ok) {
@@ -70,9 +78,10 @@ export default function RegistroPage() {
         <div className="auth-caja">
           <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
           <div className="tarjeta">
-            <h1>Cuenta creada</h1>
-            <p>Tu cuenta queda <strong>pendiente de verificación</strong>: tendrás acceso limitado (podrás tomar tareas abiertas) hasta que la coordinación confirme tu identidad. Revisa tu correo si la confirmación está activada.</p>
-            <Link className="btn btn-primario" href="/dashboard">Continuar</Link>
+            <h1>¡Cuenta creada! 💛💙❤️</h1>
+            <p>Tu solicitud quedó <strong>pendiente de aprobación</strong>. Un administrador revisará tu cuenta y te dará acceso; te avisaremos por correo cuando esté lista.</p>
+            <p className="muted" style={{ fontSize: '.9rem' }}>Si te pedimos confirmar tu correo, revisa tu bandeja de entrada (y la carpeta de spam) y toca el enlace de confirmación.</p>
+            <Link className="btn btn-primario" href="/login">Ir a iniciar sesión</Link>
           </div>
         </div>
       </main>
