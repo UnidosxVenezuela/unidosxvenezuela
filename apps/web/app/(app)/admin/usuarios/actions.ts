@@ -10,6 +10,15 @@ import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsa
 import type { Rol } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
 
+// Roles del área psicosocial con acceso a información confidencial. Solo el dueño
+// (superadmin) o un coordinador psicosocial existente puede otorgarlos: la RLS/
+// trigger proteger_campos_perfil lo exige, y aquí lo replicamos para no crear
+// cuentas de Auth huérfanas cuando el otorgamiento vaya a fallar en la BD.
+const ROLES_PSICOSOCIAL: Rol[] = ['coordinador_psicosocial', 'apoyo_psicosocial'];
+function puedeOtorgarPsico(rolesActor: (string | undefined)[], superAdmin?: boolean | null): boolean {
+  return !!superAdmin || rolesActor.includes('coordinador_psicosocial');
+}
+
 async function exigirCoordinacion() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -80,6 +89,10 @@ export async function crearUsuario(formData: FormData) {
   // El rol de aliado no se asigna directo: va por doble aprobación.
   if (rol === 'lider_plataforma_aliada') {
     throw new Error('El rol de líder de plataforma aliada se otorga con doble aprobación: crea la cuenta con otro rol y luego proponla en "Aliados".');
+  }
+  // Los roles psicosociales (confidenciales) solo los otorga el coordinador psicosocial o el dueño.
+  if (ROLES_PSICOSOCIAL.includes(rol) && !puedeOtorgarPsico(rolesYo0, yo.super_admin)) {
+    throw new Error('Los roles del área psicosocial solo los asigna un coordinador psicosocial (o el dueño). Crea la cuenta con otro rol.');
   }
 
   // Sin correo real: se usa un correo interno derivado del número (login por WhatsApp).
@@ -160,7 +173,7 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
   const rolesYo = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   if (!rolesYo.includes('admin')) {
     return { ok: false, mensaje: 'Solo administración puede importar usuarios.', filas: [] };
@@ -169,6 +182,9 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   const rol = String(formData.get('rol') ?? 'voluntario') as Rol;
   if (rol === 'admin' || rol === 'lider_plataforma_aliada') {
     return { ok: false, mensaje: 'Ese rol no se puede asignar por importación (usa el flujo correspondiente).', filas: [] };
+  }
+  if (ROLES_PSICOSOCIAL.includes(rol) && !puedeOtorgarPsico(rolesYo, yo?.super_admin)) {
+    return { ok: false, mensaje: 'Los roles del área psicosocial no se asignan por importación; los otorga el coordinador psicosocial.', filas: [] };
   }
   const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
