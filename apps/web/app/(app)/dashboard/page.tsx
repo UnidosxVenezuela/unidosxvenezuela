@@ -4,6 +4,7 @@ import { flagsDeNavegacion } from '@/lib/nav-flags';
 import { formatoHoras, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import Consejo from '@/components/Consejos';
 import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
@@ -55,6 +56,9 @@ export default async function Dashboard() {
 
   return (
     <AnimarEntrada>
+      <Consejo id="dashboard" titulo="Este es tu panel">
+        Aquí ves un resumen de tu actividad y accesos rápidos. Muévete entre secciones con el menú de la izquierda. ¿No quieres estos consejos? Apágalos con el botón <strong>💡 Consejos</strong> de arriba.
+      </Consejo>
       <div className="pagina-cab">
         <div>
           <h1 style={{ marginBottom: 4 }}>¡Hola, {primerNombre}! 👋</h1>
