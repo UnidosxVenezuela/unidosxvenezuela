@@ -13,6 +13,7 @@ import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import DrawerModal from '@/components/DrawerModal';
 import Avatar from '@/components/Avatar';
 import MenuFila from '@/components/MenuFila';
 import Kpi from '@/components/Kpi';
@@ -240,7 +241,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
         {drawerTarea && (
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
-            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle de la tarea ' + drawerTarea.titulo}>
+            <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la tarea ' + drawerTarea.titulo}>
               <DetalleTarea
                 tarea={drawerTarea} personas={drawerPersonas} perfiles={drawerPerfiles}
                 puedeEditar={drawerPuedeEditar} esGestorTarea={drawerEsGestorTarea}
@@ -248,7 +249,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
                 volver={hrefDetalleTarea(searchParams, drawerTarea.id)} cerrarHref={cerrarHref}
                 verFull={verFull}
               />
-            </aside>
+            </DrawerModal>
           </>
         )}
       </div>

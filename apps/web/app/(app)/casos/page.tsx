@@ -8,6 +8,7 @@ import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import DrawerModal from '@/components/DrawerModal';
 import Avatar from '@/components/Avatar';
 import Kpi from '@/components/Kpi';
 import Pill from '@/components/Pill';
@@ -192,11 +193,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         {drawerCaso && (
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
-            <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle del caso ' + drawerCaso.titulo}>
+            <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle del caso ' + drawerCaso.titulo}>
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif}
                 puedeEditarDatos={esAdministrador(perfil) || (puedeVerif && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && drawerCaso.estado === 'en_proceso')}
                 esAdmin={esAdministrador(perfil)} />
-            </aside>
+            </DrawerModal>
           </>
         )}
       </div>
