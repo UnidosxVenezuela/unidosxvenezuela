@@ -15,7 +15,7 @@ import { confirmarCoincidencia, descartarCoincidencia } from './actions';
 const TONO: Record<string, 'ok' | 'aviso' | 'critica' | 'neutra'> = { nueva: 'aviso', confirmada: 'ok', descartada: 'neutra' };
 const ETIQ_ESTADO: Record<string, string> = { nueva: 'Nueva', confirmada: 'Confirmada', descartada: 'Descartada' };
 
-export default async function CoincidenciasPage() {
+export default async function CoincidenciasPage({ searchParams }: { searchParams: { q?: string } }) {
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const esBusq = rolesDe(perfil).includes('busqueda');
@@ -42,6 +42,14 @@ export default async function CoincidenciasPage() {
   const filas = (filasRaw ?? []) as any[];
   const nuevas = filas.filter((c) => c.estado === 'nueva').length;
 
+  // Búsqueda por nombre parcial / cédula entre las personas digitalizadas.
+  const q = (searchParams.q ?? '').trim();
+  let resultados: any[] = [];
+  if (q.length >= 2) {
+    const { data } = await supabase.rpc('buscar_personas', { p_termino: q });
+    resultados = (data ?? []) as any[];
+  }
+
   return (
     <AnimarEntrada>
       <Consejo id="coincidencias" titulo="Coincidencias con desaparecidos">
@@ -53,6 +61,33 @@ export default async function CoincidenciasPage() {
           <p className="muted sub">Posibles reunificaciones entre personas halladas y desaparecidos. {nuevas > 0 && <><strong>{nuevas}</strong> por revisar.</>}</p>
         </div>
       </div>
+
+      {/* Buscar una persona digitalizada por nombre parcial o cédula. */}
+      <form method="get" className="fila" style={{ gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+        <input name="q" className="input crece" defaultValue={q} placeholder="Buscar persona por nombre o cédula…" style={{ minWidth: 220 }} />
+        <button className="btn" type="submit"><Icono nombre="buscar" size={16} /> Buscar</button>
+        {q && <Link className="btn" href="/coincidencias">Limpiar</Link>}
+      </form>
+      {q.length >= 2 && (
+        <div className="tarjeta" style={{ marginBottom: 14 }}>
+          <h3 className="aside-titulo" style={{ marginTop: 0 }}><Icono nombre="grupos" size={16} /> Personas que coinciden con «{q}» ({resultados.length})</h3>
+          {resultados.length === 0 ? <p className="muted" style={{ margin: 0 }}>No se encontró ninguna persona digitalizada con ese nombre o cédula.</p> : (
+            <div className="tabla-scroll"><table>
+              <thead><tr><th>Nombre</th><th>Cédula</th><th>Edad</th><th>Lugar</th></tr></thead>
+              <tbody>
+                {resultados.map((r) => (
+                  <tr key={r.persona_id}>
+                    <td><span className="fila" style={{ gap: 6 }}>{r.nombre}{r.es_menor && <Pill tono="critica" punto={false}>Menor</Pill>}</span></td>
+                    <td className="muted">{r.cedula || '—'}</td>
+                    <td className="muted">{r.edad != null ? r.edad : '—'}</td>
+                    <td>{r.listado_id ? <Link href={'/digitalizacion/' + r.listado_id}>{r.lugar_nombre || '—'} →</Link> : (r.lugar_nombre || '—')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table></div>
+          )}
+        </div>
+      )}
 
       {filas.length === 0 ? (
         <EstadoVacio icono="enlace" titulo="Sin coincidencias por ahora"
