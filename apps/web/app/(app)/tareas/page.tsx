@@ -11,7 +11,7 @@ import {
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
-import BotonConfirmar from '@/components/BotonConfirmar';
+import BotonEnviar from '@/components/BotonEnviar';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import DrawerModal from '@/components/DrawerModal';
 import Avatar from '@/components/Avatar';
@@ -214,7 +214,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
               {(
                 <form action={tomarTarea}>
                   <input type="hidden" name="tarea_id" value={t.id} />
-                  <BotonConfirmar mensaje={t.cupo ? '¿Sumarte a esta tarea?' : '¿Tomar esta tarea? Quedarás como responsable de realizarla.'} className="btn btn-acento"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</BotonConfirmar>
+                  <BotonEnviar className="btn btn-acento" cargando="Sumándote…"><Icono nombre="ok" size={16} /> {t.cupo ? 'Unirme' : 'Tomar tarea'}</BotonEnviar>
                 </form>
               )}
             </div>
