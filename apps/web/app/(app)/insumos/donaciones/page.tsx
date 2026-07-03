@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUsuario, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_DONACION, ESTADOS_DONACION, claseEstadoDonacion } from '@/lib/constantes';
@@ -10,6 +11,7 @@ import { crearDonacion, cambiarEstadoDonacion, eliminarDonacion } from '../actio
 
 export default async function DonacionesPage() {
   const { perfil } = await requireUsuario();
+  if (!puedeLogistica(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const supabase = await createClient();
   const [{ data }, { data: sols }] = await Promise.all([

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireUsuario, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Icono from '@/components/Icono';
@@ -8,6 +9,7 @@ import { crearProveedor, eliminarProveedor } from '../actions';
 
 export default async function ProveedoresPage() {
   const { perfil } = await requireUsuario();
+  if (!puedeLogistica(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const supabase = await createClient();
   const { data } = await supabase.from('proveedores').select('id, nombre, tipo, contacto, notas').order('nombre');

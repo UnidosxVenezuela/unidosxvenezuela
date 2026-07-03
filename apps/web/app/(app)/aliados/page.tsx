@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerAliados } from '@/lib/auth';
+import { requireUsuario, puedeVerAliados, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -18,7 +18,7 @@ export default async function AliadosPage() {
     .select('id, plataforma, descripcion, url, metodo, formato, datos, auth_notas, contacto, activo, creado_por, creado_en')
     .order('plataforma');
   const endpoints = (data ?? []) as EndpointAliado[];
-  const esAdmin = perfil?.rol === 'admin';
+  const esAdmin = esAdministrador(perfil);
 
   return (
     <div>
