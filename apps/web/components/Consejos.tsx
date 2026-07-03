@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 // Ayuda visual: consejos contextuales, amigables y DESACTIVABLES. Preferencia
 // guardada en el navegador (localStorage); no requiere base de datos.
@@ -44,7 +45,10 @@ export default function Consejo({ id, titulo, children }: { id: string; titulo?:
     return () => window.removeEventListener(EVT, rec);
   }, [id]);
   if (!visible) return null;
-  return (
+  // Portal al <body>: así el consejo "flota" sobre el viewport aunque se declare
+  // dentro de un contenedor con transform (p. ej. AnimarEntrada), que rompería el
+  // position:fixed. Solo corre en cliente (visible se activa en un efecto).
+  return createPortal(
     <div className="consejo" role="note">
       <span className="consejo-icono" aria-hidden>💡</span>
       <div className="consejo-cuerpo">
@@ -53,6 +57,7 @@ export default function Consejo({ id, titulo, children }: { id: string; titulo?:
       </div>
       <button type="button" className="consejo-x" aria-label="Ocultar este consejo"
         onClick={() => { localStorage.setItem(PREFIJO + id, '0'); setVisible(false); }}>✕</button>
-    </div>
+    </div>,
+    document.body,
   );
 }

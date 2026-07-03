@@ -496,13 +496,26 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 }
 .btn-consejos:hover { background: #eff6ff; border-color: #bfdbfe; }
 .btn-consejos[aria-pressed="false"] { opacity: .6; }
+/* Flotante: no ocupa espacio en el layout ni empuja el contenido. Se ancla
+   abajo a la derecha, sobre el contenido, y se puede cerrar. En móvil ocupa el
+   ancho inferior. z-index por debajo de toasts/drawers/menús. */
 .consejo {
-  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px;
-  padding: 11px 13px; border-radius: 12px;
+  position: fixed; right: 18px; bottom: 18px; z-index: 45;
+  max-width: 340px;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 14px;
   background: linear-gradient(180deg, #eff6ff, #f8fbff); border: 1px solid #bfdbfe;
-  color: #1e3a5f; animation: consejo-in .25s ease;
+  color: #1e3a5f;
+  box-shadow: 0 12px 32px rgba(30, 58, 95, .20), 0 3px 10px rgba(30, 58, 95, .12);
+  animation: consejo-in .3s cubic-bezier(.2, .8, .2, 1);
 }
-@keyframes consejo-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes consejo-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {
+  .consejo { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .consejo { animation: none; }
+}
 .consejo-icono { font-size: 1.1rem; line-height: 1.4; flex-shrink: 0; }
 .consejo-cuerpo { flex: 1; font-size: .9rem; line-height: 1.5; }
 .consejo-cuerpo strong { display: block; margin-bottom: 2px; }
