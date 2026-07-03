@@ -57,6 +57,7 @@ export default async function AyudaPage() {
         <S icono="buscar" titulo="Grupo de Búsqueda (tu función)">
           <li>Atiendes los casos de <strong>personas desaparecidas</strong>: a medida que llegan, <strong>tómalos</strong> y verifícalos (<strong>Confirmado</strong> o <strong>Falso / resuelto</strong>).</li>
           <li>Estos casos <strong>no pasan a Redacción</strong>: su información la gestiona el propio Grupo de Búsqueda.</li>
+          <li>En <strong>Coincidencias</strong> revisas posibles reunificaciones: personas halladas (en hospitales, albergues o acopio) que coinciden con un desaparecido, por cédula o nombre. Confirma o descarta cada una; presta atención a los <strong>menores</strong>.</li>
           <li>Necesitas tener aprobada tu <strong>segunda verificación</strong> (identidad) para acceder.</li>
         </S>
       )}

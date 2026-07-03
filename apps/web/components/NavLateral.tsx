@@ -18,6 +18,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     const icono = flags.verificacion ? 'ok' : flags.busqueda ? 'buscar' : 'documento';
     enlaces.push({ href: '/casos', etiqueta: 'Casos', icono });
   }
+  if (flags.busqueda) enlaces.push({ href: '/coincidencias', etiqueta: 'Coincidencias', icono: 'enlace' });
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio || flags.digitalizacion) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
