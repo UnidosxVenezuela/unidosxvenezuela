@@ -2,6 +2,7 @@ import { fechaCorta } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireUsuario, puedeGestionarTareas, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
+import Consejo from '@/components/Consejos';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_CATEGORIA,
@@ -158,6 +159,9 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   return (
     <AnimarEntrada>
       <RealtimeRefrescar tabla="tareas" />
+      <Consejo id="tareas" titulo="Cómo colaborar con tareas">
+        Toma una <strong>tarea abierta</strong> para sumarte, o sigue las que te asignaron. Toca una tarea para ver el detalle, subir material y marcar tu avance.
+      </Consejo>
       <div className="pagina-cab">
         <div>
           <h1>Tareas</h1>

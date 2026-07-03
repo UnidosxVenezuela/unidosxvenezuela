@@ -487,3 +487,32 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   th, td { border: 1px solid #cbd5e1; padding: 6px 8px; font-size: .85rem; }
   .etiquetas-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* Ayuda visual: consejos contextuales (desactivables) */
+.btn-consejos {
+  display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--borde);
+  background: var(--fondo, #fff); color: var(--texto); border-radius: 999px;
+  padding: 5px 11px; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.btn-consejos:hover { background: #eff6ff; border-color: #bfdbfe; }
+.btn-consejos[aria-pressed="false"] { opacity: .6; }
+.consejo {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px;
+  padding: 11px 13px; border-radius: 12px;
+  background: linear-gradient(180deg, #eff6ff, #f8fbff); border: 1px solid #bfdbfe;
+  color: #1e3a5f; animation: consejo-in .25s ease;
+}
+@keyframes consejo-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.consejo-icono { font-size: 1.1rem; line-height: 1.4; flex-shrink: 0; }
+.consejo-cuerpo { flex: 1; font-size: .9rem; line-height: 1.5; }
+.consejo-cuerpo strong { display: block; margin-bottom: 2px; }
+.consejo-x {
+  flex-shrink: 0; border: none; background: transparent; color: #64748b; cursor: pointer;
+  font-size: .95rem; line-height: 1; padding: 2px 4px; border-radius: 6px;
+}
+.consejo-x:hover { background: #dbeafe; color: #1e3a5f; }
+@media (prefers-color-scheme: dark) {
+  .consejo { background: #12233a; border-color: #1e3a5f; color: #cfe0f5; }
+  .consejo-x:hover { background: #1e3a5f; color: #fff; }
+  .btn-consejos:hover { background: #12233a; border-color: #1e3a5f; }
+}

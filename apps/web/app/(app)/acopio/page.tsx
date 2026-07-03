@@ -3,6 +3,7 @@ import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import CentrosAcopio from '@/components/CentrosAcopio';
+import Consejo from '@/components/Consejos';
 
 export default async function AcopioPage() {
   const { user, perfil } = await requireUsuario();
@@ -17,6 +18,9 @@ export default async function AcopioPage() {
   return (
     <div>
       <RealtimeRefrescar tabla="puntos_acopio" />
+      <Consejo id="acopio" titulo="Centros de acopio">
+        Cada centro lo gestiona su <strong>líder</strong>. Entra a <strong>«Inventario»</strong> para llevar existencias, registrar donaciones y traspasos. Usa <strong>«Panel de necesidades»</strong> para ver lo urgente de toda la red.
+      </Consejo>
       <CentrosAcopio userId={user!.id} esAdmin={esAdministrador(perfil)} />
     </div>
   );

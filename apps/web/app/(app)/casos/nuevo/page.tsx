@@ -5,6 +5,7 @@ import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
 import AvisoEnlace from '@/components/AvisoEnlace';
+import Consejo from '@/components/Consejos';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
@@ -13,6 +14,9 @@ export default async function NuevoCasoPage() {
   return (
     <div style={{ maxWidth: 640 }}>
       <Link href="/casos" className="muted">← Casos</Link>
+      <Consejo id="caso-nuevo" titulo="Reportar bien un caso">
+        Pon un <strong>título claro</strong>, la fuente y su enlace, y adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
+      </Consejo>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
           <h1>Nuevo caso</h1>

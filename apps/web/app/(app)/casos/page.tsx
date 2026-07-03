@@ -17,6 +17,7 @@ import Carrusel from '@/components/Carrusel';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
+import Consejo from '@/components/Consejos';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
@@ -81,6 +82,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
   return (
     <AnimarEntrada>
+      <Consejo id="casos" titulo="El flujo de un caso">
+        Recopilación <strong>reporta</strong> → Verificación <strong>confirma o descarta</strong> → Envío a Redacción lo <strong>pasa a contenido</strong>. Toca un caso para ver su detalle, su historial y quién intervino.
+      </Consejo>
       <div className="pagina-cab">
         <div>
           <h1>Casos</h1>

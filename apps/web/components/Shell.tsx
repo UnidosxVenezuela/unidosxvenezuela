@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Icono from './Icono';
 import NavLateral from './NavLateral';
 import CampanaNotificaciones from './CampanaNotificaciones';
+import { ToggleConsejos } from './Consejos';
 import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
 
@@ -54,6 +55,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
             <span className="topbar-marca"><span className="punto" /> Apoyo por Venezuela</span>
           </div>
           <div className="topbar-der">
+            <ToggleConsejos />
             <CampanaNotificaciones />
             <UserChip nombre={usuario.nombre} rol={usuario.rol} email={usuario.email} avatarUrl={usuario.avatarUrl} />
           </div>

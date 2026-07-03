@@ -4,6 +4,7 @@ import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/
 import { createClient } from '@/lib/supabase/server';
 import { esLiderContenido } from '@/lib/nav-flags';
 import { nombreMostrado } from '@/lib/nombre';
+import Consejo from '@/components/Consejos';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -66,6 +67,9 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
   return (
     <AnimarEntrada>
       <RealtimeRefrescar tabla="piezas_contenido" />
+      <Consejo id="contenido" titulo="Cómo se produce el contenido">
+        Crea una pieza y avánzala por etapas: <strong>Redacción → Diseño/Video → Community Manager → Publicado</strong>. Cada quien trabaja su etapa y la autoría queda registrada.
+      </Consejo>
       <div className="pagina-cab">
         <div>
           <h1>Producción de Contenido</h1>
