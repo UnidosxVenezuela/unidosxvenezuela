@@ -181,8 +181,18 @@ export async function desbanearMiembro(formData: FormData) {
 
 export async function asignarLider(formData: FormData) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
   const grupoId = String(formData.get('grupo_id'));
   const perfilId = String(formData.get('perfil_id'));
+  // Un administrador o coordinador no puede ponerse a sí mismo como líder de un grupo.
+  if (perfilId === user.id) {
+    const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+    const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+    if (roles.includes('admin') || roles.includes('coordinador')) {
+      throw new Error('Un administrador o coordinador no puede asignarse a sí mismo como líder de un grupo.');
+    }
+  }
   // Asegura pertenencia y marca rol de líder
   await supabase.from('miembros_grupo')
     .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'lider' });
@@ -191,6 +201,26 @@ export async function asignarLider(formData: FormData) {
   if (error) throw new Error('No se pudo asignar el líder: ' + error.message);
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Líder actualizado');
+}
+
+// Quitar al líder de un grupo (dejarlo sin líder). SOLO administración.
+export async function quitarLider(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede quitar al líder de un grupo.');
+  const grupoId = String(formData.get('grupo_id'));
+  const { data: g } = await supabase.from('grupos').select('lider_id').eq('id', grupoId).single();
+  if (g?.lider_id) {
+    await supabase.from('miembros_grupo').update({ rol_en_grupo: 'miembro' })
+      .eq('grupo_id', grupoId).eq('perfil_id', g.lider_id);
+  }
+  const { error } = await supabase.from('grupos').update({ lider_id: null }).eq('id', grupoId);
+  if (error) throw new Error('No se pudo quitar el líder: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Grupo sin líder');
 }
 
 // Asigna roles ADICIONALES de la cadena de contenido a un miembro (o a uno

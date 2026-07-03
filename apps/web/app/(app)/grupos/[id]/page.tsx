@@ -14,7 +14,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -270,7 +270,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                             <BotonConfirmar mensaje={'¿Vetar a ' + (nombreMostrado(m.perfiles?.nombre_completo, verFull) || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
                           </form>
                         )}
-                        {esAsignable(m) && (
+                        {esCoordinacion(perfil) && esAsignable(m) && (
                           <details className="roles-extra" style={{ flexBasis: '100%' }}>
                             <summary>Roles de contenido</summary>
                             <form action={asignarRolesContenido} style={{ marginTop: 8 }}>
@@ -375,6 +375,12 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar como líder</button>
               </form>
+              {esAdministrador(perfil) && grupo.lider_id && (
+                <form action={quitarLider} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="grupo_id" value={grupoId} />
+                  <BotonConfirmar mensaje="¿Quitar al líder de este grupo? El grupo quedará sin líder." className="btn btn-peligro" style={{ width: '100%' }}>Quitar líder</BotonConfirmar>
+                </form>
+              )}
             </div>
 
             {esAdministrador(perfil) && (
