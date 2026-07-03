@@ -188,7 +188,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       {/* Libre elección */}
       <h2>Tareas abiertas <span className="muted" style={{ fontWeight: 400 }}>· tómalas para colaborar</span></h2>
       <form method="get" className="fila" style={{ marginBottom: 12 }}>
-        <select name="cat" className="input" defaultValue={searchParams.cat ?? ''} style={{ width: 'auto' }}>
+        <select name="cat" aria-label="Filtrar por categoría" className="input" defaultValue={searchParams.cat ?? ''} style={{ width: 'auto' }}>
           <option value="">Todas las categorías</option>
           {CATEGORIAS.map((c) => <option key={c} value={c}>{ETIQUETA_CATEGORIA[c]}</option>)}
         </select>
@@ -274,15 +274,15 @@ async function GestorTodas({ searchParams, verFull = false }: { searchParams: SP
     <>
       <h2>Todas las tareas</h2>
       <form method="get" className="tarjeta fila" style={{ gap: 12 }}>
-        <select name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
+        <select name="estado" aria-label="Filtrar por estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
           <option value="">Todos los estados</option>
           {ESTADOS.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO[e]}</option>)}
         </select>
-        <select name="prioridad" className="input" defaultValue={searchParams.prioridad ?? ''} style={{ width: 'auto' }}>
+        <select name="prioridad" aria-label="Filtrar por prioridad" className="input" defaultValue={searchParams.prioridad ?? ''} style={{ width: 'auto' }}>
           <option value="">Toda prioridad</option>
           {PRIORIDADES.map((p) => <option key={p} value={p}>{ETIQUETA_PRIORIDAD[p]}</option>)}
         </select>
-        <select name="grupo" className="input" defaultValue={searchParams.grupo ?? ''} style={{ width: 'auto' }}>
+        <select name="grupo" aria-label="Filtrar por grupo" className="input" defaultValue={searchParams.grupo ?? ''} style={{ width: 'auto' }}>
           <option value="">Todos los grupos</option>
           {(grupos ?? []).map((g: any) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
         </select>

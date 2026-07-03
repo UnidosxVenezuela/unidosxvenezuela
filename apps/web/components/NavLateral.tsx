@@ -43,7 +43,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
       {enlaces.map((e) => {
         const activo = ruta === e.href || ruta.startsWith(e.href + '/');
         return (
-          <Link key={e.href + e.etiqueta} href={e.href} className={activo ? 'activo' : undefined}>
+          <Link key={e.href + e.etiqueta} href={e.href} className={activo ? 'activo' : undefined} aria-current={activo ? 'page' : undefined}>
             <Icono nombre={e.icono} />
             {e.etiqueta}
           </Link>
