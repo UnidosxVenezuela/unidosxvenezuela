@@ -19,6 +19,7 @@ import FlujoTrabajo from '@/components/FlujoTrabajo';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
 import PanelCedula from './PanelCedula';
+import { cedulaVeActivo } from '@/lib/cedula-ve';
 import Consejo from '@/components/Consejos';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -62,7 +63,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const soloVerif = puedeVerif && !accesoBusqueda && !esAdmin;    // ve solo Otras informaciones
   const subAreas = soloBusqueda ? ['Desaparecidos'] : soloVerif ? ['Otras informaciones'] : CATEGORIAS_CASO;
   // Herramienta de consulta de cédula (CNE): admin o Búsqueda con 2ª verificación.
-  const mostrarCedula = esAdmin || (rolesU.includes('busqueda') && identidadOK);
+  // El admin siempre ve el panel (con aviso si falta configurar el proveedor);
+  // a Búsqueda solo se lo mostramos cuando ya está configurado, para no ofrecer
+  // una herramienta que siempre falla.
+  const cedulaActiva = cedulaVeActivo();
+  const mostrarCedula = esAdmin || (rolesU.includes('busqueda') && identidadOK && cedulaActiva);
 
   // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
   // sin describirle acciones de otros roles.
@@ -233,7 +238,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       </div>
         </div>
         {mostrarCedula && (
-          <aside className="grupo-aside"><PanelCedula /></aside>
+          <aside className="grupo-aside"><PanelCedula activa={cedulaActiva} esAdmin={esAdmin} /></aside>
         )}
         {drawerCaso && (
           <>

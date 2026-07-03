@@ -8,7 +8,7 @@ import type { DatosCedula } from '@/lib/cedula-ve';
 // Panel del Grupo de Búsqueda: consulta una cédula contra el registro del CNE
 // para contrastar el nombre y la ubicación con los datos del caso. Solo por
 // cédula. La autorización y la auditoría las impone la Server Action.
-export default function PanelCedula() {
+export default function PanelCedula({ activa, esAdmin }: { activa: boolean; esAdmin: boolean }) {
   const [nac, setNac] = useState<'V' | 'E'>('V');
   const [cedula, setCedula] = useState('');
   const [datos, setDatos] = useState<DatosCedula | null>(null);
@@ -32,6 +32,26 @@ export default function PanelCedula() {
         <span style={{ fontWeight: 500 }}>{valor}</span>
       </div>
     ) : null;
+
+  // Sin proveedor configurado: mostramos un estado honesto (no un formulario que
+  // siempre falla). El host público anterior (api.megacreativo.com) fue dado de baja.
+  if (!activa) {
+    return (
+      <div className="tarjeta" style={{ position: 'sticky', top: 12 }}>
+        <h3 className="aside-titulo"><Icono nombre="buscar" size={16} /> Consultar cédula (CNE)</h3>
+        <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
+          Esta herramienta contrasta la cédula de un caso con el registro oficial.
+        </p>
+        <p className="muted" style={{ margin: 0, fontSize: '.8rem', borderLeft: '3px solid var(--aviso, #E6A100)', paddingLeft: 8 }}>
+          {esAdmin ? (
+            <>Aún no está <strong>configurada</strong>. Define <code>CEDULA_VE_API_URL</code> con un proveedor compatible con CedulaVE (el script auto-hospedado o un espejo vigente) y vuelve a desplegar. El host público anterior fue discontinuado.</>
+          ) : (
+            <>Aún no está disponible. Pídele a un <strong>administrador</strong> que la configure.</>
+          )}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="tarjeta" style={{ position: 'sticky', top: 12 }}>

@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { consultarCedulaVE, normalizarCedula } from '@/lib/cedula-ve';
+import { consultarCedulaVE, normalizarCedula, cedulaVeActivo } from '@/lib/cedula-ve';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
@@ -208,12 +208,22 @@ export async function consultarCedula(nac: string, cedula: string): Promise<
   const dni = normalizarCedula(cedula);
   if (!dni || dni.length < 4) return { ok: false, error: 'Escribe una cédula válida (solo dígitos).' };
 
+  // Si no hay proveedor configurado, no hacemos consulta externa ni auditamos:
+  // avisamos con claridad (distinto de una caída puntual del servicio).
+  if (!cedulaVeActivo()) {
+    return { ok: false, error: esAdmin
+      ? 'La consulta de cédula no está configurada. Define la variable de entorno CEDULA_VE_API_URL con un proveedor compatible con CedulaVE (el script auto-hospedado o un espejo vigente) y vuelve a desplegar. El host público anterior (api.megacreativo.com) fue discontinuado.'
+      : 'La consulta de cédula aún no está disponible. Pídele a un administrador que la configure.' };
+  }
+
   const r = await consultarCedulaVE(na, dni);
   // Auditoría del acceso al registro (best-effort: no interrumpe la consulta).
   await supabase.rpc('registrar_consulta_cedula', { p_nac: na, p_cedula: dni, p_encontrada: r.ok }).then(() => {}, () => {});
   if (!r.ok) {
     const error = r.motivo === 'no_encontrada' ? 'No se encontró esa cédula en el registro del CNE.'
       : r.motivo === 'entrada' ? 'Revisa la cédula: deben ser solo dígitos.'
+      : r.motivo === 'no_configurada' ? 'La consulta de cédula no está configurada. Pídele a un administrador que la active.'
+      : esAdmin ? 'El proveedor de consulta no respondió (¿caído o URL incorrecta?). Revisa CEDULA_VE_API_URL y los registros del servidor, o intenta más tarde.'
       : 'El servicio de consulta no está disponible ahora. Intenta de nuevo en un momento.';
     return { ok: false, error };
   }
