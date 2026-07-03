@@ -6,7 +6,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import DetalleCaso from '../DetalleCaso';
 
 export default async function CasoDetallePage({ params }: { params: { id: string } }) {
-  const { perfil } = await requireUsuario();
+  const { user, perfil } = await requireUsuario();
   if (!puedeRecopilar(perfil)) redirect('/dashboard');
   const supabase = await createClient();
   const id = params.id;
@@ -34,7 +34,9 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
       <Link href="/casos" className="muted">← Casos</Link>
       <div style={{ marginTop: 8 }}>
-        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil)} esAdmin={esAdministrador(perfil)} />
+        <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={puedeVerificar(perfil)}
+          puedeEditarDatos={esAdministrador(perfil) || (puedeVerificar(perfil) && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && caso.estado === 'en_proceso')}
+          esAdmin={esAdministrador(perfil)} />
       </div>
     </div>
   );
