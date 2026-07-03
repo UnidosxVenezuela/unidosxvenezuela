@@ -1,7 +1,8 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { requireUsuario, puedeLogistica } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -12,6 +13,7 @@ import { cambiarEstadoSolicitud, asignarProveedorSolicitud, crearEnvio, eliminar
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
   const gestor = puedeLogistica(perfil);
+  const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
 
@@ -50,7 +52,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             {s.descripcion && <p style={{ whiteSpace: 'pre-wrap', marginTop: 10 }}>{s.descripcion}</p>}
             <div className="muted" style={{ fontSize: '.85rem', marginTop: 8 }}>
               {s.puntos_acopio?.nombre && <div className="fila" style={{ gap: 4 }}><Icono nombre="ubicacion" size={14} /> {s.puntos_acopio.nombre}</div>}
-              <div>Solicitado por {s.perfiles?.nombre_completo || '—'} · {fechaHora(s.creado_en)}</div>
+              <div>Solicitado por {nombreMostrado(s.perfiles?.nombre_completo, verFull) || '—'} · {fechaHora(s.creado_en)}</div>
             </div>
           </div>
 
@@ -64,7 +66,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <strong>{e.tipo_vehiculo || 'Vehículo'}</strong>
                   <div className="muted" style={{ fontSize: '.85rem' }}>
                     {[
-                      e.perfiles?.nombre_completo && ('Conductor: ' + e.perfiles.nombre_completo),
+                      e.perfiles?.nombre_completo && ('Conductor: ' + nombreMostrado(e.perfiles.nombre_completo, verFull)),
                       (e.origen || e.destino) && ((e.origen || '?') + ' → ' + (e.destino || '?')),
                       e.flete != null && ('Flete: ' + e.flete),
                     ].filter(Boolean).join(' · ') || '—'}
@@ -91,7 +93,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <div className="campo"><label>Conductor / voluntario</label>
                     <select name="voluntario_id" className="input" defaultValue="">
                       <option value="">— Sin asignar —</option>
-                      {(perfilesLista ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                      {(perfilesLista ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
                     </select>
                   </div>
                   <div className="campo"><label>Tipo de vehículo</label>

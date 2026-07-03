@@ -10,6 +10,7 @@ import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
 import Avatar from './Avatar';
 import type { PuntoAcopio, UrgenciaAcopio, Rol } from '@unidos/types';
+import { nombreMostrado } from '@/lib/nombre';
 
 type Resp = { perfil_id: string; nombre: string | null; avatar: string | null; rol: Rol | null };
 type CentroLider = PuntoAcopio & { creador?: { nombre_completo: string | null; telefono: string | null } | null };
@@ -55,7 +56,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
     const map = new Map<string, Resp[]>();
     for (const r of (resp.data ?? []) as any[]) {
       const lista = map.get(r.punto_id) ?? [];
-      lista.push({ perfil_id: r.perfil_id, nombre: r.perfiles?.nombre_completo ?? null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
+      lista.push({ perfil_id: r.perfil_id, nombre: nombreMostrado(r.perfiles?.nombre_completo, esAdmin) || null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
       map.set(r.punto_id, lista);
     }
     setResponsables(map);
@@ -63,7 +64,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
     const vmap = new Map<string, Resp[]>();
     for (const r of (vol.data ?? []) as any[]) {
       const lista = vmap.get(r.punto_id) ?? [];
-      lista.push({ perfil_id: r.perfil_id, nombre: r.perfiles?.nombre_completo ?? null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
+      lista.push({ perfil_id: r.perfil_id, nombre: nombreMostrado(r.perfiles?.nombre_completo, esAdmin) || null, avatar: r.perfiles?.avatar_url ?? null, rol: r.perfiles?.rol ?? null });
       vmap.set(r.punto_id, lista);
     }
     setVoluntarios(vmap);
@@ -262,7 +263,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
                 );
               })()}
               {c.direccion && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="ubicacion" size={14} /> {c.direccion}</div>}
-              {c.creador?.nombre_completo && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Líder: {c.creador.nombre_completo}{c.creador.telefono ? ' · ' + c.creador.telefono : ''}</div>}
+              {c.creador?.nombre_completo && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Líder: {nombreMostrado(c.creador.nombre_completo, esAdmin)}{c.creador.telefono ? ' · ' + c.creador.telefono : ''}</div>}
               {(c.responsable || c.telefono) && <div className="muted fila" style={{ fontSize: '.9rem', gap: 6 }}><Icono nombre="usuario" size={14} /> Contacto en sitio: {[c.responsable, c.telefono].filter(Boolean).join(' · ')}</div>}
               {c.horario && <div className="muted fila" style={{ fontSize: '.85rem', gap: 6 }}><Icono nombre="reloj" size={14} /> {c.horario}</div>}
 

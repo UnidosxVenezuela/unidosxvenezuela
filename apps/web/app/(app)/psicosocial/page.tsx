@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { requireUsuario, puedeSupervisarPsicosocial, puedePsicosocial, esCoordPsicosocial } from '@/lib/auth';
+import { requireUsuario, puedeSupervisarPsicosocial, puedePsicosocial, esCoordPsicosocial, esAdministrador } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_APOYO, ETIQUETA_ESTADO_ACOMP, ESTADOS_ACOMP, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -140,7 +141,7 @@ export default async function PsicosocialPage({ searchParams }: { searchParams: 
                   <div className="muted" style={{ fontSize: '.82rem' }}>{ETIQUETA_TIPO_APOYO[c.tipo as keyof typeof ETIQUETA_TIPO_APOYO] ?? c.tipo}</div>
                   {c.perfiles?.nombre_completo && (
                     <div className="muted fila" style={{ gap: 4, fontSize: '.8rem', marginTop: 4 }}>
-                      <Icono nombre="usuario" size={13} /> {c.perfiles.nombre_completo}
+                      <Icono nombre="usuario" size={13} /> {nombreMostrado(c.perfiles.nombre_completo, esAdministrador(perfil))}
                     </div>
                   )}
                 </Link>

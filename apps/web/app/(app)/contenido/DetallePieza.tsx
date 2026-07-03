@@ -7,6 +7,7 @@ import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
 import SubirPiezaArchivo from './SubirPiezaArchivo';
+import { nombreMostrado } from '@/lib/nombre';
 import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa, subirAdjuntoPieza, eliminarAdjuntoPieza } from './actions';
 
 const EXPLICA_ETAPA: Record<string, string> = {
@@ -180,7 +181,7 @@ export default function DetallePieza({ pieza, perfiles, historial, adjuntos, vol
               <label>Asignar a</label>
               <select name="asignado_a" className="input" defaultValue={pieza.asignado_a ?? ''} style={{ width: '100%' }}>
                 <option value="">Sin asignar</option>
-                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, !!esCoord) || p.id}</option>)}
               </select>
             </div>
             <button className="btn" type="submit" style={{ width: '100%' }}>Guardar asignación</button>

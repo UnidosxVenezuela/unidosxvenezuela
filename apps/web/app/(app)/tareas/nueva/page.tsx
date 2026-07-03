@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, puedeGestionarTareas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from '@/lib/constantes';
+import { nombreMostrado } from '@/lib/nombre';
 import { crearTarea } from '../actions';
 import CapturarUbicacion from './CapturarUbicacion';
 
@@ -70,7 +71,7 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
             <label htmlFor="asignado_a">Asignar a</label>
             <select id="asignado_a" name="asignado_a" className="input" defaultValue="">
               <option value="">Sin asignar</option>
-              {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.nombre_completo || p.id}</option>)}
+              {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, esAdmin) || p.id}</option>)}
             </select>
           </div>
         </div>

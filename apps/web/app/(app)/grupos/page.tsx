@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea } from '@/lib/constantes';
+import { nombreMostrado } from '@/lib/nombre';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import BadgeCategoria from '@/components/BadgeCategoria';
@@ -27,7 +28,8 @@ export default async function GruposPage() {
   const nombrePorId = new Map<string, string>();
   if (liderIds.length) {
     const { data: lideres } = await supabase.from('perfiles').select('id, nombre_completo').in('id', liderIds);
-    (lideres ?? []).forEach((p: any) => nombrePorId.set(p.id, p.nombre_completo));
+    const verFull = esAdministrador(perfil);
+    (lideres ?? []).forEach((p: any) => nombrePorId.set(p.id, nombreMostrado(p.nombre_completo, verFull)));
   }
 
   return (

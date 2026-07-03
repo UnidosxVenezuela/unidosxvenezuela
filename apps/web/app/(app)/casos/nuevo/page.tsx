@@ -19,7 +19,7 @@ export default async function NuevoCasoPage() {
         </div>
       </div>
       <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
-        <TituloConDuplicados />
+        <TituloConDuplicados esAdmin={esAdministrador(perfil)} />
         <div className="campo">
           <label htmlFor="descripcion">Descripción</label>
           <textarea id="descripcion" name="descripcion" className="input" rows={3} />

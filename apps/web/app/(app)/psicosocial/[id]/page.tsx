@@ -1,8 +1,9 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedePsicosocial, esCoordPsicosocial } from '@/lib/auth';
+import { requireUsuario, puedePsicosocial, esCoordPsicosocial, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { nombreMostrado } from '@/lib/nombre';
 import {
   ETIQUETA_TIPO_APOYO, ETIQUETA_ESTADO_ACOMP, claseEstadoAcomp, siguienteEstadoAcomp,
   clasePrioridad, ETIQUETA_PRIORIDAD, PRIORIDADES, TIPOS_CONTACTO_PSICO,
@@ -72,8 +73,8 @@ export default async function AcompanamientoPage({ params }: { params: { id: str
             </div>
             {c.motivo && <p style={{ whiteSpace: 'pre-wrap', marginTop: 10 }}>{c.motivo}</p>}
             <div className="muted" style={{ fontSize: '.85rem', marginTop: 8 }}>
-              Registrado por {c.creador?.nombre_completo || '—'} · {fechaHora(c.creado_en)}
-              {c.asignado?.nombre_completo && <> · Atiende: <strong style={{ color: 'var(--texto)' }}>{c.asignado.nombre_completo}</strong></>}
+              Registrado por {nombreMostrado(c.creador?.nombre_completo, esAdministrador(perfil)) || '—'} · {fechaHora(c.creado_en)}
+              {c.asignado?.nombre_completo && <> · Atiende: <strong style={{ color: 'var(--texto)' }}>{nombreMostrado(c.asignado.nombre_completo, esAdministrador(perfil))}</strong></>}
             </div>
             {c.estado === 'cerrado' && c.notas_cierre && (
               <div className="tarjeta" style={{ marginTop: 12, background: '#f0fdf4' }}>
@@ -117,7 +118,7 @@ export default async function AcompanamientoPage({ params }: { params: { id: str
                   <div className="fila" style={{ justifyContent: 'space-between', gap: 8 }}>
                     <div className="muted" style={{ fontSize: '.82rem' }}>
                       {n.tipo_contacto && <span className="insignia" style={{ marginRight: 6 }}>{n.tipo_contacto}</span>}
-                      {n.perfiles?.nombre_completo || '—'} · {fechaHora(n.creado_en)}
+                      {nombreMostrado(n.perfiles?.nombre_completo, esAdministrador(perfil)) || '—'} · {fechaHora(n.creado_en)}
                     </div>
                     <form action={eliminarBitacora}>
                       <input type="hidden" name="id" value={n.id} />
