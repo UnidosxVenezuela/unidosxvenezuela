@@ -280,14 +280,30 @@ export async function cambiarRol(formData: FormData) {
   const supabase = await exigirCoordinacion();
   const perfilId = String(formData.get('perfil_id'));
   const rol = String(formData.get('rol')) as Rol;
+  const grupoId = String(formData.get('grupo_id') ?? '').trim();
   const { error } = await supabase.from('perfiles')
     .update({ rol }).eq('id', perfilId);
   if (error) throw new Error('No se pudo cambiar el rol: ' + error.message);
+
+  // Líder de grupo / coordinador: dejar a la persona a cargo del grupo elegido
+  // en el mismo paso. (El área psicosocial usa sus propios roles y no pasa por aquí.)
+  if (grupoId && (rol === 'lider_grupo' || rol === 'coordinador')) {
+    if (rol === 'lider_grupo') {
+      await supabase.from('miembros_grupo')
+        .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'lider' }, { onConflict: 'grupo_id,perfil_id' });
+      const { error: eg } = await supabase.from('grupos').update({ lider_id: perfilId }).eq('id', grupoId);
+      if (eg) throw new Error('Rol cambiado, pero no se pudo asignar el grupo: ' + eg.message);
+    } else {
+      await supabase.from('miembros_grupo')
+        .upsert({ grupo_id: grupoId, perfil_id: perfilId }, { onConflict: 'grupo_id,perfil_id', ignoreDuplicates: true });
+    }
+  }
+
   await supabase.rpc('registrar_auditoria', {
-    p_accion: 'cambio_rol', p_entidad_id: perfilId, p_metadata: { valor: rol },
+    p_accion: 'cambio_rol', p_entidad_id: perfilId, p_metadata: { valor: rol, grupo: grupoId || null },
   });
-  revalidatePath('/admin/usuarios');
-  redirigirOk('/admin/usuarios', 'Rol actualizado');
+  revalidatePath('/admin/usuarios'); revalidatePath('/grupos');
+  redirigirOk('/admin/usuarios', grupoId ? 'Rol y grupo actualizados' : 'Rol actualizado');
 }
 
 // Roles adicionales (un usuario puede tener más de un rol). La RLS y el trigger

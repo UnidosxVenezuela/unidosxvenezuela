@@ -3,7 +3,8 @@ import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, cambiarRol, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena, eliminarUsuario, agregarAGrupo } from './actions';
+import { cambiarVerificacion, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena, eliminarUsuario, agregarAGrupo } from './actions';
+import SelectorRolGrupo from './SelectorRolGrupo';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -35,8 +36,11 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const pendientes = perfiles.filter((p) => !p.verificado);
 
   // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
-  const { data: gruposData } = await supabase.from('grupos').select('id, nombre').order('nombre');
-  const grupos = (gruposData ?? []) as { id: string; nombre: string }[];
+  const { data: gruposData } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
+  const grupos = (gruposData ?? []) as { id: string; nombre: string; clave: string | null }[];
+  // Para el selector de líder/coordinador: todos los grupos MENOS el psicosocial
+  // (que se gestiona con sus propios roles específicos).
+  const gruposParaLider = grupos.filter((g) => g.clave !== 'apoyo_psicosocial').map((g) => ({ id: g.id, nombre: g.nombre }));
   const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupos(nombre)');
   const gruposPorPerfil = new Map<string, string[]>();
   (membresias ?? []).forEach((m: any) => {
@@ -72,13 +76,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
       return <span className="insignia">{ETIQUETA_ROL[p.rol]}</span>;
     }
     return (
-      <form action={cambiarRol} className="fila">
-        <input type="hidden" name="perfil_id" value={p.id} />
-        <select name="rol" className="input" defaultValue={p.rol} style={{ minHeight: 34, width: 'auto' }}>
-          {rolesSelect.map((r) => <option key={r} value={r}>{ETIQUETA_ROL[r]}</option>)}
-        </select>
-        <BotonConfirmar mensaje={'¿Cambiar el rol de ' + (p.nombre_completo || 'esta persona') + '?'} className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>Guardar</BotonConfirmar>
-      </form>
+      <SelectorRolGrupo perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol} roles={rolesSelect} grupos={gruposParaLider} />
     );
   };
 
