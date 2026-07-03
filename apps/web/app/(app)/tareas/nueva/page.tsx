@@ -5,6 +5,7 @@ import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from 
 import { nombreMostrado } from '@/lib/nombre';
 import { crearTarea } from '../actions';
 import CapturarUbicacion from './CapturarUbicacion';
+import BotonEnviar from '@/components/BotonEnviar';
 
 export default async function NuevaTareaPage({ searchParams }: { searchParams: { grupo?: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -80,7 +81,7 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
           Si dejas <strong>Sin asignar</strong>, la tarea queda <strong>abierta</strong> y cualquier
           voluntario podrá tomarla (libre elección).
         </p>
-        <button className="btn btn-primario" type="submit">Crear tarea</button>
+        <BotonEnviar cargando="Creando…">Crear tarea</BotonEnviar>
       </form>
     </div>
   );

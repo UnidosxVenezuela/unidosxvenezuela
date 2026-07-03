@@ -87,6 +87,7 @@ export async function tomarTarea(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath('/tareas');
   revalidatePath('/tareas/' + id);
+  redirigirOk('/tareas', '¡Gracias por sumarte! 💛 Ya estás en esta tarea.');
 }
 
 export async function liberarTarea(formData: FormData) {

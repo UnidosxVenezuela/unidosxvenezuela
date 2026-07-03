@@ -17,6 +17,7 @@ import EstadoVacio from '@/components/EstadoVacio';
 import DetallePieza from './DetallePieza';
 import LineamientosMarca from './LineamientosMarca';
 import { crearPieza } from './actions';
+import BotonEnviar from '@/components/BotonEnviar';
 
 type SP = { pieza?: string };
 
@@ -86,7 +87,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
           <div className="campo"><label>Título</label><input name="titulo" className="input" required placeholder="Ej. Campaña de recolección — semana 1" /></div>
           <div className="campo"><label>Contenido (texto para el diseño o el video) — opcional</label><textarea name="contenido" className="input" rows={3} /></div>
           <div className="campo"><label>Descripción (caption para redes) — opcional</label><textarea name="descripcion" className="input" rows={2} /></div>
-          <button className="btn btn-primario" type="submit"><Icono nombre="mas" size={16} /> Crear pieza</button>
+          <BotonEnviar cargando="Creando…"><Icono nombre="mas" size={16} /> Crear pieza</BotonEnviar>
         </form>
       </details>
 

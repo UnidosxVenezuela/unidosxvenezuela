@@ -26,13 +26,18 @@ export default function Toast() {
   useEffect(() => {
     if (!aviso) return;
     if (aviso.tipo === 'ok') exito(); else sonidoError();
+    // El éxito se auto-cierra; el error NO (puede necesitar leerse o actuarse).
+    if (aviso.tipo !== 'ok') return;
     const t = setTimeout(() => setAviso(null), 3500);
     return () => clearTimeout(t);
   }, [aviso]);
 
   if (!aviso) return null;
   return (
-    <div className={'toast toast-' + aviso.tipo} role="status" onClick={() => setAviso(null)} title="Toca para cerrar">
+    <div className={'toast toast-' + aviso.tipo}
+      role={aviso.tipo === 'ok' ? 'status' : 'alert'}
+      aria-live={aviso.tipo === 'ok' ? 'polite' : 'assertive'}
+      onClick={() => setAviso(null)} title="Toca para cerrar">
       <span className="toast-ico"><Icono nombre={aviso.tipo === 'ok' ? 'ok' : 'avisos'} size={18} /></span>
       <span className="toast-txt">{aviso.texto}</span>
       <span className="toast-x" aria-hidden="true"><Icono nombre="cerrar" size={15} /></span>

@@ -197,7 +197,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       </form>
 
       {abiertas.length === 0 ? (
-        <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>No hay tareas abiertas en esta categoría ahora mismo.</p></div>
+        <EstadoVacio icono="tareas" titulo="No hay tareas abiertas" texto="No hay tareas abiertas en esta categoría ahora mismo. Prueba con otra categoría o vuelve más tarde." />
       ) : (
         <div className="grid grid-2">
           {abiertas.map((t) => (
@@ -290,7 +290,7 @@ async function GestorTodas({ searchParams, verFull = false }: { searchParams: SP
         <Link className="btn" href="/tareas">Limpiar</Link>
       </form>
       {tareas.length === 0
-        ? <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>No hay tareas con esos filtros.</p></div>
+        ? <EstadoVacio icono="tareas" titulo="Sin resultados" texto="No hay tareas con esos filtros. Ajústalos o límpialos para ver más." />
         : <TablaTareas tareas={tareas} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} verFull={verFull} />}
     </>
   );

@@ -6,6 +6,7 @@ import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
 import AvisoEnlace from '@/components/AvisoEnlace';
 import Consejo from '@/components/Consejos';
+import BotonEnviar from '@/components/BotonEnviar';
 
 export default async function NuevoCasoPage() {
   const { perfil } = await requireUsuario();
@@ -55,7 +56,7 @@ export default async function NuevoCasoPage() {
                  accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" />
           <p className="muted" style={{ fontSize: '.8rem', margin: '4px 0 0' }}>Capturas, fotos o documentos que respalden el caso (hasta 10 MB cada uno).</p>
         </div>
-        <button className="btn btn-primario" type="submit">Crear caso</button>
+        <BotonEnviar cargando="Creando…">Crear caso</BotonEnviar>
       </form>
     </div>
   );
