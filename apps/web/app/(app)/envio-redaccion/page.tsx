@@ -11,6 +11,7 @@ import EstadoVacio from '@/components/EstadoVacio';
 import Pill from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import { enviarCasoRedaccion } from '../casos/actions';
+import AccionesRedaccionCaso from './AccionesRedaccionCaso';
 
 /** El grupo Redacción toma los casos CONFIRMADOS y los pasa al estado
  *  final del flujo de verificación: «Enviado a Redacción». */
@@ -20,10 +21,11 @@ export default async function EnvioRedaccionPage() {
   if (!puede) redirect('/dashboard');
   const supabase = await createClient();
 
+  const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, actualizado_en';
   const [{ data: confirmados }, { data: enviados }] = await Promise.all([
-    supabase.from('casos').select('id, numero, titulo, categoria, actualizado_en')
+    supabase.from('casos').select(COLS)
       .eq('estado', 'confirmado').order('actualizado_en', { ascending: true }),
-    supabase.from('casos').select('id, numero, titulo, categoria, actualizado_en')
+    supabase.from('casos').select(COLS)
       .eq('estado', 'enviado_redaccion').order('actualizado_en', { ascending: false }).limit(30),
   ]);
 
@@ -43,18 +45,21 @@ export default async function EnvioRedaccionPage() {
         <EstadoVacio icono="ok" titulo="Nada pendiente por enviar" texto="Cuando Verificación confirme un caso, aparecerá aquí para enviarlo a Redacción." />
       ) : (
         (confirmados as any[]).map((c) => (
-          <div key={c.id} className="tarjeta fila" style={{ justifyContent: 'space-between', gap: 10 }}>
-            <div>
-              <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')} · {fechaHora(c.actualizado_en)}</div>
-              <strong>{c.titulo}</strong>
-              <div style={{ marginTop: 4 }}>{c.categoria && <BadgeCategoria>{c.categoria}</BadgeCategoria>}</div>
+          <div key={c.id} className="tarjeta">
+            <div className="fila" style={{ justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+              <div>
+                <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')} · {fechaHora(c.actualizado_en)}</div>
+                <strong>{c.titulo}</strong>
+                <div style={{ marginTop: 4 }}>{c.categoria && <BadgeCategoria>{c.categoria}</BadgeCategoria>}</div>
+              </div>
+              <form action={enviarCasoRedaccion}>
+                <input type="hidden" name="caso_id" value={c.id} />
+                <BotonConfirmar mensaje={'¿Enviar «' + c.titulo + '» a Redacción?'} className="btn btn-primario">
+                  <Icono nombre="cohete" size={16} /> Enviar a Redacción
+                </BotonConfirmar>
+              </form>
             </div>
-            <form action={enviarCasoRedaccion}>
-              <input type="hidden" name="caso_id" value={c.id} />
-              <BotonConfirmar mensaje={'¿Enviar «' + c.titulo + '» a Redacción?'} className="btn btn-primario">
-                <Icono nombre="cohete" size={16} /> Enviar a Redacción
-              </BotonConfirmar>
-            </form>
+            <AccionesRedaccionCaso caso={c} />
           </div>
         ))
       )}
@@ -64,12 +69,15 @@ export default async function EnvioRedaccionPage() {
         <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Todavía no se ha enviado ninguno.</p></div>
       ) : (
         (enviados as any[]).map((c) => (
-          <div key={c.id} className="tarjeta fila" style={{ justifyContent: 'space-between', gap: 10 }}>
-            <div>
-              <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')} · {fechaHora(c.actualizado_en)}</div>
-              <strong>{c.titulo}</strong>
+          <div key={c.id} className="tarjeta">
+            <div className="fila" style={{ justifyContent: 'space-between', gap: 10 }}>
+              <div>
+                <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')} · {fechaHora(c.actualizado_en)}</div>
+                <strong>{c.titulo}</strong>
+              </div>
+              <Pill tono="ok">Enviado a Redacción</Pill>
             </div>
-            <Pill tono="ok">Enviado a Redacción</Pill>
+            <AccionesRedaccionCaso caso={c} />
           </div>
         ))
       )}

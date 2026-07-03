@@ -22,7 +22,7 @@ type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
-  const { perfil } = await requireUsuario();
+  const { user, perfil } = await requireUsuario();
   if (!puedeRecopilar(perfil)) redirect('/dashboard');
   const puedeVerif = puedeVerificar(perfil);
   const puedeCrear = esAdministrador(perfil) || rolesDe(perfil).includes('recopilacion');
@@ -191,7 +191,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
             <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={'Detalle del caso ' + drawerCaso.titulo}>
-              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif} esAdmin={esAdministrador(perfil)} />
+              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={puedeVerif}
+                puedeEditarDatos={esAdministrador(perfil) || (puedeVerif && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && drawerCaso.estado === 'en_proceso')}
+                esAdmin={esAdministrador(perfil)} />
             </aside>
           </>
         )}

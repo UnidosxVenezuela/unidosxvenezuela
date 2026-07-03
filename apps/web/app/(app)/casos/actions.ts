@@ -112,3 +112,39 @@ export async function actualizarCaso(formData: FormData) {
   revalidatePath('/casos');
   redirigirOk(opt(formData.get('volver')) || '/casos', 'Caso actualizado');
 }
+
+// Editar los DATOS del caso (título, descripción, categoría, fuente, fecha).
+// Permite corregir/completar información. La RLS (0073) decide quién puede:
+// admin/verificador, o el CREADOR mientras el caso siga «en proceso».
+// La edición queda registrada por el trigger de auditoría (casos:update).
+export async function editarCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const titulo = txt(formData.get('titulo'));
+  if (!titulo) throw new Error('El título es obligatorio.');
+  const { error } = await supabase.from('casos').update({
+    titulo,
+    descripcion: opt(formData.get('descripcion')),
+    categoria: opt(formData.get('categoria')),
+    fuente: opt(formData.get('fuente')),
+    fuente_url: opt(formData.get('fuente_url')),
+    fecha_publicacion: opt(formData.get('fecha_publicacion')),
+    actualizado_en: new Date().toISOString(),
+  }).eq('id', id);
+  if (error) throw new Error('No se pudo editar el caso: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso actualizado');
+}
+
+// Registra que Redacción COPIÓ o DESCARGÓ un caso (monitoreo). Se invoca desde
+// el cliente (AccionesRedaccionCaso). Best-effort: no interrumpe la copia.
+export async function registrarEventoCaso(casoId: string, accion: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.rpc('registrar_evento_caso', {
+    p_caso: casoId, p_accion: accion === 'descarga' ? 'descarga' : 'copia',
+  });
+}
