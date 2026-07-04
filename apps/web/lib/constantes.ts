@@ -305,6 +305,11 @@ export const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
   baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Crítica',
 };
 
+// Roles cuyo trabajo maneja datos sensibles y por eso EXIGEN la 2ª verificación
+// (identidad aprobada) antes de operar. La RLS lo impone; esto es para la UI/avisos.
+// El admin queda exento. (enlace_contacto se sumará en la Fase 3 de Búsqueda.)
+export const ROLES_SEGUNDA_VERIFICACION: Rol[] = ['recopilacion', 'busqueda', 'digitalizador'];
+
 export const AREAS: AreaClave[] = Object.keys(ETIQUETA_AREA) as AreaClave[];
 export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
 

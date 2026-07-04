@@ -3,8 +3,8 @@ import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
-import { cambiarVerificacion, proponerAliado, aprobarAliado, guardarRolesExtra, restablecerContrasena, eliminarUsuario, agregarAGrupo } from './actions';
-import SelectorRolGrupo from './SelectorRolGrupo';
+import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
+import GestionUsuarioModal from './GestionUsuarioModal';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -79,41 +79,24 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   // En el selector de rol no aparece "aliado": ese rol va por doble aprobación.
   const rolesSelect = ROLES.filter((r) => r !== 'lider_plataforma_aliada');
 
-  const selectorRol = (p: Perfil) => {
-    // Solo el superadmin puede cambiar el rol de un administrador.
-    if (p.rol === 'admin' && !esSuper) {
-      return <span className="insignia">{ETIQUETA_ROL[p.rol]} 🔒</span>;
-    }
-    // El rol de aliado no se edita acá (se otorga/quita por su flujo).
-    if (p.rol === 'lider_plataforma_aliada') {
-      return <span className="insignia">{ETIQUETA_ROL[p.rol]}</span>;
-    }
-    return (
-      <SelectorRolGrupo perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol} roles={rolesSelect}
-        grupos={gruposParaLider} lideraActual={lideraPorPerfil.get(p.id) ?? null} coordinaActual={coordinaPorPerfil.get(p.id) ?? null} />
-    );
-  };
+  // Roles adicionales asignables a una persona (sin aliado, sin su rol principal,
+  // sin admin salvo superadmin).
+  const rolesExtraDe = (p: Perfil) => ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
 
-  // Roles adicionales: un usuario puede tener más de un rol (verificador + redactor, etc.).
-  const editorRolesExtra = (p: Perfil) => {
-    const asignables = ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
-    const extra = p.roles_extra ?? [];
+  // Toda la gestión de una persona (rol + grupo a cargo + roles adicionales +
+  // agregar a grupo) va en UNA ventana flotante, para evitar errores y ordenar la UI.
+  const gestionUsuario = (p: Perfil, etiquetaBoton = 'Gestionar rol') => {
+    // Solo el superadmin puede cambiar el rol de un administrador.
+    if (p.rol === 'admin' && !esSuper) return <span className="insignia">{ETIQUETA_ROL[p.rol]} 🔒</span>;
+    // El rol de aliado no se edita acá (se otorga/quita por su flujo).
+    if (p.rol === 'lider_plataforma_aliada') return <span className="insignia">{ETIQUETA_ROL[p.rol]}</span>;
     return (
-      <details className="roles-extra">
-        <summary>Roles adicionales{extra.length ? ` · ${extra.length}` : ''}</summary>
-        <form action={guardarRolesExtra} style={{ marginTop: 8 }}>
-          <input type="hidden" name="perfil_id" value={p.id} />
-          <div style={{ display: 'grid', gap: 4 }}>
-            {asignables.map((r) => (
-              <label key={r} className="fila" style={{ gap: 6, fontWeight: 500 }}>
-                <input type="checkbox" name="roles" value={r} defaultChecked={extra.includes(r)} style={{ width: 'auto', minHeight: 0 }} />
-                {ETIQUETA_ROL[r]}
-              </label>
-            ))}
-          </div>
-          <button className="btn" style={{ minHeight: 32, padding: '4px 10px', marginTop: 8 }}>Guardar roles</button>
-        </form>
-      </details>
+      <GestionUsuarioModal
+        perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol}
+        rolesPrincipales={rolesSelect} rolesExtra={p.roles_extra ?? []} rolesExtraAsignables={rolesExtraDe(p)}
+        grupos={gruposParaLider} gruposTodos={grupos.map((g) => ({ id: g.id, nombre: g.nombre }))}
+        lideraActual={lideraPorPerfil.get(p.id) ?? null} coordinaActual={coordinaPorPerfil.get(p.id) ?? null}
+        className="btn btn-primario" etiquetaBoton={etiquetaBoton} />
     );
   };
 
@@ -159,7 +142,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                 </div>
               </div>
               <div className="fila">
-                {selectorRol(p)}
+                {gestionUsuario(p)}
                 <form action={cambiarVerificacion}>
                   <input type="hidden" name="perfil_id" value={p.id} />
                   <input type="hidden" name="verificado" value="true" />
@@ -304,22 +287,11 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                   )}
                 </td>
                 <td>
-                  {selectorRol(p)}
+                  {gestionUsuario(p)}
                   {(p.roles_extra ?? []).length > 0 && (
                     <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
                       {(p.roles_extra ?? []).map((r) => <Pill key={r} tono="info" punto={false}>{ETIQUETA_ROL[r]}</Pill>)}
                     </div>
-                  )}
-                  <div style={{ marginTop: 6 }}>{editorRolesExtra(p)}</div>
-                  {grupos.length > 0 && (
-                    <form action={agregarAGrupo} className="fila" style={{ gap: 6, marginTop: 8, flexWrap: 'nowrap' }}>
-                      <input type="hidden" name="perfil_id" value={p.id} />
-                      <select name="grupo_id" className="input" required defaultValue="" style={{ minHeight: 32, padding: '2px 8px', width: 'auto' }}>
-                        <option value="" disabled>Agregar a grupo…</option>
-                        {grupos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
-                      </select>
-                      <button className="btn" style={{ minHeight: 32, padding: '4px 10px' }}>Agregar</button>
-                    </form>
                   )}
                 </td>
               </tr>

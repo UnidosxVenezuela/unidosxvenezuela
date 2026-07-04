@@ -193,9 +193,13 @@ export async function asignarLider(formData: FormData) {
       throw new Error('Un administrador o coordinador no puede asignarse a sí mismo como líder de un grupo.');
     }
   }
+  // Un grupo tiene UN solo líder: si ya había otro, se baja a miembro antes de
+  // asignar el nuevo (mantiene consistente miembros_grupo y respeta el índice único).
+  await supabase.from('miembros_grupo').update({ rol_en_grupo: 'miembro' })
+    .eq('grupo_id', grupoId).eq('rol_en_grupo', 'lider').neq('perfil_id', perfilId);
   // Asegura pertenencia y marca rol de líder
   await supabase.from('miembros_grupo')
-    .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'lider' });
+    .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'lider' }, { onConflict: 'grupo_id,perfil_id' });
   const { error } = await supabase.from('grupos')
     .update({ lider_id: perfilId }).eq('id', grupoId);
   if (error) throw new Error('No se pudo asignar el líder: ' + error.message);

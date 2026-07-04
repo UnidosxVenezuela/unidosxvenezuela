@@ -207,6 +207,16 @@ a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
 .confirm-msg { margin: 0 0 16px; font-size: .98rem; line-height: 1.5; }
 .confirm-acciones { display: flex; gap: 10px; justify-content: flex-end; }
 
+/* Ventana flotante (Modal) — cuadro más amplio y desplazable. */
+.modal-caja {
+  background: var(--fondo); border: 1px solid var(--borde); border-radius: 16px;
+  padding: 22px; width: 100%; max-width: 480px; max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(16, 24, 40, .3); animation: drawerFade .15s ease;
+}
+.modal-seccion { padding: 14px 0; border-top: 1px solid var(--borde); }
+.modal-seccion:first-of-type { border-top: 0; padding-top: 2px; }
+.modal-seccion h4 { margin: 0 0 8px; font-size: .95rem; }
+
 /* Formularios */
 .campo { display: grid; gap: 6px; margin-bottom: 14px; }
 label { font-weight: 600; color: var(--texto-suave); }

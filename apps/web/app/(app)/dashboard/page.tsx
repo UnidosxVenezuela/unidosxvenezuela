@@ -1,9 +1,10 @@
-import { requireUsuario } from '@/lib/auth';
+import { requireUsuario, necesitaSegundaVerificacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { flagsDeNavegacion } from '@/lib/nav-flags';
 import { formatoHoras, ETIQUETA_ROL } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import AvisoSegundaVerificacion from '@/components/AvisoSegundaVerificacion';
 import Consejo from '@/components/Consejos';
 import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
@@ -63,6 +64,13 @@ export default async function Dashboard() {
   const primerNombre = (perfil?.nombre_completo || user?.email || '').split(' ')[0];
   const rolEtq = rol ? ETIQUETA_ROL[rol] : '';
 
+  // Aviso proactivo de 2ª verificación: solo a quien su rol la exige y aún no la aprobó.
+  let mostrarAviso2a = false;
+  if (necesitaSegundaVerificacion(perfil)) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    mostrarAviso2a = (vi as any)?.estado !== 'aprobada';
+  }
+
   return (
     <AnimarEntrada>
       <Consejo id="dashboard" titulo="Este es tu panel">
@@ -76,6 +84,10 @@ export default async function Dashboard() {
           </p>
         </div>
       </div>
+
+      {mostrarAviso2a && (
+        <div style={{ marginBottom: 18 }}><AvisoSegundaVerificacion /></div>
+      )}
 
       <h2>Acciones rápidas</h2>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))' }}>

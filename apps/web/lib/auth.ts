@@ -104,6 +104,14 @@ export function puedeDigitalizar(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'digitalizador']);
 }
 
+// ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
+// operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
+// para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.
+const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'digitalizador'];
+export function necesitaSegundaVerificacion(e?: EntradaRoles) {
+  return !esAdministrador(e) && tieneAlguno(e, ROLES_2A);
+}
+
 // Pipeline de producción de contenido (ve y trabaja en /contenido): admin o un
 // rol de producción. Cada rol actúa en su etapa; el influencer, en cualquiera.
 const PIPELINE: Rol[] = ['admin', 'coordinador', 'redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'];
