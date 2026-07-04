@@ -100,6 +100,15 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     );
   };
 
+  // Restablecer contraseña / eliminar cuenta: un admin común puede con usuarios NO
+  // administradores; un SUPERADMIN (dueño) además con administradores comunes.
+  // Nunca sobre un superadmin (tier dueño) ni sobre la propia cuenta.
+  const puedeGestionarCuenta = (p: Perfil) => {
+    if (!esAdmin || p.id === user!.id || p.super_admin) return false;
+    const objetivoEsAdmin = p.rol === 'admin' || (p.roles_extra ?? []).includes('admin');
+    return esSuper || !objetivoEsAdmin;
+  };
+
   return (
     <div>
       <div className="pagina-cab">
@@ -265,7 +274,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                     </button>
                   </form>
                   {identidadOK.has(p.id) && <div style={{ marginTop: 6 }}><Pill tono="ok" icono="llave">Identidad verificada</Pill></div>}
-                  {esAdmin && p.id !== user!.id && !(p.rol === 'admin' || (p.roles_extra ?? []).includes('admin') || p.super_admin) && (
+                  {puedeGestionarCuenta(p) && (
                     <form action={restablecerContrasena} style={{ marginTop: 6 }}>
                       <input type="hidden" name="perfil_id" value={p.id} />
                       <BotonConfirmar
@@ -275,7 +284,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                       </BotonConfirmar>
                     </form>
                   )}
-                  {esAdmin && p.id !== user!.id && !(p.rol === 'admin' || (p.roles_extra ?? []).includes('admin') || p.super_admin) && (
+                  {puedeGestionarCuenta(p) && (
                     <form action={eliminarUsuario} style={{ marginTop: 6 }}>
                       <input type="hidden" name="perfil_id" value={p.id} />
                       <BotonConfirmar
