@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esCoordinacion, esAdministrador, esMandoPsicosocial, rolesDe } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
+import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -14,7 +15,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -88,6 +89,23 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const idsMiembros = new Set(miembros.map((m) => m.perfil_id));
   const idsBaneados = new Set(baneados.map((b) => b.perfil_id));
   const candidatos = (todosPerfiles ?? []).filter((p: any) => !idsMiembros.has(p.id) && !idsBaneados.has(p.id));
+
+  // ── Alta de usuarios delegada (líder directo · coordinador con confirmación) ──
+  // Solo grupos de sistema (con rol funcional) permiten dar de alta CON rol.
+  const { data: rolDelGrupo } = await supabase.rpc('rol_de_grupo', { p_clave: grupo.clave });
+  const miMembresia = miembros.find((m) => m.perfil_id === user!.id);
+  const esCoordAqui = miMembresia?.rol_en_grupo === 'coordinador';
+  const puedeDarAlta = !!rolDelGrupo && (puedeGestionar || esCoordAqui);
+  const requiereConfirmacion = !!rolDelGrupo && esCoordAqui && !puedeGestionar; // coordinador puro
+  const rol2a = !!rolDelGrupo && ROLES_SEGUNDA_VERIFICACION.includes(rolDelGrupo as Rol);
+  // Solicitudes de alta pendientes (RLS: el líder/admin ve todas; el solicitante, las suyas).
+  let solicitudesAlta: any[] = [];
+  if (rolDelGrupo) {
+    const { data: sa } = await supabase.from('solicitudes_alta_usuario')
+      .select('id, nombre_completo, whatsapp, email, organizacion, motivo, creado_en, solicitante:perfiles!solicitudes_alta_usuario_solicitado_por_fkey(nombre_completo)')
+      .eq('grupo_id', grupoId).eq('estado', 'pendiente').order('creado_en', { ascending: false });
+    solicitudesAlta = (sa ?? []) as any[];
+  }
   const liderNombre = nombreMostrado((todosPerfiles ?? []).find((p: any) => p.id === grupo.lider_id)?.nombre_completo, verFull);
   const waHref = hrefSeguro(grupo.whatsapp);
   const ahora = Date.now();
@@ -242,8 +260,46 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
             );
           })}
 
+          {/* Altas por confirmar (líder/admin) o mis solicitudes pendientes (coordinador) */}
+          {solicitudesAlta.length > 0 && (
+            <>
+              <h2 className="fila" style={{ gap: 6 }}><Icono nombre="avisos" size={20} /> Altas por confirmar ({solicitudesAlta.length})</h2>
+              {solicitudesAlta.map((s) => (
+                <div key={s.id} className="tarjeta">
+                  <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                    <div>
+                      <strong>{s.nombre_completo}</strong>
+                      <div className="muted" style={{ fontSize: '.85rem' }}>
+                        {[s.whatsapp ? 'WhatsApp +' + s.whatsapp : null, s.email, s.organizacion].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
+                      </div>
+                      {s.motivo && <div style={{ fontSize: '.85rem', marginTop: 4 }}><span className="muted">Nota:</span> {s.motivo}</div>}
+                      <div className="muted" style={{ fontSize: '.8rem', marginTop: 4 }}>Propuesto por {nombreMostrado(s.solicitante?.nombre_completo, verFull) || '—'}</div>
+                    </div>
+                    {puedeGestionar ? (
+                      <div className="fila" style={{ gap: 6 }}>
+                        <form action={aprobarSolicitudAlta}>
+                          <input type="hidden" name="solicitud_id" value={s.id} />
+                          <BotonConfirmar mensaje={'¿Aprobar el alta de ' + s.nombre_completo + '? Se creará su cuenta con el rol del grupo.'} className="btn btn-acento" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="ok" size={15} /> Aprobar</BotonConfirmar>
+                        </form>
+                        <form action={rechazarSolicitudAlta}>
+                          <input type="hidden" name="solicitud_id" value={s.id} />
+                          <BotonConfirmar mensaje={'¿Rechazar el alta de ' + s.nombre_completo + '?'} className="btn btn-peligro" style={{ minHeight: 34, padding: '4px 12px' }}><Icono nombre="cerrar" size={15} /> Rechazar</BotonConfirmar>
+                        </form>
+                      </div>
+                    ) : (
+                      <Pill tono="aviso" punto={false}>Esperando al líder</Pill>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
           {/* Miembros */}
-          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="grupos" size={20} /> Miembros ({miembros.length})</h2>
+          <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+            <h2 className="fila" style={{ gap: 6, margin: 0 }}><Icono nombre="grupos" size={20} /> Miembros ({miembros.length})</h2>
+            {puedeDarAlta && <AltaUsuarioGrupo grupoId={grupoId} rolEtiqueta={ETIQUETA_ROL[rolDelGrupo as Rol] ?? rolDelGrupo} requiereConfirmacion={requiereConfirmacion} requiere2a={rol2a} />}
+          </div>
           <div className="tarjeta">
             <div className="tabla-scroll"><table>
               <thead><tr><th>Nombre</th><th>En grupo</th>{puedeGestionarMiembros && <th></th>}</tr></thead>

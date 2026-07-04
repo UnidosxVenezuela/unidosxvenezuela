@@ -2,9 +2,11 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { redirigirOk } from '@/lib/flash';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
+import { crearCuentaConRol } from '@/lib/altaUsuario';
 import type { Rol } from '@unidos/types';
 
 function whatsappOpcional(v: FormDataEntryValue | null): string | null {
@@ -262,4 +264,141 @@ export async function eliminarGrupo(formData: FormData) {
   if (error) throw new Error('No se pudo eliminar el grupo: ' + error.message);
   revalidatePath('/grupos');
   redirigirOk('/grupos', 'Grupo eliminado');
+}
+
+// ── Alta de usuarios delegada (líder directo · coordinador con confirmación) ──
+function txtG(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
+function optG(v: FormDataEntryValue | null) { const s = txtG(v); return s ? s : null; }
+
+// Datos de relación del actor con un grupo (para decidir directo vs. solicitud).
+async function relacionConGrupo(supabase: any, userId: string, grupoId: string) {
+  const [{ data: yo }, { data: g }, { data: coord }] = await Promise.all([
+    supabase.from('perfiles').select('rol, roles_extra').eq('id', userId).single(),
+    supabase.from('grupos').select('id, nombre, clave, lider_id').eq('id', grupoId).single(),
+    supabase.rpc('es_coordinador_de_grupo', { p_grupo: grupoId }),
+  ]);
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  const esAdmin = roles.includes('admin');
+  const esLider = g?.lider_id === userId;
+  const esCoord = coord === true;
+  return { esAdmin, esLider, esCoord, grupo: g };
+}
+
+// Un líder/admin crea la cuenta DIRECTO; un coordinador crea una SOLICITUD que el
+// líder confirma. El rol otorgado es el del grupo (grupo de sistema).
+export async function altaUsuarioEnGrupo(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = txtG(formData.get('grupo_id'));
+  const volver = '/grupos/' + grupoId;
+  const nombre = txtG(formData.get('nombre_completo'));
+  if (!nombre) redirigirError(volver, 'El nombre es obligatorio.');
+
+  const { esAdmin, esLider, esCoord, grupo } = await relacionConGrupo(supabase, user.id, grupoId);
+  if (!grupo) redirigirError('/grupos', 'Grupo no encontrado.');
+  // Solo grupos de sistema (con rol funcional) admiten alta con rol.
+  const { data: rolGrupo } = await supabase.rpc('rol_de_grupo', { p_clave: grupo!.clave });
+  if (!rolGrupo) redirigirError(volver, 'Este grupo no otorga un rol asignable; agrega personas con «Agregar miembro».');
+  if (!(esAdmin || esLider || esCoord)) redirigirError(volver, 'No tienes permiso para dar de alta en este grupo.');
+
+  const datos = {
+    nombre,
+    whatsapp: optG(formData.get('whatsapp')),
+    email: optG(formData.get('email')),
+    organizacion: optG(formData.get('organizacion')),
+    grupoId,
+  };
+
+  // Líder o admin → creación directa.
+  if (esAdmin || esLider) {
+    const r = await crearCuentaConRol(datos);
+    if (!r.ok) redirigirError(volver, r.error);
+    await supabase.rpc('registrar_auditoria', {
+      p_accion: 'alta_delegada', p_entidad_id: r.userId, p_metadata: { grupo: grupoId, rol: rolGrupo },
+    });
+    revalidatePath(volver);
+    redirigirOk(volver, 'Cuenta creada y verificada. Contraseña temporal: ' + r.password + ' — compártela; la persona la cambia al entrar.');
+  }
+
+  // Coordinador → solicitud pendiente de confirmación por el líder.
+  const { error } = await supabase.from('solicitudes_alta_usuario').insert({
+    grupo_id: grupoId,
+    rol: rolGrupo,                 // el trigger lo re-fija al del grupo
+    nombre_completo: nombre,
+    whatsapp: datos.whatsapp,
+    email: datos.email,
+    organizacion: datos.organizacion,
+    motivo: optG(formData.get('motivo')),
+    solicitado_por: user.id,
+    estado: 'pendiente',
+  });
+  if (error) redirigirError(volver, 'No se pudo enviar la solicitud: ' + error.message);
+  revalidatePath(volver);
+  redirigirOk(volver, 'Solicitud enviada al líder del grupo para confirmación.');
+}
+
+// El líder (o admin) aprueba una solicitud: se crea la cuenta y se notifica.
+export async function aprobarSolicitudAlta(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const solId = txtG(formData.get('solicitud_id'));
+  const { data: sol } = await supabase.from('solicitudes_alta_usuario')
+    .select('id, grupo_id, nombre_completo, whatsapp, email, organizacion, estado, solicitado_por').eq('id', solId).single();
+  if (!sol) redirigirError('/grupos', 'Solicitud no encontrada.');
+  const volver = '/grupos/' + sol!.grupo_id;
+  const { esAdmin, esLider } = await relacionConGrupo(supabase, user.id, sol!.grupo_id);
+  if (!(esAdmin || esLider)) redirigirError(volver, 'Solo el líder del grupo puede confirmar.');
+  if (sol!.estado !== 'pendiente') redirigirError(volver, 'Esta solicitud ya fue resuelta.');
+
+  const r = await crearCuentaConRol({
+    nombre: sol!.nombre_completo, whatsapp: sol!.whatsapp, email: sol!.email,
+    organizacion: sol!.organizacion, grupoId: sol!.grupo_id,
+  });
+  if (!r.ok) redirigirError(volver, r.error);
+
+  const admin = createAdminClient();
+  await admin.from('solicitudes_alta_usuario').update({
+    estado: 'aprobada', resuelto_por: user.id, resuelto_en: new Date().toISOString(), perfil_creado: r.userId,
+  }).eq('id', solId);
+  // Avisar al coordinador que propuso.
+  if (sol!.solicitado_por) {
+    await admin.from('notificaciones').insert({
+      destinatario_id: sol!.solicitado_por, tipo: 'solicitud_alta',
+      titulo: 'Alta aprobada', cuerpo: 'Se creó la cuenta de ' + sol!.nombre_completo + '.', enlace: volver,
+    });
+  }
+  revalidatePath(volver);
+  redirigirOk(volver, 'Cuenta creada y verificada. Contraseña temporal: ' + r.password + ' — compártela con la persona.');
+}
+
+// El líder (o admin) rechaza una solicitud.
+export async function rechazarSolicitudAlta(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const solId = txtG(formData.get('solicitud_id'));
+  const { data: sol } = await supabase.from('solicitudes_alta_usuario')
+    .select('id, grupo_id, nombre_completo, estado, solicitado_por').eq('id', solId).single();
+  if (!sol) redirigirError('/grupos', 'Solicitud no encontrada.');
+  const volver = '/grupos/' + sol!.grupo_id;
+  const { esAdmin, esLider } = await relacionConGrupo(supabase, user.id, sol!.grupo_id);
+  if (!(esAdmin || esLider)) redirigirError(volver, 'Solo el líder del grupo puede rechazar.');
+  if (sol!.estado !== 'pendiente') redirigirError(volver, 'Esta solicitud ya fue resuelta.');
+
+  const { error } = await supabase.from('solicitudes_alta_usuario').update({
+    estado: 'rechazada', motivo_rechazo: optG(formData.get('motivo_rechazo')),
+    resuelto_por: user.id, resuelto_en: new Date().toISOString(),
+  }).eq('id', solId);
+  if (error) redirigirError(volver, 'No se pudo rechazar: ' + error.message);
+  const admin = createAdminClient();
+  if (sol!.solicitado_por) {
+    await admin.from('notificaciones').insert({
+      destinatario_id: sol!.solicitado_por, tipo: 'solicitud_alta',
+      titulo: 'Alta no aprobada', cuerpo: 'La solicitud de alta de ' + sol!.nombre_completo + ' no fue aprobada.', enlace: volver,
+    });
+  }
+  revalidatePath(volver);
+  redirigirOk(volver, 'Solicitud rechazada.');
 }
