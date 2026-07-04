@@ -13,7 +13,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import { hrefSeguro } from '@/lib/constantes';
 import { guardBusqueda, PanelVerificacion } from '../_guard';
-import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda } from '../actions';
+import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda, aprobarCoincidenciaBusqueda, derivarAutoridadBusqueda, actualizarCustodiaNna, reunificarNnaBusqueda, cerrarBusqueda } from '../actions';
 
 const SELECT =
   '*, caso:casos!busqueda_casos_caso_id_fkey(id, numero, titulo, descripcion, estado, asignado_a, creado_en, ' +
@@ -283,6 +283,56 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
               </div>
             )}
           </div>
+
+          {/* Mando de Búsqueda: escalamiento + NNA + cierre */}
+          {esMando && !cerrado && (
+            <div className="tarjeta" style={{ borderColor: '#bfdbfe' }}>
+              <h3 className="aside-titulo"><Icono nombre="llave" size={16} /> Mando de Búsqueda</h3>
+              {f.estado_busqueda === 'coincidencia_pendiente' && (
+                <form action={aprobarCoincidenciaBusqueda}>
+                  <input type="hidden" name="caso_id" value={casoId} />
+                  <BotonConfirmar mensaje={f.es_nna ? '¿Aprobar la coincidencia de este menor? Luego deberás derivarlo a la autoridad.' : '¿Aprobar la coincidencia? Pasará al Enlace de contacto para la llamada.'} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Aprobar coincidencia</BotonConfirmar>
+                </form>
+              )}
+              {f.estado_busqueda === 'coincidencia_aprobada' && !f.es_nna && (
+                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>En cola del <strong>Enlace de contacto</strong> para la llamada de confirmación.</p>
+              )}
+              {f.estado_busqueda === 'coincidencia_aprobada' && f.es_nna && (
+                <form action={derivarAutoridadBusqueda}>
+                  <input type="hidden" name="caso_id" value={casoId} />
+                  <BotonConfirmar mensaje="¿Derivar este menor a la autoridad? Es el paso obligatorio antes de cualquier reunificación." className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="avisos" size={15} /> Derivar a la autoridad</BotonConfirmar>
+                </form>
+              )}
+              {f.es_nna && (f.estado_busqueda === 'coincidencia_aprobada' || f.estado_busqueda === 'derivado_autoridad') && (
+                <>
+                  <form action={actualizarCustodiaNna} style={{ marginTop: 10 }}>
+                    <input type="hidden" name="caso_id" value={casoId} />
+                    <label className="fila" style={{ gap: 6, fontSize: '.85rem' }}><input type="checkbox" name="custodia_verificada" defaultChecked={f.custodia_verificada} style={{ width: 'auto', minHeight: 0 }} /> Custodia verificada</label>
+                    <label className="fila" style={{ gap: 6, fontSize: '.85rem', marginTop: 4 }}><input type="checkbox" name="autoridad_notificada" defaultChecked={f.autoridad_notificada} style={{ width: 'auto', minHeight: 0 }} /> Autoridad notificada</label>
+                    <BotonEnviar className="btn" style={{ width: '100%', marginTop: 8 }}>Guardar custodia/autoridad</BotonEnviar>
+                  </form>
+                  {f.estado_busqueda === 'derivado_autoridad' && (
+                    <form action={reunificarNnaBusqueda} style={{ marginTop: 8 }}>
+                      <input type="hidden" name="caso_id" value={casoId} />
+                      <BotonConfirmar mensaje="¿Reunificar al menor? Requiere custodia verificada y autoridad notificada." disabled={!(f.custodia_verificada && f.autoridad_notificada)} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Reunificar menor</BotonConfirmar>
+                    </form>
+                  )}
+                </>
+              )}
+              <details style={{ marginTop: 10 }}>
+                <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem' }}>Cerrar el caso…</summary>
+                <form action={cerrarBusqueda} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="caso_id" value={casoId} />
+                  <select name="estado" className="input" defaultValue="descartado">
+                    <option value="descartado">Descartar (falso / duplicado)</option>
+                    <option value="encontrado_fallecido">Encontrado sin vida</option>
+                  </select>
+                  <input name="nota" className="input" placeholder="Nota de cierre (opcional)" style={{ marginTop: 6 }} maxLength={200} />
+                  <BotonConfirmar mensaje="¿Cerrar el caso con el estado elegido?" className="btn btn-peligro" style={{ width: '100%', marginTop: 8 }}>Cerrar caso</BotonConfirmar>
+                </form>
+              </details>
+            </div>
+          )}
 
           {/* Enlace a Coincidencias */}
           <div className="tarjeta">

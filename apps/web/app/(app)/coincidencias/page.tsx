@@ -41,6 +41,9 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   const { data: filasRaw } = await supabase.rpc('listar_coincidencias');
   const filas = (filasRaw ?? []) as any[];
   const nuevas = filas.filter((c) => c.estado === 'nueva').length;
+  // Solo el MANDO de Búsqueda confirma una coincidencia (0090). El resto descarta.
+  const { data: esMandoData } = await supabase.rpc('es_mando_busqueda');
+  const esMando = esMandoData === true;
 
   // Búsqueda por nombre parcial / cédula entre las personas digitalizadas.
   const q = (searchParams.q ?? '').trim();
@@ -118,16 +121,20 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
               <div className="muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.03em' }}>Caso de desaparecido</div>
               <div style={{ fontWeight: 600 }}>#{String(c.caso_numero).padStart(5, '0')}</div>
               <div className="muted" style={{ fontSize: '.85rem' }}>{c.caso_titulo}</div>
-              <Link href={'/casos?caso=' + c.caso_id} className="muted" style={{ fontSize: '.85rem' }}>Abrir el caso →</Link>
+              <Link href={'/busqueda/' + c.caso_id} className="muted" style={{ fontSize: '.85rem' }}>Abrir el caso →</Link>
             </div>
           </div>
 
           {c.estado === 'nueva' && (
             <div className="fila" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              <form action={confirmarCoincidencia}>
-                <input type="hidden" name="id" value={c.id} />
-                <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={16} /> Confirmar coincidencia</BotonEnviar>
-              </form>
+              {esMando ? (
+                <form action={confirmarCoincidencia}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={16} /> Confirmar coincidencia</BotonEnviar>
+                </form>
+              ) : (
+                <span className="muted" style={{ fontSize: '.82rem' }}>La confirmación la hace el mando del grupo. Puedes proponerla o descartarla.</span>
+              )}
               <form action={descartarCoincidencia}>
                 <input type="hidden" name="id" value={c.id} />
                 <BotonEnviar className="btn"><Icono nombre="cerrar" size={16} /> Descartar</BotonEnviar>

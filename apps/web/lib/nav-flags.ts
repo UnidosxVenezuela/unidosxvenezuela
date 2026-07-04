@@ -8,6 +8,7 @@ export type NavFlags = {
   gestionCasos: boolean;   // crea casos (ve solo los suyos)
   verificacion: boolean;   // verifica casos (Otras informaciones)
   busqueda: boolean;       // verifica casos de desaparecidos (Grupo de Búsqueda)
+  enlace: boolean;         // Enlace de contacto: llamada de confirmación (2ª verif.)
   digitalizacion: boolean; // digitaliza listados de personas (OCR)
   envioRedaccion: boolean; // pasa confirmados a "enviado a redacción"
   contenido: boolean;      // produce y publica contenido (Redacción→Diseño→Redes)
@@ -39,12 +40,15 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
   const esRecopilacion = claves.has('gestion_casos') || roles.includes('recopilacion');
   const esBusqueda = claves.has('busqueda') || roles.includes('busqueda');
+  const esEnlace = claves.has('enlace_contacto') || roles.includes('enlace_contacto');
   const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
   return {
     admin,
     gestionCasos: admin || (esRecopilacion && identidadOK),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
     busqueda: admin || (esBusqueda && identidadOK),
+    // Enlace de contacto: rol propio con 2ª verificación (identidad) obligatoria.
+    enlace: admin || (esEnlace && identidadOK),
     // Digitalización: rol/grupo propio con 2ª verificación (identidad) obligatoria.
     digitalizacion: admin || (esDigitalizador && identidadOK),
     envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),

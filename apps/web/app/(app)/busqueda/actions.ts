@@ -84,6 +84,82 @@ export async function cambiarEstadoBusqueda(formData: FormData) {
   redirigirOk('/busqueda/' + casoId, 'Estado actualizado');
 }
 
+// ── Escalamiento y cierre (mando / Enlace). Las funciones DEFINER autorizan. ──
+async function usuarioSupabase() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  return { supabase, user };
+}
+
+// Mando: aprobar la coincidencia (pendiente → aprobada).
+export async function aprobarCoincidenciaBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('aprobar_coincidencia_busqueda', { p_caso: casoId });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo aprobar: ' + error.message);
+  revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Coincidencia aprobada. Pasa al Enlace para la llamada.');
+}
+
+// Mando: derivar un NNA a la autoridad (aprobada → derivado_autoridad).
+export async function derivarAutoridadBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('derivar_autoridad_busqueda', { p_caso: casoId });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo derivar: ' + error.message);
+  revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Caso derivado a la autoridad.');
+}
+
+// Mando: actualizar custodia/autoridad de un NNA.
+export async function actualizarCustodiaNna(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('actualizar_custodia_nna', {
+    p_caso: casoId,
+    p_custodia: txt(formData.get('custodia_verificada')) === 'on',
+    p_autoridad: txt(formData.get('autoridad_notificada')) === 'on',
+  });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo actualizar: ' + error.message);
+  revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Custodia/autoridad actualizadas.');
+}
+
+// Mando: reunificar un NNA (derivado_autoridad → reunificado; exige custodia+autoridad).
+export async function reunificarNnaBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('reunificar_nna_busqueda', { p_caso: casoId });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo reunificar: ' + error.message);
+  revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Menor reunificado.');
+}
+
+// Mando: cerrar (descartado / encontrado_fallecido).
+export async function cerrarBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('cerrar_busqueda', {
+    p_caso: casoId, p_estado: txt(formData.get('estado')), p_nota: opt(formData.get('nota')),
+  });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo cerrar: ' + error.message);
+  revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Caso cerrado.');
+}
+
+// Enlace: registrar la llamada de confirmación (aprobada → reunificado, NO-NNA).
+export async function registrarContactoBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('registrar_contacto_busqueda', {
+    p_caso: casoId, p_resultado: opt(formData.get('resultado')),
+  });
+  if (error) redirigirError('/busqueda/enlace', 'No se pudo registrar: ' + error.message);
+  revalidatePath('/busqueda/enlace');
+  redirigirOk('/busqueda/enlace', 'Llamada registrada. Caso reunificado.');
+}
+
 // ── Bitácora confidencial (solo el asignado del caso o el mando) ──
 export async function agregarBitacoraBusqueda(formData: FormData) {
   const { supabase, user } = await exigirBusqueda();

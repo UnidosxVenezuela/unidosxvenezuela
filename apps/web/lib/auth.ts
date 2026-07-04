@@ -97,6 +97,12 @@ export function puedeBusqueda(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'busqueda']);
 }
 
+// Enlace de contacto: tras aprobar una coincidencia, llama a la familia y cierra el
+// caso (reunificación). La RLS y las funciones DEFINER exigen 2ª verificación.
+export function puedeEnlace(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'enlace_contacto']);
+}
+
 // Digitalización de listados de personas (OCR): rol propio 'digitalizador'
 // (Grupo de Digitalización) y admin. La 2ª verificación obligatoria para el
 // digitalizador la imponen la página/acción y la RLS (0081).
@@ -107,7 +113,7 @@ export function puedeDigitalizar(e?: EntradaRoles) {
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
 // operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
 // para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.
-const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'digitalizador'];
+const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'enlace_contacto', 'digitalizador'];
 export function necesitaSegundaVerificacion(e?: EntradaRoles) {
   return !esAdministrador(e) && tieneAlguno(e, ROLES_2A);
 }

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeBusqueda, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeBusqueda, puedeEnlace, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -13,6 +13,20 @@ import AvisoSegundaVerificacion from '@/components/AvisoSegundaVerificacion';
 export async function guardBusqueda() {
   const { user, perfil } = await requireUsuario();
   if (!puedeBusqueda(perfil)) redirect('/dashboard');
+  const supabase = await createClient();
+  const esAdmin = esAdministrador(perfil);
+  let identidadOk = esAdmin;
+  if (!esAdmin) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    identidadOk = (vi as any)?.estado === 'aprobada';
+  }
+  return { user: user!, perfil, supabase, esAdmin, identidadOk };
+}
+
+/** Guard de /busqueda/enlace: rol Enlace de contacto (o admin) + 2ª verificación. */
+export async function guardEnlace() {
+  const { user, perfil } = await requireUsuario();
+  if (!puedeEnlace(perfil)) redirect('/dashboard');
   const supabase = await createClient();
   const esAdmin = esAdministrador(perfil);
   let identidadOk = esAdmin;
