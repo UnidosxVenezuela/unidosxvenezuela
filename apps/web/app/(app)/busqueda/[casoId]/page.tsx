@@ -3,14 +3,17 @@ import { fechaHora, fechaCorta } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
 import {
   ETIQUETA_ESTADO_BUSQUEDA, ESTADOS_BUSQUEDA_CIERRE, claseEstadoBusqueda,
-  ETIQUETA_SEXO, SEXOS,
+  ETIQUETA_SEXO, SEXOS, RESULTADOS_BUSQUEDA, ETIQUETA_RESULTADO_BUSQUEDA,
+  claseResultadoBusqueda, TIPOS_CONTACTO_BUSQUEDA, MIN_FUENTES_BUSQUEDA,
 } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import { hrefSeguro } from '@/lib/constantes';
 import { guardBusqueda, PanelVerificacion } from '../_guard';
-import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda } from '../actions';
+import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda } from '../actions';
 
 const SELECT =
   '*, caso:casos!busqueda_casos_caso_id_fkey(id, numero, titulo, descripcion, estado, asignado_a, creado_en, ' +
@@ -40,6 +43,26 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
   const cerrado = ESTADOS_BUSQUEDA_CIERRE.includes(f.estado_busqueda);
   const asignadoAmi = f.caso?.asignado_a === user.id;
   const nombre = f.caso?.titulo ?? '—';
+
+  // ¿Puede atender (ver/anotar la bitácora confidencial)? El asignado o el mando.
+  const { data: esMandoData } = await supabase.rpc('es_mando_busqueda');
+  const esMando = esMandoData === true;
+  const puedeAtender = asignadoAmi || esMando;
+
+  // Bitácora + catálogo de fuentes (solo para quien atiende el caso).
+  let bitacora: any[] = [];
+  let fuentes: any[] = [];
+  if (puedeAtender) {
+    const [{ data: b }, { data: fu }] = await Promise.all([
+      supabase.from('bitacora_busqueda').select('id, contenido, fuente, resultado, tipo, creado_en, autor:perfiles!bitacora_busqueda_autor_id_fkey(nombre_completo)').eq('caso_id', casoId).order('creado_en', { ascending: false }),
+      supabase.from('fuentes_verificacion').select('id, nombre, descripcion, url, categoria, para_nna, orden').eq('activo', true).order('orden'),
+    ]);
+    bitacora = (b ?? []) as any[];
+    fuentes = (fu ?? []) as any[];
+  }
+  // Fuentes ya consultadas (por nombre en la bitácora) → checklist ≥3.
+  const consultadas = new Set(bitacora.map((n) => (n.fuente || '').trim()).filter(Boolean));
+  const nConsultadas = consultadas.size;
 
   return (
     <div>
@@ -132,6 +155,96 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
               <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={16} /> Guardar datos</BotonEnviar>
             </form>
           </details>
+
+          {puedeAtender ? (
+            <>
+              {/* Verificación cruzada: checklist de fuentes (≥3) */}
+              <h2 className="fila" style={{ gap: 6, marginTop: 8 }}><Icono nombre="ok" size={20} /> Verificación cruzada
+                <span className="insignia" style={{ marginLeft: 6, background: nConsultadas >= MIN_FUENTES_BUSQUEDA ? '#dcfce7' : undefined }}>{nConsultadas}/{MIN_FUENTES_BUSQUEDA} fuentes</span>
+              </h2>
+              <p className="muted" style={{ fontSize: '.82rem', marginTop: -6 }}>
+                Verifica el caso contra al menos {MIN_FUENTES_BUSQUEDA} fuentes antes de escalar una coincidencia. Registra cada consulta en la bitácora indicando la fuente.
+              </p>
+              <div className="tarjeta" style={{ display: 'grid', gap: 6 }}>
+                {fuentes.length === 0 && <p className="muted" style={{ margin: 0 }}>No hay fuentes en el catálogo. <Link href="/busqueda/recursos">Ver recursos</Link>.</p>}
+                {fuentes.map((s) => {
+                  const ok = consultadas.has((s.nombre || '').trim());
+                  const href = hrefSeguro(s.url);
+                  return (
+                    <div key={s.id} className="fila" style={{ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                      <span className="fila" style={{ gap: 6 }}>
+                        <Icono nombre={ok ? 'ok' : 'chevron'} size={15} />
+                        <span style={{ fontWeight: ok ? 700 : 400 }}>{s.nombre}</span>
+                        {s.para_nna && <Pill tono="critica" punto={false}>NNA</Pill>}
+                      </span>
+                      {href && <a className="btn btn-sm" href={href} target="_blank" rel="noopener noreferrer nofollow"><Icono nombre="enlace" size={13} /> Abrir</a>}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bitácora confidencial */}
+              <h2 className="fila" style={{ gap: 6 }}><Icono nombre="documento" size={20} /> Bitácora de gestiones</h2>
+              <p className="muted" style={{ fontSize: '.82rem', marginTop: -6 }}>
+                Registro confidencial. Solo lo ven quien trabaja el caso y el mando del grupo.
+              </p>
+              {!cerrado && (
+                <div className="tarjeta">
+                  <form action={agregarBitacoraBusqueda}>
+                    <input type="hidden" name="caso_id" value={casoId} />
+                    <div className="campo">
+                      <label htmlFor="contenido">Nueva nota</label>
+                      <textarea id="contenido" name="contenido" className="input" rows={3} required placeholder="Qué se consultó/gestionó y qué se encontró…" />
+                    </div>
+                    <div className="grid grid-2" style={{ gap: 8 }}>
+                      <select name="fuente" className="input" defaultValue="">
+                        <option value="">Fuente consultada…</option>
+                        {fuentes.map((s) => <option key={s.id} value={s.nombre}>{s.nombre}</option>)}
+                      </select>
+                      <select name="resultado" className="input" defaultValue="">
+                        <option value="">Resultado…</option>
+                        {RESULTADOS_BUSQUEDA.map((r) => <option key={r.valor} value={r.valor}>{r.etiqueta}</option>)}
+                      </select>
+                    </div>
+                    <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                      <select name="tipo" className="input" defaultValue="" style={{ maxWidth: 200 }}>
+                        <option value="">Tipo de gestión…</option>
+                        {TIPOS_CONTACTO_BUSQUEDA.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <BotonEnviar className="btn btn-primario"><Icono nombre="mas" size={16} /> Guardar nota</BotonEnviar>
+                    </div>
+                  </form>
+                </div>
+              )}
+              {bitacora.length === 0 ? (
+                <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Aún no hay gestiones registradas.</p></div>
+              ) : bitacora.map((n) => (
+                <div key={n.id} className="tarjeta">
+                  <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                    <div className="fila muted" style={{ gap: 6, fontSize: '.82rem', flexWrap: 'wrap' }}>
+                      {n.fuente && <span className="insignia">{n.fuente}</span>}
+                      {n.resultado && <Pill tono={tonoDeClase(claseResultadoBusqueda(n.resultado))} punto={false}>{ETIQUETA_RESULTADO_BUSQUEDA[n.resultado] ?? n.resultado}</Pill>}
+                      {n.tipo && <span>· {n.tipo}</span>}
+                      <span>· {nombreMostrado(n.autor?.nombre_completo, esAdmin) || '—'} · {fechaHora(n.creado_en)}</span>
+                    </div>
+                    <form action={eliminarBitacoraBusqueda}>
+                      <input type="hidden" name="id" value={n.id} />
+                      <input type="hidden" name="caso_id" value={casoId} />
+                      <BotonConfirmar mensaje="¿Eliminar esta nota de la bitácora?" className="btn btn-peligro" style={{ minHeight: 30, padding: '2px 8px' }}><Icono nombre="basura" size={14} /></BotonConfirmar>
+                    </form>
+                  </div>
+                  <p style={{ whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>{n.contenido}</p>
+                </div>
+              ))}
+            </>
+          ) : (
+            <div className="tarjeta">
+              <strong className="fila" style={{ gap: 6 }}><Icono nombre="admin" size={18} /> Bitácora confidencial</strong>
+              <p className="muted" style={{ margin: '8px 0 0' }}>
+                Para ver y registrar gestiones (verificación cruzada de fuentes) primero <strong>toma el caso</strong>. La bitácora solo la ven quien lo trabaja y el mando del grupo.
+              </p>
+            </div>
+          )}
         </div>
 
         <aside className="grupo-aside">

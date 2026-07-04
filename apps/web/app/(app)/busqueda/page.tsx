@@ -47,6 +47,7 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
         </div>
         <div className="fila">
           <BotonActualizar />
+          <Link className="btn" href="/busqueda/recursos"><Icono nombre="ayuda" size={16} /> Recursos</Link>
           <Link className="btn btn-primario" href="/busqueda/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>
         </div>
       </div>
