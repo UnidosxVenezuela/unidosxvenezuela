@@ -84,6 +84,60 @@ export async function cambiarEstadoBusqueda(formData: FormData) {
   redirigirOk('/busqueda/' + casoId, 'Estado actualizado');
 }
 
+// ── Bitácora confidencial (solo el asignado del caso o el mando) ──
+export async function agregarBitacoraBusqueda(formData: FormData) {
+  const { supabase, user } = await exigirBusqueda();
+  const casoId = txt(formData.get('caso_id'));
+  const contenido = txt(formData.get('contenido'));
+  if (!contenido) redirigirError('/busqueda/' + casoId, 'La nota no puede estar vacía.');
+  const { error } = await supabase.from('bitacora_busqueda').insert({
+    caso_id: casoId,
+    autor_id: user.id,
+    contenido,
+    fuente: opt(formData.get('fuente')),
+    resultado: opt(formData.get('resultado')),
+    tipo: opt(formData.get('tipo')),
+  });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo guardar la nota: ' + error.message);
+  revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Nota registrada');
+}
+
+export async function eliminarBitacoraBusqueda(formData: FormData) {
+  const { supabase } = await exigirBusqueda();
+  const casoId = txt(formData.get('caso_id'));
+  const { error } = await supabase.from('bitacora_busqueda').delete().eq('id', txt(formData.get('id')));
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo eliminar la nota: ' + error.message);
+  revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Nota eliminada');
+}
+
+// ── Catálogo de fuentes (gestión: solo el mando; la RLS lo exige) ──
+export async function crearFuente(formData: FormData) {
+  const { supabase } = await exigirBusqueda();
+  const nombre = txt(formData.get('nombre'));
+  if (!nombre) redirigirError('/busqueda/recursos', 'El nombre de la fuente es obligatorio.');
+  const { error } = await supabase.from('fuentes_verificacion').insert({
+    nombre,
+    descripcion: opt(formData.get('descripcion')),
+    url: opt(formData.get('url')),
+    categoria: opt(formData.get('categoria')),
+    para_nna: txt(formData.get('para_nna')) === 'on',
+    orden: num(formData.get('orden')) ?? 0,
+  });
+  if (error) redirigirError('/busqueda/recursos', 'No se pudo agregar la fuente: ' + error.message);
+  revalidatePath('/busqueda/recursos');
+  redirigirOk('/busqueda/recursos', 'Fuente agregada');
+}
+
+export async function eliminarFuente(formData: FormData) {
+  const { supabase } = await exigirBusqueda();
+  const { error } = await supabase.from('fuentes_verificacion').delete().eq('id', txt(formData.get('id')));
+  if (error) redirigirError('/busqueda/recursos', 'No se pudo eliminar: ' + error.message);
+  revalidatePath('/busqueda/recursos');
+  redirigirOk('/busqueda/recursos', 'Fuente eliminada');
+}
+
 // Editar los datos estructurados de la ficha (edad, sexo, ubicación, reporte, NNA).
 export async function editarFichaBusqueda(formData: FormData) {
   const { supabase } = await exigirBusqueda();

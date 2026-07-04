@@ -277,6 +277,25 @@ export const SEXOS: { valor: string; etiqueta: string }[] = [
 ];
 export const ETIQUETA_SEXO: Record<string, string> = { m: 'Masculino', f: 'Femenino', otro: 'Otro' };
 
+/** Resultado de una gestión/consulta de la bitácora de búsqueda. */
+export const RESULTADOS_BUSQUEDA: { valor: string; etiqueta: string }[] = [
+  { valor: 'no_encontrado', etiqueta: 'No encontrado' },
+  { valor: 'dudoso', etiqueta: 'Coincidencia dudosa' },
+  { valor: 'encontrado', etiqueta: 'Encontrado / coincide' },
+];
+export const ETIQUETA_RESULTADO_BUSQUEDA: Record<string, string> = {
+  no_encontrado: 'No encontrado', dudoso: 'Coincidencia dudosa', encontrado: 'Encontrado / coincide',
+};
+export function claseResultadoBusqueda(r?: string | null): string {
+  if (r === 'encontrado') return 'ok';
+  if (r === 'dudoso') return 'aviso';
+  if (r === 'no_encontrado') return '';
+  return '';
+}
+export const TIPOS_CONTACTO_BUSQUEDA = ['Consulta', 'Llamada', 'Presencial', 'Mensaje', 'Otro'];
+/** Mínimo de fuentes a verificar antes de escalar una coincidencia (según el manual). */
+export const MIN_FUENTES_BUSQUEDA = 3;
+
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {
   pendiente: 'Pendiente', asignada: 'Asignada', en_progreso: 'En progreso',
   bloqueada: 'Bloqueada', completada: 'Completada', cancelada: 'Cancelada',
