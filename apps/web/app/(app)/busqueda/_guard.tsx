@@ -1,9 +1,9 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeBusqueda, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
+import AvisoSegundaVerificacion from '@/components/AvisoSegundaVerificacion';
 
 /**
  * Guard server-side de todo /busqueda* (no confiar en los flags del nav): exige
@@ -27,12 +27,8 @@ export async function guardBusqueda() {
 export function PanelVerificacion() {
   return (
     <AnimarEntrada>
-      <div className="pagina-cab"><div><h1>Desaparecidos</h1></div></div>
-      <div className="tarjeta" style={{ maxWidth: 560 }}>
-        <h2 className="fila" style={{ gap: 8, marginTop: 0 }}><Icono nombre="llave" size={20} /> Completa tu segunda verificación</h2>
-        <p className="muted">Para trabajar casos de personas desaparecidas necesitas tu <strong>verificación de identidad</strong> aprobada.</p>
-        <Link href="/verificacion" className="btn btn-primario"><Icono nombre="llave" size={16} /> Ir a mi verificación</Link>
-      </div>
+      <div className="pagina-cab"><div><h1 className="fila" style={{ gap: 8 }}><Icono nombre="usuario" size={24} /> Desaparecidos</h1></div></div>
+      <AvisoSegundaVerificacion titulo="Completa tu segunda verificación para trabajar casos de desaparecidos" />
     </AnimarEntrada>
   );
 }
