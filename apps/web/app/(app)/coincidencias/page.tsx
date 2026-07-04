@@ -56,7 +56,7 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   return (
     <AnimarEntrada>
       <Consejo id="coincidencias" titulo="Coincidencias con desaparecidos">
-        Cuando una <strong>persona digitalizada</strong> (en un hospital, albergue o acopio) coincide con un caso de <strong>desaparecidos</strong>, aparece aquí. Revisa cada una y <strong>confírmala o descártala</strong>. Presta especial atención a los <strong>menores</strong>.
+        Cuando una <strong>persona digitalizada</strong> (en un hospital, albergue o acopio) coincide con un caso de <strong>desaparecidos</strong>, aparece aquí. La <strong>confirmación la hace el mando</strong> del grupo; el resto puede <strong>proponer o descartar</strong>. Nunca se informa a la familia sin aprobación. Presta especial atención a los <strong>menores</strong>.
       </Consejo>
       <div className="pagina-cab">
         <div>

@@ -11,6 +11,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Consejo from '@/components/Consejos';
 import { hrefSeguro } from '@/lib/constantes';
 import { guardBusqueda, PanelVerificacion } from '../_guard';
 import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda, aprobarCoincidenciaBusqueda, derivarAutoridadBusqueda, actualizarCustodiaNna, reunificarNnaBusqueda, cerrarBusqueda } from '../actions';
@@ -67,6 +68,9 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
   return (
     <div>
       <RealtimeRefrescar tabla="busqueda_casos" filtro={'caso_id=eq.' + casoId} />
+      <Consejo id="busqueda-detalle" titulo="Cómo trabajar este caso">
+        Verifícalo contra <strong>≥3 fuentes</strong> y regístralo en la <strong>bitácora</strong>. Si hay coincidencia, márcala <strong>pendiente</strong> — <strong>no contactes a la familia</strong>: la aprueba el <strong>mando</strong> y la confirma el <strong>Enlace</strong>. Con <strong>NNA</strong>, se deriva a la autoridad.
+      </Consejo>
       <Link href="/busqueda" className="muted">← Desaparecidos</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
         <h1 style={{ margin: 0, gap: 8, flexWrap: 'wrap' }} className="fila">

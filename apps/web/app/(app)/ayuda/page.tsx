@@ -54,11 +54,20 @@ export default async function AyudaPage() {
       )}
 
       {f.busqueda && (
-        <S icono="buscar" titulo="Grupo de Búsqueda (tu función)">
-          <li>Atiendes los casos de <strong>personas desaparecidas</strong>: a medida que llegan, <strong>tómalos</strong> y verifícalos (<strong>Confirmado</strong> o <strong>Falso / resuelto</strong>).</li>
-          <li>Estos casos <strong>no pasan a Redacción</strong>: su información la gestiona el propio Grupo de Búsqueda.</li>
-          <li>En <strong>Coincidencias</strong> revisas posibles reunificaciones: personas halladas (en hospitales, albergues o acopio) que coinciden con un desaparecido, por cédula o nombre. Confirma o descarta cada una; presta atención a los <strong>menores</strong>.</li>
-          <li>Necesitas tener aprobada tu <strong>segunda verificación</strong> (identidad) para acceder.</li>
+        <S icono="usuario" titulo="Grupo de Búsqueda · Desaparecidos (tu función)">
+          <li>En <strong>Desaparecidos</strong> registras y trabajas los casos de personas desaparecidas con un <strong>intake estructurado</strong> (edad, sexo, última ubicación, quién reporta) y marca de <strong>NNA</strong> si es menor. Cada caso tiene un código <strong>A-00X</strong> (adulto) / <strong>N-00X</strong> (NNA).</li>
+          <li><strong>Toma</strong> el caso y muévelo entre <strong>Activo → En revisión → Coincidencia pendiente</strong>. Verifícalo contra <strong>al menos 3 fuentes</strong> (checklist en el detalle) y registra cada gestión en la <strong>bitácora</strong> (confidencial: solo tú y el mando).</li>
+          <li>Cuando halles una coincidencia sólida, márcala <strong>pendiente</strong> y <strong>no contactes a la familia</strong>: el <strong>mando</strong> (líder/coordinador) la aprueba y luego el <strong>Enlace de contacto</strong> hace la llamada. Con <strong>menores</strong>, el caso se <strong>deriva a la autoridad</strong>.</li>
+          <li>En <strong>Coincidencias</strong> ves personas halladas (hospitales/albergues) que cruzan con un desaparecido; puedes <strong>proponer o descartar</strong> — la <strong>confirmación la hace el mando</strong>.</li>
+          <li>Atiende los <strong>recordatorios de seguimiento</strong> (cada 12–24 h) para no perder ningún caso. Necesitas tu <strong>segunda verificación</strong> (identidad) aprobada.</li>
+        </S>
+      )}
+
+      {f.enlace && (
+        <S icono="whatsapp" titulo="Enlace de contacto (tu función)">
+          <li>En <strong>«Enlace de contacto»</strong> tienes la <strong>cola</strong> de casos que el mando ya <strong>aprobó</strong> (solo adultos).</li>
+          <li>Realiza la <strong>llamada de confirmación</strong> con la familia (usa los guiones de <strong>Recursos</strong>) y <strong>registra el resultado</strong>: el caso queda <strong>reunificado</strong>.</li>
+          <li>Los casos de <strong>menores (NNA)</strong> no llegan aquí: los gestiona el mando con la autoridad. Necesitas tu <strong>segunda verificación</strong> aprobada.</li>
         </S>
       )}
 
@@ -94,8 +103,8 @@ export default async function AyudaPage() {
 
       {f.admin && (
         <S icono="admin" titulo="Administración">
-          <li><strong>Administración → Usuarios:</strong> aprueba cuentas, asigna roles y <strong>agrega personas a los grupos</strong> (al sumarlas a un grupo de trabajo, reciben su función automáticamente).</li>
-          <li>Los <strong>líderes</strong> gestionan los miembros de su grupo (nunca a admins u otros líderes); los <strong>coordinadores</strong> pertenecen a su grupo sin gestionar miembros.</li>
+          <li><strong>Administración → Usuarios:</strong> aprueba cuentas y, con <strong>«Gestionar rol»</strong>, abres una ventana para el rol principal, el grupo a cargo, los roles adicionales y agregar a un grupo. Al asignar <strong>líder o coordinador</strong> se te pide el grupo (un grupo tiene <strong>un líder</strong> y puede tener <strong>varios coordinadores</strong>).</li>
+          <li>Los <strong>líderes y coordinadores</strong> pueden <strong>dar de alta usuarios</strong> del rol de su grupo desde la página del grupo: el líder los crea directo; si lo hace un <strong>coordinador, lo confirma el líder</strong>. Si el rol requiere <strong>segunda verificación</strong>, la persona deberá completarla antes de operar.</li>
           <li>Supervisas todas las secciones; en Apoyo Psicosocial ves solo indicadores (los casos son confidenciales).</li>
         </S>
       )}
