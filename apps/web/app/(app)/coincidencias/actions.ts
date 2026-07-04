@@ -4,7 +4,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import type { Rol } from '@unidos/types';
 
 async function exigir() {
@@ -23,17 +23,27 @@ async function exigir() {
   return { supabase, user };
 }
 
-async function marcar(formData: FormData, estado: 'confirmada' | 'descartada') {
+// Confirmar la coincidencia: SOLO el mando de Búsqueda, vía la función DEFINER
+// (0090). Un buscador que lo intente recibe un error (el trigger lo bloquea).
+export async function confirmarCoincidencia(formData: FormData) {
+  const { supabase } = await exigir();
+  const id = String(formData.get('id') ?? '');
+  if (!id) throw new Error('Falta la coincidencia.');
+  const { error } = await supabase.rpc('confirmar_coincidencia', { p_id: id });
+  if (error) redirigirError('/coincidencias', 'No se pudo confirmar: ' + error.message);
+  revalidatePath('/coincidencias');
+  redirigirOk('/coincidencias', 'Coincidencia confirmada');
+}
+
+// Descartar: cualquier buscador con 2ª verificación (la RLS lo permite).
+export async function descartarCoincidencia(formData: FormData) {
   const { supabase, user } = await exigir();
   const id = String(formData.get('id') ?? '');
   if (!id) throw new Error('Falta la coincidencia.');
   const { error } = await supabase.from('coincidencias').update({
-    estado, revisado_por: user.id, revisado_en: new Date().toISOString(),
+    estado: 'descartada', revisado_por: user.id, revisado_en: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar: ' + error.message);
   revalidatePath('/coincidencias');
-  redirigirOk('/coincidencias', estado === 'confirmada' ? 'Coincidencia confirmada' : 'Coincidencia descartada');
+  redirigirOk('/coincidencias', 'Coincidencia descartada');
 }
-
-export async function confirmarCoincidencia(formData: FormData) { return marcar(formData, 'confirmada'); }
-export async function descartarCoincidencia(formData: FormData) { return marcar(formData, 'descartada'); }
