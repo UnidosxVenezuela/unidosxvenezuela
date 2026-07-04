@@ -306,3 +306,35 @@ export interface RecursoPsicosocial {
   orden: number;
   creado_en: string;
 }
+
+// ── Grupo de Búsqueda (metodología de desaparecidos) ──
+// Capa companion 1:1 sobre un caso `categoria='Desaparecidos'`. El nombre y la
+// descripción viven en casos.titulo / casos.descripcion.
+export type EstadoBusqueda =
+  | 'activo' | 'en_revision' | 'coincidencia_pendiente' | 'coincidencia_aprobada'
+  | 'encontrado_fallecido' | 'reunificado' | 'derivado_autoridad' | 'descartado';
+
+export interface BusquedaCaso {
+  id: string;
+  caso_id: string;
+  numero: number;
+  codigo: string;              // A-00X (adulto) / N-00X (NNA), congelado en el alta
+  sexo: 'm' | 'f' | 'otro' | null;
+  edad: number | null;
+  ultima_ubicacion: string | null;
+  es_nna: boolean;             // menor de edad (NNA)
+  reporta_nombre: string | null;
+  reporta_telefono: string | null;
+  estado_busqueda: EstadoBusqueda;
+  fuente_verifico: string | null;
+  proxima_revision: string | null;
+  ultimo_recordatorio: string | null;
+  custodia_verificada: boolean;
+  autoridad_notificada: boolean;
+  aprobado_por: string | null;
+  aprobado_en: string | null;
+  contacto_por: string | null;
+  contacto_en: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}

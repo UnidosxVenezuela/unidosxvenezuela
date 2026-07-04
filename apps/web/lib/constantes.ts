@@ -1,4 +1,4 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo } from '@unidos/types';
+import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
 
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
@@ -245,6 +245,37 @@ export function siguienteEstadoAcomp(e: EstadoAcompanamiento): EstadoAcompanamie
   return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
 }
 export const TIPOS_CONTACTO_PSICO = ['Llamada', 'Presencial', 'Mensaje', 'Videollamada', 'Otro'];
+
+// ── Grupo de Búsqueda (metodología de desaparecidos) ──
+export const ETIQUETA_ESTADO_BUSQUEDA: Record<EstadoBusqueda, string> = {
+  activo: 'Activo',
+  en_revision: 'En revisión',
+  coincidencia_pendiente: 'Coincidencia pendiente',
+  coincidencia_aprobada: 'Coincidencia aprobada',
+  encontrado_fallecido: 'Encontrado sin vida',
+  reunificado: 'Reunificado',
+  derivado_autoridad: 'Derivado a autoridad',
+  descartado: 'Descartado',
+};
+/** Columnas del tablero, en orden del flujo (las de cierre se agrupan al final). */
+export const ESTADOS_BUSQUEDA: EstadoBusqueda[] = [
+  'activo', 'en_revision', 'coincidencia_pendiente', 'coincidencia_aprobada',
+  'reunificado', 'derivado_autoridad', 'encontrado_fallecido', 'descartado',
+];
+/** Estados de cierre (fin del flujo). */
+export const ESTADOS_BUSQUEDA_CIERRE: EstadoBusqueda[] = ['reunificado', 'derivado_autoridad', 'encontrado_fallecido', 'descartado'];
+export function claseEstadoBusqueda(e: EstadoBusqueda): string {
+  if (e === 'reunificado') return 'ok';
+  if (e === 'coincidencia_aprobada') return 'info';
+  if (e === 'coincidencia_pendiente' || e === 'en_revision') return 'aviso';
+  if (e === 'encontrado_fallecido' || e === 'derivado_autoridad') return 'critica';
+  return ''; // activo / descartado → neutro
+}
+/** Sexo de la persona (intake). */
+export const SEXOS: { valor: string; etiqueta: string }[] = [
+  { valor: 'm', etiqueta: 'Masculino' }, { valor: 'f', etiqueta: 'Femenino' }, { valor: 'otro', etiqueta: 'Otro' },
+];
+export const ETIQUETA_SEXO: Record<string, string> = { m: 'Masculino', f: 'Femenino', otro: 'Otro' };
 
 export const ETIQUETA_ESTADO: Record<EstadoTarea, string> = {
   pendiente: 'Pendiente', asignada: 'Asignada', en_progreso: 'En progreso',

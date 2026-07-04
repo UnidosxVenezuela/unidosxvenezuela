@@ -14,11 +14,16 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
     { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
   ];
-  if (flags.gestionCasos || flags.verificacion || flags.busqueda) {
-    const icono = flags.verificacion ? 'ok' : flags.busqueda ? 'buscar' : 'documento';
-    enlaces.push({ href: '/casos', etiqueta: 'Casos', icono });
+  // «Casos» es la mesa de Recopilación/Verificación (Otras informaciones). Los
+  // buscadores tienen su propio espacio «Desaparecidos» (no se reescribe «Casos»,
+  // así los roles mixtos conservan ambas herramientas).
+  if (flags.gestionCasos || flags.verificacion) {
+    enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: flags.verificacion ? 'ok' : 'documento' });
   }
-  if (flags.busqueda) enlaces.push({ href: '/coincidencias', etiqueta: 'Coincidencias', icono: 'enlace' });
+  if (flags.busqueda) {
+    enlaces.push({ href: '/busqueda', etiqueta: 'Desaparecidos', icono: 'usuario' });
+    enlaces.push({ href: '/coincidencias', etiqueta: 'Coincidencias', icono: 'enlace' });
+  }
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio || flags.digitalizacion) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
