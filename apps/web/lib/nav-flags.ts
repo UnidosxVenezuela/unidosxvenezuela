@@ -1,10 +1,12 @@
 // Qué secciones ve cada persona: se deriva de sus GRUPOS (clave de sistema) y
 // de sus roles. El admin lo ve todo. Fuente única para el menú, el panel y Ayuda.
-import { esAdministrador, puedeSupervisarPsicosocial, rolesDe } from '@/lib/auth';
-import type { Perfil } from '@unidos/types';
+import { esAdministrador, esSuperadmin, areaDeAdmin, puedeSupervisarPsicosocial, rolesDe } from '@/lib/auth';
+import type { Perfil, AreaAdmin } from '@unidos/types';
 
 export type NavFlags = {
-  admin: boolean;
+  admin: boolean;          // admin GENERAL (ve todo): controla las secciones globales
+  panelAdmin: boolean;     // ve el panel de administración (general o de área)
+  areaAdmin: AreaAdmin | null; // área que administra (null = general/no admin de área)
   gestionCasos: boolean;   // crea casos (ve solo los suyos)
   verificacion: boolean;   // verifica casos (Otras informaciones)
   busqueda: boolean;       // verifica casos de desaparecidos (Grupo de Búsqueda)
@@ -22,6 +24,10 @@ const CONTENIDO = ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_vid
 
 export async function flagsDeNavegacion(supabase: any, userId: string, perfil: Perfil | null): Promise<NavFlags> {
   const admin = esAdministrador(perfil);
+  // Admin de área (Verificaciones/Redes): ve el panel acotado a su área, pero NO es
+  // admin general (no obtiene las secciones globales ni acceso a otras áreas). Sus
+  // secciones operativas siguen dependiendo de los roles/grupos que tenga.
+  const areaAdmin = admin || esSuperadmin(perfil) ? null : areaDeAdmin(perfil);
   const roles = rolesDe(perfil);
   let claves = new Set<string>();
   let clavesLidero = new Set<string>();  // grupos que LIDERO (grupos.lider_id = yo)
@@ -46,6 +52,8 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
   return {
     admin,
+    panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
+    areaAdmin,
     gestionCasos: admin || (esRecopilacion && identidadOK),
     verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
     busqueda: admin || (esBusqueda && identidadOK),

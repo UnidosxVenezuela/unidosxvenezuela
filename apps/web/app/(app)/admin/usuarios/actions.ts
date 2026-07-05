@@ -7,7 +7,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
-import type { Rol } from '@unidos/types';
+import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
+import type { Rol, AreaAdmin } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
 
 // Roles del área psicosocial con acceso a información confidencial. Solo el dueño
@@ -29,16 +30,74 @@ async function exigirCoordinacion() {
   return supabase;
 }
 
+// ── Administración por ÁREA (0103) ──
+// Acceso al panel: admin GENERAL/superadmin (area=null, sin acotar) o admin de ÁREA
+// (acotado a su área). El admin de área NO es es_admin() en la BD; por eso sus
+// escrituras van por el cliente de servicio TRAS validar el alcance en código.
+async function exigirPanelAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
+  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
+  const general = roles.includes('admin') || !!yo?.super_admin;
+  const area: AreaAdmin | null = general ? null
+    : roles.includes('admin_verificacion') ? 'verificacion'
+    : roles.includes('admin_redes') ? 'redes' : null;
+  if (!general && !area) throw new Error('Solo la administración puede gestionar usuarios.');
+  return { supabase, userId: user.id, esSuper: !!yo?.super_admin, area };
+}
+
+// ¿El objetivo es una cuenta de "mayor rango"? (un admin de área no la toca).
+function objetivoProtegido(rol?: string | null, rolesExtra?: unknown, superAdmin?: boolean | null): boolean {
+  const roles = [rol, ...(((rolesExtra as string[] | null) ?? []))];
+  return !!superAdmin || roles.includes('admin')
+    || roles.includes('admin_verificacion') || roles.includes('admin_redes');
+}
+
+// Un admin de área solo actúa sobre usuarios de SU área (por área de registro, rol
+// funcional del área o pertenencia/liderazgo de un grupo del área) y nunca sobre
+// cuentas protegidas. Lanza si no procede. Devuelve el cliente de servicio para la
+// escritura (el admin de área no pasa el trigger/RLS con su propia sesión).
+async function exigirObjetivoDeArea(perfilId: string, area: AreaAdmin) {
+  const admin = createAdminClient();
+  const { data: p } = await admin.from('perfiles')
+    .select('rol, roles_extra, super_admin, area_registro').eq('id', perfilId).single();
+  if (!p) throw new Error('Usuario no encontrado.');
+  if (objetivoProtegido(p.rol, p.roles_extra, p.super_admin)) {
+    throw new Error('No puedes gestionar esta cuenta desde una administración de área.');
+  }
+  if ((p as { area_registro?: string | null }).area_registro === area) return admin;
+  const roles = [p.rol, ...(((p.roles_extra as Rol[] | null) ?? []))];
+  if (roles.some((r) => ROLES_POR_AREA_ADMIN[area].includes(r as Rol))) return admin;
+  const claves = GRUPOS_POR_AREA_ADMIN[area];
+  const { data: mem } = await admin.from('miembros_grupo').select('grupos(clave)').eq('perfil_id', perfilId);
+  if (((mem ?? []) as { grupos?: { clave?: string } }[]).some((m) => claves.includes(m.grupos?.clave ?? ''))) return admin;
+  const { data: lid } = await admin.from('grupos').select('clave').eq('lider_id', perfilId);
+  if (((lid ?? []) as { clave?: string }[]).some((g) => claves.includes(g.clave ?? ''))) return admin;
+  throw new Error('Esta persona no pertenece a tu área; no puedes gestionarla.');
+}
+
+// Registra la auditoría del actor. El admin de área no pasa el gate es_coordinacion()
+// de registrar_auditoria, así que inserta la traza por el cliente de servicio.
+async function auditarPerfil(supabase: any, area: AreaAdmin | null, userId: string, accion: string, perfilId: string, metadata: Record<string, unknown>) {
+  if (area) {
+    await createAdminClient().from('registro_auditoria')
+      .insert({ actor_id: userId, accion, entidad: 'perfil', entidad_id: perfilId, metadata });
+  } else {
+    await supabase.rpc('registrar_auditoria', { p_accion: accion, p_entidad_id: perfilId, p_metadata: metadata });
+  }
+}
+
 export async function cambiarVerificacion(formData: FormData) {
-  const supabase = await exigirCoordinacion();
+  const { supabase, userId, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   const verificado = String(formData.get('verificado')) === 'true';
-  const { error } = await supabase.from('perfiles')
-    .update({ verificado }).eq('id', perfilId);
+  // Admin de área: escribe por el cliente de servicio tras validar el alcance.
+  const cliente = area ? await exigirObjetivoDeArea(perfilId, area) : supabase;
+  const { error } = await cliente.from('perfiles').update({ verificado }).eq('id', perfilId);
   if (error) throw new Error('No se pudo actualizar la verificación: ' + error.message);
-  await supabase.rpc('registrar_auditoria', {
-    p_accion: 'cambio_verificacion', p_entidad_id: perfilId, p_metadata: { valor: verificado },
-  });
+  await auditarPerfil(supabase, area, userId, 'cambio_verificacion', perfilId, { valor: verificado });
 
   // Al APROBAR, avisar por email al voluntario (si Resend está configurado).
   if (verificado) {
@@ -292,10 +351,27 @@ export async function aprobarAliado(formData: FormData) {
 }
 
 export async function cambiarRol(formData: FormData) {
-  const supabase = await exigirCoordinacion();
+  const { supabase, userId, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   const rol = String(formData.get('rol')) as Rol;
   const grupoId = String(formData.get('grupo_id') ?? '').trim();
+
+  // Admin de área: solo los roles funcionales de SU área (o voluntario), sobre un
+  // usuario de su área; el liderazgo/coordinación de grupos queda para el admin general.
+  if (area) {
+    const permitidos: Rol[] = [...ROLES_POR_AREA_ADMIN[area], 'voluntario'];
+    if (!permitidos.includes(rol)) {
+      throw new Error('Un administrador de área solo puede asignar los roles funcionales de su área.');
+    }
+    const admin = await exigirObjetivoDeArea(perfilId, area);
+    const { error: eArea } = await admin.from('perfiles').update({ rol }).eq('id', perfilId);
+    if (eArea) throw new Error('No se pudo cambiar el rol: ' + eArea.message);
+    await auditarPerfil(supabase, area, userId, 'cambio_rol', perfilId, { valor: rol });
+    revalidatePath('/admin/usuarios'); revalidatePath('/grupos');
+    redirigirOk('/admin/usuarios', 'Rol actualizado');
+    return;
+  }
+
   // Líder de grupo y coordinador van SIEMPRE a cargo de un grupo concreto.
   const requiereGrupo = rol === 'lider_grupo' || rol === 'coordinador';
   if (requiereGrupo && !grupoId) {
@@ -345,10 +421,31 @@ export async function cambiarRol(formData: FormData) {
 // proteger_campos_perfil validan: solo coordinación cambia roles_extra y conceder
 // 'admin' como extra exige superadmin.
 export async function guardarRolesExtra(formData: FormData) {
-  const supabase = await exigirCoordinacion();
+  const { supabase, userId, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   const roles = Array.from(new Set(formData.getAll('roles').map(String)))
     .filter((r) => r !== 'lider_plataforma_aliada') as Rol[];
+
+  // Admin de área: solo puede tocar los roles funcionales de SU área; los roles de
+  // otras áreas del usuario se CONSERVAN (no se pisan). Objetivo de su área y no protegido.
+  if (area) {
+    const permitidos = ROLES_POR_AREA_ADMIN[area];
+    if (roles.some((r) => !permitidos.includes(r))) {
+      throw new Error('Un administrador de área solo puede asignar los roles funcionales de su área.');
+    }
+    const admin = await exigirObjetivoDeArea(perfilId, area);
+    const { data: obj } = await admin.from('perfiles').select('roles_extra').eq('id', perfilId).single();
+    const previos = ((obj?.roles_extra as Rol[] | null) ?? []);
+    const conservados = previos.filter((r) => !permitidos.includes(r));
+    const merged = Array.from(new Set([...conservados, ...roles.filter((r) => permitidos.includes(r))]));
+    const { error: eArea } = await admin.from('perfiles').update({ roles_extra: merged }).eq('id', perfilId);
+    if (eArea) throw new Error('No se pudieron guardar los roles: ' + eArea.message);
+    await auditarPerfil(supabase, area, userId, 'cambio_roles_extra', perfilId, { roles: merged });
+    revalidatePath('/admin/usuarios');
+    redirigirOk('/admin/usuarios', 'Roles adicionales actualizados');
+    return;
+  }
+
   const { error } = await supabase.from('perfiles')
     .update({ roles_extra: roles }).eq('id', perfilId);
   if (error) throw new Error('No se pudieron guardar los roles: ' + error.message);
@@ -454,12 +551,31 @@ export async function eliminarUsuario(formData: FormData) {
   redirigirOk('/admin/usuarios', 'Usuario eliminado');
 }
 
-// Sumar a una persona a un grupo desde Administración (coordinación).
+// Sumar a una persona a un grupo desde Administración (coordinación o admin de área).
 export async function agregarAGrupo(formData: FormData) {
-  const supabase = await exigirCoordinacion();
+  const { supabase, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   const grupoId = String(formData.get('grupo_id'));
   if (!grupoId) return redirigirError('/admin/usuarios', 'Elige un grupo.');
+
+  // Admin de área: el grupo debe ser de SU área; el objetivo, de su área y no protegido.
+  if (area) {
+    const admin = createAdminClient();
+    const { data: g } = await admin.from('grupos').select('clave').eq('id', grupoId).single();
+    if (!g || !GRUPOS_POR_AREA_ADMIN[area].includes((g as { clave?: string }).clave ?? '')) {
+      return redirigirError('/admin/usuarios', 'Ese grupo no pertenece a tu área.');
+    }
+    try { await exigirObjetivoDeArea(perfilId, area); }
+    catch (e) { return redirigirError('/admin/usuarios', (e as Error).message); }
+    const { error } = await admin.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: perfilId });
+    if (error) {
+      if ((error as { code?: string }).code === '23505') return redirigirError('/admin/usuarios', 'La persona ya está en ese grupo.');
+      return redirigirError('/admin/usuarios', 'No se pudo agregar al grupo: ' + error.message);
+    }
+    revalidatePath('/admin/usuarios');
+    return redirigirOk('/admin/usuarios', 'Agregado al grupo');
+  }
+
   const { error } = await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: perfilId });
   if (error) {
     if ((error as { code?: string }).code === '23505') return redirigirError('/admin/usuarios', 'La persona ya está en ese grupo.');
