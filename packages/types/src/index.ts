@@ -25,7 +25,13 @@ export type Rol =
   // Área confidencial de salud mental
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
   | 'lider_psicosocial'        // Líder del grupo Psicosocial (gestiona el grupo, no ve casos)
-  | 'coordinador_psicosocial'; // Coordina el área psicosocial (ve todo, asigna)
+  | 'coordinador_psicosocial'  // Coordina el área psicosocial (ve todo, asigna)
+  // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
+  | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
+  | 'admin_redes';             // Admin · Redes Sociales (grupos de contenido/marketing)
+
+// Área que administra un "admin de área" (0103). El admin general administra todo.
+export type AreaAdmin = 'verificacion' | 'redes';
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer
@@ -78,6 +84,7 @@ export interface Perfil {
   super_admin: boolean;
   organizacion: string | null;
   motivo: string | null;
+  area_registro?: string | null;  // área elegida al registrarse (verificacion|redes|general)
   avatar_url: string | null;
   habilidades: string[];
   creado_en: string;
