@@ -3,8 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
-import CategoriaConNna from './CategoriaConNna';
-import AvisoEnlace from '@/components/AvisoEnlace';
+import CamposCaso from './CamposCaso';
 import Consejo from '@/components/Consejos';
 import BotonEnviar from '@/components/BotonEnviar';
 
@@ -30,21 +29,7 @@ export default async function NuevoCasoPage() {
           <label htmlFor="descripcion">Descripción</label>
           <textarea id="descripcion" name="descripcion" className="input" rows={3} />
         </div>
-        <div className="grid grid-2">
-          <CategoriaConNna />
-          <div className="campo">
-            <label htmlFor="fecha_publicacion">Fecha de publicación</label>
-            <input id="fecha_publicacion" name="fecha_publicacion" className="input" type="date" />
-          </div>
-          <div className="campo">
-            <label htmlFor="fuente">Fuente</label>
-            <input id="fuente" name="fuente" className="input" placeholder="Ej.: Facebook - Familia Pérez" />
-          </div>
-          <div className="campo">
-            <label htmlFor="fuente_url">Enlace de la fuente (opcional)</label>
-            <AvisoEnlace name="fuente_url" />
-          </div>
-        </div>
+        <CamposCaso />
         <div className="campo">
           <label htmlFor="archivos">Adjuntar archivos (opcional)</label>
           <input id="archivos" name="archivos" className="input" type="file" multiple
