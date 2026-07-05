@@ -98,6 +98,15 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const puedeDarAlta = !!rolDelGrupo && (puedeGestionar || esCoordAqui);
   const requiereConfirmacion = !!rolDelGrupo && esCoordAqui && !puedeGestionar; // coordinador puro
   const rol2a = !!rolDelGrupo && ROLES_SEGUNDA_VERIFICACION.includes(rolDelGrupo as Rol);
+  // Estado de identidad (2ª verificación) por miembro, visible SOLO al mando del
+  // grupo (admin/líder/coordinador) y solo en grupos que la exigen. La RLS no deja
+  // ver la fila de otra persona: se obtiene por RPC escopada que devuelve (perfil_id, estado).
+  const mostrarIdentidad = rol2a && (puedeGestionar || esCoordAqui);
+  const identidadPorMiembro = new Map<string, string>();
+  if (mostrarIdentidad) {
+    const { data: idsIdent } = await supabase.rpc('identidades_de_grupo', { p_grupo: grupoId });
+    (idsIdent ?? []).forEach((r: any) => identidadPorMiembro.set(r.perfil_id, r.estado));
+  }
   // Solicitudes de alta pendientes (RLS: el líder/admin ve todas; el solicitante, las suyas).
   let solicitudesAlta: any[] = [];
   if (rolDelGrupo) {
@@ -126,6 +135,14 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     const { data: enl } = await supabase.rpc('enlace_reunion_si_activa', { p_reunion: r.id });
     enlaces.set(r.id, hrefSeguro(enl as string | null));
   }));
+
+  // Insignia de estado de identidad (2ª verificación) por miembro.
+  const pillIdentidad = (estado?: string) => {
+    if (estado === 'aprobada') return <Pill tono="ok" icono="llave">Identidad verificada</Pill>;
+    if (estado === 'rechazada') return <Pill tono="critica" punto={false}>Identidad rechazada</Pill>;
+    if (estado === 'pendiente') return <Pill tono="aviso" punto={false}>En revisión</Pill>;
+    return <Pill tono="aviso" punto={false}>Sin verificar</Pill>;
+  };
 
   return (
     <div>
@@ -302,7 +319,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           </div>
           <div className="tarjeta">
             <div className="tabla-scroll"><table>
-              <thead><tr><th>Nombre</th><th>En grupo</th>{puedeGestionarMiembros && <th></th>}</tr></thead>
+              <thead><tr><th>Nombre</th><th>En grupo</th>{mostrarIdentidad && <th>Identidad</th>}{puedeGestionarMiembros && <th></th>}</tr></thead>
               <tbody>
                 {miembros.map((m) => (
                   <tr key={m.perfil_id}>
@@ -314,6 +331,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                       </span>
                     </td>
                     <td>{m.rol_en_grupo}</td>
+                    {mostrarIdentidad && <td>{pillIdentidad(identidadPorMiembro.get(m.perfil_id))}</td>}
                     {puedeGestionarMiembros && (
                       <td className="fila">
                         {grupo.lider_id !== m.perfil_id && (
@@ -357,7 +375,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     )}
                   </tr>
                 ))}
-                {miembros.length === 0 && <tr><td colSpan={3} className="muted">Sin miembros todavía.</td></tr>}
+                {miembros.length === 0 && <tr><td colSpan={2 + (mostrarIdentidad ? 1 : 0) + (puedeGestionarMiembros ? 1 : 0)} className="muted">Sin miembros todavía.</td></tr>}
               </tbody>
             </table></div>
           </div>
