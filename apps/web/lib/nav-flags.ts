@@ -50,20 +50,24 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     || claves.has('busqueda_nna') || roles.includes('buscador_nna');
   const esEnlace = claves.has('enlace_contacto') || roles.includes('enlace_contacto');
   const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
+  // Supervisión por área (0105): el admin de área VE (solo lectura) las secciones
+  // operativas de su área para supervisarlas; no las opera.
+  const supVerif = areaAdmin === 'verificacion';
+  const supRedes = areaAdmin === 'redes';
   return {
     admin,
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
     areaAdmin,
-    gestionCasos: admin || (esRecopilacion && identidadOK),
-    verificacion: admin || claves.has('verificacion') || roles.includes('verificador'),
-    busqueda: admin || (esBusqueda && identidadOK),
+    gestionCasos: admin || supVerif || (esRecopilacion && identidadOK),
+    verificacion: admin || supVerif || claves.has('verificacion') || roles.includes('verificador'),
+    busqueda: admin || supVerif || (esBusqueda && identidadOK),
     // Enlace de contacto: rol propio con 2ª verificación (identidad) obligatoria.
-    enlace: admin || (esEnlace && identidadOK),
+    enlace: admin || supVerif || (esEnlace && identidadOK),
     // Digitalización: rol/grupo propio con 2ª verificación (identidad) obligatoria.
-    digitalizacion: admin || (esDigitalizador && identidadOK),
-    envioRedaccion: admin || claves.has('redaccion') || roles.includes('redaccion'),
+    digitalizacion: admin || supVerif || (esDigitalizador && identidadOK),
+    envioRedaccion: admin || supRedes || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
-    contenido: admin || CONTENIDO.some((c) => clavesLidero.has(c)),
+    contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),
     acopio: admin || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),

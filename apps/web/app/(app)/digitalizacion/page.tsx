@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_ESTADO_LUGAR } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -16,11 +16,13 @@ export default async function DigitalizacionPage() {
   const esAdmin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
   const esDig = roles.includes('digitalizador');
-  if (!esAdmin && !esDig) redirect('/dashboard');
+  // El Admin de Verificaciones supervisa (solo lectura). No necesita 2ª verificación.
+  const supervisa = esAdminVerificacion(perfil);
+  if (!esAdmin && !esDig && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
 
   // El rol digitalizador necesita la 2ª verificación (identidad) aprobada.
-  if (!esAdmin) {
+  if (!esAdmin && !supervisa) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       return (

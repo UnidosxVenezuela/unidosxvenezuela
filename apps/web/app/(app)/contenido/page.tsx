@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esCoordinacion, esAdministrador, esAdminRedes, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { esLiderContenido } from '@/lib/nav-flags';
 import { nombreMostrado } from '@/lib/nombre';
@@ -25,9 +25,12 @@ type SP = { pieza?: string };
 export default async function ContenidoPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
+  // El Admin de Redes supervisa el contenido (solo lectura; la RLS bloquea la escritura).
+  const supervisa = esAdminRedes(perfil);
   const supabase = await createClient();
-  // El área de Contenido queda solo para el admin y los líderes de sus grupos.
-  if (!esAdmin && !(await esLiderContenido(supabase, user!.id))) redirect('/dashboard');
+  // El área de Contenido queda para el admin, el Admin de Redes (supervisión) y los
+  // líderes de sus grupos.
+  if (!esAdmin && !supervisa && !(await esLiderContenido(supabase, user!.id))) redirect('/dashboard');
 
   const [{ data: piezasData }, { data: perfilesData }, { data: marca }] = await Promise.all([
     supabase.from('piezas_contenido').select('*').order('actualizado_en', { ascending: false }),

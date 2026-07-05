@@ -1,6 +1,6 @@
 import { fechaHora } from '@/lib/fechas';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminRedes, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -18,7 +18,8 @@ import FormEditarCaso from '../casos/FormEditarCaso';
  *  final del flujo de verificación: «Enviado a Redacción». */
 export default async function EnvioRedaccionPage() {
   const { perfil } = await requireUsuario();
-  const puede = esAdministrador(perfil) || rolesDe(perfil).includes('redaccion');
+  // El Admin de Redes supervisa (solo lectura; la RLS bloquea la escritura).
+  const puede = esAdministrador(perfil) || esAdminRedes(perfil) || rolesDe(perfil).includes('redaccion');
   if (!puede) redirect('/dashboard');
   const supabase = await createClient();
 

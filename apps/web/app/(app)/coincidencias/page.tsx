@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, puedeBusqueda, puedeEnlace } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminVerificacion, puedeBusqueda, puedeEnlace } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_CONDICION } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -19,11 +19,13 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const esEnlace = puedeEnlace(perfil);
+  // El Admin de Verificaciones supervisa (solo lectura). No necesita 2ª verificación.
+  const supervisa = esAdminVerificacion(perfil);
   // Buscadores (adultos/NNA) y el Enlace revisan coincidencias; el resto, fuera.
-  if (!esAdmin && !puedeBusqueda(perfil) && !esEnlace) redirect('/dashboard');
+  if (!esAdmin && !supervisa && !puedeBusqueda(perfil) && !esEnlace) redirect('/dashboard');
   const supabase = await createClient();
 
-  if (!esAdmin) {
+  if (!esAdmin && !supervisa) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       return (
