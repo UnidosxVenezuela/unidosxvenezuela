@@ -70,7 +70,13 @@ export async function crearCaso(formData: FormData) {
     // el disparador (0098) crea la ficha ya clasificada como NNA → va al Buscador NNA.
     es_nna: txt(formData.get('es_nna')) === 'on',
   }).select('id').single();
-  if (error) throw new Error('No se pudo crear el caso: ' + error.message);
+  if (error) {
+    // La RLS exige admin o recopilación con 2ª verificación aprobada. Mensaje claro.
+    if (/row-level security|violates row-level/i.test(error.message)) {
+      throw new Error('No tienes permiso para reportar casos. Necesitas tu 2ª verificación de identidad aprobada (o pídele el rol a la administración).');
+    }
+    throw new Error('No se pudo crear el caso: ' + error.message);
+  }
   const casoId = data!.id as string;
 
   // Desaparecidos: vuelca los datos de la persona/reporte en la ficha del Grupo de
