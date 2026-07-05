@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { requireCoordinacion, esSuperadmin, esAdministrador } from '@/lib/auth';
+import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
+import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
 import GestionUsuarioModal from './GestionUsuarioModal';
@@ -12,12 +12,12 @@ import Avatar from '@/components/Avatar';
 import Pill from '@/components/Pill';
 
 export default async function AdminUsuariosPage({ searchParams }: { searchParams: { q?: string; frol?: string; fest?: string } }) {
-  const { user, perfil: yo } = await requireCoordinacion();
+  const { user, perfil: yo, area } = await requirePanelAdmin();
   const esSuper = esSuperadmin(yo);
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
@@ -33,7 +33,6 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   if (searchParams.frol) perfiles = perfiles.filter((p) => p.rol === searchParams.frol || (p.roles_extra ?? []).includes(searchParams.frol as any));
   if (searchParams.fest === 'verificado') perfiles = perfiles.filter((p) => p.verificado);
   if (searchParams.fest === 'pendiente') perfiles = perfiles.filter((p) => !p.verificado);
-  const pendientes = perfiles.filter((p) => !p.verificado);
 
   // Nombres por id (de la lista completa, sin filtrar) para mostrar quién lidera qué.
   const nombrePorId = new Map<string, string>((data ?? []).map((p: any) => [p.id, p.nombre_completo ?? '']));
@@ -41,27 +40,58 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
   const { data: gruposData } = await supabase.from('grupos').select('id, nombre, clave, lider_id').order('nombre');
   const grupos = (gruposData ?? []) as { id: string; nombre: string; clave: string | null; lider_id: string | null }[];
+  // Admin de área: los selectores de grupo se acotan a los grupos de SU área.
+  const gruposArea = area ? grupos.filter((g) => !!g.clave && GRUPOS_POR_AREA_ADMIN[area].includes(g.clave)) : grupos;
   // Para el selector de líder/coordinador: todos los grupos MENOS el psicosocial
   // (que se gestiona con sus propios roles específicos). Se incluye el líder actual
   // de cada grupo para avisar si va a ser reemplazado.
-  const gruposParaLider = grupos
+  const gruposParaLider = gruposArea
     .filter((g) => g.clave !== 'apoyo_psicosocial')
     .map((g) => ({ id: g.id, nombre: g.nombre, liderId: g.lider_id, liderNombre: g.lider_id ? (nombrePorId.get(g.lider_id) || 'otra persona') : null }));
   // Qué grupo lidera cada persona (por grupos.lider_id, salvo el psicosocial).
   const lideraPorPerfil = new Map<string, { id: string; nombre: string }>();
   grupos.forEach((g) => { if (g.lider_id && g.clave !== 'apoyo_psicosocial') lideraPorPerfil.set(g.lider_id, { id: g.id, nombre: g.nombre }); });
 
-  const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupo_id, rol_en_grupo, grupos(nombre)');
+  const { data: membresias } = await supabase.from('miembros_grupo').select('perfil_id, grupo_id, rol_en_grupo, grupos(nombre, clave)');
   const gruposPorPerfil = new Map<string, string[]>();
+  const clavesPorPerfil = new Map<string, string[]>();   // claves de sistema por persona (para acotar por área)
   // Qué grupo coordina cada persona (miembros_grupo con rol_en_grupo = 'coordinador').
   const coordinaPorPerfil = new Map<string, { id: string; nombre: string }>();
   (membresias ?? []).forEach((m: any) => {
     if (m.rol_en_grupo === 'coordinador' && m.grupos?.nombre) coordinaPorPerfil.set(m.perfil_id, { id: m.grupo_id, nombre: m.grupos.nombre });
+    if (m.grupos?.clave) {
+      const cs = clavesPorPerfil.get(m.perfil_id) ?? [];
+      cs.push(m.grupos.clave);
+      clavesPorPerfil.set(m.perfil_id, cs);
+    }
     if (!m.grupos?.nombre) return;
     const arr = gruposPorPerfil.get(m.perfil_id) ?? [];
     arr.push(m.grupos.nombre);
     gruposPorPerfil.set(m.perfil_id, arr);
   });
+
+  // Admin de área: la lista se ACOTA a los usuarios de SU área (por área de registro,
+  // rol funcional del área, o pertenencia/liderazgo de un grupo del área) y nunca a
+  // cuentas protegidas (admin general, admin de área o superadmin). El admin general
+  // ve a todos.
+  if (area) {
+    const rolesArea = ROLES_POR_AREA_ADMIN[area] as string[];
+    const clavesArea = GRUPOS_POR_AREA_ADMIN[area];
+    const ledPorPerfil = new Map<string, string[]>();
+    grupos.forEach((g) => { if (g.lider_id && g.clave) { const a = ledPorPerfil.get(g.lider_id) ?? []; a.push(g.clave); ledPorPerfil.set(g.lider_id, a); } });
+    const protegido = (p: Perfil) => p.super_admin
+      || [p.rol, ...(p.roles_extra ?? [])].some((r) => ['admin', 'admin_verificacion', 'admin_redes'].includes(r as string));
+    const enMiArea = (p: Perfil) => {
+      if (protegido(p)) return false;
+      if ((p as { area_registro?: string | null }).area_registro === area) return true;
+      if ([p.rol, ...(p.roles_extra ?? [])].some((r) => rolesArea.includes(r as string))) return true;
+      if ((clavesPorPerfil.get(p.id) ?? []).some((c) => clavesArea.includes(c))) return true;
+      if ((ledPorPerfil.get(p.id) ?? []).some((c) => clavesArea.includes(c))) return true;
+      return false;
+    };
+    perfiles = perfiles.filter(enMiArea);
+  }
+  const pendientes = perfiles.filter((p) => !p.verificado);
 
   // Flujo de aliados (doble aprobación) — solo administradores.
   let solicitudes: any[] = [];
@@ -76,12 +106,17 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     (p) => !['admin', 'lider_plataforma_aliada'].includes(p.rol) && p.id !== user!.id && !idsConSolicitud.has(p.id),
   );
 
-  // En el selector de rol no aparece "aliado": ese rol va por doble aprobación.
-  const rolesSelect = ROLES.filter((r) => r !== 'lider_plataforma_aliada');
+  // En el selector de rol no aparece "aliado": ese rol va por doble aprobación. El
+  // admin de área solo ofrece los roles funcionales de SU área (o voluntario).
+  const rolesSelect = area
+    ? ([...ROLES_POR_AREA_ADMIN[area], 'voluntario'] as string[])
+    : ROLES.filter((r) => r !== 'lider_plataforma_aliada');
 
   // Roles adicionales asignables a una persona (sin aliado, sin su rol principal,
-  // sin admin salvo superadmin).
-  const rolesExtraDe = (p: Perfil) => ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
+  // sin admin salvo superadmin). El admin de área: solo los roles de su área.
+  const rolesExtraDe = (p: Perfil) => area
+    ? (ROLES_POR_AREA_ADMIN[area] as string[]).filter((r) => r !== p.rol)
+    : ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
 
   // Toda la gestión de una persona (rol + grupo a cargo + roles adicionales +
   // agregar a grupo) va en UNA ventana flotante, para evitar errores y ordenar la UI.
@@ -94,7 +129,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
       <GestionUsuarioModal
         perfilId={p.id} nombre={p.nombre_completo ?? ''} rolActual={p.rol}
         rolesPrincipales={rolesSelect} rolesExtra={p.roles_extra ?? []} rolesExtraAsignables={rolesExtraDe(p)}
-        grupos={gruposParaLider} gruposTodos={grupos.map((g) => ({ id: g.id, nombre: g.nombre }))}
+        grupos={gruposParaLider} gruposTodos={gruposArea.map((g) => ({ id: g.id, nombre: g.nombre }))}
         lideraActual={lideraPorPerfil.get(p.id) ?? null} coordinaActual={coordinaPorPerfil.get(p.id) ?? null}
         className="btn btn-primario" etiquetaBoton={etiquetaBoton} />
     );
@@ -113,14 +148,22 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     <div>
       <div className="pagina-cab">
         <div>
-          <h1>Administración de usuarios</h1>
-          <p className="muted sub">Aprueba solicitudes de registro y asigna roles. {perfiles.length} usuarios en total.</p>
+          <h1>{area ? 'Administración · ' + ETIQUETA_AREA_ADMIN[area] : 'Administración de usuarios'}</h1>
+          <p className="muted sub">
+            {area
+              ? `Gestionas los usuarios y solicitudes de tu área (${ETIQUETA_AREA_ADMIN[area]}). ${perfiles.length} en tu área.`
+              : `Aprueba solicitudes de registro y asigna roles. ${perfiles.length} usuarios en total.`}
+          </p>
         </div>
         <div className="fila">
           <BotonActualizar />
-          <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
-          <Link className="btn" href="/admin/usuarios/importar"><Icono nombre="grupos" size={16} /> Importar por lote</Link>
-          <Link className="btn" href="/admin/areas">Áreas</Link>
+          {!area && (
+            <>
+              <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
+              <Link className="btn" href="/admin/usuarios/importar"><Icono nombre="grupos" size={16} /> Importar por lote</Link>
+              <Link className="btn" href="/admin/areas">Áreas</Link>
+            </>
+          )}
         </div>
       </div>
 

@@ -51,6 +51,22 @@ export async function requireCoordinacion() {
   return res;
 }
 
+/**
+ * Exige acceso al panel de administración: admin GENERAL / superadmin (ve y
+ * administra todo) o admin de ÁREA (acotado a su área). Devuelve `area`:
+ *   · null → admin general o superadmin (sin acotar).
+ *   · 'verificacion' | 'redes' → admin de esa área (la vista y las acciones se
+ *     acotan a su área en la página y en las Server Actions).
+ * Redirige al panel a quien no tenga ninguno de esos accesos.
+ */
+export async function requirePanelAdmin() {
+  const res = await requireUsuario();
+  const general = esAdministrador(res.perfil) || esSuperadmin(res.perfil);
+  const area = general ? null : areaDeAdmin(res.perfil);
+  if (!general && !area) redirect('/dashboard');
+  return { ...res, area };
+}
+
 export function esCoordinacion(e?: EntradaRoles) {
   return tieneAlguno(e, COORDINACION);
 }

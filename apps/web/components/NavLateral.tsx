@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Icono from './Icono';
+import { ETIQUETA_AREA_ADMIN } from '@/lib/constantes';
 import type { NavFlags } from '@/lib/nav-flags';
 
 /**
@@ -41,8 +42,16 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   enlaces.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   enlaces.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });
   enlaces.push({ href: '/verificacion', etiqueta: 'Verificación', icono: 'llave' });
+  // Panel de administración: el admin de área ve SU sección acotada; las secciones
+  // globales (verificaciones de identidad, registro de actividad, tablón) son solo
+  // del admin general.
+  if (flags.panelAdmin) {
+    enlaces.push({
+      href: '/admin/usuarios', icono: 'admin',
+      etiqueta: flags.areaAdmin ? 'Admin · ' + ETIQUETA_AREA_ADMIN[flags.areaAdmin] : 'Administración',
+    });
+  }
   if (flags.admin) {
-    enlaces.push({ href: '/admin/usuarios', etiqueta: 'Administración', icono: 'admin' });
     enlaces.push({ href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'llave' });
     enlaces.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
   }
