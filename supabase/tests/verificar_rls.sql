@@ -262,4 +262,72 @@ begin;
   end $$;
 rollback;
 
+-- ══ Administración por área (0103) ══
+
+\echo '== Test 15: un admin de área NO es admin (sin escalada de privilegios) =='
+begin;
+  update public.perfiles set rol = 'admin_verificacion', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    if public.es_admin() then raise exception 'FALLO: admin_verificacion cuenta como es_admin()'; end if;
+    if not public.es_admin_verificacion() then raise exception 'FALLO: es_admin_verificacion() falso para el rol'; end if;
+    if public.es_admin_redes() then raise exception 'FALLO: admin_verificacion cuenta como admin_redes'; end if;
+    -- Efecto concreto: NO puede crear grupos (poder exclusivo de admin).
+    begin
+      insert into public.grupos (nombre, area, lider_id) values ('_TEST_area_pirata', 'salud', v_uid);
+      raise exception 'FALLO: admin_verificacion creó un grupo (poder de admin)';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 16: un no-admin general NO puede concederse rol de admin de área =='
+begin;
+  -- Actor = coordinador: pasa las reglas 1/1b (es_coordinacion) para aislar la regla 2c.
+  update public.perfiles set rol = 'coordinador', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    begin
+      update public.perfiles set roles_extra = '{admin_verificacion}' where id = v_uid;
+      raise exception 'FALLO: un coordinador se concedió admin_verificacion';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 17: la solicitud de registro se rutea a la administración del área =='
+begin;
+  -- Un admin de área Verificaciones (destinatario esperado del ruteo).
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000d1','av@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'admin_verificacion', verificado = true where id = '00000000-0000-0000-0000-0000000000d1';
+  -- Registro en el área Verificaciones (dispara handle_new_user + notificar_registro).
+  insert into auth.users (id, email, raw_user_meta_data)
+    values ('00000000-0000-0000-0000-0000000000d2','regv@test.local',
+            '{"nombre_completo":"Registro V","area_registro":"verificacion"}'::jsonb);
+  -- Registro en el área Redes (NO debe avisar al admin de Verificaciones).
+  insert into auth.users (id, email, raw_user_meta_data)
+    values ('00000000-0000-0000-0000-0000000000d3','regr@test.local',
+            '{"nombre_completo":"Registro R","area_registro":"redes"}'::jsonb);
+  do $$
+  declare n_v int; n_r int;
+  begin
+    select count(*) into n_v from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-0000000000d1'
+        and tipo = 'registro_nuevo' and cuerpo like 'Registro V%';
+    select count(*) into n_r from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-0000000000d1'
+        and tipo = 'registro_nuevo' and cuerpo like 'Registro R%';
+    if n_v <> 1 then raise exception 'FALLO: el admin de Verificaciones no recibió la solicitud de su área (n=%)', n_v; end if;
+    if n_r <> 0 then raise exception 'FALLO: el admin de Verificaciones recibió una solicitud de Redes (n=%)', n_r; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

@@ -1,4 +1,4 @@
-import type { AreaClave, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
+import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
 
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
@@ -90,7 +90,47 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   apoyo_psicosocial: 'Apoyo Psicosocial',
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
+  admin_verificacion: 'Administración · Verificaciones',
+  admin_redes: 'Administración · Redes Sociales',
 };
+
+// ── Administración por ÁREA (0103) ──
+// Dos administraciones ACOTADAS conviven con la administración general:
+//   · Verificaciones → grupos de gestión de información (casos, verificación, búsqueda,
+//     búsqueda NNA, enlace de contacto, digitalización).
+//   · Redes Sociales → grupos de contenido (redacción/envío, diseño gráfico, edición de
+//     video, community manager, influencers).
+// El admin general ve y administra TODO; el dueño es superadmin. Un admin de área NO es
+// admin general: solo gestiona su área (sus grupos y las solicitudes de su área).
+export const AREAS_ADMIN: AreaAdmin[] = ['verificacion', 'redes'];
+export const ETIQUETA_AREA_ADMIN: Record<AreaAdmin, string> = {
+  verificacion: 'Verificaciones',
+  redes: 'Redes Sociales',
+};
+/** Rol de administración de cada área. */
+export const ROL_ADMIN_DE_AREA: Record<AreaAdmin, Rol> = {
+  verificacion: 'admin_verificacion',
+  redes: 'admin_redes',
+};
+/** Claves de grupo (sistema) que administra cada área. */
+export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
+  verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto', 'digitalizacion'],
+  redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
+};
+/** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
+export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
+  verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'],
+  redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
+};
+/** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
+export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'general'; etiqueta: string; ayuda: string }[] = [
+  { valor: 'verificacion', etiqueta: 'Verificación y búsqueda de personas',
+    ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA), enlace con familias y digitalización.' },
+  { valor: 'redes', etiqueta: 'Redes sociales y contenido',
+    ayuda: 'Redacción, diseño gráfico, edición de video, community management e influencers.' },
+  { valor: 'general', etiqueta: 'Voluntariado general / otra área',
+    ayuda: 'Logística y acopio, apoyo y otras áreas. La coordinación te ubicará según tu perfil.' },
+];
 
 // ── Insumos / Logística ──
 export const ETIQUETA_TIPO_INSUMO: Record<string, string> = {

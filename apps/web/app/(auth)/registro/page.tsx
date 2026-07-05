@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
 import { mensajeAuth } from '@/lib/mensajes-auth';
 import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
+import { AREAS_REGISTRO } from '@/lib/constantes';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -13,7 +14,7 @@ import EntradaTelefono from '@/components/EntradaTelefono';
 export default function RegistroPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '' });
+  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '', area: '' });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export default function RegistroPage() {
     setError(null);
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
+    if (!form.area) return setError('Selecciona a qué área deseas postular.');
     const correo = form.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))
       return setError('Escribe un correo válido (por ejemplo, nombre@correo.com).');
@@ -45,6 +47,7 @@ export default function RegistroPage() {
           telefono: form.telefono,
           organizacion: form.organizacion,
           motivo: form.motivo,
+          area_registro: form.area,
           terminos_version: LEGAL_VERSION,
         },
       },
@@ -101,6 +104,18 @@ export default function RegistroPage() {
         <div className="campo">
           <label htmlFor="telefono">WhatsApp / Teléfono</label>
           <EntradaTelefono name="telefono" onChange={(full) => set('telefono', full)} />
+        </div>
+        <div className="campo">
+          <label htmlFor="area">¿A qué área deseas postular? *</label>
+          <select id="area" className="input" value={form.area} onChange={(e) => set('area', e.target.value)} required>
+            <option value="" disabled>Selecciona un área…</option>
+            {AREAS_REGISTRO.map((a) => <option key={a.valor} value={a.valor}>{a.etiqueta}</option>)}
+          </select>
+          {form.area && (
+            <p className="muted" style={{ fontSize: '.85rem', margin: '4px 0 0' }}>
+              {AREAS_REGISTRO.find((a) => a.valor === form.area)?.ayuda}
+            </p>
+          )}
         </div>
         <div className="campo">
           <label htmlFor="organizacion">Organización (opcional)</label>

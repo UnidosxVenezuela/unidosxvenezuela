@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import type { Perfil, Rol } from '@unidos/types';
+import type { Perfil, Rol, AreaAdmin } from '@unidos/types';
 
 /** Devuelve el usuario autenticado y su perfil, o null si no hay sesión. */
 export async function getUsuarioYPerfil() {
@@ -63,6 +63,27 @@ export function esAdministrador(e?: EntradaRoles) {
 /** Superadmin (dueño): único que puede cambiar el rol de un admin. */
 export function esSuperadmin(perfil?: { super_admin?: boolean } | null) {
   return !!perfil?.super_admin;
+}
+
+// ── Administración por ÁREA (0103) ──
+// Un admin de área gestiona SOLO su área (sus grupos y las solicitudes correspondientes).
+// NO es admin general (`esAdministrador` sigue siendo exclusivo de 'admin'): no ve ni
+// administra todo. El admin general y el superadmin siguen viéndolo/administrándolo todo.
+export function esAdminVerificacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin_verificacion']);
+}
+export function esAdminRedes(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin_redes']);
+}
+/** ¿Es administrador de alguna área (Verificaciones o Redes)? */
+export function esAdminArea(e?: EntradaRoles) {
+  return esAdminVerificacion(e) || esAdminRedes(e);
+}
+/** Área que administra esta persona (o null si no es admin de área). */
+export function areaDeAdmin(e?: EntradaRoles): AreaAdmin | null {
+  if (esAdminVerificacion(e)) return 'verificacion';
+  if (esAdminRedes(e)) return 'redes';
+  return null;
 }
 
 // Quién puede crear y asignar tareas. El resto (voluntario, observador)
