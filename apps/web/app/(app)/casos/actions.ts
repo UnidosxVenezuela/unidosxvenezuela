@@ -56,10 +56,11 @@ export async function crearCaso(formData: FormData) {
     const v = validarArchivo(file.name, file.size, 10);
     if (!v.ok) throw new Error(v.motivo || 'Archivo no admitido.');
   }
+  const categoria = opt(formData.get('categoria'));
   const { data, error } = await supabase.from('casos').insert({
     titulo,
     descripcion: opt(formData.get('descripcion')),
-    categoria: opt(formData.get('categoria')),
+    categoria,
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
@@ -71,6 +72,23 @@ export async function crearCaso(formData: FormData) {
   }).select('id').single();
   if (error) throw new Error('No se pudo crear el caso: ' + error.message);
   const casoId = data!.id as string;
+
+  // Desaparecidos: vuelca los datos de la persona/reporte en la ficha del Grupo de
+  // Búsqueda (creada por el disparador). Best-effort: si falla, el caso queda igual y
+  // el equipo de Búsqueda podrá completar la ficha. La RPC (0100) valida y escopa.
+  if (categoria === 'Desaparecidos') {
+    const edadStr = txt(formData.get('edad'));
+    const edadNum = edadStr ? Math.trunc(Number(edadStr)) : null;
+    await supabase.rpc('completar_ficha_busqueda', {
+      p_caso: casoId,
+      p_edad: edadNum !== null && Number.isFinite(edadNum) ? edadNum : null,
+      p_sexo: opt(formData.get('sexo')),
+      p_ultima_ubicacion: opt(formData.get('ultima_ubicacion')),
+      p_situacion: opt(formData.get('situacion')),
+      p_reporta_nombre: opt(formData.get('reporta_nombre')),
+      p_reporta_telefono: opt(formData.get('reporta_telefono')),
+    });
+  }
 
   // Adjuntos de respaldo (opcional): al bucket privado 'adjuntos', carpeta casos/<id>.
   for (const file of archivos.slice(0, 10)) {
