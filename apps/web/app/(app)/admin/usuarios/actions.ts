@@ -456,18 +456,6 @@ export async function guardarRolesExtra(formData: FormData) {
   redirigirOk('/admin/usuarios', 'Roles adicionales actualizados');
 }
 
-// Exige que el actor sea ADMIN (rol principal o adicional). Devuelve además si es
-// SUPERADMIN (dueño), porque el dueño sí puede gestionar a administradores comunes.
-async function exigirAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
-  const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin')) throw new Error('Solo un administrador puede hacer esto.');
-  return { supabase, userId: user.id, esSuper: !!yo?.super_admin };
-}
-
 /** Contraseña temporal legible (12+ caracteres). */
 function generarTemporal(): string {
   return randomBytes(9).toString('base64url'); // ~12 chars [A-Za-z0-9_-]
@@ -476,7 +464,7 @@ function generarTemporal(): string {
 // Un ADMIN restablece la contraseña de un usuario NO administrador. La temporal
 // se envía SOLO al correo de la persona (el admin no la ve). Audita el cambio.
 export async function restablecerContrasena(formData: FormData) {
-  const { supabase, userId, esSuper } = await exigirAdmin();
+  const { supabase, userId, esSuper, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   if (perfilId === userId) throw new Error('Para tu propia cuenta usa "Cambiar contraseña" en tu perfil.');
   if (!emailActivo()) throw new Error('El correo (RESEND) no está configurado; no se puede enviar la contraseña temporal.');
@@ -484,14 +472,19 @@ export async function restablecerContrasena(formData: FormData) {
   const { data: objetivo } = await supabase.from('perfiles')
     .select('rol, roles_extra, super_admin, nombre_completo').eq('id', perfilId).single();
   if (!objetivo) throw new Error('Usuario no encontrado.');
-  const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
-  // Un superadmin (dueño) sí puede gestionar a un administrador común; pero nadie
-  // toca a un superadmin por aquí (el tier dueño se gestiona aparte).
-  if (objetivo.super_admin) {
-    throw new Error('No puedes restablecer la contraseña de un superadministrador.');
-  }
-  if (rolesObjetivo.includes('admin') && !esSuper) {
-    throw new Error('Solo un superadministrador puede restablecer la contraseña de un administrador.');
+  if (area) {
+    // Admin de área: solo cuentas de SU área y no protegidas.
+    await exigirObjetivoDeArea(perfilId, area);
+  } else {
+    const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
+    // Un superadmin (dueño) sí puede gestionar a un administrador común; pero nadie
+    // toca a un superadmin por aquí (el tier dueño se gestiona aparte).
+    if (objetivo.super_admin) {
+      throw new Error('No puedes restablecer la contraseña de un superadministrador.');
+    }
+    if (rolesObjetivo.includes('admin') && !esSuper) {
+      throw new Error('Solo un superadministrador puede restablecer la contraseña de un administrador.');
+    }
   }
 
   const admin = createAdminClient();
@@ -513,7 +506,7 @@ export async function restablecerContrasena(formData: FormData) {
            <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
   });
 
-  await supabase.rpc('registrar_auditoria', { p_accion: 'reset_contrasena', p_entidad_id: perfilId, p_metadata: {} });
+  await auditarPerfil(supabase, area, userId, 'reset_contrasena', perfilId, {});
   revalidatePath('/admin/usuarios');
   redirigirOk('/admin/usuarios', 'Contraseña restablecida; se envió la temporal al correo de ' + (objetivo.nombre_completo || 'la persona'));
 }
@@ -522,27 +515,30 @@ export async function restablecerContrasena(formData: FormData) {
 // cascada; sus registros (casos, tareas, contenido, comentarios) se CONSERVAN
 // con el autor en null. Requiere la migración 0048. No se puede deshacer.
 export async function eliminarUsuario(formData: FormData) {
-  const { supabase, userId, esSuper } = await exigirAdmin();
+  const { supabase, userId, esSuper, area } = await exigirPanelAdmin();
   const perfilId = String(formData.get('perfil_id'));
   if (perfilId === userId) throw new Error('No puedes eliminar tu propia cuenta.');
 
   const { data: objetivo } = await supabase.from('perfiles')
     .select('rol, roles_extra, super_admin, nombre_completo').eq('id', perfilId).single();
   if (!objetivo) throw new Error('Usuario no encontrado.');
-  const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
-  // Un superadmin (dueño) sí puede eliminar a un administrador común; pero nadie
-  // elimina a un superadmin por aquí (protege el tier dueño de un borrado accidental).
-  if (objetivo.super_admin) {
-    throw new Error('No puedes eliminar a un superadministrador.');
-  }
-  if (rolesObjetivo.includes('admin') && !esSuper) {
-    throw new Error('Solo un superadministrador puede eliminar a un administrador.');
+  if (area) {
+    // Admin de área: solo cuentas de SU área y no protegidas.
+    await exigirObjetivoDeArea(perfilId, area);
+  } else {
+    const rolesObjetivo = [objetivo.rol, ...(((objetivo.roles_extra as Rol[] | null) ?? []))];
+    // Un superadmin (dueño) sí puede eliminar a un administrador común; pero nadie
+    // elimina a un superadmin por aquí (protege el tier dueño de un borrado accidental).
+    if (objetivo.super_admin) {
+      throw new Error('No puedes eliminar a un superadministrador.');
+    }
+    if (rolesObjetivo.includes('admin') && !esSuper) {
+      throw new Error('Solo un superadministrador puede eliminar a un administrador.');
+    }
   }
 
-  // Auditar antes de borrar (el actor —el admin— sigue existiendo).
-  await supabase.rpc('registrar_auditoria', {
-    p_accion: 'eliminar_usuario', p_entidad_id: perfilId, p_metadata: { nombre: objetivo.nombre_completo },
-  });
+  // Auditar antes de borrar (el actor sigue existiendo).
+  await auditarPerfil(supabase, area, userId, 'eliminar_usuario', perfilId, { nombre: objetivo.nombre_completo });
 
   const { error } = await createAdminClient().auth.admin.deleteUser(perfilId);
   if (error) throw new Error('No se pudo eliminar el usuario: ' + error.message);
