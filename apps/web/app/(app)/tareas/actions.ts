@@ -12,24 +12,39 @@ function num(v: FormDataEntryValue | null): number | null {
   const s = txt(v); if (!s) return null; const n = Number(s); return Number.isFinite(n) ? n : null;
 }
 
+// ¿La persona `p` pertenece al grupo `g` (miembro o su líder)? Espeja el trigger 0101
+// para dar un mensaje claro antes de intentar el INSERT/UPDATE.
+async function esDelGrupo(supabase: any, g: string, p: string): Promise<boolean> {
+  const { count } = await supabase.from('miembros_grupo')
+    .select('*', { count: 'exact', head: true }).eq('grupo_id', g).eq('perfil_id', p);
+  if ((count ?? 0) > 0) return true;
+  const { data: gr } = await supabase.from('grupos').select('lider_id').eq('id', g).single();
+  return gr?.lider_id === p;
+}
+
 export async function crearTarea(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Crear: admin, coordinador o líder (por conjunto de roles), o el líder real
-  // del grupo elegido (grupos.lider_id). La RLS exige además grupo propio.
   const grupoElegido = opt(formData.get('grupo_id'));
+  const asignadoA = opt(formData.get('asignado_a'));
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const rolesYo = [yo?.rol, ...(((yo?.roles_extra as (Prioridad | string)[] | null) ?? []))] as string[];
-  let autorizado = ['admin', 'coordinador', 'lider_grupo'].some((r) => rolesYo.includes(r));
-  if (!autorizado && grupoElegido) {
-    const { data: g } = await supabase.from('grupos').select('lider_id').eq('id', grupoElegido).single();
-    autorizado = g?.lider_id === user.id;
-  }
-  if (!autorizado) throw new Error('No tienes permisos para crear tareas.');
+  const esAdmin = rolesYo.includes('admin');
 
-  const asignadoA = opt(formData.get('asignado_a'));
+  // Autorización precisa (igual que la RLS): el admin en cualquier grupo; el resto
+  // SOLO en un grupo que lidera o coordina (evita el error críptico de la RLS).
+  if (!esAdmin) {
+    if (!grupoElegido) throw new Error('Elige el grupo de la tarea.');
+    const { data: puede } = await supabase.rpc('puede_publicar_en_grupo', { g: grupoElegido });
+    if (puede !== true) throw new Error('Solo puedes crear tareas en un grupo que lideras o coordinas.');
+  }
+  // La asignación debe ser de un miembro del propio grupo (el trigger 0101 lo blinda).
+  if (asignadoA && grupoElegido && !(await esDelGrupo(supabase, grupoElegido, asignadoA))) {
+    throw new Error('Solo puedes asignar la tarea a un miembro del grupo.');
+  }
+
   const { data, error } = await supabase.from('tareas').insert({
     titulo: txt(formData.get('titulo')),
     descripcion: opt(formData.get('descripcion')),
@@ -68,6 +83,13 @@ export async function actualizarAsignacion(formData: FormData) {
   const supabase = await createClient();
   const id = txt(formData.get('tarea_id'));
   const asignado = opt(formData.get('asignado_a'));
+  // Reasignar solo a un miembro del propio grupo de la tarea (el trigger 0101 lo blinda).
+  if (asignado) {
+    const { data: t } = await supabase.from('tareas').select('grupo_id').eq('id', id).single();
+    if (t?.grupo_id && !(await esDelGrupo(supabase, t.grupo_id, asignado))) {
+      throw new Error('Solo puedes asignar la tarea a un miembro del grupo.');
+    }
+  }
   const { error } = await supabase.from('tareas').update({
     asignado_a: asignado,
     prioridad: txt(formData.get('prioridad')) as Prioridad,

@@ -69,6 +69,18 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   // Etiqueta de autoría: quién compartió cada archivo.
   const nombreDe = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, verFull)]));
 
+  // Reasignación acotada al propio grupo de la tarea (paridad con el trigger 0101).
+  // Tarea sin grupo: se conserva la lista completa (es abierta).
+  let miembrosAsignables: { id: string; nombre: string }[] = (perfiles ?? []).map((p: any) => ({ id: p.id, nombre: nombreMostrado(p.nombre_completo, verFull) || p.id }));
+  if (tarea.grupo_id) {
+    const { data: mg } = await supabase.from('miembros_grupo').select('perfil_id, perfiles(nombre_completo)').eq('grupo_id', tarea.grupo_id);
+    miembrosAsignables = (mg ?? []).map((m: any) => ({ id: m.perfil_id, nombre: nombreMostrado(m.perfiles?.nombre_completo, verFull) || m.perfil_id }));
+    // El actual asignado siempre visible en el selector, aunque falte su membresía formal.
+    if (tarea.asignado_a && !miembrosAsignables.some((x) => x.id === tarea.asignado_a)) {
+      miembrosAsignables.unshift({ id: tarea.asignado_a, nombre: nombreMostrado(tarea.asignado?.nombre_completo, verFull) || tarea.asignado_a });
+    }
+  }
+
   return (
     <div>
       <RealtimeRefrescar tabla="tareas" filtro={'id=eq.' + id} />
@@ -157,7 +169,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
               <label>Asignar a</label>
               <select name="asignado_a" className="input" defaultValue={tarea.asignado_a ?? ''}>
                 <option value="">Sin asignar</option>
-                {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
+                {miembrosAsignables.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
               </select>
             </div>
             <div className="campo">
