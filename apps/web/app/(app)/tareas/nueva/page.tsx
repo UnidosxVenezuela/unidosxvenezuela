@@ -1,34 +1,69 @@
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeGestionarTareas, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeGestionarTareas, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PRIORIDADES, ETIQUETA_PRIORIDAD, CATEGORIAS, ETIQUETA_CATEGORIA } from '@/lib/constantes';
 import { nombreMostrado } from '@/lib/nombre';
 import { crearTarea } from '../actions';
 import CapturarUbicacion from './CapturarUbicacion';
+import GrupoYAsignado from './GrupoYAsignado';
 import BotonEnviar from '@/components/BotonEnviar';
+
+type Persona = { id: string; nombre: string };
 
 export default async function NuevaTareaPage({ searchParams }: { searchParams: { grupo?: string } }) {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
-  // Pasa: roles de gestión o ser líder real de algún grupo (grupos.lider_id).
-  let autorizado = puedeGestionarTareas(perfil);
-  if (!autorizado) {
-    const { count } = await supabase.from('grupos').select('*', { count: 'exact', head: true }).eq('lider_id', user!.id);
-    autorizado = (count ?? 0) > 0;
-  }
-  if (!autorizado) redirect('/grupos');
   const esAdmin = esAdministrador(perfil);
-  const [{ data: grupos }, { data: perfiles }] = await Promise.all([
-    supabase.from('grupos').select('id, nombre').order('nombre'),
-    supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
-  ]);
+
+  // Grupos en los que PUEDE crear tareas (coincide con la RLS puede_publicar_en_grupo):
+  // el admin en todos; el resto en los que lidera o —siendo coordinador— es miembro.
+  let grupos: { id: string; nombre: string; liderId: string | null }[] = [];
+  if (esAdmin) {
+    const { data } = await supabase.from('grupos').select('id, nombre, lider_id').order('nombre');
+    grupos = (data ?? []).map((g: any) => ({ id: g.id, nombre: g.nombre, liderId: g.lider_id }));
+  } else {
+    const mapa = new Map<string, { id: string; nombre: string; liderId: string | null }>();
+    const { data: lidero } = await supabase.from('grupos').select('id, nombre, lider_id').eq('lider_id', user!.id);
+    (lidero ?? []).forEach((g: any) => mapa.set(g.id, { id: g.id, nombre: g.nombre, liderId: g.lider_id }));
+    if (rolesDe(perfil).includes('coordinador')) {
+      const { data: memb } = await supabase.from('miembros_grupo').select('grupos(id, nombre, lider_id)').eq('perfil_id', user!.id);
+      (memb ?? []).forEach((m: any) => { if (m.grupos) mapa.set(m.grupos.id, { id: m.grupos.id, nombre: m.grupos.nombre, liderId: m.grupos.lider_id }); });
+    }
+    grupos = [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  }
+
+  // Solo pasa quien pueda crear alguna tarea: gestor por rol, o líder/coordinador con grupos.
+  if (!esAdmin && !puedeGestionarTareas(perfil) && grupos.length === 0) redirect('/grupos');
+
+  // Miembros de cada grupo publicable (para acotar «Asignar a» al propio grupo).
+  const miembrosPorGrupo: Record<string, Persona[]> = {};
+  const idsGrupos = grupos.map((g) => g.id);
+  if (idsGrupos.length) {
+    const { data: miembros } = await supabase.from('miembros_grupo')
+      .select('grupo_id, perfil_id, perfiles(nombre_completo)').in('grupo_id', idsGrupos);
+    (miembros ?? []).forEach((m: any) => {
+      (miembrosPorGrupo[m.grupo_id] ??= []).push({ id: m.perfil_id, nombre: nombreMostrado(m.perfiles?.nombre_completo, esAdmin) || m.perfil_id });
+    });
+    // El líder de cada grupo siempre debe poder recibir la tarea (defensivo si 0099 no se aplicó).
+    const liderIds = [...new Set(grupos.map((g) => g.liderId).filter(Boolean) as string[])];
+    const nombreLider = new Map<string, string>();
+    if (liderIds.length) {
+      const { data: lp } = await supabase.from('perfiles').select('id, nombre_completo').in('id', liderIds);
+      (lp ?? []).forEach((p: any) => nombreLider.set(p.id, nombreMostrado(p.nombre_completo, esAdmin) || p.id));
+    }
+    for (const g of grupos) {
+      if (!g.liderId) continue;
+      const lista = (miembrosPorGrupo[g.id] ??= []);
+      if (!lista.some((x) => x.id === g.liderId)) lista.unshift({ id: g.liderId, nombre: nombreLider.get(g.liderId) ?? g.liderId });
+    }
+  }
 
   return (
     <div style={{ maxWidth: 640 }}>
       <div className="pagina-cab">
         <div>
           <h1>Nueva tarea</h1>
-          <p className="muted sub">Define título, cupo de personas, prioridad, categoría y a quién se asigna.</p>
+          <p className="muted sub">Define título, cupo de personas, prioridad, categoría y a quién se asigna (dentro del grupo).</p>
         </div>
       </div>
       <form action={crearTarea} className="tarjeta" style={{ marginTop: 12 }}>
@@ -61,25 +96,12 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
             <label htmlFor="vence_en">Vence</label>
             <input id="vence_en" name="vence_en" className="input" type="datetime-local" />
           </div>
-          <div className="campo">
-            <label htmlFor="grupo_id">Grupo</label>
-            <select id="grupo_id" name="grupo_id" className="input" defaultValue={searchParams.grupo ?? ''} required={!esAdmin}>
-              {esAdmin ? <option value="">Sin grupo</option> : <option value="" disabled>Elige tu grupo…</option>}
-              {(grupos ?? []).map((g: any) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
-            </select>
-          </div>
-          <div className="campo">
-            <label htmlFor="asignado_a">Asignar a</label>
-            <select id="asignado_a" name="asignado_a" className="input" defaultValue="">
-              <option value="">Sin asignar</option>
-              {(perfiles ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, esAdmin) || p.id}</option>)}
-            </select>
-          </div>
+          <GrupoYAsignado grupos={grupos.map((g) => ({ id: g.id, nombre: g.nombre }))} miembrosPorGrupo={miembrosPorGrupo} esAdmin={esAdmin} grupoInicial={searchParams.grupo} />
         </div>
         <CapturarUbicacion />
         <p className="muted" style={{ fontSize: '.85rem' }}>
           Si dejas <strong>Sin asignar</strong>, la tarea queda <strong>abierta</strong> y cualquier
-          voluntario podrá tomarla (libre elección).
+          miembro del grupo podrá tomarla. Solo se puede asignar a <strong>personas del grupo</strong>.
         </p>
         <BotonEnviar cargando="Creando…">Crear tarea</BotonEnviar>
       </form>

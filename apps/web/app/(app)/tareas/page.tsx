@@ -154,6 +154,14 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
       const liderId = (dt as any).grupos?.lider_id;
       drawerEsGestorTarea = esCoordinacion(perfil) || liderId === user!.id;
       drawerPuedeEditar = drawerEsGestorTarea || dt.asignado_a === user!.id || dt.creado_por === user!.id;
+      // Reasignación acotada al propio grupo (paridad con el trigger 0101).
+      if ((dt as any).grupo_id) {
+        const { data: mg } = await supabase.from('miembros_grupo').select('perfil_id, perfiles(nombre_completo)').eq('grupo_id', (dt as any).grupo_id);
+        drawerPerfiles = (mg ?? []).map((m: any) => ({ id: m.perfil_id, nombre_completo: m.perfiles?.nombre_completo }));
+        if (dt.asignado_a && !drawerPerfiles.some((p: any) => p.id === dt.asignado_a)) {
+          drawerPerfiles.unshift({ id: dt.asignado_a, nombre_completo: (dt as any).asignado?.nombre_completo });
+        }
+      }
     }
   }
 
