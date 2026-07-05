@@ -330,4 +330,21 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 18: coordinación NO puede otorgar un rol del área psicosocial (0075/0104) =='
+begin;
+  update public.perfiles set rol = 'coordinador', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    begin
+      update public.perfiles set roles_extra = '{apoyo_psicosocial}' where id = v_uid;
+      raise exception 'FALLO: un coordinador se concedió un rol del área psicosocial';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
