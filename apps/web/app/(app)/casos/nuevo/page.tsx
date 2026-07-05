@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
-import { CATEGORIAS_CASO } from '@/lib/constantes';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
+import CategoriaConNna from './CategoriaConNna';
 import AvisoEnlace from '@/components/AvisoEnlace';
 import Consejo from '@/components/Consejos';
 import BotonEnviar from '@/components/BotonEnviar';
@@ -31,12 +31,7 @@ export default async function NuevoCasoPage() {
           <textarea id="descripcion" name="descripcion" className="input" rows={3} />
         </div>
         <div className="grid grid-2">
-          <div className="campo">
-            <label htmlFor="categoria">Categoría</label>
-            <select id="categoria" name="categoria" className="input" defaultValue={CATEGORIAS_CASO[1]}>
-              {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+          <CategoriaConNna />
           <div className="campo">
             <label htmlFor="fecha_publicacion">Fecha de publicación</label>
             <input id="fecha_publicacion" name="fecha_publicacion" className="input" type="date" />
