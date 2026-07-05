@@ -65,6 +65,9 @@ export async function crearCaso(formData: FormData) {
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     estado: 'en_proceso',
     creado_por: user.id,
+    // Pista para el Grupo de Búsqueda: solo aplica a «Desaparecidos». Si se marca,
+    // el disparador (0098) crea la ficha ya clasificada como NNA → va al Buscador NNA.
+    es_nna: txt(formData.get('es_nna')) === 'on',
   }).select('id').single();
   if (error) throw new Error('No se pudo crear el caso: ' + error.message);
   const casoId = data!.id as string;

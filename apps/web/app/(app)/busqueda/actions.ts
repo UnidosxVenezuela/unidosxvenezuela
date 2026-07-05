@@ -30,30 +30,9 @@ async function exigirBusqueda() {
 // en la Fase 3 mediante funciones SECURITY DEFINER con la puerta del mando.
 const ESTADOS_OPERATIVOS = ['activo', 'en_revision', 'coincidencia_pendiente'];
 
-// ── Intake atómico: crea el caso Desaparecido + su ficha en una transacción ──
-export async function crearCasoBusqueda(formData: FormData) {
-  const { supabase } = await exigirBusqueda();
-  const nombre = txt(formData.get('titulo'));
-  if (!nombre) redirigirError('/busqueda/nuevo', 'El nombre de la persona es obligatorio.');
-  const edad = num(formData.get('edad'));
-  if (edad !== null && (edad < 0 || edad > 130)) redirigirError('/busqueda/nuevo', 'La edad no es válida.');
-
-  const { data, error } = await supabase.rpc('crear_caso_busqueda', {
-    p_titulo: nombre,
-    p_descripcion: opt(formData.get('descripcion')),
-    p_edad: edad,
-    p_sexo: opt(formData.get('sexo')),
-    p_ultima_ubicacion: opt(formData.get('ultima_ubicacion')),
-    p_es_nna: txt(formData.get('es_nna')) === 'on',
-    p_reporta_nombre: opt(formData.get('reporta_nombre')),
-    p_reporta_telefono: opt(formData.get('reporta_telefono')),
-    p_fuente: opt(formData.get('fuente')),
-    p_situacion: opt(formData.get('situacion')),
-  });
-  if (error) redirigirError('/busqueda/nuevo', 'No se pudo registrar el caso: ' + error.message);
-  revalidatePath('/busqueda');
-  redirigirOk('/busqueda/' + (data as string), 'Caso de búsqueda registrado');
-}
+// NOTA: el equipo de Búsqueda NO crea casos. Los casos llegan de Recopilación:
+// cuando marcan un caso con categoría «Desaparecidos», un disparador crea su ficha
+// y aparece en este tablero (migración 0098). Por eso ya no hay intake aquí.
 
 // «Tomar» el caso para trabajarlo (se lo asigna a sí mismo). Va por una RPC DEFINER
 // que impide que un buscador general tome un caso de menor (y viceversa): la

@@ -43,7 +43,7 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
     <AnimarEntrada>
       <RealtimeRefrescar tabla="busqueda_casos" />
       <Consejo id="busqueda" titulo="Grupo de Búsqueda · Personas desaparecidas">
-        Cada tarjeta es una persona reportada como <strong>desaparecida</strong>. Trabaja el caso, verifícalo contra las <strong>fuentes</strong> y, si hay coincidencia, márcala como <strong>pendiente</strong> para que el <strong>mando</strong> la apruebe. Con <strong>menores (NNA)</strong> la confirmación nunca se da directo: se deriva a la autoridad.
+        Los casos llegan de <strong>Recopilación</strong>: cuando marcan un reporte como <strong>desaparecido</strong>, aparece aquí. <strong>Toma</strong> el caso, verifícalo contra las <strong>fuentes</strong> y, si hay coincidencia, márcala como <strong>pendiente</strong> para que el <strong>Enlace</strong> la gestione y el <strong>mando</strong> confirme el cierre. Con <strong>menores (NNA)</strong> la confirmación nunca se da directo: se deriva a la autoridad.
       </Consejo>
       <div className="pagina-cab">
         <div>
@@ -57,7 +57,6 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
         <div className="fila">
           <BotonActualizar />
           <Link className="btn" href="/busqueda/recursos"><Icono nombre="ayuda" size={16} /> Recursos</Link>
-          <Link className="btn btn-primario" href="/busqueda/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>
         </div>
       </div>
 
@@ -82,8 +81,7 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
         <EstadoVacio
           icono="usuario"
           titulo={soloMias ? 'No tienes casos asignados' : vencidas ? 'Nada por revisar' : 'Aún no hay casos'}
-          texto={soloMias ? 'Cuando tomes un caso, aparecerá aquí.' : vencidas ? 'Ningún caso activo tiene su revisión vencida.' : 'Registra el primer caso de persona desaparecida.'}
-          accion={soloMias || vencidas ? undefined : { href: '/busqueda/nuevo', etiqueta: 'Nuevo caso' }}
+          texto={soloMias ? 'Cuando tomes un caso, aparecerá aquí.' : vencidas ? 'Ningún caso activo tiene su revisión vencida.' : 'Los casos de personas desaparecidas llegan de Recopilación. Cuando marquen un reporte como «Desaparecidos», aparecerá aquí para tomarlo.'}
         />
       ) : (
         <div className="tablero-insumos">
