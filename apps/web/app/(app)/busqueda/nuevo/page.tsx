@@ -9,15 +9,23 @@ export default async function NuevoCasoBusquedaPage() {
   const g = await guardBusqueda();
   if (!g.identidadOk) return <PanelVerificacion />;
 
+  // Tipo de caso según el rol: el Buscador NNA registra SOLO menores; el buscador
+  // general SOLO adultos; el admin/mando (o roles mixtos) elige. La RLS/RPC lo exige.
+  const soloNna = g.esBuscadorNna && !g.esBuscadorGeneral && !g.esAdmin;
+  const soloAdulto = g.esBuscadorGeneral && !g.esBuscadorNna && !g.esAdmin;
+  const eligeTipo = !soloNna && !soloAdulto;
+
   return (
     <div>
       <Link href="/busqueda" className="muted">← Desaparecidos</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
-          <h1>Nuevo caso de persona desaparecida</h1>
+          <h1>{soloNna ? 'Nuevo caso de menor (NNA)' : 'Nuevo caso de persona desaparecida'}</h1>
           <p className="muted sub" style={{ maxWidth: 560 }}>
             Registra los datos del intake. El caso entra como <strong>Desaparecido</strong> y arranca
-            en estado <strong>Activo</strong> para trabajarlo. Marca <strong>NNA</strong> si es menor de edad.
+            en estado <strong>Activo</strong> para trabajarlo.
+            {soloNna && <> Se registra como <strong>menor de edad (NNA)</strong>, con reglas especiales de protección.</>}
+            {eligeTipo && <> Marca <strong>NNA</strong> si es menor de edad.</>}
           </p>
         </div>
       </div>
@@ -49,10 +57,23 @@ export default async function NuevoCasoBusquedaPage() {
           <textarea id="descripcion" name="descripcion" className="input" rows={4} placeholder="Vestimenta, contextura, circunstancias de la desaparición, datos que ayuden a identificarla…" />
         </div>
 
-        <label className="fila" style={{ gap: 8, alignItems: 'center', margin: '4px 0 12px', cursor: 'pointer' }}>
-          <input type="checkbox" name="es_nna" />
-          <span><strong>Es menor de edad (NNA)</strong> — se aplican reglas especiales de protección.</span>
-        </label>
+        {soloNna && <input type="hidden" name="es_nna" value="on" />}
+        {eligeTipo && (
+          <label className="fila" style={{ gap: 8, alignItems: 'center', margin: '4px 0 12px', cursor: 'pointer' }}>
+            <input type="checkbox" name="es_nna" />
+            <span><strong>Es menor de edad (NNA)</strong> — lo atiende el equipo NNA y se aplican reglas especiales de protección.</span>
+          </label>
+        )}
+        {soloNna && (
+          <p className="fila" style={{ gap: 8, alignItems: 'center', margin: '4px 0 12px', fontSize: '.85rem' }}>
+            <Icono nombre="usuario" size={16} /> <span>Este caso se registra como <strong>menor de edad (NNA)</strong>.</span>
+          </p>
+        )}
+        {soloAdulto && (
+          <p className="muted" style={{ margin: '4px 0 12px', fontSize: '.85rem' }}>
+            Los casos de <strong>menores (NNA)</strong> los registra el equipo de Buscador NNA.
+          </p>
+        )}
 
         <h3 className="aside-titulo" style={{ marginTop: 4 }}><Icono nombre="usuario" size={16} /> Quién reporta</h3>
         <div className="grid grid-2">

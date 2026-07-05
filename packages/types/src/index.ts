@@ -12,7 +12,8 @@ export type Rol =
   | 'verificador'             // Revisa y aprueba casos sensibles (módulo de verificación)
   // Pipeline de contenido (grupos exclusivos por rol)
   | 'recopilacion'            // Envía información/casos para verificar (no verifica)
-  | 'busqueda'                // Verifica casos de personas desaparecidas (Grupo de Búsqueda)
+  | 'busqueda'                // Verifica casos de personas desaparecidas ADULTAS (Grupo de Búsqueda)
+  | 'buscador_nna'            // Buscador NNA: atiende SOLO los casos de menores de edad
   | 'enlace_contacto'         // Enlace de contacto: llama a la familia tras aprobar la coincidencia
   | 'digitalizador'           // Digitaliza listados de personas (Grupo de Digitalización)
   | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
