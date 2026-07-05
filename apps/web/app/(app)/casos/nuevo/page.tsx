@@ -1,15 +1,41 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { createClient } from '@/lib/supabase/server';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
 import CamposCaso from './CamposCaso';
 import Consejo from '@/components/Consejos';
+import Icono from '@/components/Icono';
 import BotonEnviar from '@/components/BotonEnviar';
 
 export default async function NuevoCasoPage() {
-  const { perfil } = await requireUsuario();
+  const { user, perfil } = await requireUsuario();
   if (!esAdministrador(perfil) && !rolesDe(perfil).includes('recopilacion')) redirect('/casos');
+
+  // Reportar casos exige la 2ª verificación de identidad aprobada (salvo admin): la RLS
+  // lo impone. Mostramos un aviso claro en vez de dejar que el guardado falle con un
+  // error críptico de la base de datos.
+  if (!esAdministrador(perfil)) {
+    const supabase = await createClient();
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') {
+      const enRevision = (vi as any)?.estado === 'pendiente';
+      return (
+        <div style={{ maxWidth: 640 }}>
+          <Link href="/casos" className="muted">← Casos</Link>
+          <div className="tarjeta" style={{ marginTop: 8 }}>
+            <h1 className="fila" style={{ gap: 8 }}><Icono nombre="llave" size={22} /> Completa tu verificación de identidad</h1>
+            <p className="muted" style={{ marginTop: 4 }}>
+              Para <strong>reportar casos</strong> necesitas tu <strong>verificación de identidad</strong> aprobada (una sola vez: selfie + documento).
+              {enRevision ? ' Tu verificación está en revisión; en cuanto la aprueben podrás crear casos.' : ' Cuando la administración la apruebe, podrás crear casos.'}
+            </p>
+            {!enRevision && <Link className="btn btn-primario" href="/verificacion"><Icono nombre="ok" size={16} /> Ir a mi verificación</Link>}
+          </div>
+        </div>
+      );
+    }
+  }
 
   return (
     <div style={{ maxWidth: 640 }}>
