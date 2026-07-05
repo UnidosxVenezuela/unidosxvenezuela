@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SEXOS } from '@/lib/constantes';
+import { SEXOS, SITUACIONES_BUSQUEDA } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonEnviar from '@/components/BotonEnviar';
 import { guardBusqueda, PanelVerificacion } from '../_guard';
@@ -48,9 +48,17 @@ export default async function NuevoCasoBusquedaPage() {
             </select>
           </div>
         </div>
-        <div className="campo">
-          <label htmlFor="ultima_ubicacion">Última ubicación conocida</label>
-          <input id="ultima_ubicacion" name="ultima_ubicacion" className="input" maxLength={200} placeholder="Dónde y cuándo se le vio por última vez" />
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="ultima_ubicacion">Última ubicación conocida</label>
+            <input id="ultima_ubicacion" name="ultima_ubicacion" className="input" maxLength={200} placeholder="Dónde y cuándo se le vio por última vez" />
+          </div>
+          <div className="campo">
+            <label htmlFor="situacion">Situación del caso</label>
+            <select id="situacion" name="situacion" className="input" defaultValue="reportado">
+              {SITUACIONES_BUSQUEDA.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+            </select>
+          </div>
         </div>
         <div className="campo">
           <label htmlFor="descripcion">Descripción / señas</label>

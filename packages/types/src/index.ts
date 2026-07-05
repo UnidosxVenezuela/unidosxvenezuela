@@ -325,6 +325,7 @@ export interface BusquedaCaso {
   sexo: 'm' | 'f' | 'otro' | null;
   edad: number | null;
   ultima_ubicacion: string | null;
+  situacion: string | null;    // reportado | hospitalizado | refugio | fallecido | no_identificado
   es_nna: boolean;             // menor de edad (NNA)
   reporta_nombre: string | null;
   reporta_telefono: string | null;

@@ -274,6 +274,17 @@ export function claseEstadoBusqueda(e: EstadoBusqueda): string {
   if (e === 'encontrado_fallecido' || e === 'derivado_autoridad') return 'critica';
   return ''; // activo / descartado → neutro
 }
+/** Situación del caso de desaparecido (intake). Enruta y prioriza. */
+export const ETIQUETA_SITUACION_BUSQUEDA: Record<string, string> = {
+  reportado: 'Desaparición reportada',
+  hospitalizado: 'Hospitalizado',
+  refugio: 'En refugio / albergue',
+  fallecido: 'Reporte de fallecimiento',
+  no_identificado: 'Persona no identificada',
+};
+export const SITUACIONES_BUSQUEDA: { valor: string; etiqueta: string }[] =
+  Object.entries(ETIQUETA_SITUACION_BUSQUEDA).map(([valor, etiqueta]) => ({ valor, etiqueta }));
+
 /** Sexo de la persona (intake). */
 export const SEXOS: { valor: string; etiqueta: string }[] = [
   { valor: 'm', etiqueta: 'Masculino' }, { valor: 'f', etiqueta: 'Femenino' }, { valor: 'otro', etiqueta: 'Otro' },
