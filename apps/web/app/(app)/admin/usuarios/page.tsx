@@ -139,7 +139,11 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   // administradores; un SUPERADMIN (dueño) además con administradores comunes.
   // Nunca sobre un superadmin (tier dueño) ni sobre la propia cuenta.
   const puedeGestionarCuenta = (p: Perfil) => {
-    if (!esAdmin || p.id === user!.id || p.super_admin) return false;
+    if (p.id === user!.id || p.super_admin) return false;
+    // Admin de área: los usuarios que ve ya están acotados a su área y no son
+    // cuentas protegidas (admin/admin de área/superadmin), así que puede gestionarlos.
+    if (area) return true;
+    if (!esAdmin) return false;
     const objetivoEsAdmin = p.rol === 'admin' || (p.roles_extra ?? []).includes('admin');
     return esSuper || !objetivoEsAdmin;
   };
