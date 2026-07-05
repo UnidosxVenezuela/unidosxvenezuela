@@ -314,6 +314,7 @@ export interface RecursoPsicosocial {
 // descripción viven en casos.titulo / casos.descripcion.
 export type EstadoBusqueda =
   | 'activo' | 'en_revision' | 'coincidencia_pendiente' | 'coincidencia_aprobada'
+  | 'cierre_pendiente'  // el Enlace finalizó; espera la confirmación del mando (3B)
   | 'encontrado_fallecido' | 'reunificado' | 'derivado_autoridad' | 'descartado';
 
 export interface BusquedaCaso {
@@ -337,6 +338,9 @@ export interface BusquedaCaso {
   aprobado_en: string | null;
   contacto_por: string | null;
   contacto_en: string | null;
+  cierre_propuesto: string | null;      // reunificado | descartado | encontrado_fallecido
+  cierre_propuesto_por: string | null;
+  cierre_propuesto_en: string | null;
   creado_en: string;
   actualizado_en: string;
 }

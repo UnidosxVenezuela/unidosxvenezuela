@@ -254,6 +254,7 @@ export const ETIQUETA_ESTADO_BUSQUEDA: Record<EstadoBusqueda, string> = {
   en_revision: 'En revisión',
   coincidencia_pendiente: 'Coincidencia pendiente',
   coincidencia_aprobada: 'Coincidencia aprobada',
+  cierre_pendiente: 'Cierre por confirmar',
   encontrado_fallecido: 'Encontrado sin vida',
   reunificado: 'Reunificado',
   derivado_autoridad: 'Derivado a autoridad',
@@ -261,15 +262,15 @@ export const ETIQUETA_ESTADO_BUSQUEDA: Record<EstadoBusqueda, string> = {
 };
 /** Columnas del tablero, en orden del flujo (las de cierre se agrupan al final). */
 export const ESTADOS_BUSQUEDA: EstadoBusqueda[] = [
-  'activo', 'en_revision', 'coincidencia_pendiente', 'coincidencia_aprobada',
-  'reunificado', 'derivado_autoridad', 'encontrado_fallecido', 'descartado',
+  'activo', 'en_revision', 'coincidencia_pendiente', 'coincidencia_aprobada', 'derivado_autoridad',
+  'cierre_pendiente', 'reunificado', 'encontrado_fallecido', 'descartado',
 ];
 /** Estados de cierre (fin del flujo). */
 export const ESTADOS_BUSQUEDA_CIERRE: EstadoBusqueda[] = ['reunificado', 'derivado_autoridad', 'encontrado_fallecido', 'descartado'];
 export function claseEstadoBusqueda(e: EstadoBusqueda): string {
   if (e === 'reunificado') return 'ok';
   if (e === 'coincidencia_aprobada') return 'info';
-  if (e === 'coincidencia_pendiente' || e === 'en_revision') return 'aviso';
+  if (e === 'coincidencia_pendiente' || e === 'en_revision' || e === 'cierre_pendiente') return 'aviso';
   if (e === 'encontrado_fallecido' || e === 'derivado_autoridad') return 'critica';
   return ''; // activo / descartado → neutro
 }

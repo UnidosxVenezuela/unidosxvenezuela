@@ -12,19 +12,22 @@ import AvisoSegundaVerificacion from '@/components/AvisoSegundaVerificacion';
  */
 export async function guardBusqueda() {
   const { user, perfil } = await requireUsuario();
-  if (!puedeBusqueda(perfil)) redirect('/dashboard');
+  // El Enlace de contacto también entra a /busqueda* (abre y valida los casos en
+  // etapa de coincidencia); la RLS limita lo que ve a esa etapa.
+  if (!puedeBusqueda(perfil) && !puedeEnlace(perfil)) redirect('/dashboard');
   const supabase = await createClient();
   const esAdmin = esAdministrador(perfil);
   // Equipo de menores (NNA) vs buscador general de adultos. El admin y el mando ven
   // ambas colas; el buscador general, solo adultos; el Buscador NNA, solo menores.
   const nna = esBuscadorNna(perfil);
   const general = rolesDe(perfil).includes('busqueda');
+  const enlace = puedeEnlace(perfil);
   let identidadOk = esAdmin;
   if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     identidadOk = (vi as any)?.estado === 'aprobada';
   }
-  return { user: user!, perfil, supabase, esAdmin, identidadOk, esBuscadorNna: nna, esBuscadorGeneral: general };
+  return { user: user!, perfil, supabase, esAdmin, identidadOk, esBuscadorNna: nna, esBuscadorGeneral: general, esEnlace: enlace };
 }
 
 /** Guard de /busqueda/enlace: rol Enlace de contacto (o admin) + 2ª verificación. */
