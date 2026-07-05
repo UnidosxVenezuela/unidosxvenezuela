@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { nombreMostrado } from '@/lib/nombre';
-import { ETIQUETA_ESTADO_BUSQUEDA, ESTADOS_BUSQUEDA, claseEstadoBusqueda } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_BUSQUEDA, ESTADOS_BUSQUEDA, claseEstadoBusqueda, ETIQUETA_SITUACION_BUSQUEDA, SITUACIONES_BUSQUEDA } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -11,10 +11,10 @@ import Consejo from '@/components/Consejos';
 import { guardBusqueda, PanelVerificacion } from './_guard';
 
 const SELECT =
-  'id, caso_id, codigo, estado_busqueda, es_nna, edad, sexo, ultima_ubicacion, proxima_revision, creado_en, ' +
+  'id, caso_id, codigo, estado_busqueda, es_nna, edad, sexo, situacion, ultima_ubicacion, proxima_revision, creado_en, ' +
   'caso:casos!busqueda_casos_caso_id_fkey(titulo, asignado_a, estado, asignado:perfiles!casos_asignado_a_fkey(nombre_completo))';
 
-export default async function BusquedaPage({ searchParams }: { searchParams: { vista?: string } }) {
+export default async function BusquedaPage({ searchParams }: { searchParams: { vista?: string; sit?: string } }) {
   const g = await guardBusqueda();
   if (!g.identidadOk) return <PanelVerificacion />;
   const { supabase, user, esAdmin } = g;
@@ -25,6 +25,7 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
   let fichas = (data ?? []) as any[];
   const soloMias = searchParams.vista === 'mia';
   const vencidas = searchParams.vista === 'revisar';
+  const sit = (searchParams.sit ?? '').trim();
   const ahora = Date.now();
   const esVencida = (f: any) => ['activo', 'en_revision'].includes(f.estado_busqueda) && f.proxima_revision && new Date(f.proxima_revision).getTime() <= ahora;
 
@@ -32,6 +33,8 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
   const totalVencidas = fichas.filter(esVencida).length;
   if (soloMias) fichas = fichas.filter((f) => f.caso?.asignado_a === user.id);
   if (vencidas) fichas = fichas.filter(esVencida);
+  if (sit) fichas = fichas.filter((f) => f.situacion === sit);
+  const vistaHref = soloMias ? '/busqueda?vista=mia' : vencidas ? '/busqueda?vista=revisar' : '/busqueda';
 
   const porEstado = (e: string) => fichas.filter((f) => f.estado_busqueda === e);
   const nnaTotal = fichas.filter((f) => f.es_nna).length;
@@ -58,11 +61,22 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
         </div>
       </div>
 
-      <div className="fila" style={{ marginBottom: 16, gap: 8, flexWrap: 'wrap' }}>
-        <Link href="/busqueda" className={'btn' + (!soloMias && !vencidas ? ' btn-primario' : '')}>Todos</Link>
-        <Link href="/busqueda?vista=mia" className={'btn' + (soloMias ? ' btn-primario' : '')}><Icono nombre="usuario" size={15} /> Mi carga{totalMias > 0 && <span className="insignia" style={{ marginLeft: 6 }}>{totalMias}</span>}</Link>
-        <Link href="/busqueda?vista=revisar" className={'btn' + (vencidas ? ' btn-primario' : '')}><Icono nombre="reloj" size={15} /> Por revisar{totalVencidas > 0 && <span className="insignia" style={{ marginLeft: 6 }}>{totalVencidas}</span>}</Link>
+      <div className="fila" style={{ marginBottom: 12, gap: 8, flexWrap: 'wrap' }}>
+        <Link href={'/busqueda' + (sit ? '?sit=' + sit : '')} className={'btn' + (!soloMias && !vencidas ? ' btn-primario' : '')}>Todos</Link>
+        <Link href={'/busqueda?vista=mia' + (sit ? '&sit=' + sit : '')} className={'btn' + (soloMias ? ' btn-primario' : '')}><Icono nombre="usuario" size={15} /> Mi carga{totalMias > 0 && <span className="insignia" style={{ marginLeft: 6 }}>{totalMias}</span>}</Link>
+        <Link href={'/busqueda?vista=revisar' + (sit ? '&sit=' + sit : '')} className={'btn' + (vencidas ? ' btn-primario' : '')}><Icono nombre="reloj" size={15} /> Por revisar{totalVencidas > 0 && <span className="insignia" style={{ marginLeft: 6 }}>{totalVencidas}</span>}</Link>
       </div>
+      <form method="get" className="fila" style={{ marginBottom: 16, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {soloMias && <input type="hidden" name="vista" value="mia" />}
+        {vencidas && <input type="hidden" name="vista" value="revisar" />}
+        <span className="muted" style={{ fontSize: '.85rem' }}>Situación:</span>
+        <select name="sit" className="input" defaultValue={sit} style={{ width: 'auto' }}>
+          <option value="">Todas</option>
+          {SITUACIONES_BUSQUEDA.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+        </select>
+        <button className="btn" type="submit"><Icono nombre="buscar" size={15} /> Filtrar</button>
+        {sit && <Link className="btn" href={vistaHref}>Limpiar</Link>}
+      </form>
 
       {fichas.length === 0 ? (
         <EstadoVacio
@@ -90,6 +104,9 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
                   <div className="muted" style={{ fontSize: '.82rem' }}>
                     {f.edad != null ? `${f.edad} años` : 'Edad n/d'}{f.ultima_ubicacion ? ` · ${f.ultima_ubicacion}` : ''}
                   </div>
+                  {f.situacion && f.situacion !== 'reportado' && (
+                    <div style={{ marginTop: 4 }}><Pill tono="neutra" punto={false}>{ETIQUETA_SITUACION_BUSQUEDA[f.situacion] ?? f.situacion}</Pill></div>
+                  )}
                   {f.caso?.asignado?.nombre_completo ? (
                     <div className="muted fila" style={{ gap: 4, fontSize: '.8rem', marginTop: 4 }}>
                       <Icono nombre="usuario" size={13} /> {nombreMostrado(f.caso.asignado.nombre_completo, esAdmin)}

@@ -48,6 +48,7 @@ export async function crearCasoBusqueda(formData: FormData) {
     p_reporta_nombre: opt(formData.get('reporta_nombre')),
     p_reporta_telefono: opt(formData.get('reporta_telefono')),
     p_fuente: opt(formData.get('fuente')),
+    p_situacion: opt(formData.get('situacion')),
   });
   if (error) redirigirError('/busqueda/nuevo', 'No se pudo registrar el caso: ' + error.message);
   revalidatePath('/busqueda');
@@ -238,6 +239,7 @@ export async function editarFichaBusqueda(formData: FormData) {
     edad,
     sexo: opt(formData.get('sexo')),
     ultima_ubicacion: opt(formData.get('ultima_ubicacion')),
+    situacion: opt(formData.get('situacion')),
     es_nna: txt(formData.get('es_nna')) === 'on',
     reporta_nombre: opt(formData.get('reporta_nombre')),
     reporta_telefono: opt(formData.get('reporta_telefono')),

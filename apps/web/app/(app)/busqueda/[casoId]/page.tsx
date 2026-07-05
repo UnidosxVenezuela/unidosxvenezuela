@@ -5,6 +5,7 @@ import {
   ETIQUETA_ESTADO_BUSQUEDA, ESTADOS_BUSQUEDA_CIERRE, claseEstadoBusqueda,
   ETIQUETA_SEXO, SEXOS, RESULTADOS_BUSQUEDA, ETIQUETA_RESULTADO_BUSQUEDA,
   claseResultadoBusqueda, TIPOS_CONTACTO_BUSQUEDA, MIN_FUENTES_BUSQUEDA,
+  ETIQUETA_SITUACION_BUSQUEDA, SITUACIONES_BUSQUEDA,
 } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -101,6 +102,7 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
             <div className="grid grid-2">
               <Dato etq="Edad" val={f.edad != null ? `${f.edad} años` : '—'} />
               <Dato etq="Sexo" val={f.sexo ? (ETIQUETA_SEXO[f.sexo] ?? f.sexo) : '—'} />
+              <Dato etq="Situación" val={f.situacion ? (ETIQUETA_SITUACION_BUSQUEDA[f.situacion] ?? f.situacion) : '—'} />
               <Dato etq="Última ubicación" val={f.ultima_ubicacion || '—'} />
               <Dato etq="Fuente que verificó" val={f.fuente_verifico || '—'} />
             </div>
@@ -139,9 +141,18 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
                   </select>
                 </div>
               </div>
-              <div className="campo">
-                <label htmlFor="ultima_ubicacion">Última ubicación</label>
-                <input id="ultima_ubicacion" name="ultima_ubicacion" className="input" defaultValue={f.ultima_ubicacion ?? ''} maxLength={200} />
+              <div className="grid grid-2">
+                <div className="campo">
+                  <label htmlFor="ultima_ubicacion">Última ubicación</label>
+                  <input id="ultima_ubicacion" name="ultima_ubicacion" className="input" defaultValue={f.ultima_ubicacion ?? ''} maxLength={200} />
+                </div>
+                <div className="campo">
+                  <label htmlFor="situacion">Situación</label>
+                  <select id="situacion" name="situacion" className="input" defaultValue={f.situacion ?? ''}>
+                    <option value="">Sin especificar</option>
+                    {SITUACIONES_BUSQUEDA.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="grid grid-2">
                 <div className="campo">
