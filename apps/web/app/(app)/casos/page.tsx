@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -29,7 +29,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const rolesU = rolesDe(perfil);
   const puedeVerif = puedeVerificar(perfil);              // Verificación → «Otras informaciones»
   const accesoBusqueda = puedeBusqueda(perfil);           // Búsqueda → «Desaparecidos» (incluye admin)
-  if (!puedeRecopilar(perfil) && !accesoBusqueda) redirect('/dashboard');
+  // El Admin de Verificaciones entra como SUPERVISOR (solo lectura; la RLS decide qué
+  // ve y bloquea toda escritura). No necesita 2ª verificación.
+  const supervisa = esAdminVerificacion(perfil);
+  if (!puedeRecopilar(perfil) && !accesoBusqueda && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
 
   // 2ª verificación obligatoria para Recopilación y Búsqueda (Verificación y admin

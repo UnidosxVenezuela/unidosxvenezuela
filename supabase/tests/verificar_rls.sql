@@ -347,4 +347,44 @@ begin;
   end $$;
 rollback;
 
+-- ══ Supervisión por área (0105) ══
+
+\echo '== Test 19: Admin de Verificaciones LEE casos/fichas (incl. Desaparecidos) sin poder mutar =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_av_desap', 'en_proceso', 'Desaparecidos', null);
+  update public.perfiles set rol = 'admin_verificacion', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_caso int; n_ficha int; n_upd int;
+  begin
+    select count(*) into n_caso from public.casos where titulo = '_TEST_av_desap';
+    if n_caso <> 1 then raise exception 'FALLO: admin_verificacion no ve un caso de Desaparecidos (n=%)', n_caso; end if;
+    select count(*) into n_ficha from public.busqueda_casos b
+      join public.casos c on c.id = b.caso_id where c.titulo = '_TEST_av_desap';
+    if n_ficha <> 1 then raise exception 'FALLO: admin_verificacion no ve la ficha de búsqueda (n=%)', n_ficha; end if;
+    -- Solo lectura: NO puede mutar el caso (la RLS de escritura no lo incluye).
+    update public.casos set notas = 'hack' where titulo = '_TEST_av_desap';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 0 then raise exception 'FALLO: admin_verificacion mutó un caso (debe ser solo lectura)'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 20: Admin de Redes LEE contenido pero NO ve casos de Desaparecidos =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_ar_desap', 'en_proceso', 'Desaparecidos', null);
+  insert into public.piezas_contenido (titulo, etapa) values ('_TEST_ar_pieza', 'redaccion');
+  update public.perfiles set rol = 'admin_redes', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_pieza int; n_desap int;
+  begin
+    select count(*) into n_pieza from public.piezas_contenido where titulo = '_TEST_ar_pieza';
+    if n_pieza <> 1 then raise exception 'FALLO: admin_redes no ve una pieza de contenido (n=%)', n_pieza; end if;
+    select count(*) into n_desap from public.casos where titulo = '_TEST_ar_desap';
+    if n_desap <> 0 then raise exception 'FALLO: admin_redes ve un caso de Desaparecidos (n=%)', n_desap; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
