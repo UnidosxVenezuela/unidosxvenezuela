@@ -10,19 +10,29 @@ import { crearFuente, eliminarFuente } from '../actions';
 // Guiones y reglas del manual del Grupo de Búsqueda.
 const GUIONES: { titulo: string; icono: string; puntos: string[] }[] = [
   {
-    titulo: 'Primer contacto con quien reporta', icono: 'whatsapp',
+    titulo: 'Primer contacto con quien reporta (buscador)', icono: 'whatsapp',
     puntos: [
       'Preséntate con calma y confirma que eres del equipo de búsqueda.',
-      'Pide datos concretos: nombre completo, edad, última ubicación y hora, vestimenta y señas.',
-      'No prometas resultados ni des información no verificada. Anota todo en la bitácora.',
+      'Aclara de inmediato que AÚN NO tienes información sobre el paradero ni la salud de la persona (Regla de Oro): evita que se interprete como un hallazgo.',
+      'Pide datos concretos: nombre completo, cédula, edad, última ubicación y hora, vestimenta y señas.',
+      'No prometas resultados ni des información sin verificar. Anota todo en la bitácora.',
     ],
   },
   {
-    titulo: 'Confirmación de una coincidencia', icono: 'ok',
+    titulo: 'Verificación cruzada (buscador)', icono: 'ok',
     puntos: [
-      'Nunca informes a la familia hasta que el mando apruebe la coincidencia.',
-      'Verifica contra al menos 3 fuentes antes de escalar.',
-      'La llamada de confirmación la realiza el Enlace de contacto tras la aprobación.',
+      'Verifica el caso contra al menos 3 fuentes antes de escalar.',
+      'Registra cada consulta en la bitácora (fuente + resultado).',
+      'Si hallas una coincidencia sólida, márcala PENDIENTE. No contactes a la familia.',
+    ],
+  },
+  {
+    titulo: 'Aprobación y llamada (Enlace de contacto)', icono: 'llave',
+    puntos: [
+      'Revisa la coincidencia pendiente y valida el trabajo del buscador (bitácora y fuentes).',
+      'Si procede, APRUEBA la coincidencia. Adulto → haz la llamada de confirmación. Menor → deriva a la autoridad.',
+      'En la llamada aplica el protocolo SPIKES (abajo) y la Regla de Oro. Registra el resultado.',
+      'Al finalizar, el caso pasa al MANDO para la confirmación final del cierre.',
     ],
   },
   {
@@ -36,10 +46,27 @@ const GUIONES: { titulo: string; icono: string; puntos: string[] }[] = [
 ];
 
 const ERRORES = [
-  'Informar a la familia antes de la aprobación del mando.',
-  'Escalar con una sola fuente sin verificación cruzada.',
+  'Informar a la familia antes de que el Enlace apruebe y confirme la coincidencia.',
+  'Escalar con una sola fuente sin verificación cruzada (≥3 fuentes).',
   'Confirmar la identidad de un menor sin derivar a la autoridad.',
+  'Dar por hecho un hallazgo o generar falsas esperanzas en la llamada.',
   'No registrar las gestiones en la bitácora (se pierde la trazabilidad).',
+];
+
+// Material del Enlace de contacto: principios de comunicación + protocolo SPIKES.
+const PRINCIPIOS_ENLACE: { t: string; d: string }[] = [
+  { t: 'Precisión técnica', d: 'Identifica los vacíos críticos (cédula, rasgos físicos, vestimenta) y verifica la identidad cruzando fuentes. Transforma reportes preliminares en datos exactos y verificados.' },
+  { t: 'Manejo de expectativas — Regla de Oro', d: 'Aclara de entrada que NO posees información sobre el paradero o la salud de la persona buscada. Así la llamada no se interpreta como una notificación de hallazgo y proteges la estabilidad emocional de la familia.' },
+  { t: 'Ética y empatía', d: 'Equilibra la agilidad con un trato humano: evita la revictimización y las falsas esperanzas, y actúa siempre con el consentimiento explícito del familiar.' },
+];
+
+const SPIKES: { s: string; t: string; hacer: string; no: string }[] = [
+  { s: 'S', t: 'Sitio', hacer: 'Un momento tranquilo y sin interrupciones. Pregunta si desea estar acompañado y mantén el contacto (visual o de voz).', no: 'Interrumpir.' },
+  { s: 'P', t: 'Percepción', hacer: 'Con preguntas abiertas, averigua qué sabe y qué espera. Corrige expectativas poco realistas.', no: 'Asumir lo que ya sabe.' },
+  { s: 'I', t: 'Invitación', hacer: 'Invítalo a decir cuánta información desea recibir. Si no quiere detalles, ofrécete a responder dudas.', no: 'Informar sin preguntar.' },
+  { s: 'K', t: 'Conocimiento', hacer: 'Da la información con una frase introductoria («Lamento tener que decirle…»); usa sus propias palabras.', no: 'Usar tecnicismos.' },
+  { s: 'E', t: 'Emociones', hacer: 'Permite y acompaña las emociones (tristeza, enojo, negación). Responde con empatía y tolera los silencios.', no: 'Destruir la esperanza.' },
+  { s: 'S', t: 'Sintetizar', hacer: 'Resume lo importante, acuerda los próximos pasos, responde dudas y agenda el próximo contacto.', no: 'Ignorar o cortar en seco.' },
 ];
 
 export default async function RecursosBusquedaPage() {
@@ -123,6 +150,38 @@ export default async function RecursosBusquedaPage() {
         <ul style={{ margin: '8px 0 0', paddingLeft: 18 }}>
           {ERRORES.map((e, i) => <li key={i} style={{ marginBottom: 4 }}>{e}</li>)}
         </ul>
+      </div>
+
+      <h2 className="fila" style={{ gap: 6, marginTop: 24 }}><Icono nombre="llave" size={20} /> Enlace de contacto: comunicar con la familia</h2>
+      <p className="muted" style={{ fontSize: '.85rem', marginTop: -6 }}>
+        Protocolo de la llamada de confirmación. El Enlace transforma reportes en datos verificados y comunica con precisión, cuidando la estabilidad emocional de la familia.
+      </p>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+        {PRINCIPIOS_ENLACE.map((p) => (
+          <div key={p.t} className="tarjeta">
+            <strong>{p.t}</strong>
+            <p className="muted" style={{ fontSize: '.85rem', margin: '6px 0 0' }}>{p.d}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="tarjeta" style={{ marginTop: 12 }}>
+        <strong className="fila" style={{ gap: 6 }}><Icono nombre="whatsapp" size={18} /> Protocolo SPIKES para comunicar malas noticias</strong>
+        <p className="muted" style={{ fontSize: '.8rem', margin: '4px 0 10px' }}>
+          Seis pasos para dar noticias difíciles con empatía. Aplícalo junto a la Regla de Oro.
+        </p>
+        <div style={{ display: 'grid', gap: 8 }}>
+          {SPIKES.map((k, i) => (
+            <div key={i} className="fila" style={{ gap: 10, alignItems: 'flex-start' }}>
+              <span aria-hidden style={{ flex: '0 0 auto', width: 30, height: 30, borderRadius: 8, background: '#eff6ff', color: '#1d4ed8', fontWeight: 700, display: 'grid', placeItems: 'center' }}>{k.s}</span>
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '.9rem' }}>{k.t}</strong>
+                <p style={{ fontSize: '.85rem', margin: '2px 0 0' }}>{k.hacer}</p>
+                <p className="muted" style={{ fontSize: '.8rem', margin: '2px 0 0' }}><strong>Evita:</strong> {k.no}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
