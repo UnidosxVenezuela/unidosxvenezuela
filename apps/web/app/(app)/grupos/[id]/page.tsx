@@ -59,6 +59,23 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const reuniones = (reunionesRaw ?? []) as any[];
   const fijados = (fijadosRaw ?? []) as any[];
   const baneados = (baneadosRaw ?? []) as any[];
+
+  // El LÍDER debe figurar SIEMPRE en la lista de miembros, aunque no tenga fila en
+  // `miembros_grupo` (p. ej. líderes históricos o asignados fuera del flujo). Si falta,
+  // se trae su perfil y se añade. Luego se ordena: líder → coordinadores → el resto.
+  let miembrosMostrar = miembros;
+  if (grupo.lider_id && !miembros.some((m) => m.perfil_id === grupo.lider_id)) {
+    const { data: lp } = await supabase.from('perfiles')
+      .select('nombre_completo, rol, avatar_url, roles_extra').eq('id', grupo.lider_id).maybeSingle();
+    if (lp) miembrosMostrar = [...miembros, { perfil_id: grupo.lider_id, rol_en_grupo: 'lider', perfiles: lp }];
+  }
+  const rangoMiembro = (m: any) =>
+    (grupo.lider_id === m.perfil_id || m.rol_en_grupo === 'lider') ? 0
+      : m.rol_en_grupo === 'coordinador' ? 1 : 2;
+  miembrosMostrar = [...miembrosMostrar].sort((a, b) =>
+    rangoMiembro(a) - rangoMiembro(b) ||
+    (a.perfiles?.nombre_completo ?? '').localeCompare(b.perfiles?.nombre_completo ?? '', 'es'));
+  const ETIQUETA_ROL_GRUPO: Record<string, string> = { lider: 'Líder', coordinador: 'Coordinador', miembro: 'Miembro' };
   // Solo pendientes por completar, ordenadas por prioridad (crítica primero).
   const tareas = ((tareasRaw ?? []) as any[])
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
@@ -314,14 +331,14 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
           {/* Miembros */}
           <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
-            <h2 className="fila" style={{ gap: 6, margin: 0 }}><Icono nombre="grupos" size={20} /> Miembros ({miembros.length})</h2>
+            <h2 className="fila" style={{ gap: 6, margin: 0 }}><Icono nombre="grupos" size={20} /> Miembros ({miembrosMostrar.length})</h2>
             {puedeDarAlta && <AltaUsuarioGrupo grupoId={grupoId} rolEtiqueta={ETIQUETA_ROL[rolDelGrupo as Rol] ?? rolDelGrupo} requiereConfirmacion={requiereConfirmacion} requiere2a={rol2a} />}
           </div>
           <div className="tarjeta">
             <div className="tabla-scroll"><table>
               <thead><tr><th>Nombre</th><th>En grupo</th>{mostrarIdentidad && <th>Identidad</th>}{puedeGestionarMiembros && <th></th>}</tr></thead>
               <tbody>
-                {miembros.map((m) => (
+                {miembrosMostrar.map((m) => (
                   <tr key={m.perfil_id}>
                     <td>
                       <span className="celda-persona">
@@ -330,7 +347,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                         {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
                       </span>
                     </td>
-                    <td>{m.rol_en_grupo}</td>
+                    <td>{ETIQUETA_ROL_GRUPO[m.rol_en_grupo] ?? m.rol_en_grupo}</td>
                     {mostrarIdentidad && <td>{pillIdentidad(identidadPorMiembro.get(m.perfil_id))}</td>}
                     {puedeGestionarMiembros && (
                       <td className="fila">
@@ -375,7 +392,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     )}
                   </tr>
                 ))}
-                {miembros.length === 0 && <tr><td colSpan={2 + (mostrarIdentidad ? 1 : 0) + (puedeGestionarMiembros ? 1 : 0)} className="muted">Sin miembros todavía.</td></tr>}
+                {miembrosMostrar.length === 0 && <tr><td colSpan={2 + (mostrarIdentidad ? 1 : 0) + (puedeGestionarMiembros ? 1 : 0)} className="muted">Sin miembros todavía.</td></tr>}
               </tbody>
             </table></div>
           </div>
