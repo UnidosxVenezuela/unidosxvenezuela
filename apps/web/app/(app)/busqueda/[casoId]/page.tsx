@@ -14,7 +14,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Consejo from '@/components/Consejos';
 import { hrefSeguro } from '@/lib/constantes';
 import { guardBusqueda, PanelVerificacion } from '../_guard';
-import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda, aprobarCoincidenciaBusqueda, derivarAutoridadBusqueda, actualizarCustodiaNna, reunificarNnaBusqueda, cerrarBusqueda } from '../actions';
+import { tomarCasoBusqueda, cambiarEstadoBusqueda, editarFichaBusqueda, agregarBitacoraBusqueda, eliminarBitacoraBusqueda, aprobarCoincidenciaBusqueda, derivarAutoridadBusqueda, actualizarCustodiaNna, reunificarNnaBusqueda, cerrarBusqueda, registrarContactoBusqueda, confirmarCierreBusqueda } from '../actions';
 
 const SELECT =
   '*, caso:casos!busqueda_casos_caso_id_fkey(id, numero, titulo, descripcion, estado, asignado_a, creado_en, ' +
@@ -42,13 +42,18 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
   );
 
   const cerrado = ESTADOS_BUSQUEDA_CIERRE.includes(f.estado_busqueda);
+  const pendienteConfirmacion = f.estado_busqueda === 'cierre_pendiente';
   const asignadoAmi = f.caso?.asignado_a === user.id;
   const nombre = f.caso?.titulo ?? '—';
 
-  // ¿Puede atender (ver/anotar la bitácora confidencial)? El asignado o el mando.
+  // Roles operativos sobre el caso. El ENLACE realiza los pasos de la coincidencia
+  // (aprobar, llamada, derivar NNA, custodia, reunificar) y propone el cierre; el
+  // MANDO da la segunda confirmación (3B). El asignado/enlace/mando ven la bitácora.
   const { data: esMandoData } = await supabase.rpc('es_mando_busqueda');
   const esMando = esMandoData === true;
-  const puedeAtender = asignadoAmi || esMando;
+  const esEnlace = g.esEnlace;
+  const puedeOperar = esEnlace || esMando;
+  const puedeAtender = asignadoAmi || esMando || esEnlace;
 
   // Bitácora + catálogo de fuentes (solo para quien atiende el caso).
   let bitacora: any[] = [];
@@ -69,7 +74,7 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
     <div>
       <RealtimeRefrescar tabla="busqueda_casos" filtro={'caso_id=eq.' + casoId} />
       <Consejo id="busqueda-detalle" titulo="Cómo trabajar este caso">
-        Verifícalo contra <strong>≥3 fuentes</strong> y regístralo en la <strong>bitácora</strong>. Si hay coincidencia, márcala <strong>pendiente</strong> — <strong>no contactes a la familia</strong>: la aprueba el <strong>mando</strong> y la confirma el <strong>Enlace</strong>. Con <strong>NNA</strong>, se deriva a la autoridad.
+        Verifícalo contra <strong>≥3 fuentes</strong> y regístralo en la <strong>bitácora</strong>. Si hay coincidencia, márcala <strong>pendiente</strong> — <strong>no contactes a la familia</strong>. El <strong>Enlace</strong> valida, <strong>aprueba</strong> y hace la llamada (adulto) o <strong>deriva a la autoridad</strong> (NNA); al finalizar, el <strong>mando</strong> da la <strong>confirmación final</strong>.
       </Consejo>
       <Link href="/busqueda" className="muted">← Desaparecidos</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
@@ -282,24 +287,31 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
                   </form>
                 ))}
                 <p className="muted" style={{ margin: '4px 0 0', fontSize: '.78rem' }}>
-                  La aprobación de coincidencias, la reunificación y el cierre los realiza el <strong>mando</strong> del grupo.
+                  La aprobación de la coincidencia, la llamada, la derivación de NNA y el cierre los realiza el <strong>Enlace de contacto</strong>; el <strong>mando</strong> da la confirmación final.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Mando de Búsqueda: escalamiento + NNA + cierre */}
-          {esMando && !cerrado && (
+          {/* Enlace de contacto: aprobar, llamada (adulto), derivar/reunificar (NNA), cerrar */}
+          {puedeOperar && !pendienteConfirmacion && !cerrado && (
             <div className="tarjeta" style={{ borderColor: '#bfdbfe' }}>
-              <h3 className="aside-titulo"><Icono nombre="llave" size={16} /> Mando de Búsqueda</h3>
+              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> Enlace de contacto</h3>
               {f.estado_busqueda === 'coincidencia_pendiente' && (
                 <form action={aprobarCoincidenciaBusqueda}>
                   <input type="hidden" name="caso_id" value={casoId} />
-                  <BotonConfirmar mensaje={f.es_nna ? '¿Aprobar la coincidencia de este menor? Luego deberás derivarlo a la autoridad.' : '¿Aprobar la coincidencia? Pasará al Enlace de contacto para la llamada.'} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Aprobar coincidencia</BotonConfirmar>
+                  <BotonConfirmar mensaje={f.es_nna ? '¿Aprobar la coincidencia de este menor? Luego lo derivarás a la autoridad.' : '¿Aprobar la coincidencia? Luego harás la llamada de confirmación.'} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Aprobar coincidencia</BotonConfirmar>
                 </form>
               )}
               {f.estado_busqueda === 'coincidencia_aprobada' && !f.es_nna && (
-                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>En cola del <strong>Enlace de contacto</strong> para la llamada de confirmación.</p>
+                <form action={registrarContactoBusqueda}>
+                  <input type="hidden" name="caso_id" value={casoId} />
+                  <div className="campo" style={{ marginTop: 4 }}>
+                    <label htmlFor="resultado">Resultado de la llamada</label>
+                    <input id="resultado" name="resultado" className="input" placeholder="Qué se confirmó con la familia…" maxLength={200} />
+                  </div>
+                  <BotonConfirmar mensaje="¿Registrar la llamada? El caso quedará pendiente de la confirmación final del mando." className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="whatsapp" size={15} /> Registrar llamada</BotonConfirmar>
+                </form>
               )}
               {f.estado_busqueda === 'coincidencia_aprobada' && f.es_nna && (
                 <form action={derivarAutoridadBusqueda}>
@@ -318,13 +330,13 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
                   {f.estado_busqueda === 'derivado_autoridad' && (
                     <form action={reunificarNnaBusqueda} style={{ marginTop: 8 }}>
                       <input type="hidden" name="caso_id" value={casoId} />
-                      <BotonConfirmar mensaje="¿Reunificar al menor? Requiere custodia verificada y autoridad notificada." disabled={!(f.custodia_verificada && f.autoridad_notificada)} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Reunificar menor</BotonConfirmar>
+                      <BotonConfirmar mensaje="¿Reunificar al menor? Requiere custodia verificada y autoridad notificada. Quedará pendiente de la confirmación del mando." disabled={!(f.custodia_verificada && f.autoridad_notificada)} className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="ok" size={15} /> Reunificar menor</BotonConfirmar>
                     </form>
                   )}
                 </>
               )}
               <details style={{ marginTop: 10 }}>
-                <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem' }}>Cerrar el caso…</summary>
+                <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem' }}>Cerrar el caso (descartar / fallecido)…</summary>
                 <form action={cerrarBusqueda} style={{ marginTop: 8 }}>
                   <input type="hidden" name="caso_id" value={casoId} />
                   <select name="estado" className="input" defaultValue="descartado">
@@ -332,11 +344,38 @@ export default async function BusquedaDetallePage({ params }: { params: { casoId
                     <option value="encontrado_fallecido">Encontrado sin vida</option>
                   </select>
                   <input name="nota" className="input" placeholder="Nota de cierre (opcional)" style={{ marginTop: 6 }} maxLength={200} />
-                  <BotonConfirmar mensaje="¿Cerrar el caso con el estado elegido?" className="btn btn-peligro" style={{ width: '100%', marginTop: 8 }}>Cerrar caso</BotonConfirmar>
+                  <BotonConfirmar mensaje="¿Proponer el cierre con el estado elegido? Lo confirmará el mando." className="btn btn-peligro" style={{ width: '100%', marginTop: 8 }}>Proponer cierre</BotonConfirmar>
                 </form>
               </details>
             </div>
           )}
+
+          {/* Mando: segunda confirmación del cierre (decisión 3B) */}
+          {pendienteConfirmacion && (esMando ? (
+            <div className="tarjeta" style={{ borderColor: '#fdba74' }}>
+              <h3 className="aside-titulo"><Icono nombre="llave" size={16} /> Confirmación del mando</h3>
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
+                El Enlace finalizó este caso como <strong>{ETIQUETA_ESTADO_BUSQUEDA[(f.cierre_propuesto ?? '') as keyof typeof ETIQUETA_ESTADO_BUSQUEDA] ?? f.cierre_propuesto ?? 'cerrado'}</strong>. Revisa todo el historial y confirma el cierre real.
+              </p>
+              <form action={confirmarCierreBusqueda}>
+                <input type="hidden" name="caso_id" value={casoId} />
+                <input type="hidden" name="aprobar" value="si" />
+                <input name="nota" className="input" placeholder="Nota de confirmación (opcional)" maxLength={200} />
+                <BotonConfirmar mensaje="¿Confirmar el cierre de este caso? Es la validación final." className="btn btn-primario" style={{ width: '100%', marginTop: 8 }}><Icono nombre="ok" size={15} /> Confirmar cierre</BotonConfirmar>
+              </form>
+              <form action={confirmarCierreBusqueda} style={{ marginTop: 6 }}>
+                <input type="hidden" name="caso_id" value={casoId} />
+                <input type="hidden" name="aprobar" value="no" />
+                <BotonConfirmar mensaje="¿Rechazar el cierre? El caso vuelve a revisión." className="btn" style={{ width: '100%' }}>Rechazar y devolver a revisión</BotonConfirmar>
+              </form>
+            </div>
+          ) : (
+            <div className="tarjeta">
+              <p className="muted fila" style={{ margin: 0, gap: 6, fontSize: '.85rem' }}>
+                <Icono nombre="reloj" size={15} /> Caso finalizado; <strong>pendiente de la confirmación final del mando</strong>.
+              </p>
+            </div>
+          ))}
 
           {/* Enlace a Coincidencias */}
           <div className="tarjeta">

@@ -93,17 +93,17 @@ async function usuarioSupabase() {
   return { supabase, user };
 }
 
-// Mando: aprobar la coincidencia (pendiente → aprobada).
+// Enlace/mando: aprobar la coincidencia (pendiente → aprobada).
 export async function aprobarCoincidenciaBusqueda(formData: FormData) {
   const { supabase } = await usuarioSupabase();
   const casoId = txt(formData.get('caso_id'));
   const { error } = await supabase.rpc('aprobar_coincidencia_busqueda', { p_caso: casoId });
   if (error) redirigirError('/busqueda/' + casoId, 'No se pudo aprobar: ' + error.message);
   revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
-  redirigirOk('/busqueda/' + casoId, 'Coincidencia aprobada. Pasa al Enlace para la llamada.');
+  redirigirOk('/busqueda/' + casoId, 'Coincidencia aprobada. Adulto → llamada; menor → derivar a la autoridad.');
 }
 
-// Mando: derivar un NNA a la autoridad (aprobada → derivado_autoridad).
+// Enlace/mando: derivar un NNA a la autoridad (aprobada → derivado_autoridad).
 export async function derivarAutoridadBusqueda(formData: FormData) {
   const { supabase } = await usuarioSupabase();
   const casoId = txt(formData.get('caso_id'));
@@ -127,17 +127,17 @@ export async function actualizarCustodiaNna(formData: FormData) {
   redirigirOk('/busqueda/' + casoId, 'Custodia/autoridad actualizadas.');
 }
 
-// Mando: reunificar un NNA (derivado_autoridad → reunificado; exige custodia+autoridad).
+// Enlace/mando: reunificar un NNA (derivado_autoridad → cierre pendiente; exige custodia+autoridad).
 export async function reunificarNnaBusqueda(formData: FormData) {
   const { supabase } = await usuarioSupabase();
   const casoId = txt(formData.get('caso_id'));
   const { error } = await supabase.rpc('reunificar_nna_busqueda', { p_caso: casoId });
   if (error) redirigirError('/busqueda/' + casoId, 'No se pudo reunificar: ' + error.message);
-  revalidatePath('/busqueda/' + casoId);
-  redirigirOk('/busqueda/' + casoId, 'Menor reunificado.');
+  revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Reunificación registrada. Espera la confirmación final del mando.');
 }
 
-// Mando: cerrar (descartado / encontrado_fallecido).
+// Enlace/mando: proponer cierre (descartado / encontrado_fallecido) → pendiente de confirmación.
 export async function cerrarBusqueda(formData: FormData) {
   const { supabase } = await usuarioSupabase();
   const casoId = txt(formData.get('caso_id'));
@@ -146,19 +146,32 @@ export async function cerrarBusqueda(formData: FormData) {
   });
   if (error) redirigirError('/busqueda/' + casoId, 'No se pudo cerrar: ' + error.message);
   revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
-  redirigirOk('/busqueda/' + casoId, 'Caso cerrado.');
+  redirigirOk('/busqueda/' + casoId, 'Cierre propuesto. Espera la confirmación final del mando.');
 }
 
-// Enlace: registrar la llamada de confirmación (aprobada → reunificado, NO-NNA).
+// Enlace/mando: registrar la llamada de confirmación (aprobada → cierre pendiente, NO-NNA).
 export async function registrarContactoBusqueda(formData: FormData) {
   const { supabase } = await usuarioSupabase();
   const casoId = txt(formData.get('caso_id'));
   const { error } = await supabase.rpc('registrar_contacto_busqueda', {
     p_caso: casoId, p_resultado: opt(formData.get('resultado')),
   });
-  if (error) redirigirError('/busqueda/enlace', 'No se pudo registrar: ' + error.message);
-  revalidatePath('/busqueda/enlace');
-  redirigirOk('/busqueda/enlace', 'Llamada registrada. Caso reunificado.');
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo registrar: ' + error.message);
+  revalidatePath('/busqueda'); revalidatePath('/busqueda/enlace'); revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, 'Llamada registrada. Espera la confirmación final del mando.');
+}
+
+// Mando: segunda confirmación del cierre (o rechazo) — decisión 3B.
+export async function confirmarCierreBusqueda(formData: FormData) {
+  const { supabase } = await usuarioSupabase();
+  const casoId = txt(formData.get('caso_id'));
+  const aprobar = txt(formData.get('aprobar')) !== 'no';
+  const { error } = await supabase.rpc('confirmar_cierre_busqueda', {
+    p_caso: casoId, p_aprobar: aprobar, p_nota: opt(formData.get('nota')),
+  });
+  if (error) redirigirError('/busqueda/' + casoId, 'No se pudo confirmar: ' + error.message);
+  revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
+  redirigirOk('/busqueda/' + casoId, aprobar ? 'Cierre confirmado.' : 'Cierre rechazado; el caso vuelve a revisión.');
 }
 
 // ── Bitácora confidencial (solo el asignado del caso o el mando) ──

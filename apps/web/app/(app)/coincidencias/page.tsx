@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, puedeBusqueda, puedeEnlace } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_CONDICION } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -18,8 +18,9 @@ const ETIQ_ESTADO: Record<string, string> = { nueva: 'Nueva', confirmada: 'Confi
 export default async function CoincidenciasPage({ searchParams }: { searchParams: { q?: string } }) {
   const { user, perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
-  const esBusq = rolesDe(perfil).includes('busqueda');
-  if (!esAdmin && !esBusq) redirect('/dashboard');
+  const esEnlace = puedeEnlace(perfil);
+  // Buscadores (adultos/NNA) y el Enlace revisan coincidencias; el resto, fuera.
+  if (!esAdmin && !puedeBusqueda(perfil) && !esEnlace) redirect('/dashboard');
   const supabase = await createClient();
 
   if (!esAdmin) {
@@ -41,9 +42,9 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   const { data: filasRaw } = await supabase.rpc('listar_coincidencias');
   const filas = (filasRaw ?? []) as any[];
   const nuevas = filas.filter((c) => c.estado === 'nueva').length;
-  // Solo el MANDO de Búsqueda confirma una coincidencia (0090). El resto descarta.
+  // La confirmación la hace el ENLACE (o el mando) desde 0094. El resto descarta.
   const { data: esMandoData } = await supabase.rpc('es_mando_busqueda');
-  const esMando = esMandoData === true;
+  const puedeConfirmar = esMandoData === true || esEnlace;
 
   // Búsqueda por nombre parcial / cédula entre las personas digitalizadas.
   const q = (searchParams.q ?? '').trim();
@@ -56,7 +57,7 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   return (
     <AnimarEntrada>
       <Consejo id="coincidencias" titulo="Coincidencias con desaparecidos">
-        Cuando una <strong>persona digitalizada</strong> (en un hospital, albergue o acopio) coincide con un caso de <strong>desaparecidos</strong>, aparece aquí. La <strong>confirmación la hace el mando</strong> del grupo; el resto puede <strong>proponer o descartar</strong>. Nunca se informa a la familia sin aprobación. Presta especial atención a los <strong>menores</strong>.
+        Cuando una <strong>persona digitalizada</strong> (en un hospital, albergue o acopio) coincide con un caso de <strong>desaparecidos</strong>, aparece aquí. La <strong>confirmación la hace el Enlace</strong> de contacto (o el mando); el resto puede <strong>proponer o descartar</strong>. Nunca se informa a la familia sin aprobación. Presta especial atención a los <strong>menores</strong>.
       </Consejo>
       <div className="pagina-cab">
         <div>
@@ -127,13 +128,13 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
 
           {c.estado === 'nueva' && (
             <div className="fila" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-              {esMando ? (
+              {puedeConfirmar ? (
                 <form action={confirmarCoincidencia}>
                   <input type="hidden" name="id" value={c.id} />
                   <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={16} /> Confirmar coincidencia</BotonEnviar>
                 </form>
               ) : (
-                <span className="muted" style={{ fontSize: '.82rem' }}>La confirmación la hace el mando del grupo. Puedes proponerla o descartarla.</span>
+                <span className="muted" style={{ fontSize: '.82rem' }}>La confirmación la hace el Enlace de contacto. Puedes proponerla o descartarla.</span>
               )}
               <form action={descartarCoincidencia}>
                 <input type="hidden" name="id" value={c.id} />
