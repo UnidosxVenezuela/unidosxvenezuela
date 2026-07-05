@@ -18,6 +18,8 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
   const g = await guardBusqueda();
   if (!g.identidadOk) return <PanelVerificacion />;
   const { supabase, user, esAdmin } = g;
+  // Vista del equipo de menores (Buscador NNA puro): su tablero es solo de NNA.
+  const vistaNna = g.esBuscadorNna && !g.esBuscadorGeneral && !esAdmin;
 
   const { data } = await supabase.from('busqueda_casos').select(SELECT).order('creado_en', { ascending: false });
   let fichas = (data ?? []) as any[];
@@ -42,8 +44,12 @@ export default async function BusquedaPage({ searchParams }: { searchParams: { v
       </Consejo>
       <div className="pagina-cab">
         <div>
-          <h1 className="fila" style={{ gap: 8 }}><Icono nombre="usuario" size={24} /> Desaparecidos</h1>
-          <p className="muted sub">Casos de personas desaparecidas que gestiona el Grupo de Búsqueda. {nnaTotal > 0 && <><strong>{nnaTotal}</strong> {nnaTotal === 1 ? 'menor (NNA)' : 'menores (NNA)'}.</>}</p>
+          <h1 className="fila" style={{ gap: 8 }}><Icono nombre="usuario" size={24} /> {vistaNna ? 'Desaparecidos · Menores (NNA)' : 'Desaparecidos'}</h1>
+          <p className="muted sub">
+            {vistaNna
+              ? 'Casos de menores desaparecidos que atiende el equipo de Buscador NNA.'
+              : <>Casos de personas desaparecidas que gestiona el Grupo de Búsqueda. {nnaTotal > 0 && <><strong>{nnaTotal}</strong> {nnaTotal === 1 ? 'menor (NNA)' : 'menores (NNA)'}.</>}</>}
+          </p>
         </div>
         <div className="fila">
           <BotonActualizar />

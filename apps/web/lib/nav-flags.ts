@@ -39,7 +39,9 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   // Recopilación y Búsqueda EXIGEN 2ª verificación: sin ella se ocultan Casos y
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
   const esRecopilacion = claves.has('gestion_casos') || roles.includes('recopilacion');
-  const esBusqueda = claves.has('busqueda') || roles.includes('busqueda');
+  // Búsqueda incluye al Buscador NNA (equipo de menores): comparten el módulo /busqueda.
+  const esBusqueda = claves.has('busqueda') || roles.includes('busqueda')
+    || claves.has('busqueda_nna') || roles.includes('buscador_nna');
   const esEnlace = claves.has('enlace_contacto') || roles.includes('enlace_contacto');
   const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
   return {

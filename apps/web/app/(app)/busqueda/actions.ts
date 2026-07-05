@@ -19,7 +19,7 @@ async function exigirBusqueda() {
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.some((r) => r === 'admin' || r === 'busqueda')) {
+  if (!roles.some((r) => r === 'admin' || r === 'busqueda' || r === 'buscador_nna')) {
     throw new Error('No tienes permisos para esta acción.');
   }
   return { supabase, user };
@@ -54,12 +54,13 @@ export async function crearCasoBusqueda(formData: FormData) {
   redirigirOk('/busqueda/' + (data as string), 'Caso de búsqueda registrado');
 }
 
-// «Tomar» el caso para trabajarlo (se lo asigna a sí mismo, en casos.asignado_a).
+// «Tomar» el caso para trabajarlo (se lo asigna a sí mismo). Va por una RPC DEFINER
+// que impide que un buscador general tome un caso de menor (y viceversa): la
+// separación adultos/NNA la decide el servidor, no la UI.
 export async function tomarCasoBusqueda(formData: FormData) {
-  const { supabase, user } = await exigirBusqueda();
+  const { supabase } = await exigirBusqueda();
   const casoId = txt(formData.get('caso_id'));
-  const { error } = await supabase.from('casos')
-    .update({ asignado_a: user.id, actualizado_en: new Date().toISOString() }).eq('id', casoId);
+  const { error } = await supabase.rpc('tomar_caso_busqueda', { p_caso: casoId });
   if (error) redirigirError('/busqueda/' + casoId, 'No se pudo tomar el caso: ' + error.message);
   revalidatePath('/busqueda'); revalidatePath('/busqueda/' + casoId);
   redirigirOk('/busqueda/' + casoId, 'Tomaste el caso');

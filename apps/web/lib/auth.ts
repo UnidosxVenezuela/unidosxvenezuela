@@ -91,10 +91,16 @@ export function puedeRecopilar(e?: EntradaRoles) {
 }
 
 // Grupo de Búsqueda: verifica los casos de personas DESAPARECIDAS (los casos
-// «Otras informaciones» quedan para Verificación). La RLS aplica la frontera por
-// categoría y exige 2ª verificación (identidad aprobada) para este rol.
+// «Otras informaciones» quedan para Verificación). Incluye al Buscador NNA, que
+// atiende solo menores (la RLS separa las colas: adultos vs menores). La RLS aplica
+// la frontera por categoría y exige 2ª verificación (identidad aprobada).
 export function puedeBusqueda(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'busqueda']);
+  return tieneAlguno(e, ['admin', 'busqueda', 'buscador_nna']);
+}
+
+// ¿Es Buscador NNA? (atiende exclusivamente casos de menores de edad).
+export function esBuscadorNna(e?: EntradaRoles) {
+  return tieneAlguno(e, ['buscador_nna']);
 }
 
 // Enlace de contacto: tras aprobar una coincidencia, llama a la familia y cierra el
@@ -113,7 +119,7 @@ export function puedeDigitalizar(e?: EntradaRoles) {
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
 // operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
 // para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.
-const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'enlace_contacto', 'digitalizador'];
+const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'];
 export function necesitaSegundaVerificacion(e?: EntradaRoles) {
   return !esAdministrador(e) && tieneAlguno(e, ROLES_2A);
 }
