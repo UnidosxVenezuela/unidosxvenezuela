@@ -98,14 +98,18 @@ export function esAdminVerificacion(e?: EntradaRoles) {
 export function esAdminRedes(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin_redes']);
 }
-/** ¿Es administrador de alguna área (Verificaciones o Redes)? */
+export function esAdminLogistica(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin_logistica']);
+}
+/** ¿Es administrador de alguna área (Verificaciones, Redes o Logística)? */
 export function esAdminArea(e?: EntradaRoles) {
-  return esAdminVerificacion(e) || esAdminRedes(e);
+  return esAdminVerificacion(e) || esAdminRedes(e) || esAdminLogistica(e);
 }
 /** Área que administra esta persona (o null si no es admin de área). */
 export function areaDeAdmin(e?: EntradaRoles): AreaAdmin | null {
   if (esAdminVerificacion(e)) return 'verificacion';
   if (esAdminRedes(e)) return 'redes';
+  if (esAdminLogistica(e)) return 'logistica';
   return null;
 }
 
@@ -175,9 +179,10 @@ export function puedePipeline(e?: EntradaRoles) {
   return tieneAlguno(e, PIPELINE);
 }
 
-// Módulo de insumos / logística: coordinación o rol logística gestiona el flujo.
+// Módulo de insumos / logística: coordinación, rol logística o el admin del área
+// Logística y Acopio gestionan el flujo.
 export function puedeLogistica(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'logistica']);
+  return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']);
 }
 
 // Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige

@@ -54,6 +54,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   // operativas de su área para supervisarlas; no las opera.
   const supVerif = areaAdmin === 'verificacion';
   const supRedes = areaAdmin === 'redes';
+  const supLogistica = areaAdmin === 'logistica';
   return {
     admin,
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
@@ -71,7 +72,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     envioRedaccion: admin || supRedes || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),
-    acopio: admin || claves.has('gestion_acopio') || roles.includes('logistica'),
+    acopio: admin || supLogistica || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
   };

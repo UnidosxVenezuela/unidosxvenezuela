@@ -92,6 +92,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   coordinador_psicosocial: 'Coordinación Psicosocial',
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
+  admin_logistica: 'Administración · Logística y Acopio',
 };
 
 // ── Administración por ÁREA (0103) ──
@@ -102,34 +103,40 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
 //     video, community manager, influencers).
 // El admin general ve y administra TODO; el dueño es superadmin. Un admin de área NO es
 // admin general: solo gestiona su área (sus grupos y las solicitudes de su área).
-export const AREAS_ADMIN: AreaAdmin[] = ['verificacion', 'redes'];
+export const AREAS_ADMIN: AreaAdmin[] = ['verificacion', 'redes', 'logistica'];
 export const ETIQUETA_AREA_ADMIN: Record<AreaAdmin, string> = {
   verificacion: 'Verificaciones',
   redes: 'Redes Sociales',
+  logistica: 'Logística y Acopio',
 };
 /** Rol de administración de cada área. */
 export const ROL_ADMIN_DE_AREA: Record<AreaAdmin, Rol> = {
   verificacion: 'admin_verificacion',
   redes: 'admin_redes',
+  logistica: 'admin_logistica',
 };
 /** Claves de grupo (sistema) que administra cada área. */
 export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
   verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto', 'digitalizacion'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
+  logistica: ['gestion_acopio'],
 };
 /** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
 export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
   verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
+  logistica: ['logistica'],
 };
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
-export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'general'; etiqueta: string; ayuda: string }[] = [
+export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'general'; etiqueta: string; ayuda: string }[] = [
   { valor: 'verificacion', etiqueta: 'Verificación y búsqueda de personas',
     ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA), enlace con familias y digitalización.' },
   { valor: 'redes', etiqueta: 'Redes sociales y contenido',
     ayuda: 'Redacción, diseño gráfico, edición de video, community management e influencers.' },
+  { valor: 'logistica', etiqueta: 'Logística y acopio',
+    ayuda: 'Centros de acopio (inventario, donaciones, traspasos), insumos y respuesta a solicitudes de ayuda con ubicación en el mapa.' },
   { valor: 'general', etiqueta: 'Voluntariado general / otra área',
-    ayuda: 'Logística y acopio, apoyo y otras áreas. La coordinación te ubicará según tu perfil.' },
+    ayuda: 'Apoyo y otras áreas. La coordinación te ubicará según tu perfil.' },
 ];
 
 // ── País desde el que ayuda cada persona (para su zona horaria y planificación) ──
