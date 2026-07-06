@@ -29,7 +29,7 @@ export function ToggleConsejos() {
   return (
     <button type="button" className="btn-consejos" onClick={toggle} aria-pressed={on}
       title={on ? 'Consejos activados — clic para ocultarlos' : 'Consejos desactivados — clic para mostrarlos'}>
-      <span aria-hidden>💡</span> {on ? 'Consejos' : 'Consejos off'}
+      <span aria-hidden>💡</span> <span className="bc-txt">{on ? 'Consejos' : 'Consejos off'}</span>
     </button>
   );
 }

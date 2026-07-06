@@ -83,7 +83,7 @@ export default async function AdminVerificacionesPage() {
             </form>
             <form action={rechazarVerificacion} className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
               <input type="hidden" name="id" value={f.id} />
-              <input name="nota" className="input" placeholder="Motivo (opcional)" style={{ width: 200, minHeight: 36 }} />
+              <input name="nota" className="input" placeholder="Motivo (opcional)" style={{ flex: '1 1 160px', minWidth: 0 }} />
               <BotonConfirmar mensaje="¿Rechazar esta verificación?" className="btn btn-peligro">
                 <Icono nombre="cerrar" size={16} /> Rechazar
               </BotonConfirmar>
