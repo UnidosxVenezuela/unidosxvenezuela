@@ -32,10 +32,12 @@ export default async function CasoDetallePage({ params }: { params: { id: string
     ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
   })));
 
-  const [{ data: perfiles }, { data: historial }] = await Promise.all([
+  const [{ data: perfiles }, { data: historial }, { data: sol }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
       .eq('entidad', 'casos').eq('entidad_id', id).order('creado_en', { ascending: false }).limit(50),
+    // Solicitud de insumo enlazada, si el caso ya fue derivado a Logística (Fase 2).
+    supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', id).maybeSingle(),
   ]);
 
   return (
@@ -45,7 +47,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
-          esAdmin={esAdministrador(perfil)} puedeTomar={verifica} miId={user!.id} />
+          esAdmin={esAdministrador(perfil)} puedeTomar={verifica} miId={user!.id} solicitud={sol} />
       </div>
     </div>
   );
