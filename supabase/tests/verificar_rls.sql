@@ -651,4 +651,48 @@ begin;
   end $$;
 rollback;
 
+-- ══ Cerrar el ciclo: entrega → caso resuelto + centro cercano (0114) ══
+
+\echo '== Test 34: al ENTREGAR la solicitud derivada, el caso queda «resuelto» (0114) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-0000000a3401', '_TEST_cierre', 'Otras informaciones', 'confirmado', true, 10.5, -66.9);
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado, caso_id)
+    values ('00000000-0000-0000-0000-0000000a3402', '_TEST_cierre_sol', 'agua', 'alta', 'en_ruta', '00000000-0000-0000-0000-0000000a3401');
+  update public.solicitudes_insumo set estado = 'entregado' where id = '00000000-0000-0000-0000-0000000a3402';
+  do $$
+  declare e text;
+  begin
+    select estado::text into e from public.casos where id = '00000000-0000-0000-0000-0000000a3401';
+    if e <> 'resuelto' then raise exception 'FALLO: el caso no quedó «resuelto» al entregar (estado=%)', e; end if;
+  end $$;
+rollback;
+
+\echo '== Test 35: centros_cercanos_para_solicitud() prioriza el cercano CON stock, para Logística (0114) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-0000000a3501', '_TEST_cerca', 'Otras informaciones', 'confirmado', true, 10.5, -66.9);
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado, caso_id)
+    values ('00000000-0000-0000-0000-0000000a3502', '_TEST_cerca_sol', 'agua', 'media', 'solicitado', '00000000-0000-0000-0000-0000000a3501');
+  insert into public.puntos_acopio (id, nombre, lat, lng, creado_por)
+    values ('00000000-0000-0000-0000-0000000a3503', 'Centro Cerca', 10.51, -66.91, :'admin');
+  insert into public.puntos_acopio (id, nombre, lat, lng, creado_por)
+    values ('00000000-0000-0000-0000-0000000a3504', 'Centro Lejos', 8.0, -62.0, :'admin');
+  insert into public.inventario_acopio (punto_id, producto, categoria, cantidad)
+    values ('00000000-0000-0000-0000-0000000a3503', 'Agua 5L', 'agua', 100);
+  update public.perfiles set rol = 'logistica', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare primero record; n int;
+  begin
+    select count(*) into n from public.centros_cercanos_para_solicitud('00000000-0000-0000-0000-0000000a3502', 5);
+    if n < 2 then raise exception 'FALLO: no devolvió los centros (n=%)', n; end if;
+    select * into primero from public.centros_cercanos_para_solicitud('00000000-0000-0000-0000-0000000a3502', 5) limit 1;
+    if primero.punto_id <> '00000000-0000-0000-0000-0000000a3503' then
+      raise exception 'FALLO: el primero no es el centro cercano con stock (%)', primero.nombre; end if;
+    if not primero.con_stock then raise exception 'FALLO: el primero debería tener stock'; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
