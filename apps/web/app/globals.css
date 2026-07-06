@@ -35,6 +35,7 @@ body {
   background: var(--fondo);
   line-height: 1.5;
   font-size: 16px;
+  overflow-x: hidden; /* red de seguridad: ningún elemento ancho desplaza la página de lado en móvil */
 }
 a { color: var(--primario); }
 h1 { font-size: 1.55rem; margin: 0 0 .5rem; }
@@ -127,6 +128,20 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
 @media (max-width: 600px) {
   .user-chip { padding: 4px; gap: 0; }
   .user-chip .uc-textos, .user-chip > svg { display: none; }
+  /* La barra superior se compacta: el botón de consejos queda solo con su ícono
+     y los grupos reducen su separación para no apretujarse en teléfonos. */
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .topbar-izq, .topbar-der { gap: 6px; }
+  .btn-consejos .bc-txt { display: none; }
+  .btn-consejos { padding: 6px 8px; gap: 0; }
+  /* Títulos un punto más chicos para que no aprieten en pantallas angostas. */
+  h1 { font-size: 1.32rem; }
+  .contenedor { padding: 16px 14px 40px; }
+}
+/* En teléfonos muy angostos se oculta el nombre de la app en la barra (queda en
+   el menú lateral) para dar aire a los controles de la derecha. */
+@media (max-width: 480px) {
+  .topbar-marca { display: none; }
 }
 
 /* Telón para el cajón móvil */
@@ -193,6 +208,11 @@ a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
    min-height en línea de los botones compactos de tablas y tarjetas. */
 @media (pointer: coarse) {
   .btn, .icono-btn, .btn-consejos, .user-chip { min-height: 44px !important; }
+  /* Los menús emergentes (acciones por fila, menú de usuario) y los filtros/
+     buscadores también deben ser cómodos al tocar, no solo los botones. */
+  .menu-fila a, .menu-fila button, .user-menu a, .user-menu button,
+  .campo-filtro select, .campo-filtro .input, .buscador > .input { min-height: 44px !important; }
+  .chip-hab { min-height: 40px; }
 }
 
 /* Diálogo de confirmación in-app (reemplaza el window.confirm nativo). */
