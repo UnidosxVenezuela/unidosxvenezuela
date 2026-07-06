@@ -24,9 +24,10 @@ export async function guardBusqueda() {
   const nna = esBuscadorNna(perfil);
   const general = rolesDe(perfil).includes('busqueda');
   const enlace = puedeEnlace(perfil);
-  // El supervisor de área no necesita 2ª verificación (opera como un admin acotado).
-  let identidadOk = esAdmin || supervisa;
-  if (!esAdmin && !supervisa) {
+  // El Admin de Verificaciones opera /busqueda como mando de su área, pero EXIGE su 2ª
+  // verificación (identidad) aprobada (el RPC es_mando_busqueda aplica el mismo criterio).
+  let identidadOk = esAdmin;
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     identidadOk = (vi as any)?.estado === 'aprobada';
   }
@@ -40,8 +41,8 @@ export async function guardEnlace() {
   if (!puedeEnlace(perfil) && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
   const esAdmin = esAdministrador(perfil);
-  let identidadOk = esAdmin || supervisa;
-  if (!esAdmin && !supervisa) {
+  let identidadOk = esAdmin;
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     identidadOk = (vi as any)?.estado === 'aprobada';
   }

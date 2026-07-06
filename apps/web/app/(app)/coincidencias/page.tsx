@@ -25,7 +25,7 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
   if (!esAdmin && !supervisa && !puedeBusqueda(perfil) && !esEnlace) redirect('/dashboard');
   const supabase = await createClient();
 
-  if (!esAdmin && !supervisa) {
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       return (

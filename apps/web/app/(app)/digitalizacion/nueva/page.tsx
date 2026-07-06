@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -11,7 +11,8 @@ export default async function NuevaDigitalizacionPage() {
   const esAdmin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
   const esDig = roles.includes('digitalizador');
-  if (!esAdmin && !esDig) redirect('/dashboard');
+  // El Admin de Verificaciones digitaliza en su área (la RLS/acción exigen su 2ª verificación).
+  if (!esAdmin && !esDig && !esAdminVerificacion(perfil)) redirect('/dashboard');
   const supabase = await createClient();
 
   // El digitalizador necesita 2ª verificación aprobada; admin exento.

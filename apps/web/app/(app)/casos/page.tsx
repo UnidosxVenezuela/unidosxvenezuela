@@ -30,18 +30,18 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const puedeVerif = puedeVerificar(perfil);              // Verificación → «Otras informaciones»
   const accesoBusqueda = puedeBusqueda(perfil);           // Búsqueda → «Desaparecidos» (incluye admin)
   // El Admin de Verificaciones entra como SUPERVISOR (solo lectura; la RLS decide qué
-  // ve y bloquea toda escritura). No necesita 2ª verificación.
+  // ve y OPERA su área) — pero, como blindaje, EXIGE su 2ª verificación aprobada.
   const supervisa = esAdminVerificacion(perfil);
   if (!puedeRecopilar(perfil) && !accesoBusqueda && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
 
-  // 2ª verificación obligatoria para Recopilación y Búsqueda (Verificación y admin
-  // quedan exentos). Sin identidad aprobada, se oculta el acceso a Casos.
-  const necesita2a = !esAdmin && !puedeVerif && (rolesU.includes('recopilacion') || rolesU.includes('busqueda'));
+  // 2ª verificación obligatoria para Recopilación, Búsqueda y el Admin de Verificaciones
+  // (Verificación y admin general quedan exentos). Sin identidad aprobada, se oculta Casos.
+  const necesita2a = !esAdmin && !puedeVerif && (rolesU.includes('recopilacion') || rolesU.includes('busqueda') || supervisa);
   // La identidad (2ª verificación) se consulta para cualquier rol de casos no-admin:
   // decide el gate de acceso y también quién ve la herramienta de cédula.
   let identidadOK = esAdmin;
-  if (!esAdmin && (rolesU.includes('recopilacion') || rolesU.includes('busqueda'))) {
+  if (!esAdmin && (rolesU.includes('recopilacion') || rolesU.includes('busqueda') || supervisa)) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     identidadOK = (vi as any)?.estado === 'aprobada';
   }
@@ -58,8 +58,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     );
   }
 
-  const puedeCrear = esAdmin || rolesU.includes('recopilacion');
-  const verifica = puedeVerif || accesoBusqueda;                 // puede cambiar estado / tomar
+  // El Admin de Verificaciones opera casos como el equipo (con su 2ª verificación aprobada).
+  const puedeOperar = supervisa && identidadOK;
+  const puedeCrear = esAdmin || rolesU.includes('recopilacion') || puedeOperar;
+  const verifica = puedeVerif || accesoBusqueda || puedeOperar;  // puede cambiar estado / tomar
   const soloBusqueda = accesoBusqueda && !puedeVerif && !esAdmin; // ve solo Desaparecidos
   const soloVerif = puedeVerif && !accesoBusqueda && !esAdmin;    // ve solo Otras informaciones
   const subAreas = soloBusqueda ? ['Desaparecidos'] : soloVerif ? ['Otras informaciones'] : CATEGORIAS_CASO;
