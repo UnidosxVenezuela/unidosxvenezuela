@@ -14,6 +14,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
+import PresenciaTag from '@/components/PresenciaTag';
 import FijarAnuncio from './FijarAnuncio';
 import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
@@ -47,7 +48,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
-      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra, pais)').eq('grupo_id', grupoId),
+      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra, pais, estado_presencia, ultima_conexion)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
@@ -72,7 +73,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   let miembrosMostrar = miembros;
   if (grupo.lider_id && !miembros.some((m) => m.perfil_id === grupo.lider_id)) {
     const { data: lp } = await supabase.from('perfiles')
-      .select('nombre_completo, rol, avatar_url, roles_extra, pais').eq('id', grupo.lider_id).maybeSingle();
+      .select('nombre_completo, rol, avatar_url, roles_extra, pais, estado_presencia, ultima_conexion').eq('id', grupo.lider_id).maybeSingle();
     if (lp) miembrosMostrar = [...miembros, { perfil_id: grupo.lider_id, rol_en_grupo: 'lider', perfiles: lp }];
   }
   const rangoMiembro = (m: any) =>
@@ -358,6 +359,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                         {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}
                         {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
                       </span>
+                      <div style={{ marginTop: 3 }}><PresenciaTag estado={m.perfiles?.estado_presencia} ultima={m.perfiles?.ultima_conexion} /></div>
                     </td>
                     <td>{ETIQUETA_ROL_GRUPO[m.rol_en_grupo] ?? m.rol_en_grupo}</td>
                     <td>

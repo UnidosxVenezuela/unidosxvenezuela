@@ -6,6 +6,17 @@ import { normalizarWhatsapp } from '@/lib/whatsapp';
 import { subirArchivo } from '@/lib/storage';
 import { PAISES } from '@/lib/constantes';
 
+// Latido de presencia (0117): refresca `ultima_conexion` mientras la pestaña está
+// abierta y, si se pasa, fija el estado elegido (conectado/ocupado). Ligero y silencioso.
+export async function latido(estado?: 'conectado' | 'ocupado') {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const patch: Record<string, unknown> = { ultima_conexion: new Date().toISOString() };
+  if (estado === 'conectado' || estado === 'ocupado') patch.estado_presencia = estado;
+  await supabase.from('perfiles').update(patch).eq('id', user.id);
+}
+
 export async function actualizarPerfil(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

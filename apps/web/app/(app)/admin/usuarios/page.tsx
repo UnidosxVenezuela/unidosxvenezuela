@@ -10,6 +10,7 @@ import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Avatar from '@/components/Avatar';
 import Pill from '@/components/Pill';
+import PresenciaTag from '@/components/PresenciaTag';
 
 export default async function AdminUsuariosPage({ searchParams }: { searchParams: { q?: string; frol?: string; fest?: string } }) {
   const { user, perfil: yo, area } = await requirePanelAdmin();
@@ -17,7 +18,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, estado_presencia, ultima_conexion, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
@@ -295,6 +296,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                     <Avatar nombre={p.nombre_completo} url={p.avatar_url} />
                     <span>
                       {p.nombre_completo || '—'}
+                      <div style={{ marginTop: 2 }}><PresenciaTag estado={p.estado_presencia} ultima={p.ultima_conexion} /></div>
                       {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
                       {p.whatsapp && <div className="muted" style={{ fontSize: '.85rem' }}>WhatsApp +{p.whatsapp}</div>}
                       {(p.habilidades ?? []).length > 0 && (
