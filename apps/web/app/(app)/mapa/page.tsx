@@ -14,7 +14,7 @@ export default async function MapaPage() {
 
   const supabase = await createClient();
 
-  const [{ data: puntosData }, { data: tareasData }, { data: lugaresData }] = await Promise.all([
+  const [{ data: puntosData }, { data: tareasData }, { data: lugaresData }, { data: solicitudesData }] = await Promise.all([
     supabase.from('puntos_acopio')
       .select('id, nombre, direccion, responsable, telefono, recibe, necesita, horario, capacidad, urgencia, lat, lng, activo, creado_por, creado_en, actualizado_en')
       .eq('activo', true),
@@ -25,11 +25,15 @@ export default async function MapaPage() {
     supabase.from('lugares')
       .select('id, tipo, nombre, lat, lng, estado')
       .not('lat', 'is', null).not('lng', 'is', null),
+    // Solicitudes de ayuda (casos-requerimiento confirmados y ubicados). Se sirve por
+    // una RPC curada (solo campos aptos para el mapa) para no exponer el resto del caso.
+    supabase.rpc('solicitudes_ayuda_mapa'),
   ]);
 
   const puntos = (puntosData ?? []) as PuntoAcopio[];
   const tareas = (tareasData ?? []) as any[];
   const lugares = (lugaresData ?? []) as any[];
+  const solicitudes = (solicitudesData ?? []) as any[];
 
   return (
     <div>
@@ -46,10 +50,12 @@ export default async function MapaPage() {
         tareas con ubicación (<span className="leyenda-pin" style={{ background: '#0033A0' }} /> azul)
         {lugares.length > 0 && <> y lugares digitalizados (
           <span className="leyenda-pin" style={{ background: '#7C3AED' }} /> verificado,{' '}
-          <span className="leyenda-pin" style={{ background: '#DB2777' }} /> pendiente)</>}.
+          <span className="leyenda-pin" style={{ background: '#DB2777' }} /> pendiente)</>}
+        {solicitudes.length > 0 && <> y <strong>solicitudes de ayuda</strong> (
+          <span className="leyenda-pin" style={{ background: '#0D9488' }} /> requerimiento con ubicación)</>}.
         Para crear o editar centros, entra a <strong>Centros de acopio</strong>.
       </p>
-      <Mapa puntos={puntos} tareas={tareas} lugares={lugares} />
+      <Mapa puntos={puntos} tareas={tareas} lugares={lugares} solicitudes={solicitudes} />
     </div>
   );
 }

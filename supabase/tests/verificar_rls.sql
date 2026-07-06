@@ -531,4 +531,62 @@ begin;
   end $$;
 rollback;
 
+-- ══ Casos «requerimiento con ubicación» + capa de mapa (0112) ══
+
+\echo '== Test 28: el CHECK rechaza un requerimiento sin ubicación o en Desaparecidos (0112) =='
+begin;
+  do $$ begin
+    begin
+      insert into public.casos (titulo, categoria, estado, es_requerimiento)
+        values ('_TEST_req_noloc', 'Otras informaciones', 'confirmado', true);
+      raise exception 'FALLO: se permitió un requerimiento SIN ubicación';
+    exception when check_violation then null; -- esperado
+    end;
+  end $$;
+  do $$ begin
+    begin
+      insert into public.casos (titulo, categoria, estado, es_requerimiento, lat, lng)
+        values ('_TEST_req_desap', 'Desaparecidos', 'en_proceso', true, 10.5, -66.9);
+      raise exception 'FALLO: se permitió un requerimiento en «Desaparecidos»';
+    exception when check_violation then null; -- esperado
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 29: solicitudes_ayuda_mapa() muestra el requerimiento confirmado a logística (que NO lee casos) y oculta el no confirmado (0112) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, req_tipo, req_urgencia)
+    values ('00000000-0000-0000-0000-00000000ee01', '_TEST_req_ok', 'Otras informaciones', 'confirmado', true, 10.5, -66.9, 'agua', 'alta');
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-00000000ee02', '_TEST_req_pend', 'Otras informaciones', 'pendiente', true, 10.6, -66.8);
+  update public.perfiles set rol = 'logistica', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_ok int; n_pend int; n_directo int;
+  begin
+    select count(*) into n_ok from public.solicitudes_ayuda_mapa() where id = '00000000-0000-0000-0000-00000000ee01';
+    if n_ok <> 1 then raise exception 'FALLO: logística no ve el requerimiento confirmado por la RPC (n=%)', n_ok; end if;
+    select count(*) into n_pend from public.solicitudes_ayuda_mapa() where id = '00000000-0000-0000-0000-00000000ee02';
+    if n_pend <> 0 then raise exception 'FALLO: la RPC devolvió un requerimiento NO confirmado'; end if;
+    select count(*) into n_directo from public.casos where id = '00000000-0000-0000-0000-00000000ee01';
+    if n_directo <> 0 then raise exception 'FALLO: logística leyó casos directamente saltando la RLS'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 30: un rol fuera de la audiencia del mapa NO ve solicitudes por la RPC (0112) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-00000000ee03', '_TEST_req_vol', 'Otras informaciones', 'confirmado', true, 10.5, -66.9);
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.solicitudes_ayuda_mapa() where id = '00000000-0000-0000-0000-00000000ee03';
+    if n <> 0 then raise exception 'FALLO: un rol fuera de la audiencia del mapa vio solicitudes (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

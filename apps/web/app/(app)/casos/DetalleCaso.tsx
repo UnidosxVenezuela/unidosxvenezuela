@@ -1,6 +1,6 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
@@ -98,6 +98,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Creado por:</strong> {caso.creado_por ? (nombres.get(caso.creado_por) ?? '—') : '—'}{caso.creado_en ? ' · ' + fechaHora(caso.creado_en) : ''}</div>
         </div>
+        {caso.es_requerimiento && (
+          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10, padding: '8px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8 }}>
+            <Icono nombre="ubicacion" size={16} />
+            <strong>Solicitud de ayuda</strong>
+            {caso.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[caso.req_tipo] ?? caso.req_tipo}</Pill>}
+            {caso.req_urgencia && <Pill tono="aviso" punto={false}>{ETIQUETA_PRIORIDAD[caso.req_urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? caso.req_urgencia}</Pill>}
+            {caso.req_cantidad && <span className="muted" style={{ fontSize: '.85rem' }}>· {caso.req_cantidad}</span>}
+            {caso.lat != null && caso.lng != null && <span className="muted" style={{ fontSize: '.82rem' }}>· Ubicación marcada en el mapa</span>}
+          </div>
+        )}
         {(caso.adjuntos ?? []).length > 0 && (
           <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
             {(caso.adjuntos as any[]).map((a) => a.href ? (

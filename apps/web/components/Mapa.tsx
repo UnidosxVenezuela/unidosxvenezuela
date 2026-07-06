@@ -5,9 +5,11 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { PuntoAcopio } from '@unidos/types';
+import { ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 
 type TareaUbic = { id: string; titulo: string; lat: number; lng: number; categoria: string };
 type LugarPunto = { id: string; tipo: string; nombre: string; lat: number; lng: number; estado: string; personas?: number };
+type SolicitudPunto = { id: string; titulo: string; lat: number; lng: number; tipo: string | null; urgencia: string | null; estado: string };
 
 const ETIQ_TIPO_LUGAR: Record<string, string> = { hospital: 'Hospital', albergue: 'Albergue', acopio: 'Centro de acopio', otro: 'Lugar' };
 const ETIQ_ESTADO_LUGAR: Record<string, string> = { pendiente_llenado: 'Pendiente de llenado', pendiente_verificar: 'Pendiente de verificar', verificado: 'Verificado' };
@@ -29,7 +31,7 @@ function colorAcopio(u: string): string {
   return '#E6A100';                      // necesita
 }
 
-export default function Mapa({ puntos, tareas, lugares = [] }: { puntos: PuntoAcopio[]; tareas: TareaUbic[]; lugares?: LugarPunto[] }) {
+export default function Mapa({ puntos, tareas, lugares = [], solicitudes = [] }: { puntos: PuntoAcopio[]; tareas: TareaUbic[]; lugares?: LugarPunto[]; solicitudes?: SolicitudPunto[] }) {
   const cont = useRef<HTMLDivElement>(null);
   const mapa = useRef<MapLibreMap | null>(null);
 
@@ -71,8 +73,16 @@ export default function Mapa({ puntos, tareas, lugares = [] }: { puntos: PuntoAc
       );
       marcadores.push(new maplibregl.Marker({ color: colorLugar(l.estado) }).setLngLat([l.lng, l.lat]).setPopup(popup).addTo(m));
     }
+    for (const s of solicitudes) {
+      const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
+        `<strong>${esc(s.titulo)}</strong><br/>Solicitud de ayuda` +
+        (s.tipo ? `<br/><b>Necesita:</b> ${esc(ETIQUETA_TIPO_INSUMO[s.tipo] ?? s.tipo)}` : '') +
+        (s.urgencia ? ` · ${esc(ETIQUETA_PRIORIDAD[s.urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? s.urgencia)}` : '')
+      );
+      marcadores.push(new maplibregl.Marker({ color: '#0D9488' }).setLngLat([s.lng, s.lat]).setPopup(popup).addTo(m));
+    }
     return () => { marcadores.forEach((mk) => mk.remove()); };
-  }, [puntos, tareas, lugares]);
+  }, [puntos, tareas, lugares, solicitudes]);
 
   return <div ref={cont} style={{ height: 560, borderRadius: 14, overflow: 'hidden', border: '1px solid var(--borde)' }} />;
 }

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { CATEGORIAS_CASO, SITUACIONES_BUSQUEDA } from '@/lib/constantes';
 import AvisoEnlace from '@/components/AvisoEnlace';
+import BloqueRequerimiento from '../BloqueRequerimiento';
 
 // Campos del caso: categoría, fecha, fuente y enlace. Cuando la categoría es
 // «Desaparecidos», el formulario se despliega para capturar los datos de la persona
@@ -86,6 +87,9 @@ export default function CamposCaso({ defecto = CATEGORIAS_CASO[1] }: { defecto?:
           </label>
         </div>
       )}
+
+      {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
+      {!esDesaparecido && <BloqueRequerimiento />}
     </>
   );
 }
