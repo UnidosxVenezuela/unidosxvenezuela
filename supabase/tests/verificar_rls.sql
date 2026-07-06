@@ -349,31 +349,31 @@ rollback;
 
 -- ══ Supervisión por área (0105) ══
 
-\echo '== Test 19: Admin de Verificaciones LEE casos/fichas (incl. Desaparecidos) sin poder mutar =='
+\echo '== Test 19: Admin de Verificaciones (con 2ª verif) LEE casos/fichas de Desaparecidos =='
 begin;
   insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_av_desap', 'en_proceso', 'Desaparecidos', null);
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true) on conflict (perfil_id) do update set estado = 'aprobada';
   update public.perfiles set rol = 'admin_verificacion', roles_extra = '{}', verificado = true where id = :'admin';
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
   do $$
-  declare n_caso int; n_ficha int; n_upd int;
+  declare n_caso int; n_ficha int;
   begin
     select count(*) into n_caso from public.casos where titulo = '_TEST_av_desap';
     if n_caso <> 1 then raise exception 'FALLO: admin_verificacion no ve un caso de Desaparecidos (n=%)', n_caso; end if;
     select count(*) into n_ficha from public.busqueda_casos b
       join public.casos c on c.id = b.caso_id where c.titulo = '_TEST_av_desap';
     if n_ficha <> 1 then raise exception 'FALLO: admin_verificacion no ve la ficha de búsqueda (n=%)', n_ficha; end if;
-    -- Solo lectura: NO puede mutar el caso (la RLS de escritura no lo incluye).
-    update public.casos set notas = 'hack' where titulo = '_TEST_av_desap';
-    get diagnostics n_upd = row_count;
-    if n_upd <> 0 then raise exception 'FALLO: admin_verificacion mutó un caso (debe ser solo lectura)'; end if;
   end $$;
 rollback;
 
-\echo '== Test 20: Admin de Redes LEE contenido pero NO ve casos de Desaparecidos =='
+\echo '== Test 20: Admin de Redes (con 2ª verif) LEE contenido pero NO ve casos de Desaparecidos =='
 begin;
   insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_ar_desap', 'en_proceso', 'Desaparecidos', null);
   insert into public.piezas_contenido (titulo, etapa) values ('_TEST_ar_pieza', 'redaccion');
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true) on conflict (perfil_id) do update set estado = 'aprobada';
   update public.perfiles set rol = 'admin_redes', roles_extra = '{}', verificado = true where id = :'admin';
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
@@ -384,6 +384,78 @@ begin;
     if n_pieza <> 1 then raise exception 'FALLO: admin_redes no ve una pieza de contenido (n=%)', n_pieza; end if;
     select count(*) into n_desap from public.casos where titulo = '_TEST_ar_desap';
     if n_desap <> 0 then raise exception 'FALLO: admin_redes ve un caso de Desaparecidos (n=%)', n_desap; end if;
+  end $$;
+rollback;
+
+-- ══ Operación por área con llave de 2ª verificación (0106) ══
+
+\echo '== Test 21: Admin de Verificaciones SIN 2ª verificación NO ve ni muta casos =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_op_desap', 'en_proceso', 'Desaparecidos', null);
+  delete from public.verificaciones_identidad where perfil_id = :'admin';
+  update public.perfiles set rol = 'admin_verificacion', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int; n_upd int;
+  begin
+    select count(*) into n from public.casos where titulo = '_TEST_op_desap';
+    if n <> 0 then raise exception 'FALLO: admin_verificacion SIN identidad vio un caso (n=%)', n; end if;
+    update public.casos set notas = 'x' where titulo = '_TEST_op_desap';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 0 then raise exception 'FALLO: admin_verificacion SIN identidad mutó un caso'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 22: Admin de Verificaciones CON 2ª verificación opera su área (mando), no otra =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_op_desap2', 'en_proceso', 'Desaparecidos', null);
+  insert into public.piezas_contenido (titulo, etapa, creado_por) values ('_TEST_op_pieza_v', 'redaccion', null);
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true) on conflict (perfil_id) do update set estado = 'aprobada';
+  update public.perfiles set rol = 'admin_verificacion', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int; n_upd int; n_ficha int; n_pieza int;
+  begin
+    select count(*) into n from public.casos where titulo = '_TEST_op_desap2';
+    if n <> 1 then raise exception 'FALLO: admin_verificacion CON identidad no ve su caso (n=%)', n; end if;
+    update public.casos set notas = 'ok' where titulo = '_TEST_op_desap2';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 1 then raise exception 'FALLO: admin_verificacion (mando) no pudo editar un caso Desaparecidos'; end if;
+    -- Como mando, puede llevar la ficha a un estado de cierre (pasa el trigger de blindaje).
+    update public.busqueda_casos set estado_busqueda = 'descartado'
+      where caso_id = (select id from public.casos where titulo = '_TEST_op_desap2');
+    get diagnostics n_ficha = row_count;
+    if n_ficha <> 1 then raise exception 'FALLO: admin_verificacion (mando) no pudo cerrar la ficha'; end if;
+    -- Aislamiento entre áreas: NO opera contenido (es de Redes).
+    update public.piezas_contenido set notas = 'hack' where titulo = '_TEST_op_pieza_v';
+    get diagnostics n_pieza = row_count;
+    if n_pieza <> 0 then raise exception 'FALLO: admin_verificacion editó una pieza de contenido (cross-area)'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 23: Admin de Redes CON 2ª verificación opera contenido, no casos de Desaparecidos =='
+begin;
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_op_desap_r', 'en_proceso', 'Desaparecidos', null);
+  insert into public.piezas_contenido (titulo, etapa, creado_por) values ('_TEST_op_pieza_r', 'redaccion', null);
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true) on conflict (perfil_id) do update set estado = 'aprobada';
+  update public.perfiles set rol = 'admin_redes', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_pieza int; n_desap int; n_upd int;
+  begin
+    update public.piezas_contenido set notas = 'ok' where titulo = '_TEST_op_pieza_r';
+    get diagnostics n_pieza = row_count;
+    if n_pieza <> 1 then raise exception 'FALLO: admin_redes CON identidad no pudo editar una pieza'; end if;
+    select count(*) into n_desap from public.casos where titulo = '_TEST_op_desap_r';
+    if n_desap <> 0 then raise exception 'FALLO: admin_redes ve un caso de Desaparecidos (cross-area)'; end if;
+    update public.casos set notas = 'hack' where titulo = '_TEST_op_desap_r';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 0 then raise exception 'FALLO: admin_redes mutó un caso de Desaparecidos (cross-area)'; end if;
   end $$;
 rollback;
 
