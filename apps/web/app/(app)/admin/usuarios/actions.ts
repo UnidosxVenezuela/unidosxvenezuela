@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
-import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, PAISES } from '@/lib/constantes';
+import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, PAISES, codigoPais } from '@/lib/constantes';
 import type { Rol, AreaAdmin } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
 
@@ -219,7 +219,7 @@ export async function crearUsuario(formData: FormData) {
 // el resultado por fila (con la contraseña temporal y un enlace wa.me listo).
 
 /** Extrae {nombre, whatsapp, email} de una línea suelta y flexible. */
-function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | null; email: string | null } | null {
+function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | null; email: string | null; pais: string | null } | null {
   let s = String(raw ?? '').replace(/[‒-―]/g, '-').trim(); // guiones largos → '-'
   if (!s) return null;
   const em = s.match(/[^\s<>(),]+@[^\s<>(),]+\.[^\s<>(),]+/);
@@ -229,6 +229,14 @@ function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | n
   const whatsapp = ph ? normalizarWhatsapp(ph[0]) : null;
   if (ph) s = s.replace(ph[0], ' ');
   if (!whatsapp && !email) return null; // línea sin datos útiles (p. ej. "Horario Tarde")
+  // País por línea: un campo (separado por guiones) que sea un país conocido —
+  // código ISO 'VE' o nombre 'Venezuela'/'Perú'. Se extrae para no mezclarlo con el nombre.
+  let pais: string | null = null;
+  const segs = s.split('-');
+  for (let i = 0; i < segs.length; i++) {
+    const c = codigoPais(segs[i]);
+    if (c) { pais = c; segs.splice(i, 1); s = segs.join('-'); break; }
+  }
   let nombre = s
     .replace(/\(([^)]*)\)/g, ' ')                                   // "(Lider de equipo)"
     .replace(/^\s*\d+\s*[-.)]\s*/, ' ')                             // "1- ", "3) "
@@ -237,7 +245,7 @@ function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | n
     .replace(/\s+/g, ' ')
     .trim();
   if (!nombre) nombre = whatsapp ? '+' + whatsapp : (email ?? 'Sin nombre');
-  return { nombre, whatsapp, email };
+  return { nombre, whatsapp, email, pais };
 }
 
 export async function importarUsuarios(_prev: EstadoImport, formData: FormData): Promise<EstadoImport> {
@@ -259,12 +267,14 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   }
   const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
-  // País común a toda la lista (solo un código conocido; vacío = no se indica).
+  // País POR DEFECTO (opcional): solo se usa en las líneas que no traen su propio
+  // país. Cada línea puede indicar el suyo (código o nombre), así una lista admite
+  // orígenes distintos.
   const paisRaw = String(formData.get('pais') ?? '').trim();
-  const pais = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
+  const paisDefecto = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
   const lineas = String(formData.get('lista') ?? '').split('\n').slice(0, 200);
 
-  const parsed = lineas.map(parsearLineaImport).filter(Boolean) as { nombre: string; whatsapp: string | null; email: string | null }[];
+  const parsed = lineas.map(parsearLineaImport).filter(Boolean) as { nombre: string; whatsapp: string | null; email: string | null; pais: string | null }[];
   if (parsed.length === 0) {
     return { ok: false, mensaje: 'No se reconoció ningún contacto. Pega una persona por línea, con su número (con código de país) o su correo.', filas: [] };
   }
@@ -296,7 +306,7 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       continue;
     }
     const { error: e2 } = await supabase.from('perfiles')
-      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp, pais })
+      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp, pais: p.pais ?? paisDefecto })
       .eq('id', creado.user.id);
     if (e2) {
       // Revertir la cuenta a medias (p. ej. WhatsApp repetido) para no dejar huérfanos.
@@ -322,7 +332,7 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
     const waLink = p.whatsapp
       ? linkWaMe(p.whatsapp, `Hola ${p.nombre} 👋 Te sumamos a Apoyo por Venezuela. Entra en https://unidosxvnezuela.com con tu WhatsApp +${p.whatsapp} y esta clave temporal: ${password} (cámbiala al entrar). 💛`)
       : undefined;
-    filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'creado', password, waLink });
+    filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: 'creado', password, waLink, pais: p.pais ?? paisDefecto });
   }
 
   await supabase.rpc('registrar_auditoria', {

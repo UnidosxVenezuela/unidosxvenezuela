@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
+import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, banderaPais, etiquetaPais, zonaPais } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
 import GestionUsuarioModal from './GestionUsuarioModal';
@@ -17,7 +17,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
@@ -285,7 +285,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
       <div className="tarjeta">
         <div className="tabla-scroll"><table>
           <thead>
-            <tr><th>Nombre</th><th>Organización</th><th>Estado</th><th>Rol</th></tr>
+            <tr><th>Nombre</th><th>Organización</th><th>País</th><th>Estado</th><th>Rol</th></tr>
           </thead>
           <tbody>
             {perfiles.map((p) => (
@@ -311,6 +311,14 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                   </span>
                 </td>
                 <td>{p.organizacion || '—'}</td>
+                <td>
+                  {p.pais ? (
+                    <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }} title={zonaPais(p.pais) ? 'Zona horaria aprox.: ' + zonaPais(p.pais) : undefined}>
+                      <span aria-hidden>{banderaPais(p.pais)}</span>
+                      <span>{etiquetaPais(p.pais)}{zonaPais(p.pais) ? ' · ' + zonaPais(p.pais) : ''}</span>
+                    </span>
+                  ) : <span className="muted">—</span>}
+                </td>
                 <td>
                   <form action={cambiarVerificacion} className="fila">
                     <input type="hidden" name="perfil_id" value={p.id} />

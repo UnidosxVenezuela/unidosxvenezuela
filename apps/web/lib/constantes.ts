@@ -197,6 +197,17 @@ export function banderaPais(codigo?: string | null): string {
   const base = 0x1f1e6, A = 'A'.charCodeAt(0);
   return String.fromCodePoint(...[...codigo.toUpperCase()].map((c) => base + c.charCodeAt(0) - A));
 }
+const NORM_PAIS = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+const PAIS_POR_NOMBRE: Record<string, string> = Object.fromEntries(PAISES.map((p) => [NORM_PAIS(p.nombre), p.codigo]));
+/** Interpreta un texto como país: código ISO ('VE') o nombre ('Venezuela'/'venezuela'/'perú'). Devuelve el código o null. */
+export function codigoPais(entrada?: string | null): string | null {
+  if (!entrada) return null;
+  const t = entrada.trim();
+  if (!t) return null;
+  const up = t.toUpperCase();
+  if (MAPA_PAIS[up]) return up;
+  return PAIS_POR_NOMBRE[NORM_PAIS(t)] ?? null;
+}
 
 // ── Insumos / Logística ──
 export const ETIQUETA_TIPO_INSUMO: Record<string, string> = {

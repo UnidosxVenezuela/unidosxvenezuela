@@ -11,6 +11,7 @@ export type FilaImport = {
   detalle?: string;
   password?: string;         // temporal a compartir (para cuentas por WhatsApp)
   waLink?: string;           // enlace wa.me con el mensaje de acceso listo
+  pais?: string | null;      // código ISO del país (detectado por línea o por defecto)
 };
 
 export type EstadoImport = { ok: boolean; mensaje?: string; filas: FilaImport[] };

@@ -4,7 +4,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import Icono from '@/components/Icono';
 import { importarUsuarios } from '../actions';
 import { IMPORT_INICIAL, type EstadoImport, type FilaImport } from '../tipos';
-import { PAISES } from '@/lib/constantes';
+import { PAISES, banderaPais, etiquetaPais } from '@/lib/constantes';
 
 function BotonEnviar() {
   const { pending } = useFormStatus();
@@ -49,19 +49,22 @@ export default function Importador({
             <input id="organizacion" name="organizacion" className="input" />
           </div>
           <div className="campo">
-            <label htmlFor="pais">País (opcional, para todos)</label>
+            <label htmlFor="pais">País por defecto (opcional)</label>
             <select id="pais" name="pais" className="input" defaultValue="">
               <option value="">— Sin indicar —</option>
               {PAISES.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
             </select>
+            <p className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>Se usa solo en las líneas que no traen su propio país.</p>
           </div>
         </div>
         <div className="campo">
           <label htmlFor="lista">Pega la lista (una persona por línea)</label>
           <textarea id="lista" name="lista" className="input" rows={9} required
-            placeholder={'+58 412-7585420 - Raquel Gámez - correo@ejemplo.com\n+57 316 0406992 - Yaneska Crespo\n+58 412-8390313 - Jeimmy'} />
+            placeholder={'+58 412-7585420 - Raquel Gámez - correo@ejemplo.com - Venezuela\n+57 316 0406992 - Yaneska Crespo - Colombia\n+34 600 123 456 - Jeimmy - ES'} />
           <p className="muted" style={{ fontSize: '.82rem', marginTop: 4 }}>
-            Reconocemos el número, el correo (si lo hay) y el nombre. Las líneas sin número ni correo se omiten.
+            Reconocemos el número, el correo (si lo hay), el nombre y —si lo agregas como un campo más— el <strong>país</strong>:
+            su nombre o su código (p. ej. «Venezuela» o «VE»). Así una misma lista admite orígenes distintos; si una línea no
+            trae país, se usa el «País por defecto». Las líneas sin número ni correo se omiten.
           </p>
         </div>
         <BotonEnviar />
@@ -77,7 +80,7 @@ export default function Importador({
             Comparte cada acceso por un canal seguro. La persona debe <strong>cambiar la clave</strong> al entrar.
           </p>
           <div className="tabla-scroll"><table>
-            <thead><tr><th>Nombre</th><th>Contacto</th><th>Estado</th><th>Acceso</th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Contacto</th><th>País</th><th>Estado</th><th>Acceso</th></tr></thead>
             <tbody>
               {estado.filas.map((f, i) => (
                 <tr key={i}>
@@ -85,6 +88,7 @@ export default function Importador({
                   <td className="muted" style={{ fontSize: '.85rem' }}>
                     {f.whatsapp ? '+' + f.whatsapp : ''}{f.whatsapp && f.email ? ' · ' : ''}{f.email ?? ''}
                   </td>
+                  <td style={{ fontSize: '.85rem' }}>{f.pais ? banderaPais(f.pais) + ' ' + etiquetaPais(f.pais) : ''}</td>
                   <td>
                     <span className={'insignia ' + (TONO[f.estado] ?? '')}>{f.estado}</span>
                     {f.detalle && <div className="muted" style={{ fontSize: '.78rem' }}>{f.detalle}</div>}
