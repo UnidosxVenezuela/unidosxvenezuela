@@ -497,4 +497,38 @@ begin;
   end $$;
 rollback;
 
+-- ══ Grupos: al salir el líder, el grupo queda sin líder (trigger 0111) ══
+
+\echo '== Test 26: quitar al líder como miembro deja grupos.lider_id en null (0111) =='
+begin;
+  insert into public.grupos (id, nombre, area, abierto)
+    values ('00000000-0000-0000-0000-00000000dd01', '_TEST_lider_out', 'comunicaciones', false);
+  insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+    values ('00000000-0000-0000-0000-00000000dd01', :'admin', 'lider');
+  update public.grupos set lider_id = :'admin' where id = '00000000-0000-0000-0000-00000000dd01';
+  do $$
+  declare v_lider uuid;
+  begin
+    delete from public.miembros_grupo where grupo_id = '00000000-0000-0000-0000-00000000dd01';
+    select lider_id into v_lider from public.grupos where id = '00000000-0000-0000-0000-00000000dd01';
+    if v_lider is not null then raise exception 'FALLO: lider_id no se limpió al quitar al líder del grupo'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 27: degradar el rol del líder en el grupo deja lider_id en null (0111) =='
+begin;
+  insert into public.grupos (id, nombre, area, abierto)
+    values ('00000000-0000-0000-0000-00000000dd02', '_TEST_lider_dem', 'comunicaciones', false);
+  insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+    values ('00000000-0000-0000-0000-00000000dd02', :'admin', 'lider');
+  update public.grupos set lider_id = :'admin' where id = '00000000-0000-0000-0000-00000000dd02';
+  do $$
+  declare v_lider uuid;
+  begin
+    update public.miembros_grupo set rol_en_grupo = 'miembro' where grupo_id = '00000000-0000-0000-0000-00000000dd02';
+    select lider_id into v_lider from public.grupos where id = '00000000-0000-0000-0000-00000000dd02';
+    if v_lider is not null then raise exception 'FALLO: lider_id no se limpió al degradar el rol del líder'; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
