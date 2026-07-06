@@ -214,9 +214,11 @@ export async function quitarLider(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin')) throw new Error('Solo un administrador puede quitar al líder de un grupo.');
+  if (!roles.includes('admin') && !(yo as { super_admin?: boolean } | null)?.super_admin) {
+    throw new Error('Solo un administrador general o el superadmin puede quitar al líder de un grupo.');
+  }
   const grupoId = String(formData.get('grupo_id'));
   const { data: g } = await supabase.from('grupos').select('lider_id').eq('id', grupoId).single();
   if (g?.lider_id) {
@@ -255,9 +257,11 @@ export async function eliminarGrupo(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
+  const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, super_admin').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin')) throw new Error('Solo un administrador puede eliminar grupos.');
+  if (!roles.includes('admin') && !(yo as { super_admin?: boolean } | null)?.super_admin) {
+    throw new Error('Solo un administrador general o el superadmin puede eliminar grupos.');
+  }
 
   const grupoId = String(formData.get('grupo_id'));
   const { error } = await supabase.from('grupos').delete().eq('id', grupoId);

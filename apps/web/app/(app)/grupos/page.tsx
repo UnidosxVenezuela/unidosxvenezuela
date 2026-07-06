@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireUsuario, esCoordinacion, esAdministrador } from '@/lib/auth';
+import { requireUsuario, esAdminGeneral, areaDeAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { etiquetaArea } from '@/lib/constantes';
 import { nombreMostrado } from '@/lib/nombre';
@@ -16,7 +16,8 @@ import EstadoVacio from '@/components/EstadoVacio';
 export default async function GruposPage() {
   const { user, perfil } = await requireUsuario();
   const supabase = await createClient();
-  const coord = esCoordinacion(perfil); // solo admin
+  const coord = esAdminGeneral(perfil);  // admin general o superadmin
+  const areaAdmin = areaDeAdmin(perfil); // admin de área (supervisa su área)
   const [{ data }, { data: conteos }] = await Promise.all([
     supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, abierto, clave').order('nombre'),
     supabase.rpc('conteo_miembros_grupo'),
@@ -24,7 +25,8 @@ export default async function GruposPage() {
   let grupos = (data ?? []) as any[];
   // Recopilación / Búsqueda sin 2ª verificación aprobada: se oculta su grupo de
   // casos (igual que la sección Casos) hasta que la administración lo apruebe.
-  if (!esAdministrador(perfil)) {
+  // El admin de área supervisa (lectura) los grupos de su área: no se le ocultan.
+  if (!esAdminGeneral(perfil) && !areaAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       grupos = grupos.filter((g) => g.clave !== 'gestion_casos' && g.clave !== 'busqueda');
@@ -36,7 +38,7 @@ export default async function GruposPage() {
   const nombrePorId = new Map<string, string>();
   if (liderIds.length) {
     const { data: lideres } = await supabase.from('perfiles').select('id, nombre_completo').in('id', liderIds);
-    const verFull = esAdministrador(perfil);
+    const verFull = esAdminGeneral(perfil);
     (lideres ?? []).forEach((p: any) => nombrePorId.set(p.id, nombreMostrado(p.nombre_completo, verFull)));
   }
 
@@ -48,6 +50,8 @@ export default async function GruposPage() {
           <p className="muted sub">
             {coord
               ? <>Como <strong>administración</strong> ves todos los grupos y puedes entrar a cualquiera para supervisarlo.</>
+              : areaAdmin
+              ? <>Como <strong>administración de tu área</strong> ves y supervisas los grupos de tu área.</>
               : <>Estos son tus grupos de trabajo. A los grupos te agrega la administración o el líder del grupo.</>}
           </p>
         </div>

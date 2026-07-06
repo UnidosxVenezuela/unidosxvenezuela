@@ -81,6 +81,13 @@ export function esSuperadmin(perfil?: { super_admin?: boolean } | null) {
   return !!perfil?.super_admin;
 }
 
+/** Admin GENERAL o superadmin (dueño): ambos administran todo. Úsalo para las
+ *  acciones de gobierno (p. ej. gestionar el liderazgo/eliminación de un grupo),
+ *  donde el superadmin debe contar como administrador aunque no tenga el rol 'admin'. */
+export function esAdminGeneral(perfil?: Perfil | null) {
+  return esAdministrador(perfil) || esSuperadmin(perfil);
+}
+
 // ── Administración por ÁREA (0103) ──
 // Un admin de área gestiona SOLO su área (sus grupos y las solicitudes correspondientes).
 // NO es admin general (`esAdministrador` sigue siendo exclusivo de 'admin'): no ve ni

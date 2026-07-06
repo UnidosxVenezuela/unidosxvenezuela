@@ -2,10 +2,10 @@ import { fechaHora } from '@/lib/fechas';
 import { urlFirmada } from '@/lib/storage';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esCoordinacion, esAdministrador, esMandoPsicosocial, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdminGeneral, esMandoPsicosocial, rolesDe, areaDeAdmin } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, banderaPais, etiquetaPais, zonaPais } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, banderaPais, etiquetaPais, zonaPais, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
 import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
@@ -19,7 +19,7 @@ import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsa
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
-  const verFull = esAdministrador(perfil);
+  const verFull = esAdminGeneral(perfil);
   const supabase = await createClient();
   const grupoId = params.id;
 
@@ -30,9 +30,15 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Grupo no encontrado</h2><Link href="/grupos">Volver</Link></div>;
   }
 
+  // Admin de área: supervisa (solo lectura) los grupos de SU área aunque no sea
+  // miembro ni líder. La RLS (0110) ya le deja leer los datos del grupo.
+  const areaAdmin = areaDeAdmin(perfil);
+  const esSupervisorArea = !!areaAdmin && (GRUPOS_POR_AREA_ADMIN[areaAdmin] ?? []).includes(grupo.clave);
+
   // Los grupos de casos (Gestión de Casos y Búsqueda) exigen 2ª verificación
-  // (identidad) aprobada también a sus líderes y coordinadores para acceder.
-  if (!esAdministrador(perfil) && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos' || grupo.clave === 'digitalizacion')) {
+  // (identidad) aprobada también a sus líderes y coordinadores para acceder. El
+  // supervisor de área (solo lectura) queda exento, como la supervisión de 0105.
+  if (!esAdminGeneral(perfil) && !esSupervisorArea && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos' || grupo.clave === 'digitalizacion')) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       redirect('/grupos?ok=' + encodeURIComponent('Completa tu segunda verificación (identidad) para acceder a este grupo.'));
@@ -80,7 +86,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const tareas = ((tareasRaw ?? []) as any[])
     .sort((a, b) => RANGO_PRIORIDAD[a.prioridad as keyof typeof RANGO_PRIORIDAD] - RANGO_PRIORIDAD[b.prioridad as keyof typeof RANGO_PRIORIDAD]);
 
-  const puedeGestionar = esCoordinacion(perfil) || grupo.lider_id === user!.id;
+  const puedeGestionar = esAdminGeneral(perfil) || grupo.lider_id === user!.id;
   const soyMiembro = miembros.some((m) => m.perfil_id === user!.id);
   // Mando del grupo Psicosocial (Coordinador o Líder): gestiona miembros y
   // publica en SU grupo, aunque no sea su líder formal. La RLS (0062) lo cumple.
@@ -94,7 +100,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   // Privacidad del grupo: quien NO es miembro (ni coordinación/líder/mando del
   // área) no entra al detalle ni ve el WhatsApp. Para grupos abiertos, primero
   // debe unirse desde la lista. La RLS restringe además a nivel de datos.
-  if (!soyMiembro && !puedeGestionar && !esMandoPsico) {
+  if (!soyMiembro && !puedeGestionar && !esMandoPsico && !esSupervisorArea) {
     redirect('/grupos?ok=' + encodeURIComponent('Únete al grupo para ver su información y su WhatsApp.'));
   }
   // ¿A quién puede un líder sumar al flujo de contenido? A voluntarios (no a
@@ -193,10 +199,16 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         </Link>
       </div>
 
-      {esCoordinacion(perfil) && !soyMiembro && (
+      {esAdminGeneral(perfil) && !soyMiembro && (
         <div className="aviso-superv" role="note">
           <Icono nombre="ojo" size={18} />
           <span>Estás viendo este grupo como <strong>coordinación</strong>: tienes acceso para <strong>supervisar</strong> y gestionar aunque no seas miembro.</span>
+        </div>
+      )}
+      {esSupervisorArea && !soyMiembro && !esAdminGeneral(perfil) && (
+        <div className="aviso-superv" role="note">
+          <Icono nombre="ojo" size={18} />
+          <span>Estás <strong>supervisando</strong> este grupo como administración de tu área (solo lectura).</span>
         </div>
       )}
 
@@ -379,7 +391,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                             <BotonConfirmar mensaje={'¿Vetar a ' + (nombreMostrado(m.perfiles?.nombre_completo, verFull) || 'esta persona') + ' del grupo? No podrá volver a unirse hasta que lo desveten.'} className="btn btn-peligro" style={{ minHeight: 36, padding: '4px 10px' }}>Vetar</BotonConfirmar>
                           </form>
                         )}
-                        {esCoordinacion(perfil) && esAsignable(m) && (
+                        {esAdminGeneral(perfil) && esAsignable(m) && (
                           <details className="roles-extra" style={{ flexBasis: '100%' }}>
                             <summary>Roles de contenido</summary>
                             <form action={asignarRolesContenido} style={{ marginTop: 8 }}>
@@ -484,7 +496,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 </select>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Asignar como líder</button>
               </form>
-              {esAdministrador(perfil) && grupo.lider_id && (
+              {esAdminGeneral(perfil) && grupo.lider_id && (
                 <form action={quitarLider} style={{ marginTop: 8 }}>
                   <input type="hidden" name="grupo_id" value={grupoId} />
                   <BotonConfirmar mensaje="¿Quitar al líder de este grupo? El grupo quedará sin líder." className="btn btn-peligro" style={{ width: '100%' }}>Quitar líder</BotonConfirmar>
@@ -492,7 +504,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               )}
             </div>
 
-            {esAdministrador(perfil) && (
+            {esAdminGeneral(perfil) && (
               <div className="tarjeta">
                 <h3 className="aside-titulo"><Icono nombre="basura" size={16} /> Eliminar grupo</h3>
                 <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>

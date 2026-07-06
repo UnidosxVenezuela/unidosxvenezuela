@@ -33,12 +33,13 @@ export default function GestionUsuarioModal({
   const aCargoAhora = rol === 'coordinador' ? coordinaActual : rol === 'lider_grupo' ? lideraActual : null;
   const destino = grupos.find((g) => g.id === grupoId);
 
-  // Aviso de traspaso, mostrado dentro del modal (no en un confirm aparte).
+  // El liderazgo/coordinación es ADITIVO: se suma el grupo elegido, sin quitarle los
+  // que ya tuviera (una persona puede liderar/coordinar varios grupos).
   const avisos: string[] = [];
   if (aCargoAhora && destino && aCargoAhora.id !== destino.id) {
     avisos.push(rol === 'coordinador'
-      ? `Ya coordina «${aCargoAhora.nombre}»; dejará de coordinarlo.`
-      : `Ya dirige «${aCargoAhora.nombre}», que quedará sin líder.`);
+      ? `Se suma a «${destino.nombre}»; seguirá coordinando «${aCargoAhora.nombre}» también.`
+      : `Se suma a «${destino.nombre}»; seguirá dirigiendo «${aCargoAhora.nombre}» también.`);
   }
   if (rol === 'lider_grupo' && destino?.liderId && destino.liderId !== perfilId) {
     avisos.push(`«${destino.nombre}» ya tiene líder (${destino.liderNombre || 'otra persona'}); será reemplazado. Un grupo tiene un solo líder.`);

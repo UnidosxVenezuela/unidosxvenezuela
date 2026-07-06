@@ -395,29 +395,22 @@ export async function cambiarRol(formData: FormData) {
     .update({ rol }).eq('id', perfilId);
   if (error) throw new Error('No se pudo cambiar el rol: ' + error.message);
 
-  // Líder/coordinador quedan a cargo de UN solo grupo. Si ya lideraba/coordinaba
-  // otro, se TRASPASA: se vacía el grupo anterior y se asigna al destino, para
-  // que nadie quede a cargo de dos grupos a la vez (evita incongruencias).
+  // Una persona PUEDE liderar/coordinar VARIOS grupos: al asignar un grupo se SUMA,
+  // sin quitarle los que ya tenía. Solo se respeta «un líder por grupo» reemplazando
+  // al líder ANTERIOR del grupo destino.
   // (El área psicosocial se gestiona con sus propios roles y no pasa por aquí.)
   if (requiereGrupo && grupoId) {
     if (rol === 'lider_grupo') {
-      // 1) Quitarle el liderazgo de cualquier OTRO grupo (excepto el psicosocial).
-      await supabase.from('grupos').update({ lider_id: null })
-        .eq('lider_id', perfilId).neq('id', grupoId).or('clave.is.null,clave.neq.apoyo_psicosocial');
-      await supabase.from('miembros_grupo').update({ rol_en_grupo: 'miembro' })
-        .eq('perfil_id', perfilId).eq('rol_en_grupo', 'lider').neq('grupo_id', grupoId);
-      // 2) Si el grupo destino ya tenía OTRO líder, bajarlo a miembro (será reemplazado).
+      // Si el grupo destino ya tenía OTRO líder, bajarlo a miembro (será reemplazado).
       await supabase.from('miembros_grupo').update({ rol_en_grupo: 'miembro' })
         .eq('grupo_id', grupoId).eq('rol_en_grupo', 'lider').neq('perfil_id', perfilId);
-      // 3) Asignar a esta persona como líder del grupo destino.
+      // Asignar a esta persona como líder del grupo destino (sin tocar otros grupos suyos).
       await supabase.from('miembros_grupo')
         .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'lider' }, { onConflict: 'grupo_id,perfil_id' });
       const { error: eg } = await supabase.from('grupos').update({ lider_id: perfilId }).eq('id', grupoId);
       if (eg) throw new Error('Rol cambiado, pero no se pudo asignar el grupo: ' + eg.message);
     } else {
-      // Coordinador de UN grupo: quitarle la coordinación de cualquier otro grupo.
-      await supabase.from('miembros_grupo').update({ rol_en_grupo: 'miembro' })
-        .eq('perfil_id', perfilId).eq('rol_en_grupo', 'coordinador').neq('grupo_id', grupoId);
+      // Coordinador: se SUMA la coordinación del grupo destino (puede coordinar varios).
       await supabase.from('miembros_grupo')
         .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'coordinador' }, { onConflict: 'grupo_id,perfil_id' });
     }
