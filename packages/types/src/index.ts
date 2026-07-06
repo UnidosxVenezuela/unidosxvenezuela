@@ -86,6 +86,11 @@ export interface Perfil {
   motivo: string | null;
   area_registro?: string | null;  // área elegida al registrarse (verificacion|redes|general)
   pais?: string | null;            // código ISO 3166-1 alfa-2 (para zona horaria/planificación)
+  ciudad?: string | null;          // ciudad de residencia (complementa pais)
+  disponibilidad?: string | null;  // horario disponible + zona horaria (texto)
+  horas_semana?: string | null;    // capacidad semanal (texto: «5-10 horas»)
+  experiencia?: string | null;     // experiencia relevante (verificación/búsqueda/datos)
+  contacto_emergencia?: string | null; // deber de cuidado: «Nombre (relación) · teléfono»
   avatar_url: string | null;
   habilidades: string[];
   creado_en: string;

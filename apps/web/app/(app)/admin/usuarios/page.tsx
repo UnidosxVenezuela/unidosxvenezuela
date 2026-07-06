@@ -17,7 +17,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
@@ -307,6 +307,17 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                           {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
                         </div>
                       )}
+                      {(p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia) && (
+                        <details style={{ marginTop: 4 }}>
+                          <summary className="muted" style={{ fontSize: '.8rem', cursor: 'pointer' }}>Ficha del voluntario</summary>
+                          <div className="muted" style={{ fontSize: '.82rem', marginTop: 4, display: 'grid', gap: 2 }}>
+                            {p.disponibilidad && <div><Icono nombre="reloj" size={12} /> {p.disponibilidad}{p.horas_semana ? ' · ' + p.horas_semana : ''}</div>}
+                            {!p.disponibilidad && p.horas_semana && <div><Icono nombre="reloj" size={12} /> {p.horas_semana}</div>}
+                            {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
+                            {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
+                          </div>
+                        </details>
+                      )}
                     </span>
                   </span>
                 </td>
@@ -318,6 +329,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                       <span>{etiquetaPais(p.pais)}{zonaPais(p.pais) ? ' · ' + zonaPais(p.pais) : ''}</span>
                     </span>
                   ) : <span className="muted">—</span>}
+                  {p.ciudad && <div className="muted" style={{ fontSize: '.82rem' }}>{p.ciudad}</div>}
                 </td>
                 <td>
                   <form action={cambiarVerificacion} className="fila">

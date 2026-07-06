@@ -76,6 +76,32 @@ export default async function PerfilPage({
           <input className="input" value={esEmailInternoWhatsapp(user?.email) ? mostrarWhatsapp(perfil?.whatsapp) : (user?.email ?? '')} disabled />
         </div>
         <SelectorHabilidades iniciales={perfil?.habilidades ?? []} sugeridas={HABILIDADES_SUGERIDAS} />
+
+        {/* Ficha del voluntario (0115): ayuda a coordinar por horario y capacidad. */}
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="ciudad">Ciudad de residencia</label>
+            <input id="ciudad" name="ciudad" className="input" defaultValue={perfil?.ciudad ?? ''} placeholder="Ej.: Caracas" />
+          </div>
+          <div className="campo">
+            <label htmlFor="horas_semana">Horas por semana</label>
+            <input id="horas_semana" name="horas_semana" className="input" defaultValue={perfil?.horas_semana ?? ''} placeholder="Ej.: 5-10 horas" />
+          </div>
+        </div>
+        <div className="campo">
+          <label htmlFor="disponibilidad">Disponibilidad (horario + zona horaria)</label>
+          <input id="disponibilidad" name="disponibilidad" className="input" defaultValue={perfil?.disponibilidad ?? ''} placeholder="Ej.: 4-8 pm hora Venezuela (GMT-4)" />
+        </div>
+        <div className="campo">
+          <label htmlFor="experiencia">Experiencia relevante (opcional)</label>
+          <textarea id="experiencia" name="experiencia" className="input" rows={3} defaultValue={perfil?.experiencia ?? ''} placeholder="Verificación de información, búsqueda de personas, atención humanitaria, gestión de datos…" />
+        </div>
+        <div className="campo">
+          <label htmlFor="contacto_emergencia">Contacto de emergencia (opcional)</label>
+          <input id="contacto_emergencia" name="contacto_emergencia" className="input" defaultValue={perfil?.contacto_emergencia ?? ''} placeholder="Nombre (relación) · teléfono" />
+          <p className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>Solo lo ve la administración; nos ayuda a cuidarte.</p>
+        </div>
+
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
       </form>
 
