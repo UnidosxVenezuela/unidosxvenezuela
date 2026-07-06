@@ -76,18 +76,32 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         ? { t: 'Buscar y verificar desaparecidos', c: <>Toma los casos de <strong>personas desaparecidas</strong> y <strong>confírmalos o descártalos</strong>. Esta información la gestiona el Grupo de Búsqueda.</> }
         : { t: 'Reportar y seguir casos', c: <>Reporta con <strong>«Nuevo caso»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca un caso para seguir su estado.</> };
 
-  const cnt = (estado?: string) => {
+  // Conteos por GRUPO de estado. Cada caso cae en exactamente un grupo, así que los
+  // tres grupos suman el total. Antes solo se contaban 'en_proceso', 'confirmado' y
+  // 'falso'; los 'pendiente' (reportes recién llegados, sin tomar), 'enviado_redaccion'
+  // y 'resuelto' no aparecían en ninguna tarjeta y "se perdían" respecto al total.
+  const cnt = (estados?: string[]) => {
     let q = supabase.from('casos').select('*', { count: 'exact', head: true });
-    if (estado) q = q.eq('estado', estado);
+    if (estados && estados.length) q = q.in('estado', estados);
     return q;
   };
-  const [total, enProc, conf, falso, perfilesRes] = await Promise.all([
-    cnt(), cnt('en_proceso'), cnt('confirmado'), cnt('falso'),
+  const [total, porVerif, conf, cerrados, confirmados, perfilesRes] = await Promise.all([
+    cnt(),
+    cnt(['pendiente', 'en_proceso']),
+    cnt(['confirmado', 'enviado_redaccion']),
+    cnt(['falso', 'resuelto']),
+    cnt(['confirmado']),
     supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
   ]);
 
+  // Filtro de estado por URL: admite un estado o una lista separada por comas (las
+  // tarjetas KPI enlazan a grupos como 'falso,resuelto'). Se validan contra el enum
+  // real para no romper la consulta con un valor inexistente.
+  const ESTADOS_VALIDOS = ['pendiente', 'en_proceso', 'confirmado', 'falso', 'enviado_redaccion', 'resuelto'];
+  const estadoFiltro = (searchParams.estado ?? '').split(',').map((s) => s.trim()).filter((e) => ESTADOS_VALIDOS.includes(e));
   let q = supabase.from('casos').select(COLS).order('actualizado_en', { ascending: false }).limit(200);
-  if (searchParams.estado) q = q.eq('estado', searchParams.estado);
+  if (estadoFiltro.length === 1) q = q.eq('estado', estadoFiltro[0]);
+  else if (estadoFiltro.length > 1) q = q.in('estado', estadoFiltro);
   if (searchParams.categoria) q = q.eq('categoria', searchParams.categoria);
   if (searchParams.q) {
     const s = searchParams.q.replace(/[%,()]/g, ' ');
@@ -138,9 +152,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
       {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
-        <Kpi etiqueta="En proceso" valor={enProc.count ?? 0} sub="Siendo verificados" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
-        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Listos para redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado" />
-        <Kpi etiqueta="Falsos / resueltos" valor={falso.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso" />
+        <Kpi etiqueta="Por verificar" valor={porVerif.count ?? 0} sub="Pendientes y en proceso" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=pendiente,en_proceso" />
+        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado,enviado_redaccion" />
+        <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso,resuelto" />
       </div>}
 
       {esAdministrador(perfil) && <>
@@ -250,7 +264,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       {puedeVerif && <>
       <h2 className="fila" style={{ gap: 8 }}>
         <span className="kpi-ico" style={{ width: 32, height: 32, background: '#d1fae5', color: '#16a34a' }}><Icono nombre="ok" size={18} /></span>
-        Listos para redacción <Pill tono="ok" punto={false}>{conf.count ?? 0}</Pill>
+        Listos para redacción <Pill tono="ok" punto={false}>{confirmados.count ?? 0}</Pill>
       </h2>
       <p className="muted" style={{ marginTop: -6 }}>Casos confirmados y activos, listos para pasar a la siguiente etapa.</p>
       {(listos ?? []).length === 0 ? (
