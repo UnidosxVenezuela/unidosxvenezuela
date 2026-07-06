@@ -123,10 +123,15 @@ export async function agregarMiembro(formData: FormData) {
 export async function quitarMiembro(formData: FormData) {
   const supabase = await createClient();
   const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
   const { error } = await supabase.from('miembros_grupo').delete()
     .eq('grupo_id', grupoId)
-    .eq('perfil_id', String(formData.get('perfil_id')));
+    .eq('perfil_id', perfilId);
   if (error) throw new Error('No se pudo quitar el miembro: ' + error.message);
+  // Si el que sale era el líder, el grupo queda sin líder (el trigger 0111 lo
+  // garantiza en la BD; aquí lo replicamos para que aplique de inmediato).
+  await supabase.from('grupos').update({ lider_id: null }).eq('id', grupoId).eq('lider_id', perfilId);
+  revalidatePath('/grupos');
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Miembro quitado');
 }
@@ -167,6 +172,9 @@ export async function banearMiembro(formData: FormData) {
     .insert({ grupo_id: grupoId, perfil_id: perfilId, baneado_por: user.id });
   if (error) throw new Error('No se pudo vetar: ' + error.message);
   await supabase.from('miembros_grupo').delete().eq('grupo_id', grupoId).eq('perfil_id', perfilId);
+  // Si la persona vetada era el líder, el grupo queda sin líder (ver trigger 0111).
+  await supabase.from('grupos').update({ lider_id: null }).eq('id', grupoId).eq('lider_id', perfilId);
+  revalidatePath('/grupos');
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Persona vetada del grupo');
 }
@@ -205,6 +213,7 @@ export async function asignarLider(formData: FormData) {
   const { error } = await supabase.from('grupos')
     .update({ lider_id: perfilId }).eq('id', grupoId);
   if (error) throw new Error('No se pudo asignar el líder: ' + error.message);
+  revalidatePath('/grupos');
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Líder actualizado');
 }
@@ -227,6 +236,7 @@ export async function quitarLider(formData: FormData) {
   }
   const { error } = await supabase.from('grupos').update({ lider_id: null }).eq('id', grupoId);
   if (error) throw new Error('No se pudo quitar el líder: ' + error.message);
+  revalidatePath('/grupos');
   revalidatePath('/grupos/' + grupoId);
   redirigirOk('/grupos/' + grupoId, 'Grupo sin líder');
 }
