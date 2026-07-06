@@ -25,6 +25,7 @@ export async function actualizarPerfil(formData: FormData) {
   const paisRaw = String(formData.get('pais') ?? '').trim();
   const pais = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
 
+  const opt = (k: string) => (String(formData.get(k) ?? '').trim() || null);
   const { error } = await supabase.from('perfiles').update({
     nombre_completo: String(formData.get('nombre') ?? ''),
     telefono: (String(formData.get('telefono') ?? '') || null),
@@ -32,6 +33,12 @@ export async function actualizarPerfil(formData: FormData) {
     organizacion: (String(formData.get('organizacion') ?? '') || null),
     pais,
     habilidades,
+    // Ficha del voluntario (0115): la propia persona la completa.
+    ciudad: opt('ciudad'),
+    disponibilidad: opt('disponibilidad'),
+    horas_semana: opt('horas_semana'),
+    experiencia: opt('experiencia'),
+    contacto_emergencia: opt('contacto_emergencia'),
   }).eq('id', user.id);
 
   if (error) {

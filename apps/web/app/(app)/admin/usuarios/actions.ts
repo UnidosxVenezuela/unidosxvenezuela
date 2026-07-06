@@ -218,8 +218,37 @@ export async function crearUsuario(formData: FormData) {
 // cuentas verificadas de una vez y, si se eligió, las suma a un grupo. Devuelve
 // el resultado por fila (con la contraseña temporal y un enlace wa.me listo).
 
-/** Extrae {nombre, whatsapp, email} de una línea suelta y flexible. */
-function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | null; email: string | null; pais: string | null } | null {
+type FilaParse = {
+  nombre: string; whatsapp: string | null; email: string | null; pais: string | null;
+  ciudad: string | null; disponibilidad: string | null; horas_semana: string | null;
+  habilidades: string[]; experiencia: string | null; contacto_emergencia: string | null;
+};
+const VACIO_EXTRA = { ciudad: null, disponibilidad: null, horas_semana: null, habilidades: [] as string[], experiencia: null, contacto_emergencia: null };
+
+/** Formato por COLUMNAS separadas por «|», para importar con la ficha completa:
+ *  nombre | whatsapp | correo | país | ciudad | disponibilidad | horas/semana | habilidades | experiencia | contacto_emergencia
+ *  Los campos que falten quedan vacíos; «habilidades» admite varias separadas por comas. */
+function parsearColumnas(raw: string): FilaParse | null {
+  const c = raw.split('|').map((x) => x.trim());
+  const val = (i: number) => (c[i] && c[i].length ? c[i] : null);
+  const nombre = val(0);
+  const whatsapp = c[1] ? normalizarWhatsapp(c[1]) : null;
+  const email = c[2] ? c[2].toLowerCase() : null;
+  if (!nombre && !whatsapp && !email) return null;
+  const paisTok = val(3);
+  const habilidades = c[7] ? c[7].split(',').map((h) => h.trim()).filter(Boolean).slice(0, 30) : [];
+  return {
+    nombre: nombre || (whatsapp ? '+' + whatsapp : (email ?? 'Sin nombre')),
+    whatsapp, email, pais: paisTok ? codigoPais(paisTok) : null,
+    ciudad: val(4), disponibilidad: val(5), horas_semana: val(6),
+    habilidades, experiencia: val(8), contacto_emergencia: val(9),
+  };
+}
+
+/** Extrae los datos de una línea. Si trae «|», usa el formato por columnas (ficha
+ *  completa); si no, el formato libre (número/correo/nombre/país). */
+function parsearLineaImport(raw: string): FilaParse | null {
+  if (String(raw ?? '').includes('|')) return parsearColumnas(raw);
   let s = String(raw ?? '').replace(/[‒-―]/g, '-').trim(); // guiones largos → '-'
   if (!s) return null;
   const em = s.match(/[^\s<>(),]+@[^\s<>(),]+\.[^\s<>(),]+/);
@@ -245,7 +274,7 @@ function parsearLineaImport(raw: string): { nombre: string; whatsapp: string | n
     .replace(/\s+/g, ' ')
     .trim();
   if (!nombre) nombre = whatsapp ? '+' + whatsapp : (email ?? 'Sin nombre');
-  return { nombre, whatsapp, email, pais };
+  return { nombre, whatsapp, email, pais, ...VACIO_EXTRA };
 }
 
 export async function importarUsuarios(_prev: EstadoImport, formData: FormData): Promise<EstadoImport> {
@@ -274,7 +303,7 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   const paisDefecto = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
   const lineas = String(formData.get('lista') ?? '').split('\n').slice(0, 200);
 
-  const parsed = lineas.map(parsearLineaImport).filter(Boolean) as { nombre: string; whatsapp: string | null; email: string | null; pais: string | null }[];
+  const parsed = lineas.map(parsearLineaImport).filter(Boolean) as FilaParse[];
   if (parsed.length === 0) {
     return { ok: false, mensaje: 'No se reconoció ningún contacto. Pega una persona por línea, con su número (con código de país) o su correo.', filas: [] };
   }
@@ -306,7 +335,14 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       continue;
     }
     const { error: e2 } = await supabase.from('perfiles')
-      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp, pais: p.pais ?? paisDefecto })
+      .update({
+        nombre_completo: p.nombre, rol, verificado: true, organizacion,
+        whatsapp: p.whatsapp, pais: p.pais ?? paisDefecto,
+        // Ficha del voluntario (0115): solo se envían si vinieron por columnas.
+        ciudad: p.ciudad, disponibilidad: p.disponibilidad, horas_semana: p.horas_semana,
+        experiencia: p.experiencia, contacto_emergencia: p.contacto_emergencia,
+        ...(p.habilidades.length ? { habilidades: p.habilidades } : {}),
+      })
       .eq('id', creado.user.id);
     if (e2) {
       // Revertir la cuenta a medias (p. ej. WhatsApp repetido) para no dejar huérfanos.

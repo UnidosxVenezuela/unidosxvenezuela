@@ -60,11 +60,12 @@ export default function Importador({
         <div className="campo">
           <label htmlFor="lista">Pega la lista (una persona por línea)</label>
           <textarea id="lista" name="lista" className="input" rows={9} required
-            placeholder={'+58 412-7585420 - Raquel Gámez - correo@ejemplo.com - Venezuela\n+57 316 0406992 - Yaneska Crespo - Colombia\n+34 600 123 456 - Jeimmy - ES'} />
+            placeholder={'+58 412-7585420 - Raquel Gámez - correo@ejemplo.com - Venezuela\n+57 316 0406992 - Yaneska Crespo - Colombia\n\nCon ficha completa (separada por «|»):\nAnabel | +584120725582 | anabel@ejemplo.com | Venezuela | Barquisimeto | 4-8 pm (GMT-4) | 5-10 horas | Español, Inglés | Analista de datos | Carlos (esposo) 04125670165'} />
           <p className="muted" style={{ fontSize: '.82rem', marginTop: 4 }}>
-            Reconocemos el número, el correo (si lo hay), el nombre y —si lo agregas como un campo más— el <strong>país</strong>:
-            su nombre o su código (p. ej. «Venezuela» o «VE»). Así una misma lista admite orígenes distintos; si una línea no
-            trae país, se usa el «País por defecto». Las líneas sin número ni correo se omiten.
+            <strong>Formato simple:</strong> reconocemos número, correo, nombre y —como un campo más— el <strong>país</strong> (nombre o código: «Venezuela» / «VE»).
+            <br /><strong>Formato ficha (con «|»):</strong> las columnas van en este orden —
+            <code>nombre | whatsapp | correo | país | ciudad | disponibilidad | horas/semana | habilidades | experiencia | contacto de emergencia</code> —
+            los campos que falten se dejan vacíos y «habilidades» admite varias separadas por comas. Si una línea no trae país, se usa el «País por defecto»; las líneas sin número ni correo se omiten.
           </p>
         </div>
         <BotonEnviar />
