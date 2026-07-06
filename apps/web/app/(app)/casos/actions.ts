@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
 import type { EstadoCaso, Rol } from '@unidos/types';
@@ -155,6 +155,20 @@ export async function crearCaso(formData: FormData) {
 
   revalidatePath('/casos');
   redirigirOk('/casos?caso=' + casoId, 'Caso creado');
+}
+
+// Derivar un caso-requerimiento confirmado a Logística (Propuesta Fase 2): crea la
+// solicitud de insumo enlazada (RPC atómica que valida, sella el enlace y audita).
+export async function derivarCasoLogistica(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const { error } = await supabase.rpc('derivar_caso_a_logistica', { p_caso: id });
+  if (error) return redirigirError(volver, error.message || 'No se pudo derivar el caso a Logística.');
+  revalidatePath('/casos'); revalidatePath('/insumos');
+  redirigirOk(volver, 'Caso derivado a Logística. La solicitud de insumo ya está en el tablero para coordinar la entrega.');
 }
 
 export async function cambiarEstadoCaso(formData: FormData) {

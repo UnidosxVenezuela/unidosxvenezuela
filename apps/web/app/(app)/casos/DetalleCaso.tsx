@@ -1,13 +1,13 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
-import { cambiarEstadoCaso, actualizarCaso, eliminarCaso, tomarCaso } from './actions';
+import { cambiarEstadoCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -23,9 +23,13 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, puedeTomar = false, miId }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; puedeTomar?: boolean; miId?: string;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, puedeTomar = false, miId, solicitud = null }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any;
 }) {
+  // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
+  // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
+  const esDerivable = caso.es_requerimiento && caso.categoria !== 'Desaparecidos' && (caso.estado === 'confirmado' || caso.estado === 'enviado_redaccion');
+  const puedeDerivar = puedeEditar || esAdmin || caso.creado_por === miId;
   const nombres = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
   const waFuente = hrefSeguro(caso.fuente_url);
@@ -36,6 +40,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     if (accion === 'casos:insert') return 'Caso creado';
     if (accion === 'casos:delete') return 'Caso eliminado';
     if (accion === 'casos:edicion') return 'Editó los datos del caso';
+    if (accion === 'casos:derivado') return 'Derivado a Logística';
     if (accion === 'casos:copia') return 'Redacción copió la información';
     if (accion === 'casos:descarga') return 'Redacción descargó la información';
     if (accion === 'casos:update') {
@@ -54,6 +59,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     if (accion === 'casos:insert') return 'Creó el caso';
     if (accion === 'casos:delete') return 'Eliminó el caso';
     if (accion === 'casos:edicion') return 'Editó los datos';
+    if (accion === 'casos:derivado') return 'Derivó a Logística';
     if (accion === 'casos:copia') return 'Copió (Redacción)';
     if (accion === 'casos:descarga') return 'Descargó (Redacción)';
     if (accion === 'casos:update') {
@@ -118,6 +124,27 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
       </div>
+
+      {caso.es_requerimiento && (
+        <div className="tarjeta" style={{ borderColor: '#99f6e4' }}>
+          <h3 className="aside-titulo"><Icono nombre="camion" size={16} /> Respuesta · Logística</h3>
+          {solicitud ? (
+            <p className="muted" style={{ margin: 0 }}>
+              Derivado a Logística · <strong style={{ color: 'var(--texto)' }}>{ETIQUETA_ESTADO_INSUMO[solicitud.estado] ?? solicitud.estado}</strong>.
+              {esAdmin && <> <Link href={'/insumos/' + solicitud.id}>Ver solicitud ↗</Link></>}
+            </p>
+          ) : esDerivable && puedeDerivar ? (
+            <form action={derivarCasoLogistica}>
+              <input type="hidden" name="caso_id" value={caso.id} />
+              <input type="hidden" name="volver" value={volver} />
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.9rem' }}>Convierte esta solicitud de ayuda en una tarea de Logística (insumo), enlazada al caso, para coordinar la entrega.</p>
+              <button className="btn btn-primario" type="submit"><Icono nombre="camion" size={16} /> Derivar a Logística</button>
+            </form>
+          ) : (
+            <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>Cuando el caso esté <strong>confirmado</strong>, la Verificación podrá derivarlo a Logística para coordinar la entrega.</p>
+          )}
+        </div>
+      )}
 
       {puedeEditarDatos && <FormEditarCaso caso={caso} volver={volver} />}
 

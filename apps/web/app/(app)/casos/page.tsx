@@ -109,14 +109,15 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const hrefCaso = (cid: string) => { const p = new URLSearchParams(filtros); p.set('caso', cid); return '/casos?' + p.toString(); };
   const cerrarHref = '/casos' + (filtros.toString() ? '?' + filtros.toString() : '');
 
-  let drawerCaso: any = null; let drawerHist: any[] = [];
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
-    const [{ data: dc }, { data: dh }, { data: dAdj }] = await Promise.all([
+    const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
+      supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', searchParams.caso).maybeSingle(),
     ]);
-    drawerCaso = dc; drawerHist = dh ?? [];
+    drawerCaso = dc; drawerHist = dh ?? []; drawerSol = ds;
     if (drawerCaso) {
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
@@ -238,7 +239,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
             <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle del caso ' + drawerCaso.titulo}>
-              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica}
+              <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} puedeTomar={verifica} miId={user!.id} />
             </DrawerModal>

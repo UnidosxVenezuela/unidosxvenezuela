@@ -17,7 +17,7 @@ export default async function InsumosPage() {
 
   const supabase = await createClient();
   const { data } = await supabase.from('solicitudes_insumo')
-    .select('id, titulo, tipo, cantidad, urgencia, estado, creado_en, puntos_acopio(nombre), proveedores(nombre)')
+    .select('id, titulo, tipo, cantidad, urgencia, estado, creado_en, caso_id, puntos_acopio(nombre), proveedores(nombre)')
     .order('creado_en', { ascending: false });
   const solicitudes = (data ?? []) as any[];
   const activas = solicitudes.filter((s) => s.estado !== 'cancelado');
@@ -65,6 +65,7 @@ export default async function InsumosPage() {
                   </div>
                   <strong style={{ display: 'block', margin: '6px 0 2px' }}>{s.titulo}</strong>
                   {s.cantidad && <div className="muted" style={{ fontSize: '.85rem' }}>{s.cantidad}</div>}
+                  {s.caso_id && <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4, color: '#0f766e' }}><Icono nombre="ubicacion" size={13} /> Solicitud de ayuda (caso derivado)</div>}
                   {s.puntos_acopio?.nombre && <div className="muted fila" style={{ gap: 4, fontSize: '.8rem', marginTop: 4 }}><Icono nombre="ubicacion" size={13} /> {s.puntos_acopio.nombre}</div>}
                   {s.proveedores?.nombre && <div className="muted fila" style={{ gap: 4, fontSize: '.8rem' }}><Icono nombre="usuario" size={13} /> {s.proveedores.nombre}</div>}
                 </Link>

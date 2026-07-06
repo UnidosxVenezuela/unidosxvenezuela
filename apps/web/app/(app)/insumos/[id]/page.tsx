@@ -21,10 +21,18 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   const id = params.id;
 
   const { data: sData } = await supabase.from('solicitudes_insumo')
-    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
+    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, caso_id, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
     .eq('id', id).single();
   const s: any = sData;
   if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Insumos</Link></div>;
+
+  // Caso de ayuda de origen, si la solicitud fue derivada de un caso (Fase 2). Se
+  // obtiene por RPC curada (Logística no lee casos por RLS).
+  let origen: { numero: number; titulo: string } | null = null;
+  if (s.caso_id) {
+    const { data: co } = await supabase.rpc('caso_de_solicitud', { p_caso: s.caso_id });
+    origen = ((co as any[]) ?? [])[0] ?? null;
+  }
 
   const [{ data: envios }, { data: proveedores }, { data: perfilesLista }] = await Promise.all([
     supabase.from('envios').select('id, tipo_vehiculo, flete, origen, destino, notas, perfiles!envios_voluntario_id_fkey(nombre_completo)').eq('solicitud_id', id).order('creado_en'),
@@ -52,6 +60,11 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               <span className="insignia">{ETIQUETA_TIPO_INSUMO[s.tipo] ?? s.tipo}</span>
               {s.cantidad && <span className="muted">Cantidad: <strong style={{ color: 'var(--texto)' }}>{s.cantidad}</strong></span>}
             </div>
+            {origen && (
+              <div className="fila" style={{ gap: 6, marginTop: 10, padding: '6px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8, fontSize: '.85rem' }}>
+                <Icono nombre="ubicacion" size={14} /> Derivado de la solicitud de ayuda del caso <strong style={{ color: 'var(--texto)' }}>#{String(origen.numero).padStart(5, '0')}</strong> — {origen.titulo}
+              </div>
+            )}
             {s.descripcion && <p style={{ whiteSpace: 'pre-wrap', marginTop: 10 }}>{s.descripcion}</p>}
             <div className="muted" style={{ fontSize: '.85rem', marginTop: 8 }}>
               {s.puntos_acopio?.nombre && <div className="fila" style={{ gap: 4 }}><Icono nombre="ubicacion" size={14} /> {s.puntos_acopio.nombre}</div>}

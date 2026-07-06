@@ -589,4 +589,66 @@ begin;
   end $$;
 rollback;
 
+-- ══ Derivar un caso-requerimiento a Logística (0113) ══
+
+\echo '== Test 31: la Verificación deriva un requerimiento confirmado → solicitud enlazada; no se deriva dos veces (0113) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, req_tipo, req_urgencia)
+    values ('00000000-0000-0000-0000-00000000ff01', '_TEST_deriv', 'Otras informaciones', 'confirmado', true, 10.5, -66.9, 'agua', 'alta');
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_sol uuid; r record;
+  begin
+    v_sol := public.derivar_caso_a_logistica('00000000-0000-0000-0000-00000000ff01');
+    if v_sol is null then raise exception 'FALLO: la derivación no devolvió una solicitud'; end if;
+    select tipo, urgencia, estado, caso_id, solicitado_por into r from public.solicitudes_insumo where id = v_sol;
+    if r.caso_id <> '00000000-0000-0000-0000-00000000ff01' then raise exception 'FALLO: la solicitud no quedó enlazada al caso'; end if;
+    if r.tipo::text <> 'agua' then raise exception 'FALLO: no arrastró el tipo (%)', r.tipo; end if;
+    if r.urgencia::text <> 'alta' then raise exception 'FALLO: no arrastró la urgencia (%)', r.urgencia; end if;
+    if r.estado::text <> 'solicitado' then raise exception 'FALLO: la solicitud no nació «solicitado»'; end if;
+    if r.solicitado_por <> (current_setting('request.jwt.claims')::json ->> 'sub')::uuid then
+      raise exception 'FALLO: no selló solicitado_por con el actor'; end if;
+    begin
+      perform public.derivar_caso_a_logistica('00000000-0000-0000-0000-00000000ff01');
+      raise exception 'FALLO: permitió derivar el mismo caso dos veces';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if; -- re-lanza el fallo real
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 32: no se deriva un caso NO confirmado (0113) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-00000000ff02', '_TEST_deriv_pend', 'Otras informaciones', 'pendiente', true, 10.5, -66.9);
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$ begin
+    begin
+      perform public.derivar_caso_a_logistica('00000000-0000-0000-0000-00000000ff02');
+      raise exception 'FALLO: derivó un caso NO confirmado';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 33: caso_de_solicitud() devuelve el caso de origen a Logística (0113) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-00000000ff03', '_TEST_origen', 'Otras informaciones', 'confirmado', true, 10.5, -66.9);
+  update public.perfiles set rol = 'logistica', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.caso_de_solicitud('00000000-0000-0000-0000-00000000ff03');
+    if n <> 1 then raise exception 'FALLO: logística no obtuvo el caso de origen (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
