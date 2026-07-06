@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
@@ -11,7 +11,7 @@ import BotonEnviar from '@/components/BotonEnviar';
 
 export default async function NuevoCasoPage() {
   const { user, perfil } = await requireUsuario();
-  if (!esAdministrador(perfil) && !rolesDe(perfil).includes('recopilacion')) redirect('/casos');
+  if (!esAdministrador(perfil) && !rolesDe(perfil).includes('recopilacion') && !esAdminVerificacion(perfil)) redirect('/casos');
 
   // Reportar casos exige la 2ª verificación de identidad aprobada (salvo admin): la RLS
   // lo impone. Mostramos un aviso claro en vez de dejar que el guardado falle con un

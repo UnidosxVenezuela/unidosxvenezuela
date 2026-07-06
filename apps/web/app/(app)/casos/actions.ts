@@ -35,9 +35,14 @@ async function exigirCasos(soloVerificar: boolean) {
   const permitidos = soloVerificar
     ? ['admin', 'verificador', 'busqueda']
     : ['admin', 'recopilacion'];
-  if (!yo?.verificado || !roles.some((r) => permitidos.includes(r as string))) {
-    throw new Error('No tienes permisos para esta acción.');
+  let ok = !!yo?.verificado && roles.some((r) => permitidos.includes(r as string));
+  // El Admin de Verificaciones opera los casos de su área con su 2ª verificación
+  // (identidad) aprobada. La RLS/RPC aplican el mismo criterio.
+  if (!ok && yo?.verificado && roles.includes('admin_verificacion')) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
+    ok = (vi as any)?.estado === 'aprobada';
   }
+  if (!ok) throw new Error('No tienes permisos para esta acción.');
   return { supabase, user };
 }
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import DetalleCaso from '../DetalleCaso';
@@ -8,9 +8,16 @@ import DetalleCaso from '../DetalleCaso';
 export default async function CasoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
   const accesoBusqueda = puedeBusqueda(perfil);
-  if (!puedeRecopilar(perfil) && !accesoBusqueda) redirect('/dashboard');
-  const verifica = puedeVerificar(perfil) || accesoBusqueda; // cambia estado / toma (RLS aplica categoría + 2ª verif)
+  const supervisa = esAdminVerificacion(perfil);
+  if (!puedeRecopilar(perfil) && !accesoBusqueda && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
+  // El Admin de Verificaciones opera su área con la 2ª verificación (identidad) aprobada.
+  let puedeOperar = false;
+  if (supervisa) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    puedeOperar = (vi as any)?.estado === 'aprobada';
+  }
+  const verifica = puedeVerificar(perfil) || accesoBusqueda || puedeOperar; // cambia estado / toma (RLS aplica categoría + 2ª verif)
   const id = params.id;
 
   const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');

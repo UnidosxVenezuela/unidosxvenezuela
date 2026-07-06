@@ -28,8 +28,14 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
   // El Admin de Redes supervisa el contenido (solo lectura; la RLS bloquea la escritura).
   const supervisa = esAdminRedes(perfil);
   const supabase = await createClient();
-  // El área de Contenido queda para el admin, el Admin de Redes (supervisión) y los
-  // líderes de sus grupos.
+  // El Admin de Redes OPERA el contenido con su 2ª verificación (identidad) aprobada;
+  // la RLS aplica el mismo criterio.
+  let puedeOperarRedes = false;
+  if (supervisa) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    puedeOperarRedes = (vi as any)?.estado === 'aprobada';
+  }
+  // El área de Contenido queda para el admin, el Admin de Redes y los líderes de sus grupos.
   if (!esAdmin && !supervisa && !(await esLiderContenido(supabase, user!.id))) redirect('/dashboard');
 
   const [{ data: piezasData }, { data: perfilesData }, { data: marca }] = await Promise.all([
@@ -64,7 +70,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
     if (dp) {
       const rolEtapa = ROL_DE_ETAPA[dp.etapa as EtapaContenido];
       // El influencer puede actuar en cualquier etapa; el resto en la suya.
-      drawerPuedeEtapa = esCoordinacion(perfil) || rolesDe(perfil).includes('influencers')
+      drawerPuedeEtapa = esCoordinacion(perfil) || puedeOperarRedes || rolesDe(perfil).includes('influencers')
         || (!!rolEtapa && rolesDe(perfil).includes(rolEtapa));
     }
   }

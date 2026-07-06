@@ -22,7 +22,7 @@ export default async function DigitalizacionPage() {
   const supabase = await createClient();
 
   // El rol digitalizador necesita la 2ª verificación (identidad) aprobada.
-  if (!esAdmin && !supervisa) {
+  if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       return (

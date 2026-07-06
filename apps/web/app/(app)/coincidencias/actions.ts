@@ -14,7 +14,8 @@ async function exigir() {
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const esAdmin = roles.includes('admin');
-  const esBusq = roles.includes('busqueda');
+  // El Admin de Verificaciones opera coincidencias como el mando (con 2ª verif).
+  const esBusq = roles.includes('busqueda') || roles.includes('admin_verificacion');
   if (!esAdmin && !esBusq) throw new Error('No tienes permiso para gestionar coincidencias.');
   if (!esAdmin) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();

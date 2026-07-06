@@ -25,7 +25,8 @@ async function exigirDigitalizar() {
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const esAdmin = roles.includes('admin');
-  const esDig = roles.includes('digitalizador');
+  // El Admin de Verificaciones digitaliza en su área (con su 2ª verificación aprobada).
+  const esDig = roles.includes('digitalizador') || roles.includes('admin_verificacion');
   if (!yo?.verificado || (!esAdmin && !esDig)) throw new Error('No tienes permiso para digitalizar.');
   // El digitalizador necesita la 2ª verificación (identidad) aprobada; admin exento.
   if (!esAdmin) {
