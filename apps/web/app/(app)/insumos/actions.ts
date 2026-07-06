@@ -51,6 +51,18 @@ export async function asignarProveedorSolicitud(formData: FormData) {
   redirigirOk('/insumos/' + id, 'Proveedor asignado');
 }
 
+// Enlazar la solicitud al centro de acopio que la cubrirá (Fase 3: sugerencia del
+// más cercano con existencias). La RLS (solins_update) exige puede_logistica().
+export async function asignarCentroSolicitud(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const puntoId = String(formData.get('punto_id') ?? '').trim() || null;
+  const { error } = await supabase.from('solicitudes_insumo').update({ punto_id: puntoId }).eq('id', id);
+  if (error) throw new Error('No se pudo asignar el centro: ' + error.message);
+  revalidatePath('/insumos/' + id);
+  redirigirOk('/insumos/' + id, 'Centro de acopio asignado');
+}
+
 export async function eliminarSolicitud(formData: FormData) {
   const { supabase } = await usuario();
   const { error } = await supabase.from('solicitudes_insumo').delete().eq('id', String(formData.get('id')));

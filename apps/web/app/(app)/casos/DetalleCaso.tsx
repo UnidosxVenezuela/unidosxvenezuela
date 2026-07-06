@@ -17,6 +17,7 @@ const EXPLICA_ESTADO: Record<string, string> = {
   confirmado: 'La información fue validada; el equipo de Envío a Redacción lo tomará.',
   falso: 'La información es falsa, antigua o el caso ya fue resuelto. No continúa en el flujo.',
   enviado_redaccion: 'El caso fue enviado a Redacción: el flujo de verificación terminó.',
+  resuelto: 'La ayuda se entregó (Logística) y el caso quedó atendido. Ciclo cerrado.',
 };
 
 /**

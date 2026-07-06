@@ -9,6 +9,7 @@ const TONO: Record<TEstadoCaso, TonoPill> = {
   confirmado: 'ok',
   falso: 'critica',
   enviado_redaccion: 'info',
+  resuelto: 'ok',        // atendido / entregado — ciclo cerrado
 };
 
 /** Insignia de estado de caso. */

@@ -9,7 +9,7 @@ import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud } from '../actions';
 
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
@@ -40,6 +40,14 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
   ]);
   const sig = siguienteEstadoInsumo(s.estado);
+
+  // Sugerencia de centros de acopio cercanos CON existencias (Fase 3), solo para
+  // solicitudes derivadas de un caso y aún abiertas. RPC curada por haversine.
+  let centros: any[] = [];
+  if (s.caso_id && s.estado !== 'entregado' && s.estado !== 'cancelado') {
+    const { data: cc } = await supabase.rpc('centros_cercanos_para_solicitud', { p_solicitud: id, p_limite: 5 });
+    centros = (cc as any[]) ?? [];
+  }
 
   return (
     <div>
@@ -166,6 +174,33 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               </form>
               <Link href="/insumos/proveedores" className="muted" style={{ fontSize: '.82rem', display: 'inline-block', marginTop: 8 }}>Gestionar proveedores →</Link>
             </div>
+
+            {s.caso_id && centros.length > 0 && (
+              <div className="tarjeta">
+                <h3 className="aside-titulo"><Icono nombre="ubicacion" size={16} /> Centros cercanos</h3>
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>Ordenados por existencias y cercanía a la solicitud de ayuda. Asigna el que la cubrirá.</p>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {centros.map((c: any) => (
+                    <div key={c.punto_id} className="fila" style={{ justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="fila" style={{ gap: 6 }}>
+                          <strong style={{ fontSize: '.9rem' }}>{c.nombre}</strong>
+                          {c.con_stock
+                            ? <Pill tono="ok" punto={false}>con stock</Pill>
+                            : <Pill tono="neutra" punto={false}>sin stock</Pill>}
+                        </div>
+                        <div className="muted" style={{ fontSize: '.8rem' }}>~{Math.round(c.distancia_km)} km{c.telefono ? ' · ' + c.telefono : ''}</div>
+                      </div>
+                      <form action={asignarCentroSolicitud}>
+                        <input type="hidden" name="id" value={id} />
+                        <input type="hidden" name="punto_id" value={c.punto_id} />
+                        <button className="btn" style={{ minHeight: 32, padding: '2px 10px' }} type="submit">Asignar</button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="basura" size={16} /> Eliminar</h3>
