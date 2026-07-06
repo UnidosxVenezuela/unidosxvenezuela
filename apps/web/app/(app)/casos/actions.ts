@@ -10,6 +10,41 @@ import type { EstadoCaso, Rol } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
+function numOpt(v: FormDataEntryValue | null): number | null {
+  const s = txt(v); if (!s) return null; const n = Number(s); return Number.isFinite(n) ? n : null;
+}
+
+// Valores válidos de los enums reutilizados (public.tipo_insumo, public.prioridad).
+const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refugio', 'otro'];
+const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
+
+// Campos de «solicitud de ayuda con ubicación» (Propuesta Fase 1). Si el bloque no
+// está activo, DEVUELVE los campos en null/false (así al desmarcarlo se limpian).
+// Un requerimiento exige ubicación y NUNCA es 'Desaparecidos' (frontera con Búsqueda);
+// el CHECK de la BD (0112) es el respaldo.
+function datosRequerimiento(formData: FormData, categoria: string | null) {
+  const es = txt(formData.get('es_requerimiento')) === 'on';
+  if (!es) {
+    return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null };
+  }
+  if (categoria === 'Desaparecidos') {
+    throw new Error('Un caso de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
+  }
+  const lat = numOpt(formData.get('lat'));
+  const lng = numOpt(formData.get('lng'));
+  if (lat === null || lng === null || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    throw new Error('Marca la ubicación en el mapa (toca o arrastra el pin).');
+  }
+  const tipo = opt(formData.get('req_tipo'));
+  const urg = opt(formData.get('req_urgencia'));
+  return {
+    es_requerimiento: true,
+    lat, lng,
+    req_tipo: tipo && TIPOS_INSUMO_VAL.includes(tipo) ? tipo : null,
+    req_cantidad: opt(formData.get('req_cantidad')),
+    req_urgencia: urg && PRIORIDADES_VAL.includes(urg) ? urg : 'media',
+  };
+}
 
 // Segunda línea de defensa para el enlace de la fuente: Google Safe Browsing
 // (solo servidor). Fail-open: si no hay clave o la API falla, no bloquea (se
@@ -76,6 +111,8 @@ export async function crearCaso(formData: FormData) {
     // Pista para el Grupo de Búsqueda: solo aplica a «Desaparecidos». Si se marca,
     // el disparador (0098) crea la ficha ya clasificada como NNA → va al Buscador NNA.
     es_nna: txt(formData.get('es_nna')) === 'on',
+    // Solicitud de ayuda con ubicación (Fase 1): campos vacíos si no se marcó.
+    ...datosRequerimiento(formData, categoria),
   }).select('id').single();
   if (error) {
     // La RLS exige admin o recopilación con 2ª verificación aprobada. Mensaje claro.
@@ -201,14 +238,17 @@ export async function editarCaso(formData: FormData) {
   const an = analizarUrl(fuenteUrl);
   if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
   await exigirEnlaceSeguro(an.url ?? fuenteUrl);
+  const categoria = opt(formData.get('categoria'));
   const { error } = await supabase.from('casos').update({
     titulo,
     descripcion: opt(formData.get('descripcion')),
-    categoria: opt(formData.get('categoria')),
+    categoria,
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     actualizado_en: new Date().toISOString(),
+    // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
+    ...datosRequerimiento(formData, categoria),
   }).eq('id', id);
   if (error) throw new Error('No se pudo editar el caso: ' + error.message);
   // Registro explícito de la edición (además del trigger de auditoría).

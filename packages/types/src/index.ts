@@ -143,6 +143,9 @@ export interface AdjuntoTarea {
 
 export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion';
 
+/** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
+export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';
+
 export interface Caso {
   id: string;
   numero: number;
@@ -158,6 +161,26 @@ export interface Caso {
   creado_por: string | null;
   creado_en: string;
   actualizado_en: string;
+  es_nna: boolean;
+  // Solicitud de ayuda con ubicación (Propuesta casos↔mapa↔acopio, Fase 1).
+  es_requerimiento: boolean;
+  lat: number | null;
+  lng: number | null;
+  req_tipo: TipoInsumo | null;
+  req_cantidad: string | null;
+  req_urgencia: Prioridad | null;
+}
+
+/** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */
+export interface SolicitudAyudaMapa {
+  id: string;
+  titulo: string;
+  categoria: string | null;
+  lat: number;
+  lng: number;
+  tipo: TipoInsumo | null;
+  urgencia: Prioridad | null;
+  estado: EstadoCaso;
 }
 
 // Pipeline de producción de contenido (un caso confirmado → pieza publicable).

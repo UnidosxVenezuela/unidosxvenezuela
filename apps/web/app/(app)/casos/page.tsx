@@ -112,7 +112,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en, asignado_a').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
     ]);

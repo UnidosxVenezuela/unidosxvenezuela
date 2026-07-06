@@ -1,6 +1,7 @@
 import Icono from '@/components/Icono';
 import { CATEGORIAS_CASO } from '@/lib/constantes';
 import AvisoEnlace from '@/components/AvisoEnlace';
+import BloqueRequerimiento from './BloqueRequerimiento';
 import { editarCaso } from './actions';
 
 /** Formulario colapsable para corregir/completar los datos de un caso. Reutilizado
@@ -26,6 +27,13 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
           <div className="campo"><label>Fuente</label><input name="fuente" className="input" defaultValue={caso.fuente ?? ''} /></div>
           <div className="campo"><label>Enlace de la fuente</label><AvisoEnlace name="fuente_url" defaultValue={caso.fuente_url ?? ''} /></div>
         </div>
+        {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
+        {caso.categoria !== 'Desaparecidos' && (
+          <BloqueRequerimiento defaults={{
+            es_requerimiento: caso.es_requerimiento, lat: caso.lat, lng: caso.lng,
+            req_tipo: caso.req_tipo, req_cantidad: caso.req_cantidad, req_urgencia: caso.req_urgencia,
+          }} />
+        )}
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
         <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Corrige o completa la información. La edición queda registrada en el historial.</p>
       </form>
