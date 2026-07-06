@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
 import { mensajeAuth } from '@/lib/mensajes-auth';
 import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
-import { AREAS_REGISTRO } from '@/lib/constantes';
+import { AREAS_REGISTRO, PAISES } from '@/lib/constantes';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -14,7 +14,7 @@ import EntradaTelefono from '@/components/EntradaTelefono';
 export default function RegistroPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '', area: '' });
+  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '', area: '', pais: '' });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +31,7 @@ export default function RegistroPage() {
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
     if (!form.area) return setError('Selecciona a qué área deseas postular.');
+    if (!form.pais) return setError('Indica desde qué país nos ayudas.');
     const correo = form.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))
       return setError('Escribe un correo válido (por ejemplo, nombre@correo.com).');
@@ -48,6 +49,7 @@ export default function RegistroPage() {
           organizacion: form.organizacion,
           motivo: form.motivo,
           area_registro: form.area,
+          pais: form.pais,
           terminos_version: LEGAL_VERSION,
         },
       },
@@ -116,6 +118,14 @@ export default function RegistroPage() {
               {AREAS_REGISTRO.find((a) => a.valor === form.area)?.ayuda}
             </p>
           )}
+        </div>
+        <div className="campo">
+          <label htmlFor="pais">¿Desde qué país nos ayudas? *</label>
+          <select id="pais" className="input" value={form.pais} onChange={(e) => set('pais', e.target.value)} required>
+            <option value="" disabled>Selecciona tu país…</option>
+            {PAISES.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
+          </select>
+          <p className="muted" style={{ fontSize: '.85rem', margin: '4px 0 0' }}>Nos ayuda a conocer tu zona horaria y coordinar mejor el trabajo.</p>
         </div>
         <div className="campo">
           <label htmlFor="organizacion">Organización (opcional)</label>

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizarWhatsapp } from '@/lib/whatsapp';
 import { subirArchivo } from '@/lib/storage';
+import { PAISES } from '@/lib/constantes';
 
 export async function actualizarPerfil(formData: FormData) {
   const supabase = await createClient();
@@ -20,11 +21,16 @@ export async function actualizarPerfil(formData: FormData) {
   const whatsapp = whatsappRaw ? normalizarWhatsapp(whatsappRaw) : null;
   if (whatsappRaw && !whatsapp) throw new Error('El WhatsApp debe incluir el código de país (solo dígitos).');
 
+  // País: solo se acepta un código conocido de la lista (o vacío para quitarlo).
+  const paisRaw = String(formData.get('pais') ?? '').trim();
+  const pais = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
+
   const { error } = await supabase.from('perfiles').update({
     nombre_completo: String(formData.get('nombre') ?? ''),
     telefono: (String(formData.get('telefono') ?? '') || null),
     whatsapp,
     organizacion: (String(formData.get('organizacion') ?? '') || null),
+    pais,
     habilidades,
   }).eq('id', user.id);
 

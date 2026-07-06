@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
-import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
+import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, PAISES } from '@/lib/constantes';
 import type { Rol, AreaAdmin } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
 
@@ -259,6 +259,9 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
   }
   const grupoId = String(formData.get('grupo_id') ?? '').trim() || null;
   const organizacion = String(formData.get('organizacion') ?? '').trim() || null;
+  // País común a toda la lista (solo un código conocido; vacío = no se indica).
+  const paisRaw = String(formData.get('pais') ?? '').trim();
+  const pais = PAISES.some((p) => p.codigo === paisRaw) ? paisRaw : null;
   const lineas = String(formData.get('lista') ?? '').split('\n').slice(0, 200);
 
   const parsed = lineas.map(parsearLineaImport).filter(Boolean) as { nombre: string; whatsapp: string | null; email: string | null }[];
@@ -293,7 +296,7 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       continue;
     }
     const { error: e2 } = await supabase.from('perfiles')
-      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp })
+      .update({ nombre_completo: p.nombre, rol, verificado: true, organizacion, whatsapp: p.whatsapp, pais })
       .eq('id', creado.user.id);
     if (e2) {
       // Revertir la cuenta a medias (p. ej. WhatsApp repetido) para no dejar huérfanos.

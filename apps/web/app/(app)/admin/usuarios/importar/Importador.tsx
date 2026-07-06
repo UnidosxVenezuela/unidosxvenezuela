@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from 'react-dom';
 import Icono from '@/components/Icono';
 import { importarUsuarios } from '../actions';
 import { IMPORT_INICIAL, type EstadoImport, type FilaImport } from '../tipos';
+import { PAISES } from '@/lib/constantes';
 
 function BotonEnviar() {
   const { pending } = useFormStatus();
@@ -42,9 +43,18 @@ export default function Importador({
             </select>
           </div>
         </div>
-        <div className="campo">
-          <label htmlFor="organizacion">Organización (opcional, para todos)</label>
-          <input id="organizacion" name="organizacion" className="input" />
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="organizacion">Organización (opcional, para todos)</label>
+            <input id="organizacion" name="organizacion" className="input" />
+          </div>
+          <div className="campo">
+            <label htmlFor="pais">País (opcional, para todos)</label>
+            <select id="pais" name="pais" className="input" defaultValue="">
+              <option value="">— Sin indicar —</option>
+              {PAISES.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
+            </select>
+          </div>
         </div>
         <div className="campo">
           <label htmlFor="lista">Pega la lista (una persona por línea)</label>
