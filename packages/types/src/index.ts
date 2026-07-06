@@ -140,7 +140,7 @@ export interface AdjuntoTarea {
   creado_en: string;
 }
 
-export type EstadoCaso = 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion';
+export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion';
 
 export interface Caso {
   id: string;

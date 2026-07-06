@@ -69,7 +69,9 @@ export async function crearCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
-    estado: 'en_proceso',
+    // Nace «pendiente» (sin asignar) para «Otras informaciones»; los Desaparecidos
+    // entran de una vez al flujo de Búsqueda, así que arrancan «en proceso».
+    estado: categoria === 'Desaparecidos' ? 'en_proceso' : 'pendiente',
     creado_por: user.id,
     // Pista para el Grupo de Búsqueda: solo aplica a «Desaparecidos». Si se marca,
     // el disparador (0098) crea la ficha ya clasificada como NNA → va al Buscador NNA.
@@ -136,8 +138,11 @@ export async function cambiarEstadoCaso(formData: FormData) {
 export async function tomarCaso(formData: FormData) {
   const { supabase, user } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
-  const { error } = await supabase.from('casos')
-    .update({ asignado_a: user.id, actualizado_en: new Date().toISOString() }).eq('id', id);
+  // Al tomarlo, si estaba «pendiente» pasa a «en proceso» (ya lo está trabajando alguien).
+  const { data: actual } = await supabase.from('casos').select('estado').eq('id', id).single();
+  const cambios: Record<string, unknown> = { asignado_a: user.id, actualizado_en: new Date().toISOString() };
+  if ((actual as { estado?: string } | null)?.estado === 'pendiente') cambios.estado = 'en_proceso';
+  const { error } = await supabase.from('casos').update(cambios).eq('id', id);
   if (error) throw new Error('No se pudo tomar el caso: ' + error.message);
   revalidatePath('/casos');
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso tomado');

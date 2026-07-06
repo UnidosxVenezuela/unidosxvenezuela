@@ -12,7 +12,8 @@ import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
-  en_proceso: 'El equipo de Verificación está revisando el caso.',
+  pendiente: 'Todavía no lo ha tomado nadie; está pendiente de revisión.',
+  en_proceso: 'Alguien ya lo tomó y lo está revisando.',
   confirmado: 'La información fue validada; el equipo de Envío a Redacción lo tomará.',
   falso: 'La información es falsa, antigua o el caso ya fue resuelto. No continúa en el flujo.',
   enviado_redaccion: 'El caso fue enviado a Redacción: el flujo de verificación terminó.',

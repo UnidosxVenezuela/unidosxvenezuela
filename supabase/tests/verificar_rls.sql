@@ -459,4 +459,42 @@ begin;
   end $$;
 rollback;
 
+-- ══ Casos: estado «pendiente» + historial para líderes/coordinadores (0107) ══
+
+\echo '== Test 24: líder de grupo ve el historial de CASOS pero NO el resto de auditoría =='
+begin;
+  insert into public.registro_auditoria (actor_id, accion, entidad, entidad_id, metadata)
+    values (null, 'casos:update', 'casos', '_TEST_h_casos', '{}'::jsonb);
+  insert into public.registro_auditoria (actor_id, accion, entidad, entidad_id, metadata)
+    values (null, 'cambio_rol', 'perfil', '_TEST_h_perfil', '{}'::jsonb);
+  update public.perfiles set rol = 'lider_grupo', roles_extra = '{}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_casos int; n_perfil int;
+  begin
+    select count(*) into n_casos from public.registro_auditoria where entidad_id = '_TEST_h_casos';
+    if n_casos <> 1 then raise exception 'FALLO: un líder de grupo no ve el historial de casos (n=%)', n_casos; end if;
+    select count(*) into n_perfil from public.registro_auditoria where entidad_id = '_TEST_h_perfil';
+    if n_perfil <> 0 then raise exception 'FALLO: un líder de grupo ve auditoría que no es de casos (n=%)', n_perfil; end if;
+  end $$;
+rollback;
+
+\echo '== Test 25: el creador puede editar su caso mientras está «pendiente» =='
+begin;
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values (:'admin', 'aprobada', 'x/s.jpg', 'x/d.jpg', true) on conflict (perfil_id) do update set estado = 'aprobada';
+  insert into public.casos (titulo, estado, categoria, creado_por) values ('_TEST_pend', 'pendiente', 'Otras informaciones', :'admin');
+  update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare n_upd int;
+  begin
+    update public.casos set descripcion = 'editado' where titulo = '_TEST_pend';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 1 then raise exception 'FALLO: el creador no pudo editar su caso pendiente'; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

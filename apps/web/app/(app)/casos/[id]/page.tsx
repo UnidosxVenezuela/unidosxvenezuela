@@ -44,7 +44,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <Link href="/casos" className="muted">← Casos</Link>
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
-          puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && caso.estado === 'en_proceso')}
+          puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
           esAdmin={esAdministrador(perfil)} puedeTomar={verifica} miId={user!.id} />
       </div>
     </div>
