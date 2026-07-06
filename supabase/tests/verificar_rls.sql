@@ -695,4 +695,66 @@ begin;
   end $$;
 rollback;
 
+-- ══ Logística: notificaciones del ciclo + auditoría de estados (0116) ══
+
+\echo '== Test 36: derivar avisa a Logística (0116) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000ab01', 'logi@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', verificado = true, nombre_completo = 'Logi' where id = '00000000-0000-0000-0000-00000000ab01';
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-00000000ab02', '_TEST_notif', 'Otras informaciones', 'confirmado', true, 10.5, -66.9);
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  select public.derivar_caso_a_logistica('00000000-0000-0000-0000-00000000ab02');
+  reset role;  -- verificar sin RLS (las notificaciones son privadas del destinatario)
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000ab01' and tipo = 'insumo_derivado';
+    if n < 1 then raise exception 'FALLO: Logística no recibió aviso de la derivación (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 37: entregar avisa al reportante y audita el cambio de estado (0116) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000ab11', 'rep@test.local') on conflict do nothing;
+  update public.perfiles set nombre_completo = 'Reportante', verificado = true where id = '00000000-0000-0000-0000-00000000ab11';
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, creado_por)
+    values ('00000000-0000-0000-0000-00000000ab12', '_TEST_entrega', 'Otras informaciones', 'confirmado', true, 10.5, -66.9, '00000000-0000-0000-0000-00000000ab11');
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado, caso_id)
+    values ('00000000-0000-0000-0000-00000000ab13', '_TEST_entrega_sol', 'agua', 'alta', 'en_ruta', '00000000-0000-0000-0000-00000000ab12');
+  update public.solicitudes_insumo set estado = 'entregado' where id = '00000000-0000-0000-0000-00000000ab13';
+  do $$
+  declare n_notif int; n_aud int; e text;
+  begin
+    select estado::text into e from public.casos where id = '00000000-0000-0000-0000-00000000ab12';
+    if e <> 'resuelto' then raise exception 'FALLO: el caso no quedó resuelto (%)', e; end if;
+    select count(*) into n_notif from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000ab11' and tipo = 'caso_resuelto';
+    if n_notif < 1 then raise exception 'FALLO: el reportante no recibió aviso de resolución'; end if;
+    select count(*) into n_aud from public.registro_auditoria
+      where entidad = 'solicitudes_insumo' and entidad_id = '00000000-0000-0000-0000-00000000ab13' and accion = 'insumo:estado';
+    if n_aud < 1 then raise exception 'FALLO: no se auditó el cambio de estado de la solicitud'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 38: no se puede reabrir una solicitud entregada (no-admin) (0116) =='
+begin;
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado)
+    values ('00000000-0000-0000-0000-00000000ab21', '_TEST_revivir', 'agua', 'media', 'entregado');
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$ begin
+    begin
+      update public.solicitudes_insumo set estado = 'en_ruta' where id = '00000000-0000-0000-0000-00000000ab21';
+      raise exception 'FALLO: se pudo reabrir una solicitud entregada siendo no-admin';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
