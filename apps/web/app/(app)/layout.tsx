@@ -45,6 +45,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           rol: perfil?.rol,
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
+          estadoPresencia: (perfil as { estado_presencia?: string | null } | null)?.estado_presencia ?? 'conectado',
         }}
         nav={flags}
       >

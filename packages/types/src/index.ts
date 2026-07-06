@@ -91,6 +91,8 @@ export interface Perfil {
   horas_semana?: string | null;    // capacidad semanal (texto: «5-10 horas»)
   experiencia?: string | null;     // experiencia relevante (verificación/búsqueda/datos)
   contacto_emergencia?: string | null; // deber de cuidado: «Nombre (relación) · teléfono»
+  estado_presencia?: string | null;    // 'conectado' | 'ocupado' (elección de la persona)
+  ultima_conexion?: string | null;     // último latido (ISO) — para online/«hace cuánto»
   avatar_url: string | null;
   habilidades: string[];
   creado_en: string;

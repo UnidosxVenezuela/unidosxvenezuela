@@ -604,3 +604,32 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   .consejo-x:hover { background: #1e3a5f; color: #fff; }
   .btn-consejos:hover { background: #12233a; border-color: #1e3a5f; }
 }
+
+/* ── Presencia (0117): interruptor Conectado/Ocupado en la barra superior y punto
+   de estado (con «hace cuánto») en Usuarios y Miembros del grupo. ── */
+.presencia-btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  border: 1px solid var(--borde); background: #fff; color: var(--texto);
+  border-radius: 999px; padding: 6px 12px; font-weight: 600; font-size: .85rem;
+}
+.presencia-btn:hover { background: #eef2f7; }
+.presencia-btn:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; }
+.presencia-punto {
+  width: 9px; height: 9px; border-radius: 999px; display: inline-block; flex-shrink: 0;
+  background: #94a3b8; box-shadow: 0 0 0 2px rgba(148,163,184,.18);
+}
+.presencia-punto.conectado { background: #0A7D2C; box-shadow: 0 0 0 2px rgba(10,125,44,.18); }
+.presencia-punto.ocupado { background: #E6A100; box-shadow: 0 0 0 2px rgba(230,161,0,.18); }
+.presencia-punto.desconectado { background: #94a3b8; box-shadow: 0 0 0 2px rgba(148,163,184,.18); }
+/* Etiqueta de presencia en línea (tablas): punto + texto + «hace cuánto». */
+.presencia-tag { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; white-space: nowrap; }
+.presencia-tag .presencia-cuando { color: var(--texto-suave); font-size: .78rem; }
+@media (max-width: 600px) {
+  /* En teléfonos el interruptor se reduce al punto, como el chip y los consejos. */
+  .presencia-btn .presencia-txt { display: none; }
+  .presencia-btn { padding: 8px; gap: 0; }
+}
+@media (prefers-color-scheme: dark) {
+  .presencia-btn { background: #0f1e33; border-color: #1e3a5f; color: #e6edf7; }
+  .presencia-btn:hover { background: #12233a; }
+}
