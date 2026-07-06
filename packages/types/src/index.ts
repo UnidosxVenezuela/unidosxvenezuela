@@ -85,6 +85,7 @@ export interface Perfil {
   organizacion: string | null;
   motivo: string | null;
   area_registro?: string | null;  // área elegida al registrarse (verificacion|redes|general)
+  pais?: string | null;            // código ISO 3166-1 alfa-2 (para zona horaria/planificación)
   avatar_url: string | null;
   habilidades: string[];
   creado_en: string;

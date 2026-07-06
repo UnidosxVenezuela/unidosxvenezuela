@@ -132,6 +132,72 @@ export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'general'; etiq
     ayuda: 'Logística y acopio, apoyo y otras áreas. La coordinación te ubicará según tu perfil.' },
 ];
 
+// ── País desde el que ayuda cada persona (para su zona horaria y planificación) ──
+// Se guarda el código ISO 3166-1 alfa-2 (p. ej. 'VE'). `utc` es un desfase
+// representativo aproximado (algunos países cambian con horario de verano).
+// Orden alfabético por nombre; 'ZZ' = «Otro país» como válvula de escape.
+export const PAISES: { codigo: string; nombre: string; utc: string }[] = [
+  { codigo: 'DE', nombre: 'Alemania', utc: 'UTC+1' },
+  { codigo: 'AR', nombre: 'Argentina', utc: 'UTC−3' },
+  { codigo: 'AU', nombre: 'Australia', utc: 'UTC+10' },
+  { codigo: 'BE', nombre: 'Bélgica', utc: 'UTC+1' },
+  { codigo: 'BO', nombre: 'Bolivia', utc: 'UTC−4' },
+  { codigo: 'BR', nombre: 'Brasil', utc: 'UTC−3' },
+  { codigo: 'CA', nombre: 'Canadá', utc: 'UTC−5' },
+  { codigo: 'CL', nombre: 'Chile', utc: 'UTC−3' },
+  { codigo: 'CN', nombre: 'China', utc: 'UTC+8' },
+  { codigo: 'CO', nombre: 'Colombia', utc: 'UTC−5' },
+  { codigo: 'CR', nombre: 'Costa Rica', utc: 'UTC−6' },
+  { codigo: 'CU', nombre: 'Cuba', utc: 'UTC−5' },
+  { codigo: 'EC', nombre: 'Ecuador', utc: 'UTC−5' },
+  { codigo: 'SV', nombre: 'El Salvador', utc: 'UTC−6' },
+  { codigo: 'AE', nombre: 'Emiratos Árabes Unidos', utc: 'UTC+4' },
+  { codigo: 'ES', nombre: 'España', utc: 'UTC+1' },
+  { codigo: 'US', nombre: 'Estados Unidos', utc: 'UTC−5' },
+  { codigo: 'FR', nombre: 'Francia', utc: 'UTC+1' },
+  { codigo: 'GT', nombre: 'Guatemala', utc: 'UTC−6' },
+  { codigo: 'HT', nombre: 'Haití', utc: 'UTC−5' },
+  { codigo: 'HN', nombre: 'Honduras', utc: 'UTC−6' },
+  { codigo: 'IE', nombre: 'Irlanda', utc: 'UTC+0' },
+  { codigo: 'IT', nombre: 'Italia', utc: 'UTC+1' },
+  { codigo: 'JP', nombre: 'Japón', utc: 'UTC+9' },
+  { codigo: 'MX', nombre: 'México', utc: 'UTC−6' },
+  { codigo: 'NI', nombre: 'Nicaragua', utc: 'UTC−6' },
+  { codigo: 'NO', nombre: 'Noruega', utc: 'UTC+1' },
+  { codigo: 'PA', nombre: 'Panamá', utc: 'UTC−5' },
+  { codigo: 'PY', nombre: 'Paraguay', utc: 'UTC−4' },
+  { codigo: 'NL', nombre: 'Países Bajos', utc: 'UTC+1' },
+  { codigo: 'PE', nombre: 'Perú', utc: 'UTC−5' },
+  { codigo: 'PT', nombre: 'Portugal', utc: 'UTC+0' },
+  { codigo: 'PR', nombre: 'Puerto Rico', utc: 'UTC−4' },
+  { codigo: 'GB', nombre: 'Reino Unido', utc: 'UTC+0' },
+  { codigo: 'DO', nombre: 'República Dominicana', utc: 'UTC−4' },
+  { codigo: 'SE', nombre: 'Suecia', utc: 'UTC+1' },
+  { codigo: 'CH', nombre: 'Suiza', utc: 'UTC+1' },
+  { codigo: 'TR', nombre: 'Turquía', utc: 'UTC+3' },
+  { codigo: 'TT', nombre: 'Trinidad y Tobago', utc: 'UTC−4' },
+  { codigo: 'UY', nombre: 'Uruguay', utc: 'UTC−3' },
+  { codigo: 'VE', nombre: 'Venezuela', utc: 'UTC−4' },
+  { codigo: 'ZZ', nombre: 'Otro país', utc: '' },
+];
+const MAPA_PAIS: Record<string, { codigo: string; nombre: string; utc: string }> =
+  Object.fromEntries(PAISES.map((p) => [p.codigo, p]));
+/** Nombre del país a partir del código (o el propio código si no está en la lista). */
+export function etiquetaPais(codigo?: string | null): string {
+  if (!codigo) return '';
+  return MAPA_PAIS[codigo]?.nombre ?? codigo;
+}
+/** Zona horaria representativa (desfase UTC) del país, para planificar. */
+export function zonaPais(codigo?: string | null): string {
+  return codigo ? (MAPA_PAIS[codigo]?.utc ?? '') : '';
+}
+/** Bandera emoji a partir del código ISO alfa-2 (símbolos indicadores regionales). */
+export function banderaPais(codigo?: string | null): string {
+  if (!codigo || codigo.length !== 2 || codigo === 'ZZ') return codigo === 'ZZ' ? '🌍' : '';
+  const base = 0x1f1e6, A = 'A'.charCodeAt(0);
+  return String.fromCodePoint(...[...codigo.toUpperCase()].map((c) => base + c.charCodeAt(0) - A));
+}
+
 // ── Insumos / Logística ──
 export const ETIQUETA_TIPO_INSUMO: Record<string, string> = {
   medicamentos: 'Medicamentos', alimentos: 'Alimentos', agua: 'Agua', higiene: 'Higiene', refugio: 'Refugio', otro: 'Otro',

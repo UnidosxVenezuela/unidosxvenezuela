@@ -1,6 +1,6 @@
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ROL, HABILIDADES_SUGERIDAS } from '@/lib/constantes';
+import { ETIQUETA_ROL, HABILIDADES_SUGERIDAS, PAISES } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 import { actualizarPerfil } from './actions';
 import { esEmailInternoWhatsapp, mostrarWhatsapp } from '@/lib/whatsapp';
@@ -58,9 +58,18 @@ export default async function PerfilPage({
             <input id="whatsapp" name="whatsapp" className="input" type="tel" defaultValue={mostrarWhatsapp(perfil?.whatsapp)} placeholder="+58 412…" />
           </div>
         </div>
-        <div className="campo">
-          <label htmlFor="organizacion">Organización</label>
-          <input id="organizacion" name="organizacion" className="input" defaultValue={perfil?.organizacion ?? ''} />
+        <div className="grid grid-2">
+          <div className="campo">
+            <label htmlFor="organizacion">Organización</label>
+            <input id="organizacion" name="organizacion" className="input" defaultValue={perfil?.organizacion ?? ''} />
+          </div>
+          <div className="campo">
+            <label htmlFor="pais">País desde el que ayudas</label>
+            <select id="pais" name="pais" className="input" defaultValue={perfil?.pais ?? ''}>
+              <option value="">— Selecciona tu país —</option>
+              {PAISES.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
+            </select>
+          </div>
         </div>
         <div className="campo">
           <label>{esEmailInternoWhatsapp(user?.email) ? 'Entras con tu WhatsApp' : 'Correo'}</label>

@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esCoordinacion, esAdministrador, esMandoPsicosocial, rolesDe } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, banderaPais, etiquetaPais, zonaPais } from '@/lib/constantes';
 import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
@@ -41,7 +41,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
-      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra)').eq('grupo_id', grupoId),
+      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra, pais)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
@@ -66,7 +66,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   let miembrosMostrar = miembros;
   if (grupo.lider_id && !miembros.some((m) => m.perfil_id === grupo.lider_id)) {
     const { data: lp } = await supabase.from('perfiles')
-      .select('nombre_completo, rol, avatar_url, roles_extra').eq('id', grupo.lider_id).maybeSingle();
+      .select('nombre_completo, rol, avatar_url, roles_extra, pais').eq('id', grupo.lider_id).maybeSingle();
     if (lp) miembrosMostrar = [...miembros, { perfil_id: grupo.lider_id, rol_en_grupo: 'lider', perfiles: lp }];
   }
   const rangoMiembro = (m: any) =>
@@ -336,7 +336,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
           </div>
           <div className="tarjeta">
             <div className="tabla-scroll"><table>
-              <thead><tr><th>Nombre</th><th>En grupo</th>{mostrarIdentidad && <th>Identidad</th>}{puedeGestionarMiembros && <th></th>}</tr></thead>
+              <thead><tr><th>Nombre</th><th>En grupo</th><th>País</th>{mostrarIdentidad && <th>Identidad</th>}{puedeGestionarMiembros && <th></th>}</tr></thead>
               <tbody>
                 {miembrosMostrar.map((m) => (
                   <tr key={m.perfil_id}>
@@ -348,6 +348,15 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                       </span>
                     </td>
                     <td>{ETIQUETA_ROL_GRUPO[m.rol_en_grupo] ?? m.rol_en_grupo}</td>
+                    <td>
+                      {m.perfiles?.pais ? (
+                        <span className="celda-persona" title={zonaPais(m.perfiles.pais) ? 'Zona horaria aprox.: ' + zonaPais(m.perfiles.pais) : undefined}>
+                          <span aria-hidden>{banderaPais(m.perfiles.pais)}</span>
+                          {etiquetaPais(m.perfiles.pais)}
+                          {zonaPais(m.perfiles.pais) && <span className="muted" style={{ fontSize: '.8rem' }}>{zonaPais(m.perfiles.pais)}</span>}
+                        </span>
+                      ) : <span className="muted">—</span>}
+                    </td>
                     {mostrarIdentidad && <td>{pillIdentidad(identidadPorMiembro.get(m.perfil_id))}</td>}
                     {puedeGestionarMiembros && (
                       <td className="fila">
@@ -392,7 +401,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     )}
                   </tr>
                 ))}
-                {miembrosMostrar.length === 0 && <tr><td colSpan={2 + (mostrarIdentidad ? 1 : 0) + (puedeGestionarMiembros ? 1 : 0)} className="muted">Sin miembros todavía.</td></tr>}
+                {miembrosMostrar.length === 0 && <tr><td colSpan={3 + (mostrarIdentidad ? 1 : 0) + (puedeGestionarMiembros ? 1 : 0)} className="muted">Sin miembros todavía.</td></tr>}
               </tbody>
             </table></div>
           </div>
