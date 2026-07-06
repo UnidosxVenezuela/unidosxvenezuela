@@ -757,4 +757,48 @@ begin;
   end $$;
 rollback;
 
+-- ══ Casos: avisos del ciclo de verificación (0118) ══
+
+\echo '== Test 39: un caso nuevo «pendiente» avisa al equipo de Verificación (0118) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000ac01', 'verif@test.local'),
+    ('00000000-0000-0000-0000-00000000ac02', 'reprt@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true, nombre_completo = 'Verif'
+    where id = '00000000-0000-0000-0000-00000000ac01';
+  update public.perfiles set nombre_completo = 'Reporta' where id = '00000000-0000-0000-0000-00000000ac02';
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000ac03', '_TEST_nuevo', 'Otras informaciones', 'pendiente', '00000000-0000-0000-0000-00000000ac02');
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000ac01' and tipo = 'caso_por_verificar';
+    if n < 1 then raise exception 'FALLO: Verificación no recibió aviso del caso nuevo (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 40: al confirmar un caso, se avisa a quien lo reportó (0118) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000ac11', 'rep2@test.local'),
+    ('00000000-0000-0000-0000-00000000ac12', 'ver2@test.local') on conflict do nothing;
+  update public.perfiles set nombre_completo = 'Reporta2', verificado = true where id = '00000000-0000-0000-0000-00000000ac11';
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000ac12';
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000ac13', '_TEST_veredicto', 'Otras informaciones', 'en_proceso', '00000000-0000-0000-0000-00000000ac11');
+  -- El verificador confirma (actor distinto del reportante) → el reportante recibe aviso.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000ac12')::text, true);
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000ac13';
+  reset role;
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000ac11' and tipo = 'caso_verificado';
+    if n < 1 then raise exception 'FALLO: el reportante no recibió aviso del veredicto (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
