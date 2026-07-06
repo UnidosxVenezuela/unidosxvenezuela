@@ -171,10 +171,10 @@ export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón
 export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 'redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'];
 
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
-  en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
+  pendiente: 'Pendiente', en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / resuelto',
   enviado_redaccion: 'Enviado a Redacción',
 };
-export const ESTADOS_CASO: EstadoCaso[] = ['en_proceso', 'confirmado', 'falso', 'enviado_redaccion'];
+export const ESTADOS_CASO: EstadoCaso[] = ['pendiente', 'en_proceso', 'confirmado', 'falso', 'enviado_redaccion'];
 // Categorías vigentes al crear/verificar (los casos viejos conservan la suya).
 export const CATEGORIAS_CASO = ['Desaparecidos', 'Otras informaciones'];
 

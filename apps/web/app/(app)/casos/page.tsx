@@ -239,7 +239,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
             <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle del caso ' + drawerCaso.titulo}>
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica}
-                puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && drawerCaso.estado === 'en_proceso')}
+                puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} puedeTomar={verifica} miId={user!.id} />
             </DrawerModal>
           </>
