@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esAdminGeneral, esMandoPsicosocial, rolesDe, areaDeAdmin } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, banderaPais, etiquetaPais, zonaPais, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, etiquetaPais, zonaPais, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
 import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
@@ -15,6 +15,8 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Avatar from '@/components/Avatar';
 import PresenciaTag from '@/components/PresenciaTag';
+import Bandera from '@/components/Bandera';
+import DisponibilidadHover from '@/components/DisponibilidadHover';
 import FijarAnuncio from './FijarAnuncio';
 import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
@@ -48,7 +50,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
 
   const [{ data: miembrosRaw }, { data: reunionesRaw }, { data: todosPerfiles }, { data: fijadosRaw }, { data: tareasRaw }, { data: baneadosRaw }] = await Promise.all([
     supabase.from('miembros_grupo')
-      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra, pais, estado_presencia, ultima_conexion)').eq('grupo_id', grupoId),
+      .select('perfil_id, rol_en_grupo, perfiles(nombre_completo, rol, avatar_url, roles_extra, pais, disponibilidad, estado_presencia, ultima_conexion)').eq('grupo_id', grupoId),
     supabase.from('reuniones')
       .select('id, titulo, inicio, duracion_min').eq('grupo_id', grupoId)
       .order('inicio', { ascending: false }),
@@ -73,7 +75,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   let miembrosMostrar = miembros;
   if (grupo.lider_id && !miembros.some((m) => m.perfil_id === grupo.lider_id)) {
     const { data: lp } = await supabase.from('perfiles')
-      .select('nombre_completo, rol, avatar_url, roles_extra, pais, estado_presencia, ultima_conexion').eq('id', grupo.lider_id).maybeSingle();
+      .select('nombre_completo, rol, avatar_url, roles_extra, pais, disponibilidad, estado_presencia, ultima_conexion').eq('id', grupo.lider_id).maybeSingle();
     if (lp) miembrosMostrar = [...miembros, { perfil_id: grupo.lider_id, rol_en_grupo: 'lider', perfiles: lp }];
   }
   const rangoMiembro = (m: any) =>
@@ -356,7 +358,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     <td>
                       <span className="celda-persona">
                         <Avatar nombre={nombreMostrado(m.perfiles?.nombre_completo, verFull)} url={m.perfiles?.avatar_url} size={26} />
-                        {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}
+                        <DisponibilidadHover pais={m.perfiles?.pais} disponibilidad={m.perfiles?.disponibilidad}>
+                          {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}
+                        </DisponibilidadHover>
                         {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
                       </span>
                       <div style={{ marginTop: 3 }}><PresenciaTag estado={m.perfiles?.estado_presencia} ultima={m.perfiles?.ultima_conexion} /></div>
@@ -365,7 +369,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                     <td>
                       {m.perfiles?.pais ? (
                         <span className="celda-persona" title={zonaPais(m.perfiles.pais) ? 'Zona horaria aprox.: ' + zonaPais(m.perfiles.pais) : undefined}>
-                          <span aria-hidden>{banderaPais(m.perfiles.pais)}</span>
+                          <Bandera codigo={m.perfiles.pais} size={20} titulo={etiquetaPais(m.perfiles.pais)} />
                           {etiquetaPais(m.perfiles.pais)}
                           {zonaPais(m.perfiles.pais) && <span className="muted" style={{ fontSize: '.8rem' }}>{zonaPais(m.perfiles.pais)}</span>}
                         </span>

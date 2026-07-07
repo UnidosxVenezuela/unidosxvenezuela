@@ -9,6 +9,7 @@ import Consejo from '@/components/Consejos';
 import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
+import GloboColaboradores from '@/components/GloboColaboradores';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 
 type Accion = { href: string; titulo: string; descripcion: string; icono: string; color: string; tinte: string };
@@ -31,13 +32,16 @@ export default async function Dashboard() {
   const flags = await flagsDeNavegacion(supabase, user!.id, perfil);
   const rol = perfil?.rol as Rol | undefined;
 
-  const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom] = await Promise.all([
+  const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom, paisesRes] = await Promise.all([
     supabase.from('tareas').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'asignada']),
     supabase.from('miembros_grupo').select('*', { count: 'exact', head: true }).eq('perfil_id', user!.id),
     supabase.from('notificaciones').select('*', { count: 'exact', head: true }).eq('leida', false),
     supabase.from('registro_horas').select('horas').eq('perfil_id', user!.id),
     supabase.rpc('total_horas_comunidad'),
+    supabase.rpc('paises_colaboradores'),
   ]);
+  // Países desde donde se colabora (agregado no sensible) para el globo del panel.
+  const paisesColab = ((paisesRes.data ?? []) as { pais: string; n: number }[]).filter((p) => p.pais);
   const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
   const totalComunidad = Number(totalCom.data ?? 0);
 
@@ -114,6 +118,17 @@ export default async function Dashboard() {
         <div className="muted">Entre todos llevamos</div>
         <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--azul)' }}>{formatoHoras(totalComunidad)}</div>
         <div className="muted" style={{ fontSize: '.9rem' }}>de voluntariado por Venezuela 💛💙❤️</div>
+      </div>
+
+      {/* Globo: puntos en los países desde donde se colabora (0120). */}
+      <div className="tarjeta" style={{ textAlign: 'center', marginTop: 16 }}>
+        <h2 style={{ margin: '0 0 2px' }}>Colaboramos desde el mundo 🌎</h2>
+        <p className="muted" style={{ marginTop: 0, fontSize: '.9rem' }}>
+          {paisesColab.length > 0
+            ? `${paisesColab.length} ${paisesColab.length === 1 ? 'país' : 'países'} sumando por Venezuela`
+            : 'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'}
+        </p>
+        <GloboColaboradores paises={paisesColab} />
       </div>
     </AnimarEntrada>
   );
