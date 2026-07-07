@@ -546,7 +546,7 @@ export async function restablecerContrasena(formData: FormData) {
            <p>Tu nueva contraseña temporal es:</p>
            <p style="font-size:1.25rem;font-weight:700;letter-spacing:.5px">${temporal}</p>
            <p>Ingresa con ella y <strong>cámbiala apenas entres</strong>, desde <em>Mi perfil</em>.</p>
-           <p><a href="https://unidosxvenezuela.com/login">Entrar a la plataforma</a></p>`,
+           <p><a href="https://unidosxvnezuela.com/login">Entrar a la plataforma</a></p>`,
   });
 
   await auditarPerfil(supabase, area, userId, 'reset_contrasena', perfilId, {});
