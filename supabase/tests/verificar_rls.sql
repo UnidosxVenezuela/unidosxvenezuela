@@ -801,4 +801,34 @@ begin;
   end $$;
 rollback;
 
+-- ══ Administración de área: Logística y Acopio (0119) ══
+
+\echo '== Test 41: admin_logistica opera acopio/insumos y supervisa su grupo, sin ser admin general (0119) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000ad01', 'adlog@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'admin_logistica', roles_extra = '{}', verificado = true, nombre_completo = 'AdminLog'
+    where id = '00000000-0000-0000-0000-00000000ad01';
+  -- Un centro ajeno (creado por otra persona): probar que opera CUALQUIER centro por ser admin de área.
+  insert into public.puntos_acopio (id, nombre, lat, lng, creado_por)
+    values ('00000000-0000-0000-0000-00000000ad0f', '_TEST_centro_log', 10.5, -66.9, :'admin');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000ad01')::text, true);
+  do $$
+  declare g_acopio uuid; g_verif uuid;
+  begin
+    if not public.puede_logistica() then raise exception 'FALLO: admin_logistica no puede_logistica()'; end if;
+    if not public.es_lider_acopio() then raise exception 'FALLO: admin_logistica no es_lider_acopio()'; end if;
+    if not public.puede_gestionar_acopio('00000000-0000-0000-0000-00000000ad0f') then
+      raise exception 'FALLO: admin_logistica no gestiona un centro ajeno'; end if;
+    if public.es_admin() then raise exception 'FALLO: admin_logistica NO debe ser admin general'; end if;
+    select id into g_acopio from public.grupos where clave = 'gestion_acopio' limit 1;
+    if g_acopio is not null and not public.puede_supervisar_grupo(g_acopio) then
+      raise exception 'FALLO: admin_logistica no supervisa «Gestión de Acopio»'; end if;
+    select id into g_verif from public.grupos where clave = 'verificacion' limit 1;
+    if g_verif is not null and public.puede_supervisar_grupo(g_verif) then
+      raise exception 'FALLO: admin_logistica NO debe supervisar un grupo de Verificaciones'; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

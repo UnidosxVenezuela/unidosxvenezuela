@@ -10,7 +10,7 @@ import type { PuntoAcopio } from '@unidos/types';
 export default async function MapaPage() {
   const { perfil } = await requireUsuario();
   const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  if (!rolesG.includes('admin') && !rolesG.includes('logistica') && !rolesG.includes('digitalizador')) redirect('/dashboard');
+  if (!rolesG.includes('admin') && !rolesG.includes('logistica') && !rolesG.includes('admin_logistica') && !rolesG.includes('digitalizador')) redirect('/dashboard');
 
   const supabase = await createClient();
 

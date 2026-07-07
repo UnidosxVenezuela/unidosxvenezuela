@@ -12,7 +12,7 @@ export default async function AcopioPage() {
   // Fallback a admin/logística si aún no se aplicó la migración 0070 (es_lider_acopio).
   const { data: lider, error } = await supabase.rpc('es_lider_acopio');
   const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  const acceso = error ? (rolesG.includes('admin') || rolesG.includes('logistica')) : !!lider;
+  const acceso = error ? (rolesG.includes('admin') || rolesG.includes('logistica') || rolesG.includes('admin_logistica')) : !!lider;
   if (!acceso) redirect('/dashboard');
 
   return (

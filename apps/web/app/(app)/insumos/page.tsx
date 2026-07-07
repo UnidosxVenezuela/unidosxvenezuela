@@ -13,7 +13,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 export default async function InsumosPage() {
   const { perfil } = await requireUsuario();
   const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  if (!rolesG.includes('admin') && !rolesG.includes('logistica')) redirect('/dashboard');
+  if (!rolesG.includes('admin') && !rolesG.includes('logistica') && !rolesG.includes('admin_logistica')) redirect('/dashboard');
 
   const supabase = await createClient();
   const { data } = await supabase.from('solicitudes_insumo')
