@@ -5,6 +5,7 @@ import CerrarSesion from '@/components/CerrarSesion';
 import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
 import Toast from '@/components/Toast';
+import ClaveTemporalModal from '@/components/ClaveTemporalModal';
 import Icono from '@/components/Icono';
 import { Suspense } from 'react';
 
@@ -38,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <Suspense fallback={null}><Toast /></Suspense>
+      <Suspense fallback={null}><ClaveTemporalModal /></Suspense>
       <RegistrarActividad />
       <Shell
         usuario={{
