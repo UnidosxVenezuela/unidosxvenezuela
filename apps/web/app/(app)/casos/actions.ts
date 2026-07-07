@@ -183,6 +183,24 @@ export async function cambiarEstadoCaso(formData: FormData) {
   redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
 }
 
+// Descartar un caso (marcarlo falso) EXIGIENDO un motivo, que queda anexado a las notas
+// para dejar constancia. El cambio de estado lo audita el trigger de la tabla `casos`.
+export async function descartarCaso(formData: FormData) {
+  const { supabase } = await exigirCasos(true);
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const motivo = txt(formData.get('motivo')).slice(0, 500);
+  if (!motivo) return redirigirError(volver, 'Indica el motivo para descartar el caso.');
+  const { data: actual } = await supabase.from('casos').select('notas').eq('id', id).single();
+  const sello = `[Descartado ${new Date().toISOString().slice(0, 10)}] ${motivo}`;
+  const notas = ((actual as { notas?: string | null } | null)?.notas ? (actual as any).notas + '\n' : '') + sello;
+  const { error } = await supabase.from('casos')
+    .update({ estado: 'falso', notas, actualizado_en: new Date().toISOString() }).eq('id', id);
+  if (error) return redirigirError(volver, 'No se pudo descartar el caso: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk(volver, 'Caso descartado. Quedó registrado el motivo.');
+}
+
 // «Tomar» un caso para trabajarlo (se lo asigna a sí mismo). Pensado para el
 // Grupo de Búsqueda con los casos de desaparecidos, pero también sirve a
 // Verificación. La RLS decide sobre qué casos puede (por categoría + 2ª verif).
