@@ -2,6 +2,7 @@
 import Modal from '@/components/Modal';
 import Icono from '@/components/Icono';
 import BotonEnviar from '@/components/BotonEnviar';
+import EntradaTelefono from '@/components/EntradaTelefono';
 import { altaUsuarioEnGrupo } from '../actions';
 
 /**
@@ -29,7 +30,7 @@ export default function AltaUsuarioGrupo({ grupoId, rolEtiqueta, requiereConfirm
         <div className="grid grid-2">
           <div className="campo">
             <label htmlFor="au_wa">WhatsApp (código + número)</label>
-            <input id="au_wa" name="whatsapp" className="input" placeholder="584120000000" inputMode="numeric" />
+            <EntradaTelefono name="whatsapp" />
           </div>
           <div className="campo">
             <label htmlFor="au_email">Correo (opcional)</label>

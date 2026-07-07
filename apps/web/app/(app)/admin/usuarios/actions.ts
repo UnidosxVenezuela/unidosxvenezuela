@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { enviarEmail, emailActivo } from '@/lib/email';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { normalizarWhatsapp, emailInternoWhatsapp, linkWaMe } from '@/lib/whatsapp';
-import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, PAISES, codigoPais } from '@/lib/constantes';
+import { ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, PAISES, codigoPais, MIN_CLAVE } from '@/lib/constantes';
 import type { Rol, AreaAdmin } from '@unidos/types';
 import type { EstadoImport, FilaImport } from './tipos';
 
@@ -143,7 +143,7 @@ export async function crearUsuario(formData: FormData) {
   if (!nombre) return err('El nombre es obligatorio.');
   if (emailReal && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailReal)) return err('El correo no es válido.');
   if (!emailReal && !whatsapp) return err('Indica un correo o un número de WhatsApp (con código de país, solo dígitos).');
-  if (password.length < 8) return err('La contraseña temporal debe tener al menos 8 caracteres.');
+  if (password.length < MIN_CLAVE) return err(`La contraseña temporal debe tener al menos ${MIN_CLAVE} caracteres.`);
   // Regla de superadmin: el admin-client saltea el trigger, así que se valida aquí.
   if (rol === 'admin' && !yo.super_admin) return err('Solo un superadministrador puede crear administradores.');
   // El rol de aliado no se asigna directo: va por doble aprobación.

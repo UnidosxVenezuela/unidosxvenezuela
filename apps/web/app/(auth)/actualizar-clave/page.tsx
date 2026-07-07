@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
+import { mensajeAuth } from '@/lib/mensajes-auth';
+import { MIN_CLAVE } from '@/lib/constantes';
 import InputContrasena from '@/components/InputContrasena';
 
 type Fase =
@@ -17,7 +19,8 @@ function traducir(raw: string): string {
   if (r.includes('expired') || r.includes('invalid')) {
     return 'El enlace ya se usó o expiró. Pedí uno nuevo.';
   }
-  return raw;
+  // Cualquier otro mensaje (en inglés) pasa por el traductor general de auth.
+  return mensajeAuth(raw);
 }
 
 export default function ActualizarClavePage() {
@@ -67,13 +70,13 @@ export default function ActualizarClavePage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setEstado(null);
-    if (pass.length < 8) return setEstado({ tipo: 'error', msg: 'Mínimo 8 caracteres.' });
+    if (pass.length < MIN_CLAVE) return setEstado({ tipo: 'error', msg: `Usa al menos ${MIN_CLAVE} caracteres.` });
     if (pass !== pass2) return setEstado({ tipo: 'error', msg: 'Las contraseñas no coinciden.' });
     setCargando(true);
     const supabase = sb.current ?? createClient();
     const { error } = await supabase.auth.updateUser({ password: pass });
     setCargando(false);
-    if (error) return setEstado({ tipo: 'error', msg: error.message });
+    if (error) return setEstado({ tipo: 'error', msg: mensajeAuth(error.message) });
     setEstado({ tipo: 'ok', msg: 'Contraseña actualizada. Redirigiendo…' });
     setTimeout(() => { router.push('/dashboard'); router.refresh(); }, 1200);
   }
@@ -97,16 +100,16 @@ export default function ActualizarClavePage() {
 
         {fase.t === 'listo' && (
           <form onSubmit={onSubmit} className="tarjeta">
-            <p className="muted" style={{ marginTop: 0 }}>Abriste este enlace desde tu correo. Definí tu nueva contraseña.</p>
+            <p className="muted" style={{ marginTop: 0 }}>Abriste este enlace desde tu correo. Definí tu nueva contraseña (al menos {MIN_CLAVE} caracteres).</p>
             <div className="campo">
               <label htmlFor="pass">Nueva contraseña</label>
               <InputContrasena id="pass" autoComplete="new-password"
-                minLength={8} value={pass} onChange={(e) => setPass(e.target.value)} required />
+                minLength={MIN_CLAVE} value={pass} onChange={(e) => setPass(e.target.value)} required />
             </div>
             <div className="campo">
               <label htmlFor="pass2">Repetir contraseña</label>
               <InputContrasena id="pass2" autoComplete="new-password"
-                minLength={8} value={pass2} onChange={(e) => setPass2(e.target.value)} required />
+                minLength={MIN_CLAVE} value={pass2} onChange={(e) => setPass2(e.target.value)} required />
             </div>
             <button className="btn btn-primario" type="submit" disabled={cargando}>
               {cargando ? 'Guardando…' : 'Actualizar contraseña'}

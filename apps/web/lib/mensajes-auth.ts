@@ -11,6 +11,8 @@ export function mensajeAuth(mensaje: string | undefined | null): string {
     return 'Correo/WhatsApp o contraseña incorrectos. Revísalos e inténtalo otra vez.';
   if (/email not confirmed|not confirmed|email_not_confirmed/.test(m))
     return 'Aún no confirmaste tu correo. Revisa tu bandeja de entrada (y la carpeta de spam) y toca el enlace de confirmación.';
+  if (/different from the old|should be different|new password.*old password|same password/.test(m))
+    return 'La nueva contraseña debe ser distinta a la anterior.';
   if (/password.*(at least|should be|too short|characters)|weak.?password|short.?password/.test(m))
     return 'La contraseña es demasiado corta. Usa al menos 8 caracteres.';
   if (/rate.?limit|too many|for security purposes|after \d+ second|only request this/.test(m))

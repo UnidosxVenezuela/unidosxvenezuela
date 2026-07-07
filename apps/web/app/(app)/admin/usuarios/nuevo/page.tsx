@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import RolGrupoSync from './RolGrupoSync';
 import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
-import { ROLES, ETIQUETA_ROL } from '@/lib/constantes';
+import { ROLES, ETIQUETA_ROL, MIN_CLAVE } from '@/lib/constantes';
 import Icono from '@/components/Icono';
+import BotonEnviar from '@/components/BotonEnviar';
+import EntradaTelefono from '@/components/EntradaTelefono';
 import { createClient } from '@/lib/supabase/server';
 import { crearUsuario } from '../actions';
 
@@ -54,7 +56,7 @@ export default async function CrearUsuarioPage() {
           </div>
           <div className="campo">
             <label htmlFor="whatsapp">WhatsApp (con código de país)</label>
-            <input id="whatsapp" name="whatsapp" type="tel" className="input" autoComplete="off" placeholder="+58 412 000 0000" />
+            <EntradaTelefono name="whatsapp" />
           </div>
         </div>
         <p className="muted" style={{ fontSize: '.82rem', marginTop: 0 }}>
@@ -83,8 +85,8 @@ export default async function CrearUsuarioPage() {
           </div>
           <div className="campo">
             <label htmlFor="password">Contraseña temporal</label>
-            <input id="password" name="password" type="text" className="input" minLength={8} required
-              autoComplete="off" placeholder="mín. 8 caracteres" />
+            <input id="password" name="password" type="text" className="input" minLength={MIN_CLAVE} required
+              autoComplete="off" placeholder={`mín. ${MIN_CLAVE} caracteres`} />
           </div>
         </div>
         {!esSuper && (
@@ -95,7 +97,7 @@ export default async function CrearUsuarioPage() {
         <p className="muted" style={{ fontSize: '.85rem', marginTop: 0 }}>
           Para un <strong>líder de plataforma aliada</strong>: crea la cuenta con otro rol y proponla en la sección “Aliados” (requiere doble aprobación).
         </p>
-        <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Crear usuario</button>
+        <BotonEnviar className="btn btn-primario" cargando="Creando…"><Icono nombre="ok" size={16} /> Crear usuario</BotonEnviar>
       </form>
     </div>
   );
