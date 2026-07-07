@@ -55,7 +55,7 @@ export default function RecuperarPage() {
             <button className="btn btn-primario" type="submit" disabled={cargando}>
               {cargando ? 'Enviando…' : 'Enviar enlace'}
             </button>
-            {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
+            {error && <p className="error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
           </form>
         )}
         <p className="muted" style={{ textAlign: 'center' }}><Link href="/login">Volver</Link></p>

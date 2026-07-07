@@ -168,15 +168,15 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
           <BarraBusqueda name="q" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
           <div className="campo-filtro">
-            <label>Estado</label>
-            <select name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
+            <label htmlFor="filtro-estado">Estado</label>
+            <select id="filtro-estado" name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
               <option value="">Todos</option>
               {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
             </select>
           </div>
           <div className="campo-filtro">
-            <label>Categoría</label>
-            <select name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
+            <label htmlFor="filtro-categoria">Categoría</label>
+            <select id="filtro-categoria" name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
               {subAreas.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>

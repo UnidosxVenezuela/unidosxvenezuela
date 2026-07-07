@@ -31,7 +31,6 @@ export default function GloboColaboradores({ paises }: { paises: { pais: string;
     onResize();
     window.addEventListener('resize', onResize);
 
-    const oscuro = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     const maxN = Math.max(1, ...paises.map((p) => p.n));
     // Un punto por país colaborador. Venezuela va siempre y como el punto MÁS grande,
     // para que resalte sobre los demás (cobe usa un solo color para todos los marcadores).
@@ -51,13 +50,13 @@ export default function GloboColaboradores({ paises }: { paises: { pais: string;
       height: width * 2,
       phi: PHI_VE,
       theta: 0.2,
-      dark: oscuro ? 1 : 0,
+      dark: 0,
       diffuse: 1.2,
       mapSamples: 16000,
-      mapBrightness: oscuro ? 5.6 : 5,
-      baseColor: oscuro ? [0.28, 0.34, 0.46] : [0.82, 0.86, 0.95],
+      mapBrightness: 5,
+      baseColor: [0.82, 0.86, 0.95],
       markerColor: [1, 0.82, 0.08], // amarillo de la bandera venezolana
-      glowColor: oscuro ? [0.13, 0.2, 0.32] : [0.92, 0.95, 1],
+      glowColor: [0.92, 0.95, 1],
       markers,
       onRender: (state) => {
         state.phi = phi;

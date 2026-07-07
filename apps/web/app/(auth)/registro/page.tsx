@@ -148,7 +148,7 @@ export default function RegistroPage() {
         <Captcha key={captchaNonce} onToken={onToken} />
         <label className="fila" style={{ gap: 8, alignItems: 'flex-start', fontWeight: 500, margin: '4px 0 10px' }}>
           <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)}
-                 style={{ width: 'auto', minHeight: 0, marginTop: 3 }} />
+                 style={{ width: 18, height: 18, minHeight: 0, marginTop: 2, flexShrink: 0 }} />
           <span className="muted" style={{ fontSize: '.9rem' }}>
             He leído y acepto los{' '}
             <Link href="/legal/terminos" target="_blank">Términos</Link>, el{' '}
@@ -159,7 +159,7 @@ export default function RegistroPage() {
         <button className="btn btn-primario" type="submit" disabled={cargando || !acepto}>
           {cargando ? 'Creando…' : 'Crear cuenta'}
         </button>
-          {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
+          {error && <p className="error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
         </form>
         <p className="muted" style={{ textAlign: 'center' }}>¿Ya tienes cuenta? <Link href="/login">Iniciar sesión</Link></p>
       </div>

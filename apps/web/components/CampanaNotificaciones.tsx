@@ -40,7 +40,7 @@ export default function CampanaNotificaciones() {
     <Link href="/notificaciones" className="icono-btn campana-btn"
       aria-label={n > 0 ? `Avisos (${n} sin leer)` : 'Avisos'}>
       <Icono nombre="avisos" size={20} />
-      {n > 0 && <span className="insignia critica campana-insignia">{n > 99 ? '99+' : n}</span>}
+      {n > 0 && <span className="insignia critica campana-insignia" aria-live="polite">{n > 99 ? '99+' : n}</span>}
     </Link>
   );
 }

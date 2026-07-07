@@ -58,7 +58,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   enlaces.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
 
   return (
-    <nav className="nav-lateral">
+    <nav className="nav-lateral" aria-label="Navegación principal">
       {enlaces.map((e) => {
         const activo = ruta === e.href || ruta.startsWith(e.href + '/');
         return (
