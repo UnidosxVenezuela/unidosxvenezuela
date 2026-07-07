@@ -90,7 +90,7 @@ export default function ActualizarClavePage() {
 
         {fase.t === 'invalido' && (
           <div className="tarjeta">
-            <p className="error" style={{ marginTop: 0 }}>{fase.msg}</p>
+            <p className="error" role="alert" style={{ marginTop: 0 }}>{fase.msg}</p>
             <Link className="btn btn-primario" href="/recuperar">Pedir un enlace nuevo</Link>
           </div>
         )}

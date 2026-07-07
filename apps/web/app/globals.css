@@ -1,4 +1,8 @@
 :root {
+  /* Aún no hay tema oscuro completo: se fija esquema claro para que los controles
+     nativos (inputs, selects, scrollbars) no se rendericen oscuros en SO en modo oscuro
+     y la app se vea consistente. */
+  color-scheme: light;
   /* Paleta alusiva a Venezuela (tricolor) */
   --azul: #0033A0;
   --azul-osc: #002270;
@@ -108,7 +112,8 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
 .campana-insignia {
   position: absolute; top: 2px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: .62rem; line-height: 1; border: 2px solid rgba(255,255,255,.9);
+  font-size: .62rem; line-height: 1; border: 2px solid #fff;
+  background: #dc2626; color: #fff; /* relleno rojo sólido: se lee como «pendiente», no deshabilitado */
 }
 
 /* Chip de usuario en la barra superior */
@@ -216,7 +221,10 @@ a.tarjeta:focus-visible, .user-chip:focus-visible, .pill:focus-visible,
    donde el ratón es preciso y prima la densidad. El !important supera los
    min-height en línea de los botones compactos de tablas y tarjetas. */
 @media (pointer: coarse) {
-  .btn, .icono-btn, .btn-consejos, .user-chip { min-height: 44px !important; }
+  .btn, .icono-btn, .btn-consejos, .user-chip, .presencia-btn { min-height: 44px !important; }
+  /* Los botones de solo ícono (campana, menú) también necesitan ancho cómodo. */
+  .icono-btn, .presencia-btn { min-width: 44px; }
+  .consejo-x { min-width: 44px; min-height: 44px; }
   /* Los menús emergentes (acciones por fila, menú de usuario) y los filtros/
      buscadores también deben ser cómodos al tocar, no solo los botones. */
   .menu-fila a, .menu-fila button, .user-menu a, .user-menu button,
@@ -549,9 +557,6 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   .usuario-top { flex-direction: column; align-items: stretch; gap: 8px; }
   .usuario-chips { flex-basis: 100%; }
 }
-@media (prefers-color-scheme: dark) {
-  .usuario-ficha { border-top-color: #1e3a5f; }
-}
 /* Editor de roles adicionales (admin) */
 .roles-extra { font-size: .85rem; }
 .roles-extra > summary { cursor: pointer; color: var(--azul); font-weight: 600; }
@@ -639,11 +644,6 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   font-size: .95rem; line-height: 1; padding: 2px 4px; border-radius: 6px;
 }
 .consejo-x:hover { background: #dbeafe; color: #1e3a5f; }
-@media (prefers-color-scheme: dark) {
-  .consejo { background: #12233a; border-color: #1e3a5f; color: #cfe0f5; }
-  .consejo-x:hover { background: #1e3a5f; color: #fff; }
-  .btn-consejos:hover { background: #12233a; border-color: #1e3a5f; }
-}
 
 /* ── Presencia (0117): interruptor Conectado/Ocupado en la barra superior y punto
    de estado (con «hace cuánto») en Usuarios y Miembros del grupo. ── */
@@ -668,10 +668,6 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   /* En teléfonos el interruptor se reduce al punto, como el chip y los consejos. */
   .presencia-btn .presencia-txt { display: none; }
   .presencia-btn { padding: 8px; gap: 0; }
-}
-@media (prefers-color-scheme: dark) {
-  .presencia-btn { background: #0f1e33; border-color: #1e3a5f; color: #e6edf7; }
-  .presencia-btn:hover { background: #12233a; }
 }
 
 /* ── Disponibilidad al pasar el mouse por el nombre (0120): tooltip con la conversión

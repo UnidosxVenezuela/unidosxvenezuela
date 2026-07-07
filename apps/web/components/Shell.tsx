@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Icono from './Icono';
@@ -22,7 +22,10 @@ type Usuario = { nombre: string; rol?: string | null; email?: string | null; ava
 export default function Shell({ usuario, nav, children }: { usuario: Usuario; nav: NavFlags; children: React.ReactNode }) {
   const [colapsada, setColapsada] = useState(false); // escritorio
   const [cajon, setCajon] = useState(false);          // móvil
+  const [esMovil, setEsMovil] = useState(false);
   const ruta = usePathname();
+  const asideRef = useRef<HTMLElement>(null);
+  const botonRef = useRef<HTMLButtonElement>(null);
 
   // Preferencia de colapso en escritorio (persistente).
   useEffect(() => { try { setColapsada(localStorage.getItem('uxv:lateral') === 'cerrada'); } catch {} }, []);
@@ -30,28 +33,54 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
   // Al navegar, cerrar el cajón móvil.
   useEffect(() => { setCajon(false); }, [ruta]);
 
+  // Saber si estamos en móvil (para desactivar el foco del lateral oculto).
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 820px)');
+    const on = () => setEsMovil(mq.matches);
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
+  // Cajón móvil como diálogo accesible: al abrir enfoca el primer enlace; Escape cierra.
+  useEffect(() => {
+    if (!cajon) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cerrarCajon(); };
+    document.addEventListener('keydown', onKey);
+    asideRef.current?.querySelector<HTMLElement>('a, button')?.focus();
+    return () => document.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cajon]);
+
+  // Cerrar el cajón devolviendo el foco a la hamburguesa (no en navegación).
+  const cerrarCajon = () => { setCajon(false); botonRef.current?.focus(); };
+
   const alternar = () => {
-    const movil = typeof window !== 'undefined' && window.matchMedia('(max-width: 820px)').matches;
-    if (movil) { setCajon((v) => !v); return; }
+    if (esMovil) { setCajon((v) => !v); return; }
     setColapsada((v) => { const n = !v; try { localStorage.setItem('uxv:lateral', n ? 'cerrada' : 'abierta'); } catch {} return n; });
   };
+
+  // El lateral está fuera de pantalla (y no debe recibir foco ni lectores) cuando:
+  // en móvil el cajón está cerrado, o en escritorio está colapsado.
+  const oculto = esMovil ? !cajon : colapsada;
 
   return (
     <div className={'app-shell' + (colapsada ? ' lateral-colapsada' : '') + (cajon ? ' lateral-movil' : '')}>
       <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
       <SonidoBotones />
-      <aside className="sidebar">
+      <aside ref={asideRef} id="menu-lateral" className="sidebar" {...(oculto ? ({ inert: '' } as any) : {})}>
         <div className="tricolor" />
         <div className="marca"><span className="punto" /> Apoyo por Venezuela</div>
         <NavLateral flags={nav} />
       </aside>
 
-      {cajon && <button className="backdrop" aria-label="Cerrar menú" onClick={() => setCajon(false)} />}
+      {cajon && <button className="backdrop" aria-label="Cerrar menú" onClick={cerrarCajon} />}
 
       <div className="contenido">
         <header className="topbar">
           <div className="topbar-izq">
-            <button className="icono-btn" aria-label="Mostrar u ocultar el menú" aria-expanded={cajon} onClick={alternar}>
+            <button ref={botonRef} className="icono-btn" aria-label="Mostrar u ocultar el menú"
+              aria-controls="menu-lateral" aria-expanded={esMovil ? cajon : !colapsada} onClick={alternar}>
               <Icono nombre="menu" size={22} />
             </button>
             <span className="topbar-marca"><span className="punto" /> Apoyo por Venezuela</span>
