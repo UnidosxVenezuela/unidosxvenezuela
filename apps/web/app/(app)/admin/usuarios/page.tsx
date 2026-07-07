@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, banderaPais, etiquetaPais, zonaPais } from '@/lib/constantes';
+import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, etiquetaPais, zonaPais } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
 import GestionUsuarioModal from './GestionUsuarioModal';
@@ -11,6 +11,8 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Avatar from '@/components/Avatar';
 import Pill from '@/components/Pill';
 import PresenciaTag from '@/components/PresenciaTag';
+import Bandera from '@/components/Bandera';
+import MenuFila from '@/components/MenuFila';
 
 export default async function AdminUsuariosPage({ searchParams }: { searchParams: { q?: string; frol?: string; fest?: string } }) {
   const { user, perfil: yo, area } = await requirePanelAdmin();
@@ -283,100 +285,100 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
         <button className="btn" type="submit"><Icono nombre="buscar" size={16} /> Buscar</button>
         {(searchParams.q || searchParams.frol || searchParams.fest) && <Link className="btn" href="/admin/usuarios">Limpiar</Link>}
       </form>
-      <div className="tarjeta">
-        <div className="tabla-scroll"><table>
-          <thead>
-            <tr><th>Nombre</th><th>Organización</th><th>País</th><th>Estado</th><th>Rol</th></tr>
-          </thead>
-          <tbody>
-            {perfiles.map((p) => (
-              <tr key={p.id}>
-                <td>
-                  <span className="fila" style={{ gap: 8, flexWrap: 'nowrap' }}>
-                    <Avatar nombre={p.nombre_completo} url={p.avatar_url} />
-                    <span>
-                      {p.nombre_completo || '—'}
-                      <div style={{ marginTop: 2 }}><PresenciaTag estado={p.estado_presencia} ultima={p.ultima_conexion} /></div>
-                      {p.telefono && <div className="muted" style={{ fontSize: '.85rem' }}>{p.telefono}</div>}
-                      {p.whatsapp && <div className="muted" style={{ fontSize: '.85rem' }}>WhatsApp +{p.whatsapp}</div>}
-                      {(p.habilidades ?? []).length > 0 && (
-                        <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
-                          {(p.habilidades ?? []).slice(0, 6).map((h) => <span key={h} className="hab-ro">{h}</span>)}
-                        </div>
-                      )}
-                      {(gruposPorPerfil.get(p.id) ?? []).length > 0 && (
-                        <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
-                          {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
-                        </div>
-                      )}
-                      {(p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia) && (
-                        <details style={{ marginTop: 4 }}>
-                          <summary className="muted" style={{ fontSize: '.8rem', cursor: 'pointer' }}>Ficha del voluntario</summary>
-                          <div className="muted" style={{ fontSize: '.82rem', marginTop: 4, display: 'grid', gap: 2 }}>
-                            {p.disponibilidad && <div><Icono nombre="reloj" size={12} /> {p.disponibilidad}{p.horas_semana ? ' · ' + p.horas_semana : ''}</div>}
-                            {!p.disponibilidad && p.horas_semana && <div><Icono nombre="reloj" size={12} /> {p.horas_semana}</div>}
-                            {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
-                            {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
-                          </div>
-                        </details>
-                      )}
-                    </span>
-                  </span>
-                </td>
-                <td>{p.organizacion || '—'}</td>
-                <td>
-                  {p.pais ? (
-                    <span className="fila" style={{ gap: 6, flexWrap: 'nowrap' }} title={zonaPais(p.pais) ? 'Zona horaria aprox.: ' + zonaPais(p.pais) : undefined}>
-                      <span aria-hidden>{banderaPais(p.pais)}</span>
-                      <span>{etiquetaPais(p.pais)}{zonaPais(p.pais) ? ' · ' + zonaPais(p.pais) : ''}</span>
-                    </span>
-                  ) : <span className="muted">—</span>}
-                  {p.ciudad && <div className="muted" style={{ fontSize: '.82rem' }}>{p.ciudad}</div>}
-                </td>
-                <td>
-                  <form action={cambiarVerificacion} className="fila">
-                    <input type="hidden" name="perfil_id" value={p.id} />
-                    <input type="hidden" name="verificado" value={(!p.verificado).toString()} />
-                    <Pill tono={p.verificado ? 'ok' : 'aviso'}>{p.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
-                    <button className="btn" style={{ minHeight: 34, padding: '4px 10px' }}>
-                      {p.verificado ? 'Quitar' : 'Verificar'}
-                    </button>
-                  </form>
-                  {identidadOK.has(p.id) && <div style={{ marginTop: 6 }}><Pill tono="ok" icono="llave">Identidad verificada</Pill></div>}
-                  {puedeGestionarCuenta(p) && (
-                    <form action={restablecerContrasena} style={{ marginTop: 6 }}>
+      {perfiles.length === 0 ? (
+        <div className="tarjeta"><span className="muted">No hay usuarios que coincidan con la búsqueda.</span></div>
+      ) : (
+        <div className="rejilla-usuarios">
+          {perfiles.map((p) => (
+            <article className="tarjeta usuario-card" key={p.id}>
+              {/* Cabecera: quién es, presencia y estado de un vistazo */}
+              <div className="usuario-cab">
+                <Avatar nombre={p.nombre_completo} url={p.avatar_url} size={46} />
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="usuario-nombre">{p.nombre_completo || '—'}</div>
+                  <PresenciaTag estado={p.estado_presencia} ultima={p.ultima_conexion} />
+                </div>
+              </div>
+
+              <div className="usuario-chips">
+                <Pill tono={p.verificado ? 'ok' : 'aviso'}>{p.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
+                {identidadOK.has(p.id) && <Pill tono="ok" icono="llave">Identidad</Pill>}
+                <Pill tono="neutra" punto={false}>{ETIQUETA_ROL[p.rol] ?? p.rol}</Pill>
+                {(p.roles_extra ?? []).map((r) => <Pill key={r} tono="info" punto={false}>{ETIQUETA_ROL[r] ?? r}</Pill>)}
+              </div>
+
+              {/* Datos de contacto y colaboración */}
+              <div className="usuario-datos">
+                {p.pais && (
+                  <div className="fila" style={{ gap: 6 }} title={zonaPais(p.pais) ? 'Zona horaria aprox.: ' + zonaPais(p.pais) : undefined}>
+                    <Bandera codigo={p.pais} size={18} titulo={etiquetaPais(p.pais)} />
+                    <span>{etiquetaPais(p.pais)}{p.ciudad ? ' · ' + p.ciudad : ''}{zonaPais(p.pais) ? ' · ' + zonaPais(p.pais) : ''}</span>
+                  </div>
+                )}
+                {p.organizacion && <div className="muted"><Icono nombre="grupos" size={13} /> {p.organizacion}</div>}
+                {(p.telefono || p.whatsapp) && (
+                  <div className="muted">
+                    {p.telefono}{p.telefono && p.whatsapp ? ' · ' : ''}{p.whatsapp ? 'WhatsApp +' + p.whatsapp : ''}
+                  </div>
+                )}
+                {(gruposPorPerfil.get(p.id) ?? []).length > 0 && (
+                  <div className="usuario-chips">
+                    {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
+                  </div>
+                )}
+                {(p.habilidades ?? []).length > 0 && (
+                  <div className="usuario-chips">
+                    {(p.habilidades ?? []).slice(0, 8).map((h) => <span key={h} className="hab-ro">{h}</span>)}
+                  </div>
+                )}
+                {(p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia) && (
+                  <details>
+                    <summary className="muted" style={{ fontSize: '.82rem', cursor: 'pointer' }}>Ficha del voluntario</summary>
+                    <div className="muted" style={{ fontSize: '.82rem', marginTop: 4, display: 'grid', gap: 2 }}>
+                      {p.disponibilidad && <div><Icono nombre="reloj" size={12} /> {p.disponibilidad}{p.horas_semana ? ' · ' + p.horas_semana : ''}</div>}
+                      {!p.disponibilidad && p.horas_semana && <div><Icono nombre="reloj" size={12} /> {p.horas_semana}</div>}
+                      {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
+                      {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
+                    </div>
+                  </details>
+                )}
+              </div>
+
+              {/* Acciones: gestión de rol y verificación a la vista; lo sensible en «⋮» */}
+              <div className="usuario-acc">
+                {gestionUsuario(p)}
+                <form action={cambiarVerificacion}>
+                  <input type="hidden" name="perfil_id" value={p.id} />
+                  <input type="hidden" name="verificado" value={(!p.verificado).toString()} />
+                  <button className="btn" style={{ minHeight: 38 }}>
+                    <Icono nombre={p.verificado ? 'cerrar' : 'ok'} size={15} /> {p.verificado ? 'Quitar verif.' : 'Verificar'}
+                  </button>
+                </form>
+                {puedeGestionarCuenta(p) && (
+                  <MenuFila etiqueta="Más acciones">
+                    <form action={restablecerContrasena}>
                       <input type="hidden" name="perfil_id" value={p.id} />
                       <BotonConfirmar
                         mensaje={'¿Restablecer la contraseña de ' + (p.nombre_completo || 'esta persona') + '? Se le enviará una contraseña temporal a su correo.'}
-                        className="btn" style={{ minHeight: 32, padding: '4px 10px' }}>
+                        className="">
                         <Icono nombre="llave" size={14} /> Restablecer contraseña
                       </BotonConfirmar>
                     </form>
-                  )}
-                  {puedeGestionarCuenta(p) && (
-                    <form action={eliminarUsuario} style={{ marginTop: 6 }}>
+                    <form action={eliminarUsuario}>
                       <input type="hidden" name="perfil_id" value={p.id} />
                       <BotonConfirmar
                         mensaje={'¿ELIMINAR a ' + (p.nombre_completo || 'esta persona') + '? Se borra su cuenta definitivamente; sus registros se conservan sin autor. No se puede deshacer.'}
-                        className="btn btn-peligro" style={{ minHeight: 32, padding: '4px 10px' }}>
-                        <Icono nombre="basura" size={14} /> Eliminar
+                        className="peligro">
+                        <Icono nombre="basura" size={14} /> Eliminar usuario
                       </BotonConfirmar>
                     </form>
-                  )}
-                </td>
-                <td>
-                  {gestionUsuario(p)}
-                  {(p.roles_extra ?? []).length > 0 && (
-                    <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
-                      {(p.roles_extra ?? []).map((r) => <Pill key={r} tono="info" punto={false}>{ETIQUETA_ROL[r]}</Pill>)}
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table></div>
-      </div>
+                  </MenuFila>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

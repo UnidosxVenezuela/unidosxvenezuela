@@ -14,7 +14,12 @@ export default function MenuFila({ children, etiqueta = 'Acciones' }: { children
 
   useEffect(() => {
     if (!abierto) return;
-    const onClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setAbierto(false); };
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      // No cerrar si el clic ocurre dentro de un diálogo de confirmación (portal fuera
+      // del menú): así un BotonConfirmar dentro del menú se resuelve sin desmontarse.
+      if (ref.current && !ref.current.contains(t) && !t.closest?.('.confirm-backdrop')) setAbierto(false);
+    };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setAbierto(false); };
     document.addEventListener('mousedown', onClick);
     document.addEventListener('keydown', onKey);
