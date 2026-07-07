@@ -29,10 +29,20 @@ export function etiquetaOffset(off: number): string {
 
 /** Hora actual (HH:MM) en un huso con `off` horas de desfase respecto a UTC. */
 export function horaActualEn(off: number): string {
-  const ahoraUtcMin = Date.now() / 60000 + new Date().getTimezoneOffset(); // minutos UTC
-  let t = Math.round(ahoraUtcMin + off * 60);
+  // Date.now() ya está en UTC; los minutos-del-día en UTC son (now/60000) % 1440, y a eso
+  // se le suma el desfase del huso destino. (No hay que sumar getTimezoneOffset: eso daría UTC.)
+  let t = Math.round(Date.now() / 60000 + off * 60);
   t = ((t % 1440) + 1440) % 1440;
   return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+}
+
+/** Nombre del huso del navegador (IANA), p. ej. «America/Caracas», o '' si no se puede. */
+export function zonaVisitante(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  } catch {
+    return '';
+  }
 }
 
 /**

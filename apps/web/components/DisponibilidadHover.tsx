@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { offsetPais, offsetVisitante, etiquetaOffset, horaActualEn, convertirHorario } from '@/lib/husos';
+import { offsetPais, offsetVisitante, etiquetaOffset, horaActualEn, convertirHorario, zonaVisitante } from '@/lib/husos';
 import { etiquetaPais } from '@/lib/constantes';
 
 /**
@@ -47,7 +47,7 @@ export default function DisponibilidadHover({
             </span>
           )}
           <span className="disp-tip-z">
-            Tu zona: {etiquetaOffset(viewerOff)} · ahora {horaActualEn(viewerOff)}
+            Tu zona: {zonaVisitante() ? `${zonaVisitante()} (${etiquetaOffset(viewerOff)})` : etiquetaOffset(viewerOff)} · ahora {horaActualEn(viewerOff)}
             {dif != null && dif > 0 ? ` · ${dif} h de diferencia` : dif === 0 ? ' · misma hora' : ''}
           </span>
         </span>

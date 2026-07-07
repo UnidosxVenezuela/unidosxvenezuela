@@ -16,6 +16,42 @@ const COORDS: Record<string, [number, number]> = {
   UY: [-32.5, -55.8],
 };
 
+// Marca de Venezuela en forma de CORAZÓN: en vez de un punto, se rellena la silueta de un
+// corazón con muchos marcadores pequeños alrededor de la posición de Venezuela. Como cobe
+// proyecta cada marcador sobre la esfera, el corazón gira junto con el globo sin cálculos
+// extra. Silueta con la curva paramétrica clásica del corazón (muesca arriba, punta abajo),
+// rellenada por punto-en-polígono.
+function corazonVenezuela(): { location: [number, number]; size: number }[] {
+  const ve = COORDS.VE;
+  if (!ve) return [];
+  const [lat, lng] = ve;
+  const escala = 6; // radio aproximado en grados (silueta visible y clara en el globo)
+  // Contorno del corazón, normalizado a ~[-1,1] con la punta hacia abajo (sur).
+  const poly: [number, number][] = [];
+  for (let i = 0; i <= 72; i++) {
+    const t = (i / 72) * Math.PI * 2;
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+    poly.push([x / 16, (y + 2.7) / 14.3]);
+  }
+  const dentro = (px: number, py: number) => {
+    let c = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i]![0], yi = poly[i]![1], xj = poly[j]![0], yj = poly[j]![1];
+      if (((yi > py) !== (yj > py)) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  };
+  const pts: { location: [number, number]; size: number }[] = [];
+  for (let ny = 1.05; ny >= -1.05; ny -= 0.14) {
+    for (let nx = -1.05; nx <= 1.05; nx += 0.14) {
+      // ny hacia el norte (lat), nx hacia el este (lng).
+      if (dentro(nx, ny)) pts.push({ location: [lat + ny * escala, lng + nx * escala], size: 0.03 });
+    }
+  }
+  return pts;
+}
+
 export default function GloboColaboradores({ paises }: { paises: { pais: string; n: number }[] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [listo, setListo] = useState(false);
@@ -31,15 +67,16 @@ export default function GloboColaboradores({ paises }: { paises: { pais: string;
 
     const oscuro = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
     const maxN = Math.max(1, ...paises.map((p) => p.n));
+    // Un punto por país colaborador (Venezuela va como corazón, no como punto).
     const markers = paises
+      .filter((p) => p.pais !== 'VE')
       .map((p) => {
         const c = COORDS[p.pais];
         return c ? { location: c, size: 0.03 + 0.055 * (p.n / maxN) } : null;
       })
       .filter(Boolean) as { location: [number, number]; size: number }[];
-    // Venezuela siempre presente (el foco), aunque nadie colabore todavía desde allí.
-    const ve = COORDS.VE;
-    if (ve && !markers.some((m) => m.location === ve)) markers.push({ location: ve, size: 0.075 });
+    // Venezuela siempre presente (el foco) y con forma de corazón 💛💙❤️.
+    markers.push(...corazonVenezuela());
 
     const globe = createGlobe(canvas, {
       devicePixelRatio: 2,
