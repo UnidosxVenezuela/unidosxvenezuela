@@ -7,7 +7,7 @@ import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
-import { cambiarEstadoCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica } from './actions';
+import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -104,6 +104,11 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Creado por:</strong> {caso.creado_por ? (nombres.get(caso.creado_por) ?? '—') : '—'}{caso.creado_en ? ' · ' + fechaHora(caso.creado_en) : ''}</div>
+          {caso.asignado_a && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <strong>Tomado por:</strong> {nombres.get(caso.asignado_a) ?? '—'}{caso.asignado_a === miId ? ' (tú)' : ''}
+            </div>
+          )}
         </div>
         {caso.es_requerimiento && (
           <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10, padding: '8px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8 }}>
@@ -174,26 +179,63 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
       )}
       {puedeTomar && caso.estado !== 'enviado_redaccion' && caso.asignado_a !== miId && (
-        <form action={tomarCaso} className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
+        <form action={tomarCaso} className="tarjeta" style={{ borderColor: caso.asignado_a ? 'var(--aviso, #e6a100)' : 'var(--azul)' }}>
           <input type="hidden" name="caso_id" value={caso.id} />
           <input type="hidden" name="volver" value={volver} />
           <div className="fila" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span className="muted" style={{ fontSize: '.9rem' }}>¿Vas a trabajar este caso? <strong>Tómalo</strong> para dejar constancia de que lo estás verificando.</span>
+            {caso.asignado_a ? (
+              <span style={{ fontSize: '.9rem' }}>
+                <Icono nombre="avisos" size={14} /> Ya lo está trabajando <strong>{nombres.get(caso.asignado_a) ?? 'otra persona'}</strong>. Si vas a continuarlo, tómalo tú.
+              </span>
+            ) : (
+              <span className="muted" style={{ fontSize: '.9rem' }}>¿Vas a trabajar este caso? <strong>Tómalo</strong> para dejar constancia de que lo estás verificando.</span>
+            )}
             <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Tomar caso</button>
           </div>
         </form>
       )}
       {puedeEditar && caso.estado !== 'enviado_redaccion' ? (
         <>
-          <form action={cambiarEstadoCaso} className="tarjeta">
-            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Estado del caso</h3>
-            <input type="hidden" name="caso_id" value={caso.id} />
-            <input type="hidden" name="volver" value={volver} />
-            <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }}>
-              {ESTADOS_CASO.filter((e) => e !== 'enviado_redaccion').map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
-            </select>
-            <button className="btn btn-primario" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
-          </form>
+          {/* Decisión del verificador: confirmar o descartar, bien visibles. El cambio
+              de estado libre queda como opción avanzada. */}
+          <div className="tarjeta">
+            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> ¿Qué haces con este caso?</h3>
+            {caso.estado !== 'confirmado' && (
+              <form action={cambiarEstadoCaso}>
+                <input type="hidden" name="caso_id" value={caso.id} />
+                <input type="hidden" name="volver" value={volver} />
+                <input type="hidden" name="estado" value="confirmado" />
+                <button className="btn btn-acento" type="submit" style={{ width: '100%' }}>
+                  <Icono nombre="ok" size={16} /> Confirmar caso
+                </button>
+              </form>
+            )}
+            {caso.estado !== 'falso' && (
+              <form action={descartarCaso} style={{ marginTop: caso.estado !== 'confirmado' ? 12 : 0 }}>
+                <input type="hidden" name="caso_id" value={caso.id} />
+                <input type="hidden" name="volver" value={volver} />
+                <label className="muted" style={{ fontSize: '.85rem' }}>¿Es falso, antiguo o duplicado? Descártalo indicando el motivo:</label>
+                <textarea name="motivo" className="input" rows={2} required maxLength={500}
+                  placeholder="Motivo del descarte…" style={{ marginTop: 4 }} />
+                <BotonConfirmar
+                  mensaje={'¿Descartar este caso como falso? Saldrá del flujo de verificación y quedará registrado el motivo.'}
+                  className="btn btn-peligro" style={{ width: '100%', marginTop: 6 }}>
+                  <Icono nombre="cerrar" size={15} /> Descartar (falso)
+                </BotonConfirmar>
+              </form>
+            )}
+            <details style={{ marginTop: 12 }}>
+              <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem' }}>Cambiar estado manualmente (avanzado)</summary>
+              <form action={cambiarEstadoCaso} style={{ marginTop: 8 }}>
+                <input type="hidden" name="caso_id" value={caso.id} />
+                <input type="hidden" name="volver" value={volver} />
+                <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }} aria-label="Estado del caso">
+                  {ESTADOS_CASO.filter((e) => e !== 'enviado_redaccion').map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
+                </select>
+                <button className="btn" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
+              </form>
+            </details>
+          </div>
 
           <form action={actualizarCaso} className="tarjeta">
             <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Notas</h3>

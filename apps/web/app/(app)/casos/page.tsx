@@ -19,6 +19,8 @@ import FlujoTrabajo from '@/components/FlujoTrabajo';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
 import Consejo from '@/components/Consejos';
+import FiltroSelect from '@/components/FiltroSelect';
+import { nombreMostrado } from '@/lib/nombre';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
@@ -123,6 +125,17 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   if (searchParams.categoria) filtros.set('categoria', searchParams.categoria);
   const hrefCaso = (cid: string) => { const p = new URLSearchParams(filtros); p.set('caso', cid); return '/casos?' + p.toString(); };
   const cerrarHref = '/casos' + (filtros.toString() ? '?' + filtros.toString() : '');
+  // Nombres para mostrar «tomado por» en la lista (respeta la privacidad de apellidos).
+  const nombresCaso = new Map<string, string>(((perfilesRes.data ?? []) as any[]).map((p) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
+  // Enlaces de los KPIs preservando la búsqueda y la categoría activas.
+  const kpiHref = (estado?: string) => {
+    const p = new URLSearchParams();
+    if (searchParams.q) p.set('q', searchParams.q);
+    if (searchParams.categoria) p.set('categoria', searchParams.categoria);
+    if (estado) p.set('estado', estado);
+    const s = p.toString();
+    return '/casos' + (s ? '?' + s : '');
+  };
 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
@@ -152,11 +165,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       </div>
 
       {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
-        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
-        <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href="/casos?estado=pendiente" />
-        <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
-        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado,enviado_redaccion" />
-        <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso,resuelto" />
+        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href={kpiHref()} />
+        <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href={kpiHref('pendiente')} />
+        <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href={kpiHref('en_proceso')} />
+        <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href={kpiHref('confirmado,enviado_redaccion')} />
+        <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href={kpiHref('falso,resuelto')} />
       </div>}
 
       {esAdministrador(perfil) && <>
@@ -169,17 +182,17 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <BarraBusqueda name="q" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
           <div className="campo-filtro">
             <label htmlFor="filtro-estado">Estado</label>
-            <select id="filtro-estado" name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
+            <FiltroSelect id="filtro-estado" name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
               <option value="">Todos</option>
               {ESTADOS_CASO.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
-            </select>
+            </FiltroSelect>
           </div>
           <div className="campo-filtro">
             <label htmlFor="filtro-categoria">Categoría</label>
-            <select id="filtro-categoria" name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
+            <FiltroSelect id="filtro-categoria" name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
               {subAreas.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            </FiltroSelect>
           </div>
           <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
           {(searchParams.q || searchParams.estado || searchParams.categoria) && <Link className="btn" href="/casos">Limpiar</Link>}
@@ -238,6 +251,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                         ) : null}
                       </span>
                       {c.descripcion && <div className="desc">{String(c.descripcion).slice(0, 60)}</div>}
+                      {c.asignado_a && <div className="muted" style={{ fontSize: '.76rem', marginTop: 2 }}><Icono nombre="grupos" size={11} /> Tomado por {nombresCaso.get(c.asignado_a) ?? '—'}</div>}
                     </div>
                   </td>
                   <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
