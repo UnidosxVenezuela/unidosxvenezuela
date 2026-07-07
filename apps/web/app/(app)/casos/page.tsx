@@ -85,9 +85,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (estados && estados.length) q = q.in('estado', estados);
     return q;
   };
-  const [total, porVerif, conf, cerrados, confirmados, perfilesRes] = await Promise.all([
+  const [total, pendientes, enProceso, conf, cerrados, confirmados, perfilesRes] = await Promise.all([
     cnt(),
-    cnt(['pendiente', 'en_proceso']),
+    cnt(['pendiente']),
+    cnt(['en_proceso']),
     cnt(['confirmado', 'enviado_redaccion']),
     cnt(['falso', 'resuelto']),
     cnt(['confirmado']),
@@ -150,9 +151,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
       </div>
 
-      {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', margin: '16px 0' }}>
+      {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href="/casos" />
-        <Kpi etiqueta="Por verificar" valor={porVerif.count ?? 0} sub="Pendientes y en proceso" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=pendiente,en_proceso" />
+        <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href="/casos?estado=pendiente" />
+        <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href="/casos?estado=en_proceso" />
         <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href="/casos?estado=confirmado,enviado_redaccion" />
         <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href="/casos?estado=falso,resuelto" />
       </div>}
