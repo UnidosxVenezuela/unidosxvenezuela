@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { mensajeAuth } from '@/lib/mensajes-auth';
+import { MIN_CLAVE } from '@/lib/constantes';
 import InputContrasena from '@/components/InputContrasena';
 
 export default function CambiarContrasena() {
@@ -13,12 +15,12 @@ export default function CambiarContrasena() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setEstado(null);
-    if (pass.length < 8) return setEstado({ tipo: 'error', msg: 'Mínimo 8 caracteres.' });
+    if (pass.length < MIN_CLAVE) return setEstado({ tipo: 'error', msg: `Usa al menos ${MIN_CLAVE} caracteres.` });
     if (pass !== pass2) return setEstado({ tipo: 'error', msg: 'Las contraseñas no coinciden.' });
     setCargando(true);
     const { error } = await supabase.auth.updateUser({ password: pass });
     setCargando(false);
-    if (error) return setEstado({ tipo: 'error', msg: error.message });
+    if (error) return setEstado({ tipo: 'error', msg: mensajeAuth(error.message) });
     setPass(''); setPass2('');
     setEstado({ tipo: 'ok', msg: 'Contraseña actualizada.' });
   }
@@ -26,6 +28,7 @@ export default function CambiarContrasena() {
   return (
     <form onSubmit={onSubmit} className="tarjeta">
       <h2 style={{ marginTop: 0 }}>Cambiar contraseña</h2>
+      <p className="muted" style={{ marginTop: 0, fontSize: '.85rem' }}>Usa al menos {MIN_CLAVE} caracteres.</p>
       <div className="campo">
         <label htmlFor="pass">Nueva contraseña</label>
         <InputContrasena id="pass" autoComplete="new-password"

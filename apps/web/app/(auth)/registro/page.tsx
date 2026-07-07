@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
 import { mensajeAuth } from '@/lib/mensajes-auth';
 import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
-import { AREAS_REGISTRO, PAISES } from '@/lib/constantes';
+import { AREAS_REGISTRO, PAISES, MIN_CLAVE } from '@/lib/constantes';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -99,6 +99,7 @@ export default function RegistroPage() {
         <div className="auth-marca"><span className="punto" /> Apoyo por Venezuela</div>
         <h1 style={{ textAlign: 'center' }}>Crear cuenta</h1>
         <form onSubmit={onSubmit} className="tarjeta">
+        <p className="muted" style={{ fontSize: '.85rem', marginTop: 0 }}>Los campos sin «(opcional)» son obligatorios.</p>
         <div className="campo">
           <label htmlFor="nombre">Nombre completo</label>
           <input id="nombre" className="input" value={form.nombre} onChange={(e) => set('nombre', e.target.value)} required />
@@ -108,7 +109,7 @@ export default function RegistroPage() {
           <EntradaTelefono name="telefono" onChange={(full) => set('telefono', full)} />
         </div>
         <div className="campo">
-          <label htmlFor="area">¿A qué área deseas postular? *</label>
+          <label htmlFor="area">¿A qué área deseas postular?</label>
           <select id="area" className="input" value={form.area} onChange={(e) => set('area', e.target.value)} required>
             <option value="" disabled>Selecciona un área…</option>
             {AREAS_REGISTRO.map((a) => <option key={a.valor} value={a.valor}>{a.etiqueta}</option>)}
@@ -120,7 +121,7 @@ export default function RegistroPage() {
           )}
         </div>
         <div className="campo">
-          <label htmlFor="pais">¿Desde qué país nos ayudas? *</label>
+          <label htmlFor="pais">¿Desde qué país nos ayudas?</label>
           <select id="pais" className="input" value={form.pais} onChange={(e) => set('pais', e.target.value)} required>
             <option value="" disabled>Selecciona tu país…</option>
             {PAISES.map((p) => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
@@ -143,12 +144,13 @@ export default function RegistroPage() {
         </div>
         <div className="campo">
           <label htmlFor="password">Contraseña</label>
-          <InputContrasena id="password" autoComplete="new-password" minLength={8} value={form.password} onChange={(e) => set('password', e.target.value)} required />
+          <InputContrasena id="password" autoComplete="new-password" minLength={MIN_CLAVE} value={form.password} onChange={(e) => set('password', e.target.value)} required />
+          <p className="muted" style={{ fontSize: '.82rem', margin: '4px 0 0' }}>Usa al menos {MIN_CLAVE} caracteres.</p>
         </div>
         <Captcha key={captchaNonce} onToken={onToken} />
-        <label className="fila" style={{ gap: 8, alignItems: 'flex-start', fontWeight: 500, margin: '4px 0 10px' }}>
+        <label className="fila" style={{ gap: 10, alignItems: 'flex-start', fontWeight: 500, margin: '4px 0 10px', cursor: 'pointer' }}>
           <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)}
-                 style={{ width: 18, height: 18, minHeight: 0, marginTop: 2, flexShrink: 0 }} />
+                 style={{ width: 24, height: 24, minHeight: 0, marginTop: 1, flexShrink: 0, accentColor: 'var(--primario)', cursor: 'pointer' }} />
           <span className="muted" style={{ fontSize: '.9rem' }}>
             He leído y acepto los{' '}
             <Link href="/legal/terminos" target="_blank">Términos</Link>, el{' '}
@@ -156,7 +158,7 @@ export default function RegistroPage() {
             <Link href="/legal/descargo" target="_blank">Descargo de Responsabilidad</Link>.
           </span>
         </label>
-        <button className="btn btn-primario" type="submit" disabled={cargando || !acepto}>
+        <button className="btn btn-primario" type="submit" disabled={cargando}>
           {cargando ? 'Creando…' : 'Crear cuenta'}
         </button>
           {error && <p className="error" role="alert" style={{ marginTop: 12 }}>{error}</p>}

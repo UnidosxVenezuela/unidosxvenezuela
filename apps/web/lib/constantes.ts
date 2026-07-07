@@ -1,5 +1,8 @@
 import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
 
+/** Longitud mínima de contraseña (única fuente de verdad en la UI: registro, alta y cambio de clave). */
+export const MIN_CLAVE = 8;
+
 export const ETIQUETA_URGENCIA: Record<UrgenciaAcopio, string> = {
   alta: 'Urgente', media: 'Necesita', baja: 'Cubierto',
 };
