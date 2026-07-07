@@ -522,18 +522,35 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 /* Habilidad en modo solo lectura (perfil ajeno, admin) */
 .hab-ro { display: inline-block; border: 1px solid var(--borde); background: #f8fafc; border-radius: 999px; padding: 3px 10px; font-size: .8rem; font-weight: 600; color: var(--texto); }
 
-/* ── Administración de usuarios: tarjetas de perfil (reemplazan la tabla densa) ── */
-.rejilla-usuarios { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
-.usuario-card { display: flex; flex-direction: column; gap: 10px; }
-.usuario-cab { display: flex; gap: 10px; align-items: center; }
-.usuario-nombre { font-weight: 700; font-size: 1.02rem; line-height: 1.2; word-break: break-word; }
-.usuario-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.usuario-datos { display: grid; gap: 6px; font-size: .9rem; }
-.usuario-datos .muted { display: flex; align-items: center; gap: 6px; }
-.usuario-acc { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--borde); }
+/* ── Administración de usuarios: tarjetas de perfil de ANCHO COMPLETO (tipo fila) ──
+   Una tarjeta por línea, baja de alto: se escanea como un listado pero más elegante. */
+.rejilla-usuarios { display: flex; flex-direction: column; gap: 10px; }
+.usuario-card { display: flex; flex-direction: column; gap: 8px; padding: 11px 16px; }
+/* Renglón principal: identidad · chips · acciones (las acciones quedan fijas a la derecha;
+   los chips fluyen y, si sobran, envuelven dentro de su zona sin empujar las acciones). */
+.usuario-top { display: flex; align-items: center; gap: 14px; }
+/* Zona identidad: avatar + nombre/presencia + subrenglón (país · ciudad · organización) */
+.usuario-id { display: flex; align-items: center; gap: 11px; flex: 1 1 40%; min-width: 0; }
+.usuario-id-txt { min-width: 0; }
+.usuario-nombre-fila { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.usuario-nombre { font-weight: 700; line-height: 1.2; word-break: break-word; }
+.usuario-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--texto-suave); font-size: .82rem; margin-top: 2px; }
+.usuario-sub .fila { gap: 5px; }
+/* Zona de chips de estado/rol/grupos y zona de acciones */
+.usuario-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; flex: 1 1 auto; min-width: 0; }
+.usuario-acc { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .usuario-acc > form { margin: 0; }
+/* Ficha del voluntario: se despliega en una línea propia, a lo ancho de la tarjeta */
+.usuario-ficha { flex-basis: 100%; border-top: 1px solid var(--borde); padding-top: 8px; }
+.usuario-ficha > summary { cursor: pointer; color: var(--azul); font-size: .82rem; font-weight: 600; }
+.usuario-ficha-cont { display: grid; gap: 3px; margin-top: 6px; color: var(--texto-suave); font-size: .84rem; }
+.usuario-ficha-cont > div { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+@media (max-width: 680px) {
+  .usuario-top { flex-direction: column; align-items: stretch; gap: 8px; }
+  .usuario-chips { flex-basis: 100%; }
+}
 @media (prefers-color-scheme: dark) {
-  .usuario-acc { border-top-color: #1e3a5f; }
+  .usuario-ficha { border-top-color: #1e3a5f; }
 }
 /* Editor de roles adicionales (admin) */
 .roles-extra { font-size: .85rem; }

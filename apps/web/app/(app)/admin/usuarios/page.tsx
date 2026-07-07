@@ -291,57 +291,34 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
         <div className="rejilla-usuarios">
           {perfiles.map((p) => (
             <article className="tarjeta usuario-card" key={p.id}>
-              {/* Cabecera: quién es, presencia y estado de un vistazo */}
-              <div className="usuario-cab">
-                <Avatar nombre={p.nombre_completo} url={p.avatar_url} size={46} />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="usuario-nombre">{p.nombre_completo || '—'}</div>
-                  <PresenciaTag estado={p.estado_presencia} ultima={p.ultima_conexion} />
+              <div className="usuario-top">
+              {/* Identidad: avatar + nombre/presencia + país · ciudad · organización */}
+              <div className="usuario-id">
+                <Avatar nombre={p.nombre_completo} url={p.avatar_url} size={44} />
+                <div className="usuario-id-txt">
+                  <div className="usuario-nombre-fila">
+                    <span className="usuario-nombre">{p.nombre_completo || '—'}</span>
+                    <PresenciaTag estado={p.estado_presencia} ultima={p.ultima_conexion} />
+                  </div>
+                  <div className="usuario-sub">
+                    {p.pais && (
+                      <span className="fila" title={zonaPais(p.pais) ? 'Zona horaria aprox.: ' + zonaPais(p.pais) : undefined}>
+                        <Bandera codigo={p.pais} size={16} titulo={etiquetaPais(p.pais)} />{etiquetaPais(p.pais)}
+                      </span>
+                    )}
+                    {p.ciudad && <span>· {p.ciudad}</span>}
+                    {p.organizacion && <span>· {p.organizacion}</span>}
+                  </div>
                 </div>
               </div>
 
+              {/* Estado, rol y grupos en chips */}
               <div className="usuario-chips">
                 <Pill tono={p.verificado ? 'ok' : 'aviso'}>{p.verificado ? 'Verificado' : 'Sin verificar'}</Pill>
                 {identidadOK.has(p.id) && <Pill tono="ok" icono="llave">Identidad</Pill>}
                 <Pill tono="neutra" punto={false}>{ETIQUETA_ROL[p.rol] ?? p.rol}</Pill>
                 {(p.roles_extra ?? []).map((r) => <Pill key={r} tono="info" punto={false}>{ETIQUETA_ROL[r] ?? r}</Pill>)}
-              </div>
-
-              {/* Datos de contacto y colaboración */}
-              <div className="usuario-datos">
-                {p.pais && (
-                  <div className="fila" style={{ gap: 6 }} title={zonaPais(p.pais) ? 'Zona horaria aprox.: ' + zonaPais(p.pais) : undefined}>
-                    <Bandera codigo={p.pais} size={18} titulo={etiquetaPais(p.pais)} />
-                    <span>{etiquetaPais(p.pais)}{p.ciudad ? ' · ' + p.ciudad : ''}{zonaPais(p.pais) ? ' · ' + zonaPais(p.pais) : ''}</span>
-                  </div>
-                )}
-                {p.organizacion && <div className="muted"><Icono nombre="grupos" size={13} /> {p.organizacion}</div>}
-                {(p.telefono || p.whatsapp) && (
-                  <div className="muted">
-                    {p.telefono}{p.telefono && p.whatsapp ? ' · ' : ''}{p.whatsapp ? 'WhatsApp +' + p.whatsapp : ''}
-                  </div>
-                )}
-                {(gruposPorPerfil.get(p.id) ?? []).length > 0 && (
-                  <div className="usuario-chips">
-                    {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
-                  </div>
-                )}
-                {(p.habilidades ?? []).length > 0 && (
-                  <div className="usuario-chips">
-                    {(p.habilidades ?? []).slice(0, 8).map((h) => <span key={h} className="hab-ro">{h}</span>)}
-                  </div>
-                )}
-                {(p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia) && (
-                  <details>
-                    <summary className="muted" style={{ fontSize: '.82rem', cursor: 'pointer' }}>Ficha del voluntario</summary>
-                    <div className="muted" style={{ fontSize: '.82rem', marginTop: 4, display: 'grid', gap: 2 }}>
-                      {p.disponibilidad && <div><Icono nombre="reloj" size={12} /> {p.disponibilidad}{p.horas_semana ? ' · ' + p.horas_semana : ''}</div>}
-                      {!p.disponibilidad && p.horas_semana && <div><Icono nombre="reloj" size={12} /> {p.horas_semana}</div>}
-                      {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
-                      {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
-                    </div>
-                  </details>
-                )}
+                {(gruposPorPerfil.get(p.id) ?? []).map((g) => <Pill key={g} tono="neutra" punto={false}>{g}</Pill>)}
               </div>
 
               {/* Acciones: gestión de rol y verificación a la vista; lo sensible en «⋮» */}
@@ -375,6 +352,28 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                   </MenuFila>
                 )}
               </div>
+              </div>
+
+              {/* Ficha del voluntario: contacto y datos extra, plegado para no alargar */}
+              {(p.telefono || p.whatsapp || p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia || (p.habilidades ?? []).length > 0) && (
+                <details className="usuario-ficha">
+                  <summary>Ficha del voluntario</summary>
+                  <div className="usuario-ficha-cont">
+                    {(p.telefono || p.whatsapp) && (
+                      <div>
+                        <Icono nombre="avisos" size={12} />
+                        {p.telefono}{p.telefono && p.whatsapp ? ' · ' : ''}{p.whatsapp ? 'WhatsApp +' + p.whatsapp : ''}
+                      </div>
+                    )}
+                    {(p.disponibilidad || p.horas_semana) && <div><Icono nombre="reloj" size={12} /> {[p.disponibilidad, p.horas_semana].filter(Boolean).join(' · ')}</div>}
+                    {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
+                    {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
+                    {(p.habilidades ?? []).length > 0 && (
+                      <div>{(p.habilidades ?? []).slice(0, 12).map((h) => <span key={h} className="hab-ro">{h}</span>)}</div>
+                    )}
+                  </div>
+                </details>
+              )}
             </article>
           ))}
         </div>
