@@ -31,7 +31,7 @@ export default function BotonConfirmar(
   return (
     <>
       <button {...props} ref={btnRef} type="submit" className={className}
-        onClick={(e) => { e.preventDefault(); setAbierto(true); }}>
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAbierto(true); }}>
         {children}
       </button>
       {abierto && createPortal(
