@@ -258,8 +258,11 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
                 const color = pct >= 90 ? '#CF142B' : pct >= 60 ? '#E6A100' : '#0A7D2C';
                 return (
                   <div style={{ margin: '4px 0' }}>
-                    <div className="fila" style={{ fontSize: '.9rem', gap: 6 }}>🛏 <span>Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres</span></div>
-                    <div style={{ height: 6, borderRadius: 6, background: 'var(--borde)', overflow: 'hidden', marginTop: 2 }}><div style={{ width: pct + '%', height: '100%', background: color }} /></div>
+                    <div className="fila" style={{ fontSize: '.9rem', gap: 6 }}><span aria-hidden>🛏</span> <span>Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres · {pct}% ocupado</span></div>
+                    <div role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Ocupación del albergue: ${pct}%`}
+                      style={{ height: 6, borderRadius: 6, background: 'var(--borde)', overflow: 'hidden', marginTop: 2 }}>
+                      <div style={{ width: pct + '%', height: '100%', background: color }} />
+                    </div>
                   </div>
                 );
               })()}

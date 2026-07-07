@@ -95,7 +95,8 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
           </p>
           {Number(centro.camas_total) > 0 && (() => {
             const total = Number(centro.camas_total); const ocup = Math.max(0, Math.min(Number(centro.camas_ocupadas), total)); const libres = total - ocup;
-            return <p className="sub" style={{ margin: '2px 0 0' }}>🛏 Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres</p>;
+            const pct = total > 0 ? Math.round((ocup / total) * 100) : 0;
+            return <p className="sub" style={{ margin: '2px 0 0' }}><span aria-hidden>🛏</span> Albergue: <strong>{ocup}/{total}</strong> camas · {libres} libres · {pct}% ocupado</p>;
           })()}
         </div>
         {gestor && (

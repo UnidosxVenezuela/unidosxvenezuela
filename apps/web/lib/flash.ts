@@ -12,3 +12,10 @@ export function redirigirError(path: string, mensaje: string): never {
   const sep = path.includes('?') ? '&' : '?';
   redirect(path + sep + 'err=' + encodeURIComponent(mensaje));
 }
+
+/** Redirige mostrando una contraseña temporal en un modal PERSISTENTE (con «Copiar»),
+ *  no en un toast que se cierra solo: así no se pierde la única copia. */
+export function redirigirClave(path: string, nombre: string, clave: string): never {
+  const sep = path.includes('?') ? '&' : '?';
+  redirect(path + sep + 'clave=' + encodeURIComponent(clave) + '&clave_para=' + encodeURIComponent(nombre || ''));
+}

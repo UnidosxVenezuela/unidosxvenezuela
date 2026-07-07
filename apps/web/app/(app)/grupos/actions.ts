@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { redirigirOk, redirigirError } from '@/lib/flash';
+import { redirigirOk, redirigirError, redirigirClave } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { crearCuentaConRol } from '@/lib/altaUsuario';
@@ -332,7 +332,7 @@ export async function altaUsuarioEnGrupo(formData: FormData) {
       p_accion: 'alta_delegada', p_entidad_id: r.userId, p_metadata: { grupo: grupoId, rol: rolGrupo },
     });
     revalidatePath(volver);
-    redirigirOk(volver, 'Cuenta creada y verificada. Contraseña temporal: ' + r.password + ' — compártela; la persona la cambia al entrar.');
+    redirigirClave(volver, nombre, r.password);
   }
 
   // Coordinador → solicitud pendiente de confirmación por el líder.
@@ -384,7 +384,7 @@ export async function aprobarSolicitudAlta(formData: FormData) {
     });
   }
   revalidatePath(volver);
-  redirigirOk(volver, 'Cuenta creada y verificada. Contraseña temporal: ' + r.password + ' — compártela con la persona.');
+  redirigirClave(volver, sol!.nombre_completo, r.password);
 }
 
 // El líder (o admin) rechaza una solicitud.
