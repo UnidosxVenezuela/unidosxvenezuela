@@ -633,3 +633,29 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
   .presencia-btn { background: #0f1e33; border-color: #1e3a5f; color: #e6edf7; }
   .presencia-btn:hover { background: #12233a; }
 }
+
+/* ── Disponibilidad al pasar el mouse por el nombre (0120): tooltip con la conversión
+   de horario a la zona de quien mira. ── */
+.disp-hover { position: relative; cursor: help; outline: none; }
+.disp-hover:focus-visible { outline: 2px solid var(--amarillo); outline-offset: 2px; border-radius: 4px; }
+.disp-reloj { font-size: .72em; margin-left: 4px; opacity: .55; }
+.disp-tip {
+  position: absolute; left: 0; top: calc(100% + 6px); z-index: 40;
+  min-width: 230px; max-width: 300px; display: flex; flex-direction: column; gap: 3px;
+  background: #0b1b3a; color: #eaf0fb; border-radius: 10px; padding: 10px 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.28); font-weight: 500; font-size: .82rem; line-height: 1.35;
+  white-space: normal; cursor: default;
+}
+.disp-tip::before {
+  content: ''; position: absolute; left: 16px; top: -5px; width: 10px; height: 10px;
+  background: #0b1b3a; transform: rotate(45deg); border-radius: 2px;
+}
+.disp-tip-t { font-size: .68rem; text-transform: uppercase; letter-spacing: .4px; color: #93b4ef; font-weight: 700; }
+.disp-tip-l { color: #fff; font-weight: 600; }
+.disp-tip-c { color: #8ef0b6; font-weight: 700; }
+.disp-tip-z { color: #b9c6df; font-size: .78rem; }
+
+/* ── Globo de colaboradores en el panel (0120) ── */
+.globo-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.globo-canvas { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; contain: layout paint size; opacity: 0; transition: opacity .6s ease; }
+.globo-canvas.listo { opacity: 1; }
