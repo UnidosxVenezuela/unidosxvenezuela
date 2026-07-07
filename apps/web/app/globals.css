@@ -102,6 +102,15 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
 .icono-btn:hover { background: #eef2f7; color: var(--texto); }
 .icono-btn:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; }
 
+/* Campana de avisos en la barra superior: hereda .icono-btn (visible sobre la barra
+   clara) y coloca la insignia del conteo en la esquina. */
+.campana-btn { position: relative; text-decoration: none; }
+.campana-insignia {
+  position: absolute; top: 2px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .62rem; line-height: 1; border: 2px solid rgba(255,255,255,.9);
+}
+
 /* Chip de usuario en la barra superior */
 .user-chip {
   display: inline-flex; align-items: center; gap: 10px; padding: 5px 10px 5px 6px;

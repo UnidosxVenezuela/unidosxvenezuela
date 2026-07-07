@@ -42,6 +42,7 @@ export default async function Dashboard() {
   ]);
   // Países desde donde se colabora (agregado no sensible) para el globo del panel.
   const paisesColab = ((paisesRes.data ?? []) as { pais: string; n: number }[]).filter((p) => p.pais);
+  const totalColab = paisesColab.reduce((s, p) => s + (Number(p.n) || 0), 0);
   const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
   const totalComunidad = Number(totalCom.data ?? 0);
 
@@ -123,10 +124,17 @@ export default async function Dashboard() {
       {/* Globo: puntos en los países desde donde se colabora (0120). */}
       <div className="tarjeta" style={{ textAlign: 'center', marginTop: 16 }}>
         <h2 style={{ margin: '0 0 2px' }}>Colaboramos desde el mundo 🌎</h2>
-        <p className="muted" style={{ marginTop: 0, fontSize: '.9rem' }}>
-          {paisesColab.length > 0
-            ? `${paisesColab.length} ${paisesColab.length === 1 ? 'país' : 'países'} sumando por Venezuela`
-            : 'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'}
+        <p className="muted" style={{ marginTop: 0, fontSize: '.95rem' }}>
+          {paisesColab.length > 0 ? (
+            <>
+              Somos <strong style={{ color: 'var(--azul)' }}>{totalColab.toLocaleString('es')}</strong>{' '}
+              {totalColab === 1 ? 'persona voluntaria' : 'personas voluntarias'} desde{' '}
+              <strong style={{ color: 'var(--azul)' }}>{paisesColab.length}</strong>{' '}
+              {paisesColab.length === 1 ? 'país' : 'países'}, sumando por Venezuela 💛💙❤️
+            </>
+          ) : (
+            'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'
+          )}
         </p>
         <GloboColaboradores paises={paisesColab} />
       </div>

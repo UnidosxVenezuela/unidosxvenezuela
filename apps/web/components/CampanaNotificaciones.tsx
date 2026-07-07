@@ -37,10 +37,10 @@ export default function CampanaNotificaciones() {
   }, []);
 
   return (
-    <Link href="/notificaciones" className="fila" aria-label="Avisos"
-      style={{ gap: 6, color: '#fff', textDecoration: 'none', fontWeight: 600 }}>
-      <Icono nombre="avisos" size={18} />
-      {n > 0 && <span className="insignia critica">{n}</span>}
+    <Link href="/notificaciones" className="icono-btn campana-btn"
+      aria-label={n > 0 ? `Avisos (${n} sin leer)` : 'Avisos'}>
+      <Icono nombre="avisos" size={20} />
+      {n > 0 && <span className="insignia critica campana-insignia">{n > 99 ? '99+' : n}</span>}
     </Link>
   );
 }
