@@ -32,17 +32,20 @@ export default async function Dashboard() {
   const flags = await flagsDeNavegacion(supabase, user!.id, perfil);
   const rol = perfil?.rol as Rol | undefined;
 
-  const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom, paisesRes] = await Promise.all([
+  const [pendientes, misGrupos, noLeidas, misHorasRows, totalCom, paisesRes, totalColabRes] = await Promise.all([
     supabase.from('tareas').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'asignada']),
     supabase.from('miembros_grupo').select('*', { count: 'exact', head: true }).eq('perfil_id', user!.id),
     supabase.from('notificaciones').select('*', { count: 'exact', head: true }).eq('leida', false),
     supabase.from('registro_horas').select('horas').eq('perfil_id', user!.id),
     supabase.rpc('total_horas_comunidad'),
     supabase.rpc('paises_colaboradores'),
+    supabase.rpc('total_colaboradores'),
   ]);
   // Países desde donde se colabora (agregado no sensible) para el globo del panel.
   const paisesColab = ((paisesRes.data ?? []) as { pais: string; n: number }[]).filter((p) => p.pais);
-  const totalColab = paisesColab.reduce((s, p) => s + (Number(p.n) || 0), 0);
+  // «Somos N»: total real de la plataforma (RPC 0121). Si la migración aún no se aplicó,
+  // cae a la suma por país para no mostrar 0.
+  const totalColab = Number(totalColabRes.data ?? 0) || paisesColab.reduce((s, p) => s + (Number(p.n) || 0), 0);
   const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
   const totalComunidad = Number(totalCom.data ?? 0);
 
