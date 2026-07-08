@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminDigitalizacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_ESTADO_LUGAR } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -16,8 +16,8 @@ export default async function DigitalizacionPage() {
   const esAdmin = esAdministrador(perfil);
   const roles = rolesDe(perfil);
   const esDig = roles.includes('digitalizador');
-  // El Admin de Verificaciones supervisa (solo lectura). No necesita 2ª verificación.
-  const supervisa = esAdminVerificacion(perfil);
+  // El Admin de Digitalización opera/supervisa su propia área (0124).
+  const supervisa = esAdminDigitalizacion(perfil);
   if (!esAdmin && !esDig && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
 
@@ -56,7 +56,7 @@ export default async function DigitalizacionPage() {
           <p className="muted sub">Convierte listas de personas en registros verificados. {totalPersonas > 0 && <>Ya hay <strong>{totalPersonas}</strong> personas digitalizadas.</>}</p>
         </div>
         <div className="fila" style={{ gap: 8 }}>
-          {esAdmin && <Link className="btn" href="/digitalizacion/lugares"><Icono nombre="mapa" /> Moderar lugares</Link>}
+          {(esAdmin || esAdminDigitalizacion(perfil)) && <Link className="btn" href="/digitalizacion/lugares"><Icono nombre="mapa" /> Moderar lugares</Link>}
           <Link className="btn btn-primario" href="/digitalizacion/nueva"><Icono nombre="mas" /> Nueva digitalización</Link>
         </div>
       </div>

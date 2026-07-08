@@ -26,66 +26,138 @@ function extraerLineas(data: any): { texto: string; confianza: number }[] {
   return String(data?.text ?? '').split('\n').map((t) => ({ texto: t.trim(), confianza: 0 })).filter((l) => l.texto.length > 0);
 }
 
-// De una línea cruda intenta separar cédula (6–9 dígitos) y nombre.
+// De una línea cruda intenta separar cédula y nombre. Reconoce cédulas venezolanas
+// con prefijo (V/E/J/P/G) y con puntos/guiones (V-12.345.678), o dígitos sueltos.
 function parsear(texto: string, tipo: string, i: number, confianza: number): Fila {
-  const ced = texto.match(/\b\d{6,9}\b/);
-  const cedula = ced ? ced[0] : '';
-  const nombre = texto.replace(/\d[\d.\-]*/g, ' ').replace(/[|_>*]+/g, ' ').replace(/\s+/g, ' ').trim();
-  return { id: 'f' + i + '_' + Math.round(confianza), nombre, cedula, edad: '', condicion: condPorTipo(tipo), notas: '', confianza, incluir: nombre.length > 1 };
+  const t = texto.replace(/\s+/g, ' ').trim();
+  const mPref = t.match(/\b[VEJPGvejpg][-.\s]?\d[\d.\s-]{5,12}/);
+  const mNum = t.match(/\b\d{6,9}\b/);
+  const cand = mPref ? mPref[0] : mNum ? mNum[0] : '';
+  let cedula = '';
+  if (cand) { const d = cand.replace(/\D/g, ''); if (d.length >= 6 && d.length <= 9) cedula = d; }
+  let nombre = cand ? t.replace(cand, ' ') : t;
+  nombre = nombre
+    .replace(/\d[\d.\-]*/g, ' ')
+    .replace(/[|_>*<•·°º#()\[\]{}=]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[^\p{L}]+/u, '')
+    .replace(/[^\p{L}.]+$/u, '')
+    .trim();
+  const letras = (nombre.match(/\p{L}/gu) || []).length;
+  return { id: 'f' + i + '_' + Math.round(confianza), nombre, cedula, edad: '', condicion: condPorTipo(tipo), notas: '', confianza, incluir: letras > 1 };
 }
 
-// ── Preprocesado de la imagen para el OCR (mejora la precisión, todo en el
-//    dispositivo). Escala + escala de grises + estiramiento de contraste +
-//    binarizado por umbral de Otsu. Solo se usa para reconocer; el documento
-//    que se guarda sigue siendo la foto legible.
+// ── Preprocesado de la imagen para el OCR (todo en el dispositivo): escala, gris con
+//    estiramiento de contraste, ENDEREZADO automático (deskew auto-validado) y
+//    BINARIZADO ADAPTATIVO (Sauvola), que tolera sombras y luz despareja mucho mejor
+//    que un umbral global. Solo se usa para reconocer; se guarda la foto legible.
 function cargarImg(url: string): Promise<HTMLImageElement> {
   return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('img')); im.src = url; });
 }
-function umbralOtsu(hist: number[], total: number): number {
-  let suma = 0; for (let i = 0; i < 256; i++) suma += i * (hist[i] ?? 0);
-  let sumaB = 0, pesoB = 0, maxVar = 0, thr = 127;
-  for (let t = 0; t < 256; t++) {
-    const ht = hist[t] ?? 0;
-    pesoB += ht; if (pesoB === 0) continue;
-    const pesoF = total - pesoB; if (pesoF === 0) break;
-    sumaB += t * ht;
-    const mediaB = sumaB / pesoB, mediaF = (suma - sumaB) / pesoF;
-    const entre = pesoB * pesoF * (mediaB - mediaF) * (mediaB - mediaF);
-    if (entre > maxVar) { maxVar = entre; thr = t; }
+
+// Gris + estiramiento de contraste (min–max) desde datos RGBA.
+function aGris(d: Uint8ClampedArray, n: number): Uint8ClampedArray {
+  const g = new Uint8ClampedArray(n);
+  let min = 255, max = 0;
+  for (let i = 0, p = 0; p < n; i += 4, p++) {
+    const v = (d[i]! * 0.299 + d[i + 1]! * 0.587 + d[i + 2]! * 0.114) | 0;
+    g[p] = v; if (v < min) min = v; if (v > max) max = v;
   }
-  return thr;
+  const rango = Math.max(1, max - min);
+  for (let p = 0; p < n; p++) g[p] = ((g[p]! - min) * 255 / rango) | 0;
+  return g;
 }
+
+// «Nitidez» de los renglones: proyección horizontal de píxeles oscuros (suma de
+// cuadrados). A mayor alineación de las líneas con las filas, mayor valor.
+function nitidezFilas(g: Uint8ClampedArray, w: number, h: number, thr: number): number {
+  let s = 0;
+  for (let y = 0; y < h; y++) {
+    let c = 0; const base = y * w;
+    for (let x = 0; x < w; x++) if (g[base + x]! < thr) c++;
+    s += c * c;
+  }
+  return s;
+}
+
+// Binarizado adaptativo de Sauvola con imágenes integrales (O(1) por píxel de ventana).
+function binarizarSauvola(g: Uint8ClampedArray, w: number, h: number): void {
+  const r = Math.min(30, Math.max(8, Math.round(Math.min(w, h) / 40)));
+  const k = 0.34, R = 128, W1 = w + 1;
+  const I = new Float64Array(W1 * (h + 1));
+  const I2 = new Float64Array(W1 * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let rs = 0, rs2 = 0;
+    for (let x = 0; x < w; x++) {
+      const v = g[y * w + x]!;
+      rs += v; rs2 += v * v;
+      I[(y + 1) * W1 + (x + 1)] = I[y * W1 + (x + 1)]! + rs;
+      I2[(y + 1) * W1 + (x + 1)] = I2[y * W1 + (x + 1)]! + rs2;
+    }
+  }
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - r), y1 = Math.min(h - 1, y + r);
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w - 1, x + r), cnt = (x1 - x0 + 1) * (y1 - y0 + 1);
+      const sum = I[(y1 + 1) * W1 + (x1 + 1)]! - I[y0 * W1 + (x1 + 1)]! - I[(y1 + 1) * W1 + x0]! + I[y0 * W1 + x0]!;
+      const sum2 = I2[(y1 + 1) * W1 + (x1 + 1)]! - I2[y0 * W1 + (x1 + 1)]! - I2[(y1 + 1) * W1 + x0]! + I2[y0 * W1 + x0]!;
+      const mean = sum / cnt;
+      const std = Math.sqrt(Math.max(0, sum2 / cnt - mean * mean));
+      const t = mean * (1 + k * (std / R - 1));
+      g[y * w + x] = g[y * w + x]! >= t ? 255 : 0;
+    }
+  }
+}
+
 async function preprocesarParaOCR(file: File): Promise<Blob | File> {
   const url = URL.createObjectURL(file);
   try {
     const img = await cargarImg(url);
     let w = img.naturalWidth, h = img.naturalHeight;
     if (!w || !h) return file;
-    // Ampliar hasta que el lado menor tenga ~1500px (Tesseract rinde mejor con más resolución),
-    // sin pasar de 2400px en el lado mayor (memoria).
+    // Ampliar hasta ~1500px el lado menor (Tesseract rinde mejor con más resolución),
+    // sin pasar de 2400px el lado mayor (memoria).
     const escala = Math.min(2400 / Math.max(w, h), Math.max(1, 1500 / Math.min(w, h)));
     w = Math.max(1, Math.round(w * escala)); h = Math.max(1, Math.round(h * escala));
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
     const ctx = canvas.getContext('2d'); if (!ctx) return file;
-    ctx.drawImage(img, 0, 0, w, h);
-    const imgData = ctx.getImageData(0, 0, w, h);
-    const d = imgData.data;
-    const n = w * h;
-    const gris = new Uint8ClampedArray(n);
-    let min = 255, max = 0;
-    for (let i = 0, p = 0; p < n; i += 4, p++) {
-      const g = (d[i]! * 0.299 + d[i + 1]! * 0.587 + d[i + 2]! * 0.114) | 0;
-      gris[p] = g; if (g < min) min = g; if (g > max) max = g;
+    const dibujar = (c: CanvasRenderingContext2D, cw: number, ch: number, ang: number) => {
+      c.save(); c.fillStyle = '#fff'; c.fillRect(0, 0, cw, ch);
+      if (ang) { c.translate(cw / 2, ch / 2); c.rotate(ang); c.translate(-cw / 2, -ch / 2); }
+      c.drawImage(img, 0, 0, cw, ch); c.restore();
+    };
+
+    // 1) Enderezado AUTO-VALIDADO en una versión reducida (rápido). Probamos ángulos
+    //    pequeños (ambos signos) y elegimos el que más «afila» los renglones; si ninguno
+    //    supera a 0° por ≥6%, no rotamos (una foto ya derecha se queda igual → sin riesgo).
+    let mejorAng = 0;
+    const f = Math.min(1, 700 / Math.max(w, h));
+    const sw = Math.max(1, Math.round(w * f)), sh = Math.max(1, Math.round(h * f));
+    const sCanvas = document.createElement('canvas'); sCanvas.width = sw; sCanvas.height = sh;
+    const sctx = sCanvas.getContext('2d');
+    if (sctx) {
+      const thrS = 110;
+      dibujar(sctx, sw, sh, 0);
+      const base = nitidezFilas(aGris(sctx.getImageData(0, 0, sw, sh).data, sw * sh), sw, sh, thrS);
+      let mejor = base;
+      for (let deg = -8; deg <= 8; deg++) {
+        if (deg === 0) continue;
+        const ang = deg * Math.PI / 180;
+        dibujar(sctx, sw, sh, ang);
+        const sc = nitidezFilas(aGris(sctx.getImageData(0, 0, sw, sh).data, sw * sh), sw, sh, thrS);
+        if (sc > mejor) { mejor = sc; mejorAng = ang; }
+      }
+      if (!(mejor >= base * 1.06)) mejorAng = 0;
     }
-    const rango = Math.max(1, max - min);
-    const hist = new Array(256).fill(0);
-    for (let p = 0; p < n; p++) { const v = ((gris[p]! - min) * 255 / rango) | 0; gris[p] = v; hist[v]++; }
-    const thr = umbralOtsu(hist, n);
-    for (let i = 0, p = 0; p < n; i += 4, p++) {
-      const v = gris[p]! >= thr ? 255 : 0;
-      d[i] = d[i + 1] = d[i + 2] = v; // alfa intacto
-    }
-    ctx.putImageData(imgData, 0, 0);
+
+    // 2) Dibuja a resolución completa (enderezada si aplica) y binariza con Sauvola.
+    dibujar(ctx, w, h, mejorAng);
+    const gris = aGris(ctx.getImageData(0, 0, w, h).data, w * h);
+    binarizarSauvola(gris, w, h);
+    const out = ctx.getImageData(0, 0, w, h);
+    const od = out.data;
+    for (let p = 0, i = 0; p < w * h; p++, i += 4) { const v = gris[p]!; od[i] = od[i + 1] = od[i + 2] = v; od[i + 3] = 255; }
+    ctx.putImageData(out, 0, 0);
     return await new Promise<Blob | File>((res) => canvas.toBlob((b) => res(b || file), 'image/png'));
   } catch {
     return file;
@@ -221,6 +293,13 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
       const Tesseract: any = await import('tesseract.js');
       const worker = await Tesseract.createWorker('spa', 1, {
         logger: (m: any) => { if (m?.status === 'recognizing text') setProgreso(Math.round((m.progress || 0) * 100)); },
+      });
+      // Una lista es un bloque uniforme de renglones: PSM 6 segmenta mejor que el auto;
+      // conservar espacios ayuda a separar nombre/cédula; fijar el DPI evita reescalados.
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6',
+        preserve_interword_spaces: '1',
+        user_defined_dpi: '300',
       });
       const { data } = await worker.recognize(paraOcr, {}, { blocks: true });
       await worker.terminate();

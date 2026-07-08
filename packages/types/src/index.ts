@@ -29,10 +29,11 @@ export type Rol =
   // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
   | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
   | 'admin_redes'              // Admin · Redes Sociales (grupos de contenido/marketing)
-  | 'admin_logistica';         // Admin · Logística y Acopio (centros de acopio + insumos + mapa)
+  | 'admin_logistica'          // Admin · Logística y Acopio (centros de acopio + insumos + mapa)
+  | 'admin_digitalizacion';    // Admin · Digitalización (captura de listados + moderación de lugares)
 
 // Área que administra un "admin de área" (0103). El admin general administra todo.
-export type AreaAdmin = 'verificacion' | 'redes' | 'logistica';
+export type AreaAdmin = 'verificacion' | 'redes' | 'logistica' | 'digitalizacion';
 
 // Áreas inspiradas en clusters humanitarios (IASC/OCHA) + áreas de trabajo.
 // El catálogo es extensible por un admin (tabla `areas`), por eso al leer

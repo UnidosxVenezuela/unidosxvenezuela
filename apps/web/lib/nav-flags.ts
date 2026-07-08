@@ -55,6 +55,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   const supVerif = areaAdmin === 'verificacion';
   const supRedes = areaAdmin === 'redes';
   const supLogistica = areaAdmin === 'logistica';
+  const supDigit = areaAdmin === 'digitalizacion';
   return {
     admin,
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
@@ -64,11 +65,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     busqueda: admin || supVerif || (esBusqueda && identidadOK),
     // Enlace de contacto: rol propio con 2ª verificación (identidad) obligatoria.
     enlace: admin || supVerif || (esEnlace && identidadOK),
-    // Digitalización: rol/grupo propio con 2ª verificación (identidad) obligatoria.
-    // NO pertenece al área de Verificaciones (búsqueda/gestión de casos/verificación/
-    // enlace/NNA) → el admin de esa área NO la ve en su menú. Esto además oculta «Mapa»,
-    // que se muestra con `acopio || digitalizacion` y que tampoco es de su área.
-    digitalizacion: admin || (esDigitalizador && identidadOK),
+    // Digitalización: ÁREA propia (0124) con 2ª verificación (identidad) obligatoria.
+    // La supervisa SU admin de área (supDigit); el admin de Verificaciones ya NO (se
+    // separó). «Mapa» aparece para este admin porque se muestra con `acopio || digitalizacion`.
+    digitalizacion: admin || supDigit || (esDigitalizador && identidadOK),
     envioRedaccion: admin || supRedes || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),

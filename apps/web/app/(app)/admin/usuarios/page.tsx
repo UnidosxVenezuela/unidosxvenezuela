@@ -83,7 +83,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     const ledPorPerfil = new Map<string, string[]>();
     grupos.forEach((g) => { if (g.lider_id && g.clave) { const a = ledPorPerfil.get(g.lider_id) ?? []; a.push(g.clave); ledPorPerfil.set(g.lider_id, a); } });
     const protegido = (p: Perfil) => p.super_admin
-      || [p.rol, ...(p.roles_extra ?? [])].some((r) => ['admin', 'admin_verificacion', 'admin_redes'].includes(r as string));
+      || [p.rol, ...(p.roles_extra ?? [])].some((r) => ['admin', 'admin_verificacion', 'admin_redes', 'admin_logistica', 'admin_digitalizacion'].includes(r as string));
     const enMiArea = (p: Perfil) => {
       if (protegido(p)) return false;
       if ((p as { area_registro?: string | null }).area_registro === area) return true;
