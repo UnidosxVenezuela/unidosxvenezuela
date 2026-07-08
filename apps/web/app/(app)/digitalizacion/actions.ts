@@ -106,7 +106,68 @@ export async function guardarListado(formData: FormData) {
   if (eP) throw new Error('Se creó el listado pero fallaron las personas: ' + eP.message);
 
   revalidatePath('/digitalizacion');
-  redirigirOk('/digitalizacion', `Guardado: ${personas.length} personas en ${lugarNombre}`);
+  redirigirOk('/digitalizacion', `Guardado: ${personas.length} personas en ${lugarNombre}. Queda por verificar antes del cruce.`);
+}
+
+// ── Verificación de Digitalización (0125): revisión de la información ──
+// El verificador (con 2ª verificación) o el admin revisan un listado por_verificar/
+// observado, CORRIGEN las personas si el OCR erró y luego lo marcan «verificado»
+// (dispara el cruce con desaparecidos) u «observado» (lo devuelve con nota). La RPC
+// verificar_listado (SECURITY DEFINER) impone permisos, prohíbe auto-verificación y
+// corre la detección de coincidencias solo al verificar. La edición/borrado de
+// personas pasa por la RLS (rama del verificador, solo mientras el listado esté en
+// revisión), así que aquí basta con exigir sesión.
+async function exigirSesion() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  return { supabase, user };
+}
+
+export async function verificarListado(formData: FormData) {
+  const { supabase } = await exigirSesion();
+  const id = txt(formData.get('listado_id'));
+  const estado = txt(formData.get('estado'));
+  const nota = opt(formData.get('nota'));
+  if (!id) throw new Error('Falta el listado.');
+  if (estado !== 'verificado' && estado !== 'observado') throw new Error('Estado de revisión no válido.');
+  if (estado === 'observado' && !nota) throw new Error('Indica qué observaste para devolver el listado.');
+  const { error } = await supabase.rpc('verificar_listado', { p_listado: id, p_estado: estado, p_nota: nota });
+  if (error) throw new Error('No se pudo guardar la revisión: ' + error.message);
+  revalidatePath('/digitalizacion'); revalidatePath('/digitalizacion/' + id);
+  redirigirOk('/digitalizacion/' + id, estado === 'verificado' ? 'Listado verificado' : 'Observaciones guardadas');
+}
+
+export async function editarPersonaListado(formData: FormData) {
+  const { supabase } = await exigirSesion();
+  const personaId = txt(formData.get('persona_id'));
+  const listadoId = txt(formData.get('listado_id'));
+  if (!personaId || !listadoId) throw new Error('Faltan datos de la persona.');
+  const nombre = txt(formData.get('nombre_completo')).slice(0, 160);
+  if (nombre.length < 2) throw new Error('El nombre no puede quedar vacío.');
+  const edad = (() => { const n = parseInt(txt(formData.get('edad')), 10); return Number.isFinite(n) && n >= 0 && n <= 130 ? n : null; })();
+  const condicion = COND.includes(txt(formData.get('condicion'))) ? txt(formData.get('condicion')) : 'otro';
+  const { error } = await supabase.from('personas_listado').update({
+    nombre_completo: nombre,
+    cedula: (txt(formData.get('cedula')).replace(/\D/g, '') || null),
+    edad,
+    condicion,
+    notas: opt(formData.get('notas')),
+  }).eq('id', personaId);
+  if (error) throw new Error('No se pudo actualizar la persona: ' + error.message);
+  revalidatePath('/digitalizacion/' + listadoId);
+  redirigirOk('/digitalizacion/' + listadoId, 'Persona actualizada');
+}
+
+export async function eliminarPersonaListado(formData: FormData) {
+  const { supabase } = await exigirSesion();
+  const personaId = txt(formData.get('persona_id'));
+  const listadoId = txt(formData.get('listado_id'));
+  if (!personaId || !listadoId) throw new Error('Faltan datos de la persona.');
+  const { error } = await supabase.from('personas_listado').delete().eq('id', personaId);
+  if (error) throw new Error('No se pudo eliminar la fila: ' + error.message);
+  revalidatePath('/digitalizacion/' + listadoId);
+  redirigirOk('/digitalizacion/' + listadoId, 'Fila eliminada');
 }
 
 // ── Moderación de lugares (admin general o admin de Digitalización) ──

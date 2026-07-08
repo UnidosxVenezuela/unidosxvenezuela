@@ -165,13 +165,24 @@ export function puedeEnlace(e?: EntradaRoles) {
 // (Grupo de Digitalización) y admin. La 2ª verificación obligatoria para el
 // digitalizador la imponen la página/acción y la RLS (0081).
 export function puedeDigitalizar(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'digitalizador', 'admin_digitalizacion']);
+  return tieneAlguno(e, ['admin', 'digitalizador', 'admin_digitalizacion', 'verificador_digitalizacion']);
+}
+
+// Verificación de Digitalización (0125): revisa/corrige los listados digitalizados
+// antes de que se dispare el cruce con desaparecidos. Rol propio dentro del área de
+// Digitalización. La 2ª verificación (identidad) es obligatoria (la imponen página,
+// acción y RLS): maneja datos sensibles de víctimas (heridos/fallecidos/NNA).
+export function esVerificadorDigitalizacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['verificador_digitalizacion']);
+}
+export function puedeVerificarDigitalizacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'verificador_digitalizacion']);
 }
 
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
 // operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
 // para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.
-const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'];
+const ROLES_2A: Rol[] = ['recopilacion', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador', 'verificador_digitalizacion'];
 export function necesitaSegundaVerificacion(e?: EntradaRoles) {
   return !esAdministrador(e) && tieneAlguno(e, ROLES_2A);
 }
