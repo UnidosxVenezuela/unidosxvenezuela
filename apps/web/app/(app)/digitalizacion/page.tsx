@@ -86,7 +86,7 @@ export default async function DigitalizacionPage() {
           <p className="muted sub">Convierte listas de personas en registros verificados. {totalPersonas > 0 && <>Ya hay <strong>{totalPersonas}</strong> personas digitalizadas.</>}</p>
         </div>
         <div className="fila" style={{ gap: 8 }}>
-          {(esAdmin || supervisa) && <Link className="btn" href="/digitalizacion/lugares"><Icono nombre="mapa" /> Moderar lugares</Link>}
+          {(esAdmin || supervisa || esVerif) && <Link className="btn" href="/digitalizacion/lugares"><Icono nombre="mapa" /> Moderar lugares</Link>}
           {puedeCapturar && <Link className="btn btn-primario" href="/digitalizacion/nueva"><Icono nombre="mas" /> Nueva digitalización</Link>}
         </div>
       </div>
