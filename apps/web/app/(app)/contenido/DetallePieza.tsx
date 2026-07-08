@@ -7,8 +7,10 @@ import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
 import SubirPiezaArchivo from './SubirPiezaArchivo';
+import SubirAdjuntos from './SubirAdjuntos';
+import { r2Configurado } from '@/lib/r2';
 import { nombreMostrado } from '@/lib/nombre';
-import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa, subirAdjuntoPieza, eliminarAdjuntoPieza } from './actions';
+import { guardarRedaccion, guardarEnlacePieza, asignarPieza, avanzarEtapa, eliminarAdjuntoPieza } from './actions';
 
 const EXPLICA_ETAPA: Record<string, string> = {
   redaccion: 'Se redacta el contenido y la descripción, y se elige el destino (Diseño o Video).',
@@ -24,6 +26,7 @@ export default function DetallePieza({ pieza, perfiles, historial, adjuntos, vol
   miId?: string; esCoord?: boolean; nombres: Map<string, string>; avatares: Map<string, string | null>;
 }) {
   const etapa = pieza.etapa as string;
+  const r2On = r2Configurado();
   const sig = siguienteEtapa(pieza.etapa, pieza.destino ?? null);
   const etiquetaAvanzar = etapa === 'redaccion'
     ? (pieza.destino ? 'Enviar a ' + ETIQUETA_DESTINO[pieza.destino as keyof typeof ETIQUETA_DESTINO] : 'Elige el destino para avanzar')
@@ -99,14 +102,7 @@ export default function DetallePieza({ pieza, perfiles, historial, adjuntos, vol
             ))}
           </div>
         )}
-        {puedeEtapa && (
-          <form action={subirAdjuntoPieza} style={{ marginTop: 10 }}>
-            <input type="hidden" name="pieza_id" value={pieza.id} />
-            <input type="hidden" name="volver" value={volver} />
-            <input type="file" name="archivos" className="input" multiple />
-            <button className="btn btn-primario" type="submit" style={{ marginTop: 8 }}><Icono nombre="mas" size={16} /> Adjuntar archivo(s)</button>
-          </form>
-        )}
+        {puedeEtapa && <SubirAdjuntos piezaId={pieza.id} volver={volver} r2On={r2On} />}
       </div>
 
       {/* Contenido y descripción: editable en Redacción; referencia en el resto */}
@@ -140,7 +136,7 @@ export default function DetallePieza({ pieza, perfiles, historial, adjuntos, vol
       {puedeEtapa && (etapa === 'diseno' || etapa === 'video') && (
         <div className="tarjeta">
           <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Entregable final</h3>
-          <SubirPiezaArchivo piezaId={pieza.id} urlActual={pieza.adjunto_url} nombreActual={pieza.adjunto_nombre} />
+          <SubirPiezaArchivo piezaId={pieza.id} urlActual={pieza.adjunto_url} nombreActual={pieza.adjunto_nombre} r2On={r2On} />
           <form action={guardarEnlacePieza} style={{ marginTop: 12 }}>
             <input type="hidden" name="pieza_id" value={pieza.id} />
             <input type="hidden" name="volver" value={volver} />
