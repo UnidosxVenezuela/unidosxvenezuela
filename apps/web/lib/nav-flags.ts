@@ -17,6 +17,7 @@ export type NavFlags = {
   acopio: boolean;         // mapa + centros de acopio + insumos
   psicosocial: boolean;    // área confidencial (o supervisión si admin)
   aliados: boolean;        // base de datos de plataformas aliadas
+  captacion: boolean;      // Captación de Oportunidades (contactos estratégicos)
 };
 
 // Grupos/roles del área de contenido (producción y publicación).
@@ -77,6 +78,9 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     acopio: admin || supLogistica || claves.has('gestion_acopio') || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
+    // Captación de Oportunidades (0129): rol propio 'captacion' (ve solo esta
+    // sección) o el admin general. No exige 2ª verificación.
+    captacion: admin || roles.includes('captacion'),
   };
 }
 

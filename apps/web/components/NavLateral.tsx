@@ -36,6 +36,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   if (flags.digitalizacion) enlaces.push({ href: '/digitalizacion', etiqueta: 'Digitalización', icono: 'imagen' });
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
+  if (flags.captacion) enlaces.push({ href: '/captacion', etiqueta: 'Captación', icono: 'enlace' });
   if (flags.admin) {
     enlaces.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   }
