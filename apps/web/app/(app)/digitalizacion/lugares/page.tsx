@@ -78,9 +78,13 @@ export default async function LugaresPage() {
                 <Icono nombre="ubicacion" size={14} /> Agrega <strong>latitud y longitud</strong> y guarda los datos para poder verificar (así aparece en el mapa y en Centros).
               </p>
             )
-          ) : (
+          ) : (l.lat != null && l.lng != null) ? (
             <p className="muted fila" style={{ marginTop: 8, fontSize: '.82rem', gap: 6 }}>
               <Icono nombre="ok" size={14} /> Verificado. <Link href="/acopio">Gestionar en Centros y lugares →</Link>
+            </p>
+          ) : (
+            <p className="fila" style={{ marginTop: 8, fontSize: '.82rem', gap: 6, color: 'var(--rojo, #CE1126)' }}>
+              <Icono nombre="ubicacion" size={14} /> Verificado, pero <strong>sin ubicación</strong>: no aparece en el mapa ni en Centros. Escribe latitud y longitud arriba y pulsa «Guardar datos».
             </p>
           )}
         </div>
