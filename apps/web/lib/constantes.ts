@@ -96,6 +96,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
   admin_logistica: 'Administración · Logística y Acopio',
+  admin_digitalizacion: 'Administración · Digitalización',
 };
 
 // ── Administración por ÁREA (0103) ──
@@ -106,34 +107,40 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
 //     video, community manager, influencers).
 // El admin general ve y administra TODO; el dueño es superadmin. Un admin de área NO es
 // admin general: solo gestiona su área (sus grupos y las solicitudes de su área).
-export const AREAS_ADMIN: AreaAdmin[] = ['verificacion', 'redes', 'logistica'];
+export const AREAS_ADMIN: AreaAdmin[] = ['verificacion', 'redes', 'logistica', 'digitalizacion'];
 export const ETIQUETA_AREA_ADMIN: Record<AreaAdmin, string> = {
   verificacion: 'Verificaciones',
   redes: 'Redes Sociales',
   logistica: 'Logística y Acopio',
+  digitalizacion: 'Digitalización',
 };
 /** Rol de administración de cada área. */
 export const ROL_ADMIN_DE_AREA: Record<AreaAdmin, Rol> = {
   verificacion: 'admin_verificacion',
   redes: 'admin_redes',
   logistica: 'admin_logistica',
+  digitalizacion: 'admin_digitalizacion',
 };
 /** Claves de grupo (sistema) que administra cada área. */
 export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
-  verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto', 'digitalizacion'],
+  verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['gestion_acopio'],
+  digitalizacion: ['digitalizacion'],
 };
 /** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
 export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
-  verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'],
+  verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['logistica'],
+  digitalizacion: ['digitalizador'],
 };
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
-export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'general'; etiqueta: string; ayuda: string }[] = [
+export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general'; etiqueta: string; ayuda: string }[] = [
   { valor: 'verificacion', etiqueta: 'Verificación y búsqueda de personas',
-    ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA), enlace con familias y digitalización.' },
+    ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA) y enlace con familias.' },
+  { valor: 'digitalizacion', etiqueta: 'Digitalización de listados',
+    ayuda: 'Capturar listas de personas de hospitales y albergues (foto/OCR, a mano o CSV) y ubicarlas en el mapa.' },
   { valor: 'redes', etiqueta: 'Redes sociales y contenido',
     ayuda: 'Redacción, diseño gráfico, edición de video, community management e influencers.' },
   { valor: 'logistica', etiqueta: 'Logística y acopio',

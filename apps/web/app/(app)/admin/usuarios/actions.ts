@@ -44,7 +44,8 @@ async function exigirPanelAdmin() {
   const area: AreaAdmin | null = general ? null
     : roles.includes('admin_verificacion') ? 'verificacion'
     : roles.includes('admin_redes') ? 'redes'
-    : roles.includes('admin_logistica') ? 'logistica' : null;
+    : roles.includes('admin_logistica') ? 'logistica'
+    : roles.includes('admin_digitalizacion') ? 'digitalizacion' : null;
   if (!general && !area) throw new Error('Solo la administración puede gestionar usuarios.');
   return { supabase, userId: user.id, esSuper: !!yo?.super_admin, area };
 }
@@ -53,7 +54,8 @@ async function exigirPanelAdmin() {
 function objetivoProtegido(rol?: string | null, rolesExtra?: unknown, superAdmin?: boolean | null): boolean {
   const roles = [rol, ...(((rolesExtra as string[] | null) ?? []))];
   return !!superAdmin || roles.includes('admin')
-    || roles.includes('admin_verificacion') || roles.includes('admin_redes') || roles.includes('admin_logistica');
+    || roles.includes('admin_verificacion') || roles.includes('admin_redes') || roles.includes('admin_logistica')
+    || roles.includes('admin_digitalizacion');
 }
 
 // Un admin de área solo actúa sobre usuarios de SU área (por área de registro, rol

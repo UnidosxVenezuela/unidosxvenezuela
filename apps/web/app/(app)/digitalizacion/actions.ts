@@ -25,8 +25,8 @@ async function exigirDigitalizar() {
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra, verificado').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   const esAdmin = roles.includes('admin');
-  // El Admin de Verificaciones digitaliza en su área (con su 2ª verificación aprobada).
-  const esDig = roles.includes('digitalizador') || roles.includes('admin_verificacion');
+  // El Admin de Digitalización digitaliza en su área (con su 2ª verificación aprobada).
+  const esDig = roles.includes('digitalizador') || roles.includes('admin_digitalizacion');
   if (!yo?.verificado || (!esAdmin && !esDig)) throw new Error('No tienes permiso para digitalizar.');
   // El digitalizador necesita la 2ª verificación (identidad) aprobada; admin exento.
   if (!esAdmin) {
@@ -109,7 +109,7 @@ export async function guardarListado(formData: FormData) {
   redirigirOk('/digitalizacion', `Guardado: ${personas.length} personas en ${lugarNombre}`);
 }
 
-// ── Moderación de lugares (solo admin) ──
+// ── Moderación de lugares (admin general o admin de Digitalización) ──
 const TIPOS_LUGAR_MOD = ['hospital', 'albergue', 'acopio', 'otro'];
 
 async function exigirAdmin() {
@@ -118,7 +118,7 @@ async function exigirAdmin() {
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin')) throw new Error('Solo un administrador puede moderar lugares.');
+  if (!roles.includes('admin') && !roles.includes('admin_digitalizacion')) throw new Error('No tienes permiso para moderar lugares.');
   return { supabase, user };
 }
 

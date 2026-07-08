@@ -101,15 +101,19 @@ export function esAdminRedes(e?: EntradaRoles) {
 export function esAdminLogistica(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin_logistica']);
 }
-/** ¿Es administrador de alguna área (Verificaciones, Redes o Logística)? */
+export function esAdminDigitalizacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin_digitalizacion']);
+}
+/** ¿Es administrador de alguna área (Verificaciones, Redes, Logística o Digitalización)? */
 export function esAdminArea(e?: EntradaRoles) {
-  return esAdminVerificacion(e) || esAdminRedes(e) || esAdminLogistica(e);
+  return esAdminVerificacion(e) || esAdminRedes(e) || esAdminLogistica(e) || esAdminDigitalizacion(e);
 }
 /** Área que administra esta persona (o null si no es admin de área). */
 export function areaDeAdmin(e?: EntradaRoles): AreaAdmin | null {
   if (esAdminVerificacion(e)) return 'verificacion';
   if (esAdminRedes(e)) return 'redes';
   if (esAdminLogistica(e)) return 'logistica';
+  if (esAdminDigitalizacion(e)) return 'digitalizacion';
   return null;
 }
 
@@ -161,7 +165,7 @@ export function puedeEnlace(e?: EntradaRoles) {
 // (Grupo de Digitalización) y admin. La 2ª verificación obligatoria para el
 // digitalizador la imponen la página/acción y la RLS (0081).
 export function puedeDigitalizar(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'digitalizador']);
+  return tieneAlguno(e, ['admin', 'digitalizador', 'admin_digitalizacion']);
 }
 
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
