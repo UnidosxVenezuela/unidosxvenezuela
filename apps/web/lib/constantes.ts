@@ -1,4 +1,4 @@
-import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EstadoListado, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
+import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EstadoListado, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda, CategoriaOportunidad, EstadoOportunidad } from '@unidos/types';
 
 /** Longitud mínima de contraseña (única fuente de verdad en la UI: registro, alta y cambio de clave). */
 export const MIN_CLAVE = 8;
@@ -94,6 +94,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   apoyo_psicosocial: 'Apoyo Psicosocial',
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
+  captacion: 'Captación de Oportunidades',
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
   admin_logistica: 'Administración · Logística y Acopio',
@@ -304,6 +305,37 @@ export function tonoEstadoListado(e?: string | null): 'ok' | 'aviso' | 'critica'
   if (e === 'verificado') return 'ok';
   if (e === 'observado') return 'critica';
   if (e === 'por_verificar') return 'aviso';
+  return 'neutra';
+}
+
+// ── Captación de Oportunidades (0129) ──
+export const CATEGORIAS_OPORTUNIDAD: CategoriaOportunidad[] = ['fundacion', 'organizacion', 'empresa', 'proyecto', 'alianza'];
+export const ETIQUETA_CATEGORIA_OPORTUNIDAD: Record<CategoriaOportunidad, string> = {
+  fundacion: 'Fundación',
+  organizacion: 'Organización',
+  empresa: 'Empresa',
+  proyecto: 'Proyecto',
+  alianza: 'Alianza',
+};
+/** Tono de Pill por categoría de oportunidad. */
+export const TONO_CATEGORIA_OPORTUNIDAD: Record<CategoriaOportunidad, 'info' | 'ok' | 'alta' | 'aviso' | 'neutra'> = {
+  fundacion: 'info',
+  organizacion: 'ok',
+  empresa: 'alta',
+  proyecto: 'aviso',
+  alianza: 'neutra',
+};
+export const ESTADOS_OPORTUNIDAD: EstadoOportunidad[] = ['investigacion', 'verificado', 'enviado'];
+export const ETIQUETA_ESTADO_OPORTUNIDAD: Record<EstadoOportunidad, string> = {
+  investigacion: 'Investigación',
+  verificado: 'Verificado',
+  enviado: 'Enviado',
+};
+/** Tono de Pill según el estado de clasificación de la oportunidad. */
+export function tonoEstadoOportunidad(e?: string | null): 'aviso' | 'ok' | 'info' | 'neutra' {
+  if (e === 'investigacion') return 'aviso';
+  if (e === 'verificado') return 'ok';
+  if (e === 'enviado') return 'info';
   return 'neutra';
 }
 

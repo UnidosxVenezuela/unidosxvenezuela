@@ -179,6 +179,16 @@ export function puedeVerificarDigitalizacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'verificador_digitalizacion']);
 }
 
+// Captación de Oportunidades (0129): registra y clasifica contactos estratégicos.
+// Rol propio 'captacion' (scoped: ve SOLO su sección) más el admin general. No
+// maneja datos de víctimas, así que NO exige 2ª verificación.
+export function esCaptacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['captacion']);
+}
+export function puedeCaptacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'captacion']);
+}
+
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
 // operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
 // para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.

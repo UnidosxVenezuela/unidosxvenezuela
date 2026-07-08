@@ -27,6 +27,8 @@ export type Rol =
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
   | 'lider_psicosocial'        // Líder del grupo Psicosocial (gestiona el grupo, no ve casos)
   | 'coordinador_psicosocial'  // Coordina el área psicosocial (ve todo, asigna)
+  // Captación de Oportunidades: registra contactos estratégicos; ve SOLO esa sección.
+  | 'captacion'                // Captación de Oportunidades (0129)
   // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
   | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
   | 'admin_redes'              // Admin · Redes Sociales (grupos de contenido/marketing)
@@ -155,6 +157,24 @@ export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | '
 
 /** Estado de revisión de un listado digitalizado (paso de Verificación de Digitalización, 0125). */
 export type EstadoListado = 'por_verificar' | 'verificado' | 'observado';
+
+/** Captación de Oportunidades (0129): categorías, estados de clasificación y tarjeta. */
+export type CategoriaOportunidad = 'fundacion' | 'organizacion' | 'empresa' | 'proyecto' | 'alianza';
+export type EstadoOportunidad = 'investigacion' | 'verificado' | 'enviado';
+export interface Oportunidad {
+  id: string;
+  categoria: CategoriaOportunidad;
+  estado: EstadoOportunidad;
+  titulo: string;
+  contacto: string | null;
+  enlace: string | null;
+  ubicacion: string | null;
+  descripcion: string | null;
+  archivo_path: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
 
 /** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
 export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';
