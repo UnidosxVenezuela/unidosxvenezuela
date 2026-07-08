@@ -75,7 +75,9 @@ export default async function AyudaPage() {
         <S icono="imagen" titulo="Digitalización de listados (tu función)">
           <li>Sube o <strong>fotografía</strong> una lista de personas (hospital, albergue o centro de acopio). El texto se reconoce <strong>en tu propio dispositivo</strong> — la imagen no se envía a terceros.</li>
           <li><strong>Confirma línea por línea</strong>: corrige nombre, cédula, edad y condición; las líneas de baja confianza aparecen resaltadas. Desmarca lo que no sean personas.</li>
-          <li>Al guardar, la data queda en la base de datos y (con ubicación) podrá verse en el mapa.</li>
+          <li>Al guardar, el listado queda <strong>«Por verificar»</strong>: el cruce con desaparecidos <strong>aún no corre</strong>.</li>
+          <li><strong>Verificación de Digitalización</strong> revisa el listado <strong>contra la foto</strong>, corrige lo que el OCR leyó mal y lo marca <strong>verificado</strong> (ahí se activa el cruce) u <strong>observado</strong> (vuelve con una nota). Nadie verifica su propio listado.</li>
+          <li><strong>Lugares del mapa:</strong> en <strong>«Moderar lugares»</strong> se completan los datos y las <strong>coordenadas</strong>; al verificar un lugar aparece en <strong>«Centros y lugares»</strong> para gestionarlo (capacidad, inventario, necesidades). Moderan el verificador y el admin de Digitalización; el admin además puede borrarlos.</li>
         </S>
       )}
 
