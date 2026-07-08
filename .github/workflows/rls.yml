@@ -18,10 +18,11 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
-        # Autenticar la llamada a la API de GitHub que resuelve la última release:
-        # sin token son 60 req/h por IP (compartida entre runners) y falla con
-        # «rate limit exceeded»; con GITHUB_TOKEN sube a 1000 req/h por repo.
+          # PIN de versión: evita la llamada «resolver la última release» a la API de
+          # GitHub, que sin token se rate-limitea (60 req/h por IP compartida entre runners)
+          # y hacía fallar setup-cli con «supabase: command not found». El token ayuda a la
+          # descarga de esa release fija.
+          version: 2.109.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
