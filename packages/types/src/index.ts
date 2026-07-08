@@ -16,6 +16,7 @@ export type Rol =
   | 'buscador_nna'            // Buscador NNA: atiende SOLO los casos de menores de edad
   | 'enlace_contacto'         // Enlace de contacto: llama a la familia tras aprobar la coincidencia
   | 'digitalizador'           // Digitaliza listados de personas (Grupo de Digitalización)
+  | 'verificador_digitalizacion' // Revisa/corrige los listados digitalizados antes del cruce
   | 'redaccion'               // Grupo Redacción: envía los confirmados a Redacción
   | 'redes_sociales'          // Redes Sociales (publicación)
   | 'diseno_grafico'          // Diseño Gráfico
@@ -151,6 +152,9 @@ export interface AdjuntoTarea {
 }
 
 export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion' | 'resuelto';
+
+/** Estado de revisión de un listado digitalizado (paso de Verificación de Digitalización, 0125). */
+export type EstadoListado = 'por_verificar' | 'verificado' | 'observado';
 
 /** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
 export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';

@@ -50,6 +50,8 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     || claves.has('busqueda_nna') || roles.includes('buscador_nna');
   const esEnlace = claves.has('enlace_contacto') || roles.includes('enlace_contacto');
   const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
+  // Verificación de Digitalización (0125): comparte el módulo /digitalizacion (revisa).
+  const esVerifDigit = claves.has('verificacion_digitalizacion') || roles.includes('verificador_digitalizacion');
   // Supervisión por área (0105): el admin de área VE (solo lectura) las secciones
   // operativas de su área para supervisarlas; no las opera.
   const supVerif = areaAdmin === 'verificacion';
@@ -68,7 +70,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     // Digitalización: ÁREA propia (0124) con 2ª verificación (identidad) obligatoria.
     // La supervisa SU admin de área (supDigit); el admin de Verificaciones ya NO (se
     // separó). «Mapa» aparece para este admin porque se muestra con `acopio || digitalizacion`.
-    digitalizacion: admin || supDigit || (esDigitalizador && identidadOK),
+    digitalizacion: admin || supDigit || ((esDigitalizador || esVerifDigit) && identidadOK),
     envioRedaccion: admin || supRedes || claves.has('redaccion') || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),

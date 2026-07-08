@@ -1,4 +1,4 @@
-import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
+import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EstadoListado, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda } from '@unidos/types';
 
 /** Longitud mínima de contraseña (única fuente de verdad en la UI: registro, alta y cambio de clave). */
 export const MIN_CLAVE = 8;
@@ -84,6 +84,7 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   buscador_nna: 'Buscador NNA',
   enlace_contacto: 'Enlace de contacto',
   digitalizador: 'Digitalización',
+  verificador_digitalizacion: 'Verificación de Digitalización',
   redaccion: 'Envío a Redacción',
   redes_sociales: 'Community Manager',
   diseno_grafico: 'Diseño Gráfico',
@@ -126,14 +127,14 @@ export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
   verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['gestion_acopio'],
-  digitalizacion: ['digitalizacion'],
+  digitalizacion: ['digitalizacion', 'verificacion_digitalizacion'],
 };
 /** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
 export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
   verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['logistica'],
-  digitalizacion: ['digitalizador'],
+  digitalizacion: ['digitalizador', 'verificador_digitalizacion'],
 };
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
 export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general'; etiqueta: string; ayuda: string }[] = [
@@ -285,6 +286,20 @@ export const ETIQUETA_ESTADO_LUGAR: Record<string, string> = {
   pendiente_verificar: 'Pendiente de verificar',
   verificado: 'Verificado',
 };
+// Estado de revisión de un listado (paso de Verificación de Digitalización, 0125).
+export const ETIQUETA_ESTADO_LISTADO: Record<EstadoListado, string> = {
+  por_verificar: 'Por verificar',
+  verificado: 'Verificado',
+  observado: 'Con observaciones',
+};
+/** Tono de Pill según el estado de revisión del listado. */
+export function tonoEstadoListado(e?: string | null): 'ok' | 'aviso' | 'critica' | 'neutra' {
+  if (e === 'verificado') return 'ok';
+  if (e === 'observado') return 'critica';
+  if (e === 'por_verificar') return 'aviso';
+  return 'neutra';
+}
+
 export const CONDICIONES_PERSONA = ['herido', 'refugiado', 'fallecido', 'sano', 'desconocida', 'otro'] as const;
 export const ETIQUETA_CONDICION: Record<string, string> = {
   herido: 'Herido',
@@ -456,7 +471,7 @@ export const ETIQUETA_PRIORIDAD: Record<Prioridad, string> = {
 // Roles cuyo trabajo maneja datos sensibles y por eso EXIGEN la 2ª verificación
 // (identidad aprobada) antes de operar. La RLS lo impone; esto es para la UI/avisos.
 // El admin queda exento. (enlace_contacto se sumará en la Fase 3 de Búsqueda.)
-export const ROLES_SEGUNDA_VERIFICACION: Rol[] = ['recopilacion', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador'];
+export const ROLES_SEGUNDA_VERIFICACION: Rol[] = ['recopilacion', 'busqueda', 'buscador_nna', 'enlace_contacto', 'digitalizador', 'verificador_digitalizacion'];
 
 export const AREAS: AreaClave[] = Object.keys(ETIQUETA_AREA) as AreaClave[];
 export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
