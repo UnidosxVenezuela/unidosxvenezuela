@@ -8,7 +8,7 @@ import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import Pill from '@/components/Pill';
-import BotonEnviar from '@/components/BotonEnviar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import Consejo from '@/components/Consejos';
 import { confirmarCoincidencia, descartarCoincidencia } from './actions';
 
@@ -124,7 +124,7 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
               <div className="muted" style={{ fontSize: '.75rem', textTransform: 'uppercase', letterSpacing: '.03em' }}>Caso de desaparecido</div>
               <div style={{ fontWeight: 600 }}>#{String(c.caso_numero).padStart(5, '0')}</div>
               <div className="muted" style={{ fontSize: '.85rem' }}>{c.caso_titulo}</div>
-              <Link href={'/busqueda/' + c.caso_id} className="muted" style={{ fontSize: '.85rem' }}>Abrir el caso →</Link>
+              <Link href={'/busqueda/' + c.caso_id} className="btn" style={{ marginTop: 8 }}><Icono nombre="documento" size={16} /> Abrir el caso</Link>
             </div>
           </div>
 
@@ -133,14 +133,21 @@ export default async function CoincidenciasPage({ searchParams }: { searchParams
               {puedeConfirmar ? (
                 <form action={confirmarCoincidencia}>
                   <input type="hidden" name="id" value={c.id} />
-                  <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={16} /> Confirmar coincidencia</BotonEnviar>
+                  <BotonConfirmar className="btn btn-primario" confirmar="Sí, confirmar"
+                    mensaje={(c.es_menor ? '⚠️ Es un MENOR de edad — verifica con especial cuidado. ' : '')
+                      + `¿Confirmar la coincidencia entre «${c.persona_nombre}» y el caso #${String(c.caso_numero).padStart(5, '0')}? Se registrará como reunificación; es una acción delicada.`}>
+                    <Icono nombre="ok" size={16} /> Confirmar coincidencia
+                  </BotonConfirmar>
                 </form>
               ) : (
                 <span className="muted" style={{ fontSize: '.82rem' }}>La confirmación la hace el Enlace de contacto. Puedes proponerla o descartarla.</span>
               )}
               <form action={descartarCoincidencia}>
                 <input type="hidden" name="id" value={c.id} />
-                <BotonEnviar className="btn"><Icono nombre="cerrar" size={16} /> Descartar</BotonEnviar>
+                <BotonConfirmar className="btn" confirmar="Sí, descartar"
+                  mensaje={`¿Descartar la coincidencia entre «${c.persona_nombre}» y el caso #${String(c.caso_numero).padStart(5, '0')}? Dejará de aparecer como pendiente por revisar.`}>
+                  <Icono nombre="cerrar" size={16} /> Descartar
+                </BotonConfirmar>
               </form>
             </div>
           )}
