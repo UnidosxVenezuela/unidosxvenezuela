@@ -6,6 +6,9 @@ import { redirigirOk } from '@/lib/flash';
 import { rolesDe } from '@/lib/auth';
 import { siguienteEtapa } from '@/lib/constantes';
 import { subirArchivo } from '@/lib/storage';
+import { r2Configurado, firmarPut } from '@/lib/r2';
+import { clasificarMime, limiteBytes, extDe, urlPublicaR2, nombreSeguro } from '@/lib/subida-tipos';
+import { randomUUID } from 'node:crypto';
 import type { EtapaContenido, DestinoContenido } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
@@ -179,4 +182,72 @@ export async function eliminarAdjuntoPieza(formData: FormData) {
   if (error) throw new Error('No se pudo eliminar el adjunto: ' + error.message);
   revalidatePath('/contenido');
   redirigirOk(volverDe(formData, piezaId), 'Adjunto eliminado');
+}
+
+// ── Subida directa navegador → Cloudflare R2 (bucket público `contenido`) ──
+// Evita el tope de las Server Actions/Vercel (~4.5 MB): el archivo NO pasa por el
+// servidor. Flujo en dos pasos: (1) firmarSubidaContenido devuelve una URL PUT
+// firmada; el navegador sube directo a R2; (2) registrar* guarda la referencia en
+// la BD (con RLS). Si R2 no está configurado, la UI usa el flujo por Supabase.
+
+type DestinoSubida = 'final' | 'adjunto';
+
+/** Paso 1: valida acceso/tipo/tamaño y devuelve una URL PUT firmada para R2. */
+export async function firmarSubidaContenido(input: {
+  piezaId: string; nombre: string; mime: string; size: number; destino: DestinoSubida;
+}): Promise<{ url: string; key: string; publicUrl: string } | { error: string }> {
+  if (!r2Configurado()) return { error: 'La subida directa no está configurada.' };
+  const { supabase } = await sesion();
+  const piezaId = String(input.piezaId || '');
+  if (!piezaId) return { error: 'Falta la pieza.' };
+  // Acceso: solo quien puede LEER la pieza (RLS 0064) puede subirle archivos.
+  const { data: pieza } = await supabase.from('piezas_contenido').select('id').eq('id', piezaId).maybeSingle();
+  if (!pieza) return { error: 'No tienes acceso a esta pieza.' };
+  const tipo = clasificarMime(input.mime);
+  if (!tipo) return { error: 'Tipo de archivo no permitido.' };
+  if (!(Number(input.size) > 0) || Number(input.size) > limiteBytes(tipo)) {
+    return { error: 'El archivo excede el tamaño permitido.' };
+  }
+  const carpeta = input.destino === 'final' ? 'final' : 'adjuntos';
+  const key = `piezas/${piezaId}/${carpeta}/${randomUUID()}.${extDe(input.mime, input.nombre || '')}`;
+  try {
+    const url = await firmarPut(key); // expira en 1 h (margen para videos grandes)
+    return { url, key, publicUrl: urlPublicaR2(key) };
+  } catch (e) {
+    return { error: 'No se pudo preparar la subida: ' + ((e as Error)?.message ?? 'error') };
+  }
+}
+
+/** Paso 2 (entregable final): guarda la URL pública en la pieza tras subir a R2. */
+export async function registrarArchivoPiezaR2(
+  input: { piezaId: string; key: string; nombre: string },
+): Promise<{ url?: string; nombre?: string; error?: string }> {
+  const { supabase } = await sesion();
+  const piezaId = String(input.piezaId || '');
+  const key = String(input.key || '');
+  if (!piezaId || !key.startsWith(`piezas/${piezaId}/`)) return { error: 'Datos de archivo no válidos.' };
+  const url = urlPublicaR2(key);
+  const nombre = nombreSeguro(input.nombre || 'archivo');
+  const { error } = await supabase.from('piezas_contenido').update({ adjunto_url: url, adjunto_nombre: nombre }).eq('id', piezaId);
+  if (error) return { error: 'No se pudo guardar: ' + error.message };
+  revalidatePath('/contenido');
+  return { url, nombre };
+}
+
+/** Paso 2 (adjunto): inserta el adjunto en piezas_adjuntos tras subir a R2. */
+export async function registrarAdjuntoR2(
+  input: { piezaId: string; key: string; nombre: string; mime: string },
+): Promise<{ error?: string }> {
+  const { supabase, user } = await sesion();
+  const piezaId = String(input.piezaId || '');
+  const key = String(input.key || '');
+  if (!piezaId || !key.startsWith(`piezas/${piezaId}/`)) return { error: 'Datos de archivo no válidos.' };
+  const { data: pieza } = await supabase.from('piezas_contenido').select('etapa').eq('id', piezaId).maybeSingle();
+  const { error } = await supabase.from('piezas_adjuntos').insert({
+    pieza_id: piezaId, url: urlPublicaR2(key), nombre: nombreSeguro(input.nombre || 'archivo'),
+    mime: input.mime || null, etapa: (pieza?.etapa as string) ?? null, creado_por: user.id,
+  });
+  if (error) return { error: 'No se pudo registrar el adjunto: ' + error.message };
+  revalidatePath('/contenido');
+  return {};
 }

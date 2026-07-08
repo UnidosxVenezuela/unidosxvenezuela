@@ -18,7 +18,13 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # PIN de versión: evita la llamada «resolver la última release» a la API de
+          # GitHub, que sin token se rate-limitea (60 req/h por IP compartida entre runners)
+          # y hacía fallar setup-cli con «supabase: command not found». El token ayuda a la
+          # descarga de esa release fija.
+          version: 2.109.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Arrancamos SIN migraciones y luego las aplicamos con psql en autocommit
       # (una sentencia = una transacción). Así `alter type ... add value` queda
