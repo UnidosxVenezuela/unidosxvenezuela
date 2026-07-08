@@ -282,6 +282,11 @@ export type UrgenciaAcopio = 'alta' | 'media' | 'baja';
 export interface PuntoAcopio {
   id: string;
   nombre: string;
+  // Tipo de lugar (Digitalización): hospital | albergue | acopio | otro.
+  // Los centros creados a mano quedan como 'acopio' (default en BD, 0126).
+  tipo: 'hospital' | 'albergue' | 'acopio' | 'otro';
+  // Lugar de Digitalización que dio origen al centro (null si se creó a mano).
+  lugar_id: string | null;
   direccion: string | null;
   responsable: string | null;
   telefono: string | null;
