@@ -19,9 +19,18 @@ const ENTIDADES: Record<string, string> = {
   registro_horas: 'horas', puntos_acopio: 'un centro de acopio', reuniones: 'una reunión',
   endpoints_aliados: 'un contacto aliado', casos: 'un caso', casos_adjuntos: 'un adjunto de caso',
   acopio_responsables: 'un responsable de acopio', perfiles: 'un perfil', piezas_contenido: 'una pieza de contenido',
+  // Nuevas entidades auditadas (0130) + otras que faltaban en el mapa.
+  oportunidades: 'una oportunidad (Captación)', listados_digitalizados: 'un listado digitalizado',
+  lugares: 'un lugar', movimientos_acopio: 'un movimiento de inventario', solicitudes_traspaso: 'una solicitud de traspaso',
+  busqueda_casos: 'una ficha de desaparecido', bitacora_busqueda: 'una gestión de búsqueda',
+  solicitudes_alta_usuario: 'una solicitud de alta', solicitudes_insumo: 'una solicitud de insumo',
+  inventario_acopio: 'un producto de inventario', cedula: 'una cédula (CNE)', insumo: 'un insumo', aviso: 'un aviso',
 };
 const SEMANTICAS: Record<string, string> = {
   cambio_rol: 'cambió un rol', cambio_verificacion: 'cambió una verificación', crear_usuario: 'creó un usuario',
+  reset_contrasena: 'restableció una contraseña', cambio_roles_extra: 'cambió los roles adicionales',
+  eliminar_usuario: 'eliminó un usuario', verificacion_aprobada: 'aprobó una verificación de identidad',
+  verificacion_rechazada: 'rechazó una verificación de identidad', alta_delegada: 'creó una cuenta (alta delegada)',
 };
 
 function describir(accion: string, entidad: string, meta?: any): string {
@@ -43,6 +52,28 @@ function describir(accion: string, entidad: string, meta?: any): string {
         default: return 'actualizó un caso';
       }
     }
+    // Captación de Oportunidades: describir por el movimiento de estado.
+    if (tabla === 'oportunidades') {
+      if (op === 'insert') return 'creó una oportunidad (Captación)';
+      if (op === 'delete') return 'eliminó una oportunidad';
+      const et: Record<string, string> = { investigacion: 'Investigación', verificado: 'Verificado', enviado: 'Enviado' };
+      return et[meta?.estado as string] ? `movió una oportunidad a ${et[meta?.estado as string]}` : 'editó una oportunidad';
+    }
+    // Digitalización: moderación de lugares y verificación de listados.
+    if (tabla === 'lugares') {
+      if (op === 'insert') return 'registró un lugar';
+      if (op === 'delete') return 'eliminó un lugar';
+      return meta?.estado === 'verificado' ? 'verificó un lugar' : 'editó un lugar';
+    }
+    if (tabla === 'listados_digitalizados') {
+      if (op === 'insert') return 'guardó un listado digitalizado';
+      if (op === 'delete') return 'eliminó un listado digitalizado';
+      if (meta?.estado === 'verificado') return 'verificó un listado digitalizado';
+      if (meta?.estado === 'observado') return 'observó un listado digitalizado';
+      return 'editó un listado digitalizado';
+    }
+    if (tabla === 'cedula') return 'consultó una cédula (CNE)';
+    if (tabla === 'insumo') return 'cambió el estado de un insumo';
     return `${OPS[op] ?? op} ${ENTIDADES[tabla] ?? entidad ?? tabla}`;
   }
   return SEMANTICAS[accion] ?? accion;
