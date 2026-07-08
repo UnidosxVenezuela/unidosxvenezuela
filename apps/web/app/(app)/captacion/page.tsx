@@ -16,6 +16,8 @@ import Pill from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonActualizar from '@/components/BotonActualizar';
+import Kpi from '@/components/Kpi';
+import FlujoTrabajo from '@/components/FlujoTrabajo';
 import Consejo from '@/components/Consejos';
 import { cambiarEstadoOportunidad, eliminarOportunidad } from './actions';
 
@@ -45,6 +47,9 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
 
   const porEstado = (e: string) => oportunidades.filter((o) => o.estado === e);
   const total = oportunidades.length;
+  const cInv = porEstado('investigacion').length;
+  const cVer = porEstado('verificado').length;
+  const cEnv = porEstado('enviado').length;
 
   const Tarjeta = ({ o }: { o: any }) => {
     const url = urls.get(o.id);
@@ -123,6 +128,22 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
           <Link className="btn btn-primario" href="/captacion/nueva"><Icono nombre="mas" /> Nueva oportunidad</Link>
         </div>
       </div>
+
+      {/* Tarjetas de estado (resumen del proceso) */}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
+        <Kpi etiqueta="Total" valor={total} sub={filtro ? ETIQUETA_CATEGORIA_OPORTUNIDAD[filtro as keyof typeof ETIQUETA_CATEGORIA_OPORTUNIDAD] : 'Todas las oportunidades'} color="var(--azul)" icono="enlace" tinte="#eef2ff" />
+        <Kpi etiqueta="Investigación" valor={cInv} sub="Recién detectadas" color="#a16207" icono="buscar" tinte="#fef9c3" />
+        <Kpi etiqueta="Verificado" valor={cVer} sub="Datos confirmados" color="#16a34a" icono="ok" tinte="#d1fae5" />
+        <Kpi etiqueta="Enviado" valor={cEnv} sub="Contactadas / derivadas" color="var(--azul)" icono="cohete" tinte="#eef2ff" />
+      </div>
+
+      {/* Flujo del proceso */}
+      <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>El flujo · las tres etapas</p>
+      <FlujoTrabajo pasos={[
+        { etiqueta: 'Investigación', valor: cInv, icono: 'buscar', color: '#a16207', tinte: '#fef9c3' },
+        { etiqueta: 'Verificado', valor: cVer, icono: 'ok', color: '#16a34a', tinte: '#d1fae5' },
+        { etiqueta: 'Enviado', valor: cEnv, icono: 'cohete', color: '#0033A0', tinte: '#eef2ff' },
+      ]} />
 
       {/* Filtro por categoría */}
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap', margin: '4px 0 14px' }}>
