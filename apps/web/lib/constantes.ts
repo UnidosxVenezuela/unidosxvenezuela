@@ -286,6 +286,13 @@ export const ETIQUETA_ESTADO_LUGAR: Record<string, string> = {
   pendiente_verificar: 'Pendiente de verificar',
   verificado: 'Verificado',
 };
+/** Tono de Pill por tipo de lugar/centro (badge en la gestión de Centros). */
+export const TONO_TIPO_LUGAR: Record<string, 'ok' | 'aviso' | 'alta' | 'info' | 'neutra'> = {
+  hospital: 'alta',
+  albergue: 'info',
+  acopio: 'ok',
+  otro: 'neutra',
+};
 // Estado de revisión de un listado (paso de Verificación de Digitalización, 0125).
 export const ETIQUETA_ESTADO_LISTADO: Record<EstadoListado, string> = {
   por_verificar: 'Por verificar',

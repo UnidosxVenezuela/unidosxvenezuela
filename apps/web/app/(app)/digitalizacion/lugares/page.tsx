@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminDigitalizacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_ESTADO_LUGAR, TIPOS_LUGAR } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -15,7 +15,8 @@ const TONO: Record<string, 'ok' | 'aviso' | 'critica'> = { verificado: 'ok', pen
 
 export default async function LugaresPage() {
   const { perfil } = await requireUsuario();
-  if (!esAdministrador(perfil)) redirect('/digitalizacion');
+  // Modera el admin general o el admin de Digitalización (su área).
+  if (!esAdministrador(perfil) && !esAdminDigitalizacion(perfil)) redirect('/digitalizacion');
   const supabase = await createClient();
 
   const { data: lugaresRaw } = await supabase.from('lugares')
@@ -31,7 +32,7 @@ export default async function LugaresPage() {
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="mapa" size={24} /> Lugares (moderación)</h1>
-          <p className="muted sub">Completa los datos de los lugares nuevos y verifica que la información digitalizada corresponda a cada lugar. {pendientes.length > 0 && <><strong>{pendientes.length}</strong> por revisar.</>}</p>
+          <p className="muted sub">Completa los datos de los lugares nuevos y verifica que la información digitalizada corresponda a cada lugar. Al <strong>verificar</strong>, el lugar aparece en <strong>Centros y lugares</strong> (Acopio) para gestionarlo. {pendientes.length > 0 && <><strong>{pendientes.length}</strong> por revisar.</>}</p>
         </div>
       </div>
 
@@ -65,12 +66,26 @@ export default async function LugaresPage() {
               <BotonEnviar className="btn btn-primario">Guardar datos</BotonEnviar>
             </div>
           </form>
-          {l.estado !== 'verificado' && (
-            <form action={verificarLugar} style={{ marginTop: 8 }}>
-              <input type="hidden" name="id" value={l.id} />
-              <BotonEnviar className="btn btn-acento"><Icono nombre="ok" size={16} /> Marcar verificado</BotonEnviar>
-              <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Confirma que los datos son correctos y que la información digitalizada corresponde realmente a este lugar.</p>
-            </form>
+          {l.estado !== 'verificado' ? (
+            (l.lat != null && l.lng != null) ? (
+              <form action={verificarLugar} style={{ marginTop: 8 }}>
+                <input type="hidden" name="id" value={l.id} />
+                <BotonEnviar className="btn btn-acento"><Icono nombre="ok" size={16} /> Marcar verificado</BotonEnviar>
+                <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Al verificar, el lugar aparece en <strong>Centros y lugares</strong> para gestionarlo (datos, capacidad, inventario). Confirma que la información corresponde realmente a este lugar.</p>
+              </form>
+            ) : (
+              <p className="muted fila" style={{ marginTop: 8, fontSize: '.82rem', gap: 6 }}>
+                <Icono nombre="ubicacion" size={14} /> Agrega <strong>latitud y longitud</strong> y guarda los datos para poder verificar (así aparece en el mapa y en Centros).
+              </p>
+            )
+          ) : (l.lat != null && l.lng != null) ? (
+            <p className="muted fila" style={{ marginTop: 8, fontSize: '.82rem', gap: 6 }}>
+              <Icono nombre="ok" size={14} /> Verificado. <Link href="/acopio">Gestionar en Centros y lugares →</Link>
+            </p>
+          ) : (
+            <p className="fila" style={{ marginTop: 8, fontSize: '.82rem', gap: 6, color: 'var(--rojo, #CE1126)' }}>
+              <Icono nombre="ubicacion" size={14} /> Verificado, pero <strong>sin ubicación</strong>: no aparece en el mapa ni en Centros. Escribe latitud y longitud arriba y pulsa «Guardar datos».
+            </p>
           )}
         </div>
       ))}

@@ -5,7 +5,7 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { createClient } from '@/lib/supabase/client';
-import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL } from '@/lib/constantes';
+import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL, ETIQUETA_TIPO_LUGAR, TIPOS_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
 import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
 import Avatar from './Avatar';
@@ -30,6 +30,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
   const [necCount, setNecCount] = useState<Map<string, number>>(new Map());
   const [candidatos, setCandidatos] = useState<{ id: string; nombre_completo: string | null; rol: Rol | null }[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const [editando, setEditando] = useState<PuntoAcopio | 'nuevo' | null>(null);
   const [sel, setSel] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -119,6 +120,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
     const supabase = createClient();
     const payload = {
       nombre,
+      tipo: (String(fd.get('tipo') || 'acopio') as PuntoAcopio['tipo']),
       capacidad: str(fd.get('capacidad')),
       camas_total: intOf(fd.get('camas_total')),
       camas_ocupadas: intOf(fd.get('camas_ocupadas')),
@@ -172,6 +174,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
   }
 
   const ed = editando !== null && editando !== 'nuevo' ? editando : null;
+  const centrosVisibles = filtroTipo === 'todos' ? centros : centros.filter((c) => (c.tipo ?? 'acopio') === filtroTipo);
   // ¿El usuario LIDERA este centro? (admin, su creador o un responsable). Solo
   // los líderes gestionan; el resto lo ve para coordinarse (contacto del líder).
   const lidero = (c: CentroLider) => esAdmin || c.creado_por === userId || (responsables.get(c.id) ?? []).some((r) => r.perfil_id === userId);
@@ -180,8 +183,8 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
     <div>
       <div className="pagina-cab">
         <div>
-          <h1>Centros de acopio</h1>
-          <p className="muted sub">Registra los puntos y su ubicación. Entra a «Inventario» para llevar las existencias y marcar necesidades — desde el teléfono o con el código QR del centro.</p>
+          <h1>Centros y lugares</h1>
+          <p className="muted sub">Centros de acopio, albergues, hospitales y otros lugares. Los que <strong>Digitalización verifica</strong> aparecen aquí para gestionarlos: datos, capacidad de camas, inventario y necesidades — desde el teléfono o con el código QR del centro.</p>
         </div>
         {editando === null && (
           <div className="fila" style={{ gap: 8 }}>
@@ -207,6 +210,11 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
             </div>
             <div>
               <div className="campo"><label>Nombre del centro</label><input name="nombre" className="input" required defaultValue={ed?.nombre ?? ''} /></div>
+              <div className="campo"><label>Tipo de lugar</label>
+                <select name="tipo" className="input" defaultValue={ed?.tipo ?? 'acopio'}>
+                  {TIPOS_LUGAR.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_LUGAR[t]}</option>)}
+                </select>
+              </div>
               {ed && (
                 <div className="campo"><label>Urgencia (en el mapa)</label>
                   <select name="urgencia" className="input" defaultValue={ed?.urgencia ?? 'media'}>
@@ -232,25 +240,48 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
         </form>
       )}
 
+      {/* Filtro por tipo */}
+      {!cargando && centros.length > 0 && (
+        <div className="fila" style={{ gap: 6, flexWrap: 'wrap', margin: '4px 0 12px' }}>
+          {(['todos', ...TIPOS_LUGAR] as const).map((t) => {
+            const n = t === 'todos' ? centros.length : centros.filter((c) => (c.tipo ?? 'acopio') === t).length;
+            const activo = filtroTipo === t;
+            return (
+              <button key={t} type="button" aria-pressed={activo}
+                className={activo ? 'btn btn-primario' : 'btn'} style={{ minHeight: 32, padding: '3px 12px' }}
+                onClick={() => setFiltroTipo(t)}>
+                {t === 'todos' ? 'Todos' : ETIQUETA_TIPO_LUGAR[t]} · {n}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Listado */}
       {cargando ? (
         <p className="muted">Cargando…</p>
       ) : centros.length === 0 ? (
         <div className="tarjeta vacio">
           <Icono nombre="acopio" size={40} />
-          <p className="muted" style={{ marginBottom: 0 }}>Aún no hay centros de acopio. Crea el primero.</p>
+          <p className="muted" style={{ marginBottom: 0 }}>Aún no hay centros ni lugares. Crea el primero, o verifica un lugar en Digitalización para que aparezca aquí.</p>
         </div>
+      ) : centrosVisibles.length === 0 ? (
+        <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>No hay lugares de este tipo.</p></div>
       ) : (
         <div className="grid grid-2">
-          {centros.map((c) => (
+          {centrosVisibles.map((c) => (
             <div key={c.id} className="tarjeta" style={{ borderLeft: '5px solid ' + (c.urgencia === 'alta' ? '#CF142B' : c.urgencia === 'baja' ? '#0A7D2C' : '#E6A100'), opacity: c.activo ? 1 : 0.55 }}>
-              <div className="fila" style={{ justifyContent: 'space-between' }}>
-                <strong>{c.nombre}</strong>
+              <div className="fila" style={{ justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
+                <span className="fila" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <strong>{c.nombre}</strong>
+                  <Pill tono={TONO_TIPO_LUGAR[c.tipo ?? 'acopio'] ?? 'neutra'} punto={false}>{ETIQUETA_TIPO_LUGAR[c.tipo ?? 'acopio'] ?? c.tipo}</Pill>
+                </span>
                 <span className="fila" style={{ gap: 6 }}>
                   {(necCount.get(c.id) ?? 0) > 0 && <Pill tono="aviso" punto={false}>{necCount.get(c.id)} necesidades</Pill>}
                   <Pill tono={tonoDeClase(claseUrgencia(c.urgencia))}>{ETIQUETA_URGENCIA[c.urgencia]}</Pill>
                 </span>
               </div>
+              {c.lugar_id && <div className="muted fila" style={{ fontSize: '.82rem', gap: 6 }}><Icono nombre="ok" size={13} /> Verificado desde Digitalización</div>}
               {c.capacidad && <div className="muted" style={{ fontSize: '.9rem' }}>Capacidad: {c.capacidad}</div>}
               {Number(c.camas_total) > 0 && (() => {
                 const total = Number(c.camas_total); const ocup = Math.max(0, Math.min(Number(c.camas_ocupadas), total)); const libres = total - ocup;

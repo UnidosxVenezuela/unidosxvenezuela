@@ -208,10 +208,17 @@ export async function actualizarLugar(formData: FormData) {
 export async function verificarLugar(formData: FormData) {
   const { supabase, user } = await exigirAdmin();
   const id = txt(formData.get('id'));
+  if (!id) throw new Error('Falta el lugar.');
+  // Un lugar verificado se vuelca a Centros y lugares (0126): necesita ubicación
+  // para ser un punto real del mapa. Se avisa aquí y lo impone el trigger.
+  const { data: lugar } = await supabase.from('lugares').select('lat, lng').eq('id', id).maybeSingle();
+  if ((lugar as any)?.lat == null || (lugar as any)?.lng == null) {
+    throw new Error('Agrega la ubicación (latitud y longitud) del lugar antes de verificarlo.');
+  }
   const { error } = await supabase.from('lugares').update({
     estado: 'verificado', verificado_por: user.id, verificado_en: new Date().toISOString(), actualizado_en: new Date().toISOString(),
   }).eq('id', id);
   if (error) throw new Error('No se pudo verificar el lugar: ' + error.message);
-  revalidatePath('/digitalizacion/lugares'); revalidatePath('/mapa');
-  redirigirOk('/digitalizacion/lugares', 'Lugar verificado');
+  revalidatePath('/digitalizacion/lugares'); revalidatePath('/mapa'); revalidatePath('/acopio');
+  redirigirOk('/digitalizacion/lugares', 'Lugar verificado. Ya puedes gestionarlo en Centros y lugares.');
 }
