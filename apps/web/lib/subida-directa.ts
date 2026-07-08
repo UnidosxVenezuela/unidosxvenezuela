@@ -8,11 +8,12 @@ export async function comprimirImagen(
   file: File,
   opts: { maxDim?: number; calidad?: number; umbralBytes?: number } = {},
 ): Promise<{ blob: Blob; mime: string }> {
-  const maxDim = opts.maxDim ?? 1920;
-  const calidad = opts.calidad ?? 0.82;
-  const umbral = opts.umbralBytes ?? 1024 * 1024; // no re-comprimir imágenes ya livianas
-  // Solo JPEG/PNG/WEBP: GIF (posible animación) y AVIF se dejan tal cual.
-  if (!/^image\/(jpe?g|png|webp)$/i.test(file.type)) return { blob: file, mime: file.type };
+  const maxDim = opts.maxDim ?? 2560;
+  const calidad = opts.calidad ?? 0.85;
+  const umbral = opts.umbralBytes ?? 2 * 1024 * 1024; // solo fotos grandes (>2 MB)
+  // SOLO JPEG (foto): PNG/WEBP pueden tener transparencia (piezas de diseño) y GIF
+  // animación → se dejan intactos para no degradar entregables gráficos.
+  if (!/^image\/jpe?g$/i.test(file.type)) return { blob: file, mime: file.type };
   try {
     const bitmap = await cargarBitmap(file);
     const escala = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
