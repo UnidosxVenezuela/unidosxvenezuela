@@ -28,7 +28,7 @@ export default async function EnvioRedaccionPage() {
     supabase.from('casos').select(COLS)
       .eq('estado', 'confirmado').order('actualizado_en', { ascending: true }),
     supabase.from('casos').select(COLS)
-      .eq('estado', 'enviado_redaccion').order('actualizado_en', { ascending: false }).limit(30),
+      .eq('estado', 'enviado_redaccion').order('actualizado_en', { ascending: false }),
   ]);
 
   return (
@@ -67,7 +67,7 @@ export default async function EnvioRedaccionPage() {
         ))
       )}
 
-      <h2 style={{ marginTop: 20 }}>Enviados recientemente</h2>
+      <h2 style={{ marginTop: 20 }}>Enviados a Redacción <span className="insignia">{(enviados ?? []).length}</span></h2>
       {(enviados ?? []).length === 0 ? (
         <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Todavía no se ha enviado ninguno.</p></div>
       ) : (
