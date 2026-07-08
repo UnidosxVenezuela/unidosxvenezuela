@@ -170,22 +170,34 @@ export async function eliminarPersonaListado(formData: FormData) {
   redirigirOk('/digitalizacion/' + listadoId, 'Fila eliminada');
 }
 
-// ── Moderación de lugares (admin general o admin de Digitalización) ──
+// ── Moderación de lugares (admin general, admin de Digitalización o verificador) ──
 const TIPOS_LUGAR_MOD = ['hospital', 'albergue', 'acopio', 'otro'];
 
-async function exigirAdmin() {
+// Modera lugares: el admin general y el admin de Digitalización (área completa),
+// y el Verificador de Digitalización (con su 2ª verificación, como en la revisión).
+// La RLS (0128) lo impone de nuevo: opera_verificacion_digitalizacion() = verificador
+// + identidad aprobada.
+async function exigirModerarLugares() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin') && !roles.includes('admin_digitalizacion')) throw new Error('No tienes permiso para moderar lugares.');
+  const esAdmin = roles.includes('admin');
+  const esAdminDig = roles.includes('admin_digitalizacion');
+  const esVerif = roles.includes('verificador_digitalizacion');
+  if (!esAdmin && !esAdminDig && !esVerif) throw new Error('No tienes permiso para moderar lugares.');
+  // El verificador (no admin) necesita su 2ª verificación de identidad aprobada.
+  if (esVerif && !esAdmin && !esAdminDig) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') throw new Error('Necesitas tu segunda verificación aprobada para moderar lugares.');
+  }
   return { supabase, user };
 }
 
-// Admin completa/corrige los datos de un lugar (nombre, tipo, ubicación, dirección).
+// Completa/corrige los datos de un lugar (nombre, tipo, ubicación, dirección).
 export async function actualizarLugar(formData: FormData) {
-  const { supabase } = await exigirAdmin();
+  const { supabase } = await exigirModerarLugares();
   const id = txt(formData.get('id'));
   const tipo = txt(formData.get('tipo'));
   const nombre = txt(formData.get('nombre'));
@@ -204,9 +216,9 @@ export async function actualizarLugar(formData: FormData) {
   redirigirOk('/digitalizacion/lugares', 'Lugar actualizado');
 }
 
-// Admin da por verificado un lugar (datos correctos y la data corresponde).
+// Da por verificado un lugar (datos correctos y la data corresponde).
 export async function verificarLugar(formData: FormData) {
-  const { supabase, user } = await exigirAdmin();
+  const { supabase, user } = await exigirModerarLugares();
   const id = txt(formData.get('id'));
   if (!id) throw new Error('Falta el lugar.');
   // Un lugar verificado se vuelca a Centros y lugares (0126): necesita ubicación

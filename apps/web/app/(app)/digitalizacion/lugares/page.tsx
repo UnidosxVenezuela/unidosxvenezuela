@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, esAdministrador, esAdminDigitalizacion } from '@/lib/auth';
+import { requireUsuario, esAdministrador, esAdminDigitalizacion, esVerificadorDigitalizacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_LUGAR, ETIQUETA_ESTADO_LUGAR, TIPOS_LUGAR } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -14,10 +14,31 @@ import { actualizarLugar, verificarLugar } from '../actions';
 const TONO: Record<string, 'ok' | 'aviso' | 'critica'> = { verificado: 'ok', pendiente_verificar: 'aviso', pendiente_llenado: 'critica' };
 
 export default async function LugaresPage() {
-  const { perfil } = await requireUsuario();
-  // Modera el admin general o el admin de Digitalización (su área).
-  if (!esAdministrador(perfil) && !esAdminDigitalizacion(perfil)) redirect('/digitalizacion');
+  const { user, perfil } = await requireUsuario();
+  const esAdmin = esAdministrador(perfil);
+  const esAdminDig = esAdminDigitalizacion(perfil);
+  const esVerif = esVerificadorDigitalizacion(perfil);
+  // Moderan el admin general, el admin de Digitalización (su área) y el verificador.
+  if (!esAdmin && !esAdminDig && !esVerif) redirect('/digitalizacion');
   const supabase = await createClient();
+
+  // El verificador (que no es admin) necesita su 2ª verificación aprobada: modera
+  // datos de lugares sensibles. Admin y admin de Digitalización quedan exentos.
+  if (esVerif && !esAdmin && !esAdminDig) {
+    const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
+    if ((vi as any)?.estado !== 'aprobada') {
+      return (
+        <AnimarEntrada>
+          <Link href="/digitalizacion" className="muted">← Digitalización</Link>
+          <div className="tarjeta" style={{ maxWidth: 560, marginTop: 8 }}>
+            <h2 className="fila" style={{ gap: 8, marginTop: 0 }}><Icono nombre="llave" size={20} /> Completa tu segunda verificación</h2>
+            <p className="muted">Para moderar los lugares del mapa necesitas tu <strong>verificación de identidad</strong> aprobada.</p>
+            <Link href="/verificacion" className="btn btn-primario"><Icono nombre="llave" size={16} /> Ir a mi verificación</Link>
+          </div>
+        </AnimarEntrada>
+      );
+    }
+  }
 
   const { data: lugaresRaw } = await supabase.from('lugares')
     .select('id, tipo, nombre, direccion, lat, lng, estado, notas, creado_en, listados_digitalizados(count)')
