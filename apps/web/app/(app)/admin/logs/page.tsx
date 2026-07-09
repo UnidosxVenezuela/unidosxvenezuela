@@ -32,8 +32,16 @@ const SEMANTICAS: Record<string, string> = {
   eliminar_usuario: 'eliminó un usuario', verificacion_aprobada: 'aprobó una verificación de identidad',
   verificacion_rechazada: 'rechazó una verificación de identidad', alta_delegada: 'creó una cuenta (alta delegada)',
 };
+// Columnas de `perfiles` → nombre corto legible (para describir QUÉ se editó, con `cambios`).
+const CAMPOS_PERFIL: Record<string, string> = {
+  avatar_url: 'foto de perfil', nombre_completo: 'nombre', whatsapp: 'WhatsApp', telefono: 'teléfono',
+  organizacion: 'organización', pais: 'país', habilidades: 'habilidades', ciudad: 'ciudad',
+  disponibilidad: 'disponibilidad', horas_semana: 'horas por semana', experiencia: 'experiencia',
+  contacto_emergencia: 'contacto de emergencia', rol: 'rol', roles_extra: 'roles adicionales',
+  verificado: 'verificación', super_admin: 'permisos de superadmin', area_admin: 'área de administración',
+};
 
-function describir(accion: string, entidad: string, meta?: any): string {
+function describir(accion: string, entidad: string, meta?: any, actorId?: string | null, entidadId?: string | null): string {
   const partes = accion.split(':');
   if (partes.length === 2) {
     const tabla = partes[0]!;
@@ -72,6 +80,19 @@ function describir(accion: string, entidad: string, meta?: any): string {
       if (meta?.estado === 'observado') return 'observó un listado digitalizado';
       return 'editó un listado digitalizado';
     }
+    // Perfiles: describir QUÉ se editó (metadata.cambios) y de quién (propio vs. de otra persona).
+    if (tabla === 'perfiles') {
+      if (op === 'insert') return 'creó un perfil';
+      if (op === 'delete') return 'eliminó un perfil';
+      const etiquetas = (Array.isArray(meta?.cambios) ? meta.cambios : [])
+        .map((c: string) => CAMPOS_PERFIL[c]).filter(Boolean) as string[];
+      const propio = !!actorId && !!entidadId && actorId === entidadId;
+      if (propio) {
+        return etiquetas.length > 0 ? `actualizó su perfil (${etiquetas.join(', ')})` : 'editó su perfil';
+      }
+      const quien = meta?.nombre_completo ? ` de ${meta.nombre_completo}` : '';
+      return etiquetas.length > 0 ? `editó el perfil${quien} (${etiquetas.join(', ')})` : `editó un perfil${quien}`;
+    }
     if (tabla === 'cedula') return 'consultó una cédula (CNE)';
     if (tabla === 'insumo') return 'cambió el estado de un insumo';
     return `${OPS[op] ?? op} ${ENTIDADES[tabla] ?? entidad ?? tabla}`;
@@ -101,7 +122,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
       actorNombre: actor?.nombre_completo ?? (l.actor_id ? '—' : 'Sistema'),
       actorRol: actor?.rol ?? null,
       actorAvatar: actor?.avatar_url ?? null,
-      desc: describir(l.accion, l.entidad, l.metadata),
+      desc: describir(l.accion, l.entidad, l.metadata, l.actor_id, l.entidad_id),
     };
   });
   if (rolFiltro) logs = logs.filter((l) => l.actorRol === rolFiltro);
@@ -147,7 +168,7 @@ export default async function LogsPage({ searchParams }: { searchParams: SP }) {
             <thead><tr><th>Fecha</th><th>Usuario</th><th>Rol</th><th>Acción</th></tr></thead>
             <tbody>
               {logs.map((l: any) => {
-                const extra = l.metadata?.titulo || l.metadata?.nombre || l.metadata?.nombre_completo;
+                const extra = l.accion === 'perfiles:update' ? null : (l.metadata?.titulo || l.metadata?.nombre || l.metadata?.nombre_completo);
                 return (
                   <tr key={l.id}>
                     <td style={{ whiteSpace: 'nowrap' }}>{fechaHora(l.creado_en)}</td>
