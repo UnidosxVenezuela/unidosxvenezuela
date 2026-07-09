@@ -19,6 +19,7 @@ const TRAZOS: Record<string, React.ReactNode> = {
   ubicacion: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z" /><circle cx="12" cy="10" r="3" /></>,
   mas: <><path d="M12 5v14" /><path d="M5 12h14" /></>,
   salir: <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></>,
+  salida: <><path d="M12 3v13" /><path d="m7 11 5 5 5-5" /><path d="M5 21h14" /></>,
   usuario: <><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 12 0v1" /></>,
   filtro: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />,
   reloj: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
@@ -44,12 +45,20 @@ const TRAZOS: Record<string, React.ReactNode> = {
   corazon: <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />,
 };
 
+// Glifo de reserva (caja punteada) para un `nombre` no definido: hace VISIBLE un
+// ícono mal escrito en vez de dejar un hueco invisible (así se detecta al toque).
+const RESERVA = <rect x="4" y="4" width="16" height="16" rx="3" strokeDasharray="3 3" />;
+
 export default function Icono({ nombre, size = 20, ...props }: { nombre: string; size?: number } & SVGProps<SVGSVGElement>) {
+  const trazo = TRAZOS[nombre];
+  if (trazo === undefined && process.env.NODE_ENV !== 'production') {
+    console.warn(`[Icono] nombre no definido: "${nombre}" — usa uno de: ${Object.keys(TRAZOS).join(', ')}`);
+  }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       aria-hidden="true" {...props}>
-      {TRAZOS[nombre] ?? null}
+      {trazo ?? RESERVA}
     </svg>
   );
 }

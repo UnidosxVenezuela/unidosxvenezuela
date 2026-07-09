@@ -11,6 +11,7 @@ import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
 import GloboColaboradores from '@/components/GloboColaboradores';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
+import { kpisDeRol } from '@/lib/kpis-panel';
 
 type Accion = { href: string; titulo: string; descripcion: string; icono: string; color: string; tinte: string };
 
@@ -38,7 +39,7 @@ export default async function Dashboard() {
   const misGrupoIds = [...new Set((misGrupoRows ?? []).map((r: any) => r.grupo_id).filter(Boolean))];
   const misGruposCount = misGrupoIds.length;
 
-  const [pendientes, noLeidas, misHorasRows, totalCom, paisesRes, totalColabRes] = await Promise.all([
+  const [pendientes, noLeidas, misHorasRows, totalCom, paisesRes, totalColabRes, kpisRol] = await Promise.all([
     misGrupoIds.length
       ? supabase.from('tareas').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'asignada']).in('grupo_id', misGrupoIds)
       : Promise.resolve({ count: 0 } as { count: number }),
@@ -47,6 +48,7 @@ export default async function Dashboard() {
     supabase.rpc('total_horas_comunidad'),
     supabase.rpc('paises_colaboradores'),
     supabase.rpc('total_colaboradores'),
+    kpisDeRol(supabase, user!.id, flags),
   ]);
   // Países desde donde se colabora (agregado no sensible) para el globo del panel.
   const paisesColab = ((paisesRes.data ?? []) as { pais: string; n: number }[]).filter((p) => p.pais);
@@ -108,6 +110,16 @@ export default async function Dashboard() {
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))' }}>
         {acciones.map((a) => <AccionRapida key={a.href + a.titulo} {...a} />)}
       </div>
+
+      {kpisRol.length > 0 && (
+        <>
+          <h2>Pendiente de ti</h2>
+          <p className="muted" style={{ marginTop: -4 }}>Lo que espera tu atención según tu función. Toca una tarjeta para ir directo.</p>
+          <div className="grid grid-2">
+            {kpisRol.map((k) => <Kpi key={k.href + k.etiqueta} {...k} />)}
+          </div>
+        </>
+      )}
 
       {mostrarFlujo && (
         <>
