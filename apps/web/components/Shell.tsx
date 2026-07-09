@@ -93,7 +93,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
           </div>
         </header>
         <main id="contenido-principal" tabIndex={-1} className="contenedor">{children}</main>
-        <footer className="muted" style={{ textAlign: 'center', fontSize: '.8rem', padding: '10px 24px 24px' }}>
+        <footer className="muted" style={{ textAlign: 'center', fontSize: '.8rem', padding: '10px 24px max(24px, env(safe-area-inset-bottom))' }}>
           <Link href="/legal/terminos">Términos</Link> · <Link href="/legal/privacidad">Privacidad</Link> · <Link href="/legal/descargo">Descargo de responsabilidad</Link>
         </footer>
       </div>

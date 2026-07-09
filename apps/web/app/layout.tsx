@@ -12,6 +12,7 @@ export const viewport: Viewport = {
   themeColor: '#0033A0',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover', // usa toda la pantalla en PWA; los env(safe-area-*) evitan el notch/gestos
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
