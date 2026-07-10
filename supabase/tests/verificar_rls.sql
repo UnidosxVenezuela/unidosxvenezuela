@@ -831,4 +831,118 @@ begin;
   reset role;
 rollback;
 
+-- ══ Telegram como canal de avisos (0139) ══
+
+\echo '== Test 42: telegram_enlaces — cada quien gestiona SOLO los suyos; sin UPDATE de usuario (0139) =='
+begin;
+  -- Otra persona, dueña de un enlace ajeno (sembrado con privilegios plenos).
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000fe001', 'tg_otro@test.local') on conflict do nothing;
+  insert into public.telegram_enlaces (token, perfil_id, expira_en)
+    values ('_TEST_tg_ajeno', '00000000-0000-0000-0000-0000000fe001', now() + interval '15 min');
+  update public.perfiles set rol = 'voluntario', verificado = true where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid; n int;
+  begin
+    -- (a) NO ve el enlace ajeno.
+    select count(*) into n from public.telegram_enlaces where token = '_TEST_tg_ajeno';
+    if n <> 0 then raise exception 'FALLO: se ve un telegram_enlace ajeno (n=%)', n; end if;
+    -- (b) Puede insertar el SUYO.
+    insert into public.telegram_enlaces (token, perfil_id, expira_en)
+      values ('_TEST_tg_mio', v_uid, now() + interval '15 min');
+    select count(*) into n from public.telegram_enlaces where token = '_TEST_tg_mio';
+    if n <> 1 then raise exception 'FALLO: no pudo insertar su propio enlace (n=%)', n; end if;
+    -- (c) NO puede crear uno a nombre de otra persona (viola with check).
+    begin
+      insert into public.telegram_enlaces (token, perfil_id, expira_en)
+        values ('_TEST_tg_falso', '00000000-0000-0000-0000-0000000fe001', now() + interval '15 min');
+      raise exception 'FALLO: insertó un enlace a nombre de otra persona';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+    -- (d) NO puede marcar usado_en (no hay policy de UPDATE; eso lo hace el webhook con service_role).
+    update public.telegram_enlaces set usado_en = now() where token = '_TEST_tg_mio';
+    if exists (select 1 from public.telegram_enlaces where token = '_TEST_tg_mio' and usado_en is not null) then
+      raise exception 'FALLO: un usuario marcó usado_en (debería poder solo el webhook)';
+    end if;
+    -- El borrado del ajeno no afecta filas (no lo ve).
+    delete from public.telegram_enlaces where token = '_TEST_tg_ajeno';
+  end $$;
+  reset role;
+  -- Con privilegios plenos: el ajeno sigue intacto (no borrado, no marcado).
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.telegram_enlaces where token = '_TEST_tg_ajeno' and usado_en is null;
+    if n <> 1 then raise exception 'FALLO: el enlace ajeno fue alterado por otra persona (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 43: perfiles.telegram_chat_id — auto-edición SÍ, ajena NO (0139) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000fe002', 'tg_otro2@test.local') on conflict do nothing;
+  update public.perfiles set telegram_chat_id = '_TEST_chatOtro' where id = '00000000-0000-0000-0000-0000000fe002';
+  update public.perfiles set rol = 'voluntario', verificado = true, telegram_chat_id = null where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    -- Edita lo SUYO (no está en la lista negra de proteger_campos_perfil).
+    update public.perfiles set telegram_chat_id = '_TEST_chatMio', telegram_username = '@mio' where id = v_uid;
+    -- Intenta editar lo AJENO: la RLS de fila propia lo hace invisible (0 filas).
+    update public.perfiles set telegram_chat_id = '_TEST_hack' where id = '00000000-0000-0000-0000-0000000fe002';
+  end $$;
+  reset role;
+  -- (:'admin' NO se interpola dentro de un bloque $$; se comprueba por el valor propio.)
+  do $$
+  begin
+    if not exists (select 1 from public.perfiles where telegram_chat_id = '_TEST_chatMio') then
+      raise exception 'FALLO: no pudo vincular su propio Telegram';
+    end if;
+    if not exists (select 1 from public.perfiles where id = '00000000-0000-0000-0000-0000000fe002' and telegram_chat_id = '_TEST_chatOtro') then
+      raise exception 'FALLO: una persona alteró el telegram_chat_id de otra';
+    end if;
+  end $$;
+rollback;
+
+\echo '== Test 44: índice único parcial — un chat de Telegram ↔ una sola cuenta (0139) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000fe003', 'tg_a@test.local') on conflict do nothing;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000fe004', 'tg_b@test.local') on conflict do nothing;
+  update public.perfiles set telegram_chat_id = '_TEST_dup' where id = '00000000-0000-0000-0000-0000000fe003';
+  do $$
+  begin
+    begin
+      update public.perfiles set telegram_chat_id = '_TEST_dup' where id = '00000000-0000-0000-0000-0000000fe004';
+      raise exception 'FALLO: dos cuentas comparten el mismo telegram_chat_id';
+    exception when unique_violation then
+      null;  -- comportamiento esperado
+    when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 45: el webhook (service_role, sin auth.uid) vincula y marca usado_en pese a RLS (0139) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000fe005', 'tg_hook@test.local') on conflict do nothing;
+  insert into public.telegram_enlaces (token, perfil_id, expira_en)
+    values ('_TEST_tg_hook', '00000000-0000-0000-0000-0000000fe005', now() + interval '15 min');
+  -- Sin rol authenticated ni jwt: es el camino del webhook (service_role bypassa RLS).
+  update public.perfiles set telegram_chat_id = '_TEST_hookchat', telegram_username = '@hook'
+    where id = '00000000-0000-0000-0000-0000000fe005';
+  update public.telegram_enlaces set usado_en = now() where token = '_TEST_tg_hook';
+  do $$
+  begin
+    if not exists (select 1 from public.perfiles where id = '00000000-0000-0000-0000-0000000fe005' and telegram_chat_id = '_TEST_hookchat') then
+      raise exception 'FALLO: el webhook no pudo escribir telegram_chat_id';
+    end if;
+    if not exists (select 1 from public.telegram_enlaces where token = '_TEST_tg_hook' and usado_en is not null) then
+      raise exception 'FALLO: el webhook no pudo marcar el token usado';
+    end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

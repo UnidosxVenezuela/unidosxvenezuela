@@ -1,10 +1,14 @@
 'use server';
+import { randomBytes } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { normalizarWhatsapp } from '@/lib/whatsapp';
 import { subirArchivo } from '@/lib/storage';
 import { PAISES } from '@/lib/constantes';
+
+// Minutos que vale un enlace de vinculación de Telegram (un solo uso).
+const TELEGRAM_VIGENCIA_MIN = 15;
 
 // Latido de presencia (0117): refresca `ultima_conexion` mientras la pestaña está
 // abierta y, si se pasa, fija el estado elegido (conectado/ocupado). Ligero y silencioso.
@@ -83,4 +87,39 @@ export async function subirAvatar(formData: FormData): Promise<{ url?: string; e
   } catch (e) {
     return { error: 'No se pudo subir: ' + ((e as Error)?.message ?? 'error') };
   }
+}
+
+// ── Telegram (canal de avisos, 0139) ──
+// Genera un enlace profundo de un solo uso `t.me/<bot>?start=<token>`. La
+// persona lo abre y pulsa Start; el webhook valida el token y vincula su chat.
+export async function crearEnlaceTelegram(): Promise<{ url?: string; error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'No autenticado.' };
+  const bot = process.env.NEXT_PUBLIC_TELEGRAM_BOT;
+  if (!bot) return { error: 'El canal de Telegram aún no está configurado.' };
+
+  // Un solo enlace vigente por persona: borra los previos (RLS: solo los suyos).
+  await supabase.from('telegram_enlaces').delete().eq('perfil_id', user.id);
+
+  // Token corto, seguro y admisible en el deep-link de Telegram ([A-Za-z0-9_-]).
+  const token = randomBytes(9).toString('base64url');
+  const expira = new Date(Date.now() + TELEGRAM_VIGENCIA_MIN * 60_000).toISOString();
+  const { error } = await supabase.from('telegram_enlaces').insert({
+    token, perfil_id: user.id, expira_en: expira,
+  });
+  if (error) return { error: 'No se pudo generar el enlace: ' + error.message };
+  return { url: `https://t.me/${bot}?start=${token}` };
+}
+
+// Corta la vinculación desde la app (RLS: auto-edición del propio perfil; los
+// campos de Telegram no están en la lista negra de `proteger_campos_perfil`).
+export async function desvincularTelegram() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  await supabase.from('perfiles')
+    .update({ telegram_chat_id: null, telegram_username: null })
+    .eq('id', user.id);
+  revalidatePath('/perfil');
 }

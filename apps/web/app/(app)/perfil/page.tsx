@@ -2,7 +2,8 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ROL, HABILIDADES_SUGERIDAS, PAISES } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
-import { actualizarPerfil } from './actions';
+import { actualizarPerfil, desvincularTelegram } from './actions';
+import VincularTelegram from './VincularTelegram';
 import { esEmailInternoWhatsapp, mostrarWhatsapp } from '@/lib/whatsapp';
 import CambiarContrasena from '@/components/CambiarContrasena';
 import SubirAvatar from '@/components/SubirAvatar';
@@ -104,6 +105,27 @@ export default async function PerfilPage({
 
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
       </form>
+
+      {/* Avisos por Telegram (0139): canal opcional y adicional a la campana y al push. */}
+      <div className="tarjeta" style={{ marginTop: 12 }}>
+        <h2 style={{ marginTop: 0 }}>Avisos por Telegram</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Recibe los mismos avisos también por Telegram, con un botón que abre la app. Es opcional
+          y se suma a la campana y a las notificaciones del navegador.
+        </p>
+        {perfil?.telegram_chat_id ? (
+          <div>
+            <Pill tono="ok" icono="ok">
+              Vinculado{perfil.telegram_username ? ' como ' + perfil.telegram_username : ''}
+            </Pill>
+            <form action={desvincularTelegram} style={{ marginTop: 10 }}>
+              <button type="submit" className="btn">Desvincular</button>
+            </form>
+          </div>
+        ) : (
+          <VincularTelegram />
+        )}
+      </div>
 
       <CambiarContrasena />
     </div>
