@@ -50,10 +50,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   if (necesita2a && !identidadOK) {
     return (
       <AnimarEntrada>
-        <div className="pagina-cab"><div><h1>Casos</h1></div></div>
+        <div className="pagina-cab"><div><h1>Solicitudes</h1></div></div>
         <div className="tarjeta" style={{ maxWidth: 560 }}>
           <h2 className="fila" style={{ gap: 8, marginTop: 0 }}><Icono nombre="llave" size={20} /> Completa tu segunda verificación</h2>
-          <p className="muted">Para acceder a Casos necesitas aprobar la <strong>verificación de identidad</strong> (foto en vivo + documento). Es un paso obligatorio para tu rol; cuando la aprueben, verás la sección de Casos y tu grupo.</p>
+          <p className="muted">Para acceder a Solicitudes necesitas aprobar la <strong>verificación de identidad</strong> (foto en vivo + documento). Es un paso obligatorio para tu rol; cuando la aprueben, verás la sección de Solicitudes y tu grupo.</p>
           <Link href="/verificacion" className="btn btn-primario"><Icono nombre="llave" size={16} /> Ir a mi verificación</Link>
         </div>
       </AnimarEntrada>
@@ -71,12 +71,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
   // sin describirle acciones de otros roles.
   const tipCasos = esAdmin
-    ? { t: 'El flujo de un caso', c: <>Recopilación <strong>reporta</strong> → Verificación (otros casos) o el Grupo de Búsqueda (desaparecidos) <strong>confirma o descarta</strong> → Envío a Redacción <strong>pasa a contenido</strong> solo «Otras informaciones». Toca un caso para ver su historial.</> }
+    ? { t: 'El flujo de una solicitud', c: <>Recopilación <strong>reporta</strong> → Verificación (otras solicitudes) o el Grupo de Búsqueda (desaparecidos) <strong>confirma o descarta</strong> → Envío a Redacción <strong>pasa a contenido</strong> solo «Otras informaciones». Toca una solicitud para ver su historial.</> }
     : puedeVerif
-      ? { t: 'Verificar casos', c: <>Revisa lo reportado (que no sean desaparecidos) y <strong>confírmalo o descártalo</strong>. Toca un caso para ver su fuente, su detalle y quién intervino.</> }
+      ? { t: 'Verificar solicitudes', c: <>Revisa lo reportado (que no sean desaparecidos) y <strong>confírmalo o descártalo</strong>. Toca una solicitud para ver su fuente, su detalle y quién intervino.</> }
       : accesoBusqueda
         ? { t: 'Buscar y verificar desaparecidos', c: <>Toma los casos de <strong>personas desaparecidas</strong> y <strong>confírmalos o descártalos</strong>. Esta información la gestiona el Grupo de Búsqueda.</> }
-        : { t: 'Reportar y seguir casos', c: <>Reporta con <strong>«Nuevo caso»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca un caso para seguir su estado.</> };
+        : { t: 'Reportar y seguir solicitudes', c: <>Reporta con <strong>«Nueva solicitud»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca una solicitud para seguir su estado.</> };
 
   // Conteos por GRUPO de estado. Cada caso cae en exactamente un grupo, así que los
   // tres grupos suman el total. Antes solo se contaban 'en_proceso', 'confirmado' y
@@ -159,13 +159,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       <Consejo id="casos" titulo={tipCasos.t}>{tipCasos.c}</Consejo>
       <div className="pagina-cab">
         <div>
-          <h1>Casos</h1>
-          <p className="muted sub">{puedeVerif ? 'Verifica la información que llega: confírmala o descártala.' : accesoBusqueda ? 'Verifica los casos de personas desaparecidas: confírmalos o descártalos.' : 'Registra casos y da seguimiento a los tuyos.'}</p>
+          <h1>Solicitudes</h1>
+          <p className="muted sub">{puedeVerif ? 'Verifica la información que llega: confírmala o descártala.' : accesoBusqueda ? 'Verifica los casos de personas desaparecidas: confírmalos o descártalos.' : 'Registra solicitudes y da seguimiento a las tuyas.'}</p>
         </div>
       </div>
 
       {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
-        <Kpi etiqueta="Total de casos" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href={kpiHref()} />
+        <Kpi etiqueta="Total de solicitudes" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href={kpiHref()} />
         <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href={kpiHref('pendiente')} />
         <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href={kpiHref('en_proceso')} />
         <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href={kpiHref('confirmado,enviado_redaccion')} />
@@ -199,7 +199,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </form>
         <div className="toolbar-acciones">
           <BotonActualizar />
-          {puedeCrear && <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nuevo caso</Link>}
+          {puedeCrear && <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nueva solicitud</Link>}
         </div>
       </div>
 
@@ -228,12 +228,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           (total.count ?? 0) === 0 ? (
             <div className="vacio">
               <Icono nombre="documento" size={42} />
-              <h3 style={{ margin: '10px 0 4px' }}>Aún no hay casos</h3>
+              <h3 style={{ margin: '10px 0 4px' }}>Aún no hay solicitudes</h3>
               <p className="muted" style={{ margin: '0 auto 14px', maxWidth: 440 }}>Cuando el equipo de recopilación reporte información, aparecerá aquí para verificarla.</p>
-              <Link href="/casos/nuevo" className="btn btn-primario"><Icono nombre="mas" size={16} /> Reportar un caso</Link>
+              <Link href="/casos/nuevo" className="btn btn-primario"><Icono nombre="mas" size={16} /> Reportar una solicitud</Link>
             </div>
           ) : (
-            <p className="muted" style={{ margin: 0 }}>No hay casos con esos filtros. <Link href={cerrarHref}>Limpiar filtros</Link>.</p>
+            <p className="muted" style={{ margin: 0 }}>No hay solicitudes con esos filtros. <Link href={cerrarHref}>Limpiar filtros</Link>.</p>
           )
         ) : (
           <div className="tabla-scroll"><table>
@@ -268,7 +268,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         {drawerCaso && (
           <>
             <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
-            <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle del caso ' + drawerCaso.titulo}>
+            <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la solicitud ' + drawerCaso.titulo}>
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} puedeTomar={verifica} miId={user!.id} />
@@ -282,9 +282,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <span className="kpi-ico" style={{ width: 32, height: 32, background: '#d1fae5', color: '#16a34a' }}><Icono nombre="ok" size={18} /></span>
         Listos para redacción <Pill tono="ok" punto={false}>{confirmados.count ?? 0}</Pill>
       </h2>
-      <p className="muted" style={{ marginTop: -6 }}>Casos confirmados y activos, listos para pasar a la siguiente etapa.</p>
+      <p className="muted" style={{ marginTop: -6 }}>Solicitudes confirmadas y activas, listas para pasar a la siguiente etapa.</p>
       {(listos ?? []).length === 0 ? (
-        <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Aún no hay casos confirmados.</p></div>
+        <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>Aún no hay solicitudes confirmadas.</p></div>
       ) : (
         <Carrusel>
           {(listos ?? []).map((c: any) => (

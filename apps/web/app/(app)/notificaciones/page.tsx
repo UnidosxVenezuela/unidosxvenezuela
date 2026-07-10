@@ -28,7 +28,7 @@ export default async function NotificacionesPage() {
       <div className="pagina-cab">
         <div>
           <h1>Notificaciones</h1>
-          <p className="muted sub">Avisos de tareas, grupos y casos en los que participas.</p>
+          <p className="muted sub">Avisos de tareas, grupos y solicitudes en las que participas.</p>
         </div>
         <form action={marcarTodasLeidas}>
           <button className="btn" type="submit"><Icono nombre="ok" size={16} /> Marcar todas como leídas</button>

@@ -52,11 +52,11 @@ export async function enviarARedaccion(formData: FormData) {
   if (!verificado || !roles.some((r) => ['admin', 'coordinador', 'verificador'].includes(r))) throw new Error('No tienes permisos para enviar a Redacción.');
   const casoId = txt(formData.get('caso_id'));
   const { data: caso } = await supabase.from('casos').select('titulo, estado').eq('id', casoId).single();
-  if (!caso) throw new Error('Caso no encontrado.');
-  if (caso.estado !== 'confirmado') throw new Error('Solo se envían casos confirmados y activos.');
+  if (!caso) throw new Error('Solicitud no encontrada.');
+  if (caso.estado !== 'confirmado') throw new Error('Solo se envían solicitudes confirmadas y activas.');
   // Evitar duplicados: si el caso ya tiene una pieza, abrirla en vez de crear otra.
   const { data: ya } = await supabase.from('piezas_contenido').select('id').eq('caso_id', casoId).limit(1).maybeSingle();
-  if (ya) { revalidatePath('/contenido'); redirigirOk('/contenido?pieza=' + ya.id, 'Este caso ya estaba en producción'); }
+  if (ya) { revalidatePath('/contenido'); redirigirOk('/contenido?pieza=' + ya.id, 'Esta solicitud ya estaba en producción'); }
   const { data, error } = await supabase.from('piezas_contenido')
     .insert({ caso_id: casoId, titulo: caso.titulo, etapa: 'redaccion', creado_por: user.id })
     .select('id').single();

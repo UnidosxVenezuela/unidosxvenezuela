@@ -28,7 +28,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
     return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null };
   }
   if (categoria === 'Desaparecidos') {
-    throw new Error('Un caso de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
+    throw new Error('Una solicitud de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
   }
   const lat = numOpt(formData.get('lat'));
   const lng = numOpt(formData.get('lng'));
@@ -116,9 +116,9 @@ export async function crearCaso(formData: FormData) {
   if (error) {
     // La RLS exige admin o recopilación con 2ª verificación aprobada. Mensaje claro.
     if (/row-level security|violates row-level/i.test(error.message)) {
-      throw new Error('No tienes permiso para reportar casos. Necesitas tu 2ª verificación de identidad aprobada (o pídele el rol a la administración).');
+      throw new Error('No tienes permiso para reportar solicitudes. Necesitas tu 2ª verificación de identidad aprobada (o pídele el rol a la administración).');
     }
-    throw new Error('No se pudo crear el caso: ' + error.message);
+    throw new Error('No se pudo crear la solicitud: ' + error.message);
   }
   const casoId = data!.id as string;
 
@@ -136,7 +136,7 @@ export async function crearCaso(formData: FormData) {
   }
 
   revalidatePath('/casos');
-  redirigirOk('/casos?caso=' + casoId, 'Caso creado');
+  redirigirOk('/casos?caso=' + casoId, 'Solicitud creada');
 }
 
 // Derivar un caso-requerimiento confirmado a Logística (Propuesta Fase 2): crea la
@@ -148,9 +148,9 @@ export async function derivarCasoLogistica(formData: FormData) {
   const id = txt(formData.get('caso_id'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
   const { error } = await supabase.rpc('derivar_caso_a_logistica', { p_caso: id });
-  if (error) return redirigirError(volver, error.message || 'No se pudo derivar el caso a Logística.');
+  if (error) return redirigirError(volver, error.message || 'No se pudo derivar la solicitud a Logística.');
   revalidatePath('/casos'); revalidatePath('/insumos');
-  redirigirOk(volver, 'Caso derivado a Logística. La solicitud de insumo ya está en el tablero para coordinar la entrega.');
+  redirigirOk(volver, 'Solicitud derivada a Logística. La solicitud de insumo ya está en el tablero para coordinar la entrega.');
 }
 
 export async function cambiarEstadoCaso(formData: FormData) {
@@ -172,15 +172,15 @@ export async function descartarCaso(formData: FormData) {
   const id = txt(formData.get('caso_id'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
   const motivo = txt(formData.get('motivo')).slice(0, 500);
-  if (!motivo) return redirigirError(volver, 'Indica el motivo para descartar el caso.');
+  if (!motivo) return redirigirError(volver, 'Indica el motivo para descartar la solicitud.');
   const { data: actual } = await supabase.from('casos').select('notas').eq('id', id).single();
   const sello = `[Descartado ${new Date().toISOString().slice(0, 10)}] ${motivo}`;
   const notas = ((actual as { notas?: string | null } | null)?.notas ? (actual as any).notas + '\n' : '') + sello;
   const { error } = await supabase.from('casos')
     .update({ estado: 'falso', notas, actualizado_en: new Date().toISOString() }).eq('id', id);
-  if (error) return redirigirError(volver, 'No se pudo descartar el caso: ' + error.message);
+  if (error) return redirigirError(volver, 'No se pudo descartar la solicitud: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(volver, 'Caso descartado. Quedó registrado el motivo.');
+  redirigirOk(volver, 'Solicitud descartada. Quedó registrado el motivo.');
 }
 
 // «Tomar» un caso para trabajarlo (se lo asigna a sí mismo). Pensado para el
@@ -194,9 +194,9 @@ export async function tomarCaso(formData: FormData) {
   const cambios: Record<string, unknown> = { asignado_a: user.id, actualizado_en: new Date().toISOString() };
   if ((actual as { estado?: string } | null)?.estado === 'pendiente') cambios.estado = 'en_proceso';
   const { error } = await supabase.from('casos').update(cambios).eq('id', id);
-  if (error) throw new Error('No se pudo tomar el caso: ' + error.message);
+  if (error) throw new Error('No se pudo tomar la solicitud: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso tomado');
+  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Solicitud tomada');
 }
 
 // El grupo "Envío a Redacción" pasa un caso confirmado al estado final del flujo.
@@ -208,7 +208,7 @@ export async function enviarCasoRedaccion(formData: FormData) {
   const { error } = await supabase.rpc('enviar_caso_redaccion', { p_caso: id });
   if (error) throw new Error('No se pudo enviar a Redacción: ' + error.message);
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk('/envio-redaccion', 'Caso enviado a Redacción');
+  redirigirOk('/envio-redaccion', 'Solicitud enviada a Redacción');
 }
 
 export async function eliminarCaso(formData: FormData) {
@@ -217,12 +217,12 @@ export async function eliminarCaso(formData: FormData) {
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin')) throw new Error('Solo un administrador puede eliminar casos.');
+  if (!roles.includes('admin')) throw new Error('Solo un administrador puede eliminar solicitudes.');
   const id = txt(formData.get('caso_id'));
   const { error } = await supabase.from('casos').delete().eq('id', id);
-  if (error) throw new Error('No se pudo eliminar el caso: ' + error.message);
+  if (error) throw new Error('No se pudo eliminar la solicitud: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk('/casos', 'Caso eliminado');
+  redirigirOk('/casos', 'Solicitud eliminada');
 }
 
 export async function actualizarCaso(formData: FormData) {
@@ -232,9 +232,9 @@ export async function actualizarCaso(formData: FormData) {
     notas: opt(formData.get('notas')),
     actualizado_en: new Date().toISOString(),
   }).eq('id', id);
-  if (error) throw new Error('No se pudo actualizar el caso: ' + error.message);
+  if (error) throw new Error('No se pudo actualizar la solicitud: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(opt(formData.get('volver')) || '/casos', 'Caso actualizado');
+  redirigirOk(opt(formData.get('volver')) || '/casos', 'Solicitud actualizada');
 }
 
 // Editar los DATOS del caso (título, descripción, categoría, fuente, fecha).
@@ -265,11 +265,11 @@ export async function editarCaso(formData: FormData) {
     // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
     ...datosRequerimiento(formData, categoria),
   }).eq('id', id);
-  if (error) throw new Error('No se pudo editar el caso: ' + error.message);
+  if (error) throw new Error('No se pudo editar la solicitud: ' + error.message);
   // Registro explícito de la edición (además del trigger de auditoría).
   await supabase.rpc('registrar_evento_caso', { p_caso: id, p_accion: 'edicion' });
   revalidatePath('/casos'); revalidatePath('/envio-redaccion');
-  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Caso actualizado');
+  redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Solicitud actualizada');
 }
 
 // Registra que Redacción COPIÓ o DESCARGÓ un caso (monitoreo). Se invoca desde

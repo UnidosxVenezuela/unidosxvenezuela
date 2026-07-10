@@ -140,7 +140,7 @@ export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
 export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general'; etiqueta: string; ayuda: string }[] = [
   { valor: 'verificacion', etiqueta: 'Verificación y búsqueda de personas',
-    ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA) y enlace con familias.' },
+    ayuda: 'Gestión de solicitudes, verificación, búsqueda de personas (incluye menores/NNA) y enlace con familias.' },
   { valor: 'digitalizacion', etiqueta: 'Digitalización de listados',
     ayuda: 'Capturar listas de personas de hospitales y albergues (foto/OCR, a mano o CSV) y ubicarlas en el mapa.' },
   { valor: 'redes', etiqueta: 'Redes sociales y contenido',

@@ -9,7 +9,7 @@ import { editarCaso } from './actions';
 export default function FormEditarCaso({ caso, volver }: { caso: any; volver: string }) {
   return (
     <details className="tarjeta">
-      <summary style={{ cursor: 'pointer', fontWeight: 600 }}><Icono nombre="pizarra" size={16} /> Editar datos del caso</summary>
+      <summary style={{ cursor: 'pointer', fontWeight: 600 }}><Icono nombre="pizarra" size={16} /> Editar datos de la solicitud</summary>
       <form action={editarCaso} style={{ marginTop: 10 }}>
         <input type="hidden" name="caso_id" value={caso.id} />
         <input type="hidden" name="volver" value={volver} />

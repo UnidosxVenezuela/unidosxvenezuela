@@ -24,7 +24,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   const { data: caso } = await supabase.from('casos')
     .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, notas, creado_por, creado_en, actualizado_en, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia')
     .eq('id', id).single() as any;
-  if (!caso) return <div className="tarjeta"><h2>Caso no encontrado</h2><Link href="/casos">Volver</Link></div>;
+  if (!caso) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/casos">Volver</Link></div>;
 
   // Adjuntos de respaldo con URL firmada (misma vista que el panel lateral).
   const { urlFirmada } = await import('@/lib/storage');
@@ -43,7 +43,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   return (
     <div style={{ maxWidth: 720 }}>
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
-      <Link href="/casos" className="muted">← Casos</Link>
+      <Link href="/casos" className="muted">← Solicitudes</Link>
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
