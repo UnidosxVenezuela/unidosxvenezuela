@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import RolGrupoSync from './RolGrupoSync';
 import { requireCoordinacion, esSuperadmin } from '@/lib/auth';
-import { ROLES, ETIQUETA_ROL, MIN_CLAVE } from '@/lib/constantes';
+import { ROLES_ASIGNABLES, GRUPOS_INACTIVOS, ETIQUETA_ROL, MIN_CLAVE } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonEnviar from '@/components/BotonEnviar';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -12,7 +12,8 @@ export default async function CrearUsuarioPage() {
   const { perfil: yo } = await requireCoordinacion();
   const esSuper = esSuperadmin(yo);
   const supabase = await createClient();
-  const { data: grupos } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
+  const { data: gruposRaw } = await supabase.from('grupos').select('id, nombre, clave').order('nombre');
+  const grupos = (gruposRaw ?? []).filter((g: any) => !GRUPOS_INACTIVOS.includes(g.clave));  // ocultar grupos desactivados (0138)
   // Rol funcional → id de su grupo (para autoseleccionar el grupo al elegir rol).
   const CLAVE_DE_ROL: Record<string, string> = {
     recopilacion: 'gestion_casos', verificador: 'verificacion', busqueda: 'busqueda', digitalizador: 'digitalizacion', redaccion: 'redaccion',
@@ -26,8 +27,7 @@ export default async function CrearUsuarioPage() {
     Object.entries(CLAVE_DE_ROL).forEach(([rol, clave]) => { if (g.clave === clave) mapaRolGrupo[rol] = g.id; });
   });
   // "admin" solo lo asigna un superadmin; "aliado" va por doble aprobación (no acá).
-  const rolesAsignables = ROLES.filter((r) =>
-    r !== 'lider_plataforma_aliada' && (r !== 'admin' || esSuper));
+  const rolesAsignables = ROLES_ASIGNABLES.filter((r) => r !== 'admin' || esSuper);
 
   return (
     <div>

@@ -112,6 +112,7 @@ export interface Grupo {
   lider_id: string | null;
   whatsapp: string | null;
   rol_objetivo: Rol | null; // si es un espacio de trabajo por rol (pre-hecho)
+  activa?: boolean;         // grupo activo; los desactivados (0138) se ocultan de la UI
   creado_en: string;
 }
 
