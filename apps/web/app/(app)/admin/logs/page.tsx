@@ -2,7 +2,7 @@ import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { requireCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ROL } from '@/lib/constantes';
+import { ETIQUETA_ROL, ETIQUETA_ESTADO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import Avatar from '@/components/Avatar';
@@ -32,14 +32,37 @@ const SEMANTICAS: Record<string, string> = {
   eliminar_usuario: 'eliminó un usuario', verificacion_aprobada: 'aprobó una verificación de identidad',
   verificacion_rechazada: 'rechazó una verificación de identidad', alta_delegada: 'creó una cuenta (alta delegada)',
 };
-// Columnas de `perfiles` → nombre corto legible (para describir QUÉ se editó, con `cambios`).
-const CAMPOS_PERFIL: Record<string, string> = {
+// Columna → nombre corto legible, para describir QUÉ campos cambiaron (metadata.cambios,
+// disponible en toda tabla auditada desde 0134). Cubre perfiles y campos comunes de otras
+// entidades (tareas, grupos, centros, contenido…). Las columnas no listadas se omiten.
+const CAMPO_LEGIBLE: Record<string, string> = {
+  // Perfiles
   avatar_url: 'foto de perfil', nombre_completo: 'nombre', whatsapp: 'WhatsApp', telefono: 'teléfono',
   organizacion: 'organización', pais: 'país', habilidades: 'habilidades', ciudad: 'ciudad',
   disponibilidad: 'disponibilidad', horas_semana: 'horas por semana', experiencia: 'experiencia',
-  contacto_emergencia: 'contacto de emergencia', rol: 'rol', roles_extra: 'roles adicionales',
+  contacto_emergencia: 'contacto de emergencia', roles_extra: 'roles adicionales',
   verificado: 'verificación', super_admin: 'permisos de superadmin', area_admin: 'área de administración',
+  // Comunes a varias entidades
+  estado: 'estado', etapa: 'etapa', titulo: 'título', nombre: 'nombre', descripcion: 'descripción',
+  categoria: 'categoría', prioridad: 'prioridad', urgencia: 'urgencia', notas: 'notas', contenido: 'contenido',
+  asignado_a: 'responsable', asignado: 'responsable', cupo: 'cupo', vence_en: 'fecha límite', fecha_limite: 'fecha límite',
+  lider_id: 'líder', abierto: 'visibilidad', rol: 'rol', rol_en_grupo: 'rol en el grupo',
+  capacidad: 'capacidad', camas_total: 'camas', camas_ocupadas: 'camas ocupadas', recibe: 'qué recibe',
+  necesita: 'necesidades', horario: 'horario', direccion: 'dirección', lat: 'ubicación', lng: 'ubicación',
+  cantidad: 'cantidad', producto: 'producto', fuente: 'fuente', motivo: 'motivo', enlace: 'enlace', ubicacion: 'ubicación',
 };
+
+// Traduce las columnas cambiadas a etiquetas legibles: ignora columnas no listadas,
+// deduplica (lat/lng → «ubicación») y corta a 3 + «+N».
+function camposLegibles(cambios: any): string[] {
+  const out: string[] = []; const vistos = new Set<string>();
+  for (const c of (Array.isArray(cambios) ? cambios : [])) {
+    const et = CAMPO_LEGIBLE[c as string];
+    if (!et || vistos.has(et)) continue;
+    vistos.add(et); out.push(et);
+  }
+  return out.length > 3 ? [...out.slice(0, 3), `+${out.length - 3}`] : out;
+}
 
 function describir(accion: string, entidad: string, meta?: any, actorId?: string | null, entidadId?: string | null): string {
   const partes = accion.split(':');
@@ -84,8 +107,7 @@ function describir(accion: string, entidad: string, meta?: any, actorId?: string
     if (tabla === 'perfiles') {
       if (op === 'insert') return 'creó un perfil';
       if (op === 'delete') return 'eliminó un perfil';
-      const etiquetas = (Array.isArray(meta?.cambios) ? meta.cambios : [])
-        .map((c: string) => CAMPOS_PERFIL[c]).filter(Boolean) as string[];
+      const etiquetas = camposLegibles(meta?.cambios);
       const propio = !!actorId && !!entidadId && actorId === entidadId;
       if (propio) {
         return etiquetas.length > 0 ? `actualizó su perfil (${etiquetas.join(', ')})` : 'editó su perfil';
@@ -93,9 +115,25 @@ function describir(accion: string, entidad: string, meta?: any, actorId?: string
       const quien = meta?.nombre_completo ? ` de ${meta.nombre_completo}` : '';
       return etiquetas.length > 0 ? `editó el perfil${quien} (${etiquetas.join(', ')})` : `editó un perfil${quien}`;
     }
+    // Tareas: describir por el estado (marcar como completada, etc.).
+    if (tabla === 'tareas') {
+      if (op === 'insert') return 'creó una tarea';
+      if (op === 'delete') return 'eliminó una tarea';
+      const cambios: string[] = Array.isArray(meta?.cambios) ? meta.cambios : [];
+      const est = ETIQUETA_ESTADO[meta?.estado as keyof typeof ETIQUETA_ESTADO];
+      if (est && cambios.includes('estado')) return `marcó una tarea como ${est}`;
+      const cs = camposLegibles(cambios);
+      return cs.length > 0 ? `editó una tarea (${cs.join(', ')})` : 'editó una tarea';
+    }
     if (tabla === 'cedula') return 'consultó una cédula (CNE)';
     if (tabla === 'insumo') return 'cambió el estado de un insumo';
-    return `${OPS[op] ?? op} ${ENTIDADES[tabla] ?? entidad ?? tabla}`;
+    // Genérico: en ediciones, listar los campos que cambiaron (metadata.cambios).
+    const base = `${OPS[op] ?? op} ${ENTIDADES[tabla] ?? entidad ?? tabla}`;
+    if (op === 'update') {
+      const cs = camposLegibles(meta?.cambios);
+      if (cs.length > 0) return `${base} (${cs.join(', ')})`;
+    }
+    return base;
   }
   return SEMANTICAS[accion] ?? accion;
 }
