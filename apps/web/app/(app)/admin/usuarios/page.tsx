@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, ETIQUETA_GRUPO_REGISTRO, AREAS_REGISTRO, etiquetaPais, zonaPais } from '@/lib/constantes';
+import { ROLES, ROLES_ASIGNABLES, GRUPOS_INACTIVOS, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, ETIQUETA_GRUPO_REGISTRO, AREAS_REGISTRO, etiquetaPais, zonaPais } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
 import GestionUsuarioModal from './GestionUsuarioModal';
@@ -42,7 +42,8 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
 
   // Grupos (para "agregar a grupo") y a qué grupos pertenece cada quien.
   const { data: gruposData } = await supabase.from('grupos').select('id, nombre, clave, lider_id').order('nombre');
-  const grupos = (gruposData ?? []) as { id: string; nombre: string; clave: string | null; lider_id: string | null }[];
+  const grupos = ((gruposData ?? []) as { id: string; nombre: string; clave: string | null; lider_id: string | null }[])
+    .filter((g) => !GRUPOS_INACTIVOS.includes(g.clave ?? ''));  // ocultar grupos desactivados (0138)
   // Admin de área: los selectores de grupo se acotan a los grupos de SU área.
   const gruposArea = area ? grupos.filter((g) => !!g.clave && GRUPOS_POR_AREA_ADMIN[area].includes(g.clave)) : grupos;
   // Para el selector de líder/coordinador: todos los grupos MENOS el psicosocial
@@ -113,13 +114,13 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   // admin de área solo ofrece los roles funcionales de SU área (o voluntario).
   const rolesSelect = area
     ? ([...ROLES_POR_AREA_ADMIN[area], 'voluntario'] as string[])
-    : ROLES.filter((r) => r !== 'lider_plataforma_aliada');
+    : (ROLES_ASIGNABLES as string[]);
 
   // Roles adicionales asignables a una persona (sin aliado, sin su rol principal,
   // sin admin salvo superadmin). El admin de área: solo los roles de su área.
   const rolesExtraDe = (p: Perfil) => area
     ? (ROLES_POR_AREA_ADMIN[area] as string[]).filter((r) => r !== p.rol)
-    : ROLES.filter((r) => r !== 'lider_plataforma_aliada' && r !== p.rol && (r !== 'admin' || esSuper));
+    : (ROLES_ASIGNABLES as string[]).filter((r) => r !== p.rol && (r !== 'admin' || esSuper));
 
   // Toda la gestión de una persona (rol + grupo a cargo + roles adicionales +
   // agregar a grupo) va en UNA ventana flotante, para evitar errores y ordenar la UI.

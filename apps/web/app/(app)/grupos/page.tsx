@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requireUsuario, esAdminGeneral, areaDeAdmin } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea } from '@/lib/constantes';
+import { etiquetaArea, GRUPOS_INACTIVOS } from '@/lib/constantes';
 import { nombreMostrado } from '@/lib/nombre';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -22,7 +22,7 @@ export default async function GruposPage() {
     supabase.from('grupos').select('id, nombre, area, descripcion, lider_id, abierto, clave').order('nombre'),
     supabase.rpc('conteo_miembros_grupo'),
   ]);
-  let grupos = (data ?? []) as any[];
+  let grupos = ((data ?? []) as any[]).filter((g) => !GRUPOS_INACTIVOS.includes(g.clave));  // ocultar grupos desactivados (0138)
   // Recopilación / Búsqueda sin 2ª verificación aprobada: se oculta su grupo de
   // casos (igual que la sección Casos) hasta que la administración lo apruebe.
   // El admin de área supervisa (lectura) los grupos de su área: no se le ocultan.

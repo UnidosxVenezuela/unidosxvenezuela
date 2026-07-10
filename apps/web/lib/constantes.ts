@@ -125,17 +125,17 @@ export const ROL_ADMIN_DE_AREA: Record<AreaAdmin, Rol> = {
 };
 /** Claves de grupo (sistema) que administra cada área. */
 export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
-  verificacion: ['gestion_casos', 'verificacion', 'busqueda', 'busqueda_nna', 'enlace_contacto'],
+  verificacion: ['gestion_casos', 'verificacion'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['gestion_acopio'],
-  digitalizacion: ['digitalizacion', 'verificacion_digitalizacion'],
+  digitalizacion: [],  // grupos de digitalización/búsqueda desactivados (ver GRUPOS_INACTIVOS)
 };
 /** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
 export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
-  verificacion: ['recopilacion', 'verificador', 'busqueda', 'buscador_nna', 'enlace_contacto'],
+  verificacion: ['recopilacion', 'verificador'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['logistica'],
-  digitalizacion: ['digitalizador', 'verificador_digitalizacion'],
+  digitalizacion: [],  // roles de digitalización/búsqueda desactivados (ver ROLES_INACTIVOS)
 };
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
 export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general'; etiqueta: string; ayuda: string }[] = [
@@ -552,6 +552,17 @@ export const ROLES_SEGUNDA_VERIFICACION: Rol[] = ['recopilacion', 'busqueda', 'b
 
 export const AREAS: AreaClave[] = Object.keys(ETIQUETA_AREA) as AreaClave[];
 export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
+
+// ── Grupos y roles DESACTIVADOS (la plataforma ya no hace digitalización de listados
+//    ni búsqueda de personas) ──
+// Se OCULTAN de /grupos y de los selectores de administración, y los roles NO se ofrecen
+// para asignar. Es reversible: quien ya tenga el rol lo conserva (inerte) y basta quitar
+// las claves/roles de estas listas (y poner grupos.activa=true, migración 0138) para
+// reactivarlos. `ETIQUETA_ROL`/`ROLES` se conservan completos para mostrar y filtrar lo existente.
+export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion'];
+export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador'];
+/** Roles que un admin puede asignar (excluye los retirados y el aliado, que va por su flujo). */
+export const ROLES_ASIGNABLES: Rol[] = ROLES.filter((r) => !ROLES_INACTIVOS.includes(r) && r !== 'lider_plataforma_aliada');
 
 export const ESTADOS: EstadoTarea[] = Object.keys(ETIQUETA_ESTADO) as EstadoTarea[];
 export const PRIORIDADES: Prioridad[] = Object.keys(ETIQUETA_PRIORIDAD) as Prioridad[];
