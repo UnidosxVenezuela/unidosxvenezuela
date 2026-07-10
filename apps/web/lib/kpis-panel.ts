@@ -27,7 +27,7 @@ export async function kpisDeRol(supabase: any, userId: string, flags: NavFlags):
   const cands: Cand[] = [
     {
       cond: flags.verificacion && !conFlujo,
-      base: { etiqueta: 'Casos por verificar', sub: 'esperan tu revisión', icono: 'ok', tinte: '#dcfce7', color: '#16a34a', href: '/casos?estado=pendiente,en_proceso' },
+      base: { etiqueta: 'Solicitudes por verificar', sub: 'esperan tu revisión', icono: 'ok', tinte: '#dcfce7', color: '#16a34a', href: '/casos?estado=pendiente,en_proceso' },
       contar: () => num(supabase.from('casos').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'en_proceso']).neq('categoria', 'Desaparecidos')),
     },
     {
@@ -67,7 +67,7 @@ export async function kpisDeRol(supabase: any, userId: string, flags: NavFlags):
     },
     {
       cond: flags.gestionCasos && !flags.verificacion && !flags.admin,
-      base: { etiqueta: 'Mis casos abiertos', sub: 'en proceso', icono: 'documento', tinte: '#eef2ff', color: 'var(--azul)', href: '/casos' },
+      base: { etiqueta: 'Mis solicitudes abiertas', sub: 'en proceso', icono: 'documento', tinte: '#eef2ff', color: 'var(--azul)', href: '/casos' },
       contar: () => num(supabase.from('casos').select('*', { count: 'exact', head: true }).eq('creado_por', userId).in('estado', ['pendiente', 'en_proceso'])),
     },
   ];

@@ -14,31 +14,43 @@ type Defaults = {
 };
 
 /**
- * Bloque «Solicitud de ayuda con ubicación» (Propuesta Fase 1). Si se activa, el
- * caso se marca como requerimiento accionable, se ubica en el mapa (con un pin, sin
- * escribir coordenadas) y se captura tipo/cantidad/urgencia para poder derivarlo a
- * Logística en la Fase 2. No aplica a «Desaparecidos» (el padre no lo muestra ahí).
+ * Bloque «Solicitud de ayuda con ubicación»: ubica el caso en el mapa (con un pin, sin
+ * escribir coordenadas) y captura qué se necesita / cantidad / urgencia.
+ *  · `fijo` (creación de casos): SIEMPRE activo, sin interruptor — todo caso es una
+ *    solicitud con ubicación. Manda `es_requerimiento=on` por un campo oculto.
+ *  · sin `fijo` (edición): interruptor opcional (por compatibilidad con casos previos).
  */
-export default function BloqueRequerimiento({ defaults = {} }: { defaults?: Defaults }) {
+export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { defaults?: Defaults; fijo?: boolean }) {
   const [activo, setActivo] = useState(!!defaults.es_requerimiento);
+  const mostrar = fijo || activo;
   return (
     <div className="tarjeta" style={{ background: '#f0fdfa', borderColor: '#99f6e4', marginBottom: 12 }}>
-      <label className="fila" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-        <input type="checkbox" name="es_requerimiento" checked={activo} onChange={(e) => setActivo(e.target.checked)} style={{ marginTop: 3 }} />
-        <span>
-          <strong className="fila" style={{ gap: 6 }}><Icono nombre="ubicacion" size={15} /> Es una solicitud de ayuda con ubicación</strong>
-          <span className="muted" style={{ display: 'block', fontSize: '.82rem' }}>
-            Un requerimiento con lugar (hospital sin insumos, refugio sin agua…). Se marcará en el mapa para coordinar la respuesta.
+      {fijo ? (
+        <>
+          <input type="hidden" name="es_requerimiento" value="on" />
+          <strong className="fila" style={{ gap: 6 }}><Icono nombre="ubicacion" size={15} /> ¿Dónde ocurre? — ubicación de la solicitud</strong>
+          <p className="muted" style={{ fontSize: '.82rem', margin: '2px 0 0' }}>
+            Marca el lugar en el mapa (toca o arrastra el pin). Toda solicitud debe tener una ubicación clara.
+          </p>
+        </>
+      ) : (
+        <label className="fila" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+          <input type="checkbox" name="es_requerimiento" checked={activo} onChange={(e) => setActivo(e.target.checked)} style={{ marginTop: 3 }} />
+          <span>
+            <strong className="fila" style={{ gap: 6 }}><Icono nombre="ubicacion" size={15} /> Es una solicitud de ayuda con ubicación</strong>
+            <span className="muted" style={{ display: 'block', fontSize: '.82rem' }}>
+              Un requerimiento con lugar (hospital sin insumos, refugio sin agua…). Se marcará en el mapa para coordinar la respuesta.
+            </span>
           </span>
-        </span>
-      </label>
+        </label>
+      )}
 
-      {activo && (
+      {mostrar && (
         <div style={{ marginTop: 10 }}>
           <SelectorUbicacionMapa latInicial={defaults.lat ?? null} lngInicial={defaults.lng ?? null} />
           <div className="grid grid-2" style={{ marginTop: 10 }}>
             <div className="campo">
-              <label htmlFor="req_tipo">Tipo de insumo</label>
+              <label htmlFor="req_tipo">¿Qué se necesita? (tipo)</label>
               <select id="req_tipo" name="req_tipo" className="input" defaultValue={defaults.req_tipo ?? ''}>
                 <option value="">Sin especificar</option>
                 {TIPOS_INSUMO.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_INSUMO[t]}</option>)}

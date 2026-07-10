@@ -38,7 +38,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   const areaAdmin = areaDeAdmin(perfil);
   const esSupervisorArea = !!areaAdmin && (GRUPOS_POR_AREA_ADMIN[areaAdmin] ?? []).includes(grupo.clave);
 
-  // Los grupos de casos (Gestión de Casos y Búsqueda) exigen 2ª verificación
+  // Los grupos de casos (Recopilación y Gestión de la Información, y Búsqueda) exigen 2ª verificación
   // (identidad) aprobada también a sus líderes y coordinadores para acceder. El
   // supervisor de área (solo lectura) queda exento, como la supervisión de 0105.
   if (!esAdminGeneral(perfil) && !esSupervisorArea && (grupo.clave === 'busqueda' || grupo.clave === 'gestion_casos' || grupo.clave === 'digitalizacion')) {

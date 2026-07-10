@@ -38,17 +38,17 @@ export default async function AyudaPage() {
       </S>
 
       {f.gestionCasos && !f.verificacion && (
-        <S icono="documento" titulo="Gestión de casos (tu función)">
-          <li>Con <strong>«Reportar un caso»</strong> registras la información que llega: título, categoría (<em>Desaparecidos</em> u <em>Otras informaciones</em>), fuente, fecha y <strong>archivos de respaldo</strong>.</li>
-          <li>En <strong>Gestión de casos</strong> ves <strong>solo tus casos</strong> y su estado. El equipo de Verificación decide si se confirman.</li>
+        <S icono="documento" titulo="Gestión de solicitudes (tu función)">
+          <li>Con <strong>«Reportar una solicitud»</strong> registras la información que llega: título, categoría (<em>Desaparecidos</em> u <em>Otras informaciones</em>), fuente, fecha y <strong>archivos de respaldo</strong>.</li>
+          <li>En <strong>Gestión de solicitudes</strong> ves <strong>solo tus solicitudes</strong> y su estado. El equipo de Verificación decide si se confirman.</li>
           <li>Sé prudente con los datos sensibles: escribe solo lo necesario.</li>
         </S>
       )}
 
       {f.verificacion && (
         <S icono="ok" titulo="Verificación (tu función)">
-          <li>Verificas los casos de <strong>«Otras informaciones»</strong> (los <em>desaparecidos</em> los atiende el Grupo de Búsqueda): decides <strong>Confirmado y activo</strong> si es verídico, o <strong>Falso / resuelto</strong> si no procede.</li>
-          <li>Abre cada caso para ver su descripción, fuente, adjuntos y dejar <strong>notas</strong>.</li>
+          <li>Verificas las solicitudes de <strong>«Otras informaciones»</strong> (los <em>desaparecidos</em> los atiende el Grupo de Búsqueda): decides <strong>Confirmado y activo</strong> si es verídico, o <strong>Falso / resuelto</strong> si no procede.</li>
+          <li>Abre cada solicitud para ver su descripción, fuente, adjuntos y dejar <strong>notas</strong>.</li>
           <li>Los confirmados pasan al equipo de <strong>Envío a Redacción</strong> (tú no los envías).</li>
         </S>
       )}
@@ -83,8 +83,8 @@ export default async function AyudaPage() {
 
       {f.envioRedaccion && (
         <S icono="cohete" titulo="Redacción · Envío a Redacción (tu función)">
-          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves los casos <strong>confirmados</strong> por Verificación.</li>
-          <li>Revisa y toca <strong>«Enviar a Redacción»</strong>: el caso queda marcado y el flujo de verificación termina.</li>
+          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves las solicitudes <strong>confirmadas</strong> por Verificación.</li>
+          <li>Revisa y toca <strong>«Enviar a Redacción»</strong>: la solicitud queda marcada y el flujo de verificación termina.</li>
         </S>
       )}
 

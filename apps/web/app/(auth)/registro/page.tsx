@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { LEGAL_VERSION } from '@/lib/legal-version';
 import { mensajeAuth } from '@/lib/mensajes-auth';
 import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
-import { AREAS_REGISTRO, PAISES, MIN_CLAVE } from '@/lib/constantes';
+import { GRUPOS_REGISTRO, PAISES, MIN_CLAVE } from '@/lib/constantes';
 import Captcha, { captchaActivo } from '@/components/Captcha';
 import InputContrasena from '@/components/InputContrasena';
 import EntradaTelefono from '@/components/EntradaTelefono';
@@ -14,7 +14,7 @@ import EntradaTelefono from '@/components/EntradaTelefono';
 export default function RegistroPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '', area: '', pais: '' });
+  const [form, setForm] = useState({ nombre: '', telefono: '', organizacion: '', motivo: '', email: '', password: '', grupo: '', pais: '' });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaNonce, setCaptchaNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function RegistroPage() {
     setError(null);
     if (captchaActivo() && !captchaToken) return setError('Completa la verificación anti-bot.');
     if (!acepto) return setError('Debes aceptar los Términos, el Aviso de Privacidad y el Descargo para continuar.');
-    if (!form.area) return setError('Selecciona a qué área deseas postular.');
+    if (!form.grupo) return setError('Selecciona el grupo al que deseas postular.');
     if (!form.pais) return setError('Indica desde qué país nos ayudas.');
     const correo = form.email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))
@@ -38,6 +38,8 @@ export default function RegistroPage() {
     if (esEmailInternoWhatsapp(correo))
       return setError('Usa tu correo personal. Si solo tienes WhatsApp, pídele a la coordinación que te cree la cuenta.');
     setCargando(true);
+    // El grupo elegido define su área (para rutear el aviso al admin de área).
+    const seccionGrupo = GRUPOS_REGISTRO.find((s) => s.opciones.some((o) => o.grupo === form.grupo));
     const { data, error } = await supabase.auth.signUp({
       email: correo,
       password: form.password,
@@ -48,7 +50,8 @@ export default function RegistroPage() {
           telefono: form.telefono,
           organizacion: form.organizacion,
           motivo: form.motivo,
-          area_registro: form.area,
+          area_registro: seccionGrupo?.area ?? 'general',
+          grupo_interes: form.grupo,
           pais: form.pais,
           terminos_version: LEGAL_VERSION,
         },
@@ -109,16 +112,18 @@ export default function RegistroPage() {
           <EntradaTelefono name="telefono" onChange={(full) => set('telefono', full)} />
         </div>
         <div className="campo">
-          <label htmlFor="area">¿A qué área deseas postular?</label>
-          <select id="area" className="input" value={form.area} onChange={(e) => set('area', e.target.value)} required>
-            <option value="" disabled>Selecciona un área…</option>
-            {AREAS_REGISTRO.map((a) => <option key={a.valor} value={a.valor}>{a.etiqueta}</option>)}
+          <label htmlFor="grupo">¿A qué grupo deseas postular?</label>
+          <select id="grupo" className="input" value={form.grupo} onChange={(e) => set('grupo', e.target.value)} required>
+            <option value="" disabled>Selecciona un grupo…</option>
+            {GRUPOS_REGISTRO.map((s) => (
+              <optgroup key={s.seccion} label={s.seccion}>
+                {s.opciones.map((o) => <option key={o.grupo} value={o.grupo}>{o.etiqueta}</option>)}
+              </optgroup>
+            ))}
           </select>
-          {form.area && (
-            <p className="muted" style={{ fontSize: '.85rem', margin: '4px 0 0' }}>
-              {AREAS_REGISTRO.find((a) => a.valor === form.area)?.ayuda}
-            </p>
-          )}
+          <p className="muted" style={{ fontSize: '.85rem', margin: '4px 0 0' }}>
+            Elige el grupo donde quieres colaborar. Si no estás seguro, elige «Voluntariado general» y la coordinación te ubicará.
+          </p>
         </div>
         <div className="campo">
           <label htmlFor="pais">¿Desde qué país nos ayudas?</label>

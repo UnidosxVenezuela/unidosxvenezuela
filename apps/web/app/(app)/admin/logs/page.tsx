@@ -17,7 +17,7 @@ const ENTIDADES: Record<string, string> = {
   adjuntos_tarea: 'un adjunto', grupos: 'un grupo', miembros_grupo: 'una membresía de grupo',
   miembros_baneados: 'un veto de grupo', mensajes_fijados: 'un anuncio', publicaciones: 'una publicación',
   registro_horas: 'horas', puntos_acopio: 'un centro de acopio', reuniones: 'una reunión',
-  endpoints_aliados: 'un contacto aliado', casos: 'un caso', casos_adjuntos: 'un adjunto de caso',
+  endpoints_aliados: 'un contacto aliado', casos: 'una solicitud', casos_adjuntos: 'un adjunto de solicitud',
   acopio_responsables: 'un responsable de acopio', perfiles: 'un perfil', piezas_contenido: 'una pieza de contenido',
   // Nuevas entidades auditadas (0130) + otras que faltaban en el mapa.
   oportunidades: 'una oportunidad (Captación)', listados_digitalizados: 'un listado digitalizado',
@@ -71,16 +71,16 @@ function describir(accion: string, entidad: string, meta?: any, actorId?: string
     const op = partes[1]!;
     // Casos: describir por lo que significa el cambio de estado, no solo "editó".
     if (tabla === 'casos') {
-      if (op === 'insert') return 'creó un caso';
-      if (op === 'delete') return 'eliminó un caso';
-      if (op === 'edicion') return 'editó los datos de un caso';
-      if (op === 'copia') return 'copió la información de un caso (Redacción)';
-      if (op === 'descarga') return 'descargó la información de un caso (Redacción)';
+      if (op === 'insert') return 'creó una solicitud';
+      if (op === 'delete') return 'eliminó una solicitud';
+      if (op === 'edicion') return 'editó los datos de una solicitud';
+      if (op === 'copia') return 'copió la información de una solicitud (Redacción)';
+      if (op === 'descarga') return 'descargó la información de una solicitud (Redacción)';
       switch (meta?.estado) {
-        case 'confirmado': return 'confirmó un caso';
-        case 'falso': return 'descartó un caso';
-        case 'enviado_redaccion': return 'envió un caso a Redacción';
-        default: return 'actualizó un caso';
+        case 'confirmado': return 'confirmó una solicitud';
+        case 'falso': return 'descartó una solicitud';
+        case 'enviado_redaccion': return 'envió una solicitud a Redacción';
+        default: return 'actualizó una solicitud';
       }
     }
     // Captación de Oportunidades: describir por el movimiento de estado.

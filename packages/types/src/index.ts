@@ -90,6 +90,7 @@ export interface Perfil {
   organizacion: string | null;
   motivo: string | null;
   area_registro?: string | null;  // área elegida al registrarse (verificacion|redes|general)
+  grupo_interes?: string | null;   // grupo concreto al que desea postular (clave de `grupos`)
   pais?: string | null;            // código ISO 3166-1 alfa-2 (para zona horaria/planificación)
   ciudad?: string | null;          // ciudad de residencia (complementa pais)
   disponibilidad?: string | null;  // horario disponible + zona horaria (texto)
@@ -187,6 +188,7 @@ export interface Caso {
   categoria: string | null;
   fuente: string | null;
   fuente_url: string | null;
+  contacto: string | null;   // responsable/referente: teléfono, WhatsApp, organización
   fecha_publicacion: string | null;
   asignado_a: string | null;
   estado: EstadoCaso;

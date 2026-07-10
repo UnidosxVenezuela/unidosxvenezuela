@@ -57,7 +57,7 @@ export default function DetallePieza({ pieza, perfiles, historial, adjuntos, vol
             <strong>Asignado a:</strong>
             {pieza.asignado_a ? <><Avatar nombre={nombres.get(pieza.asignado_a)} url={avatares.get(pieza.asignado_a)} size={22} /> {nombres.get(pieza.asignado_a) ?? '—'}</> : <span className="muted">Sin asignar</span>}
           </div>
-          {pieza.caso_id && <div style={{ gridColumn: '1 / -1' }}><strong>Caso de origen:</strong> <Link href={'/casos/' + pieza.caso_id}>Ver caso ↗</Link></div>}
+          {pieza.caso_id && <div style={{ gridColumn: '1 / -1' }}><strong>Solicitud de origen:</strong> <Link href={'/casos/' + pieza.caso_id}>Ver solicitud ↗</Link></div>}
           {pieza.adjunto_url && (
             <div style={{ gridColumn: '1 / -1' }}><strong>Archivo:</strong> <a href={pieza.adjunto_url} target="_blank" rel="noopener noreferrer">{pieza.adjunto_nombre || 'Abrir archivo'} ↗</a></div>
           )}

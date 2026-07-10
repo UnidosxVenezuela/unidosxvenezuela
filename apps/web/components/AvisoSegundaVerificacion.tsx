@@ -17,7 +17,7 @@ export default function AvisoSegundaVerificacion({ titulo = 'Necesitas tu segund
         <div>
           <strong style={{ fontSize: '1.02rem' }}>{titulo}</strong>
           <p className="muted" style={{ margin: '4px 0 0' }}>
-            Tu rol trabaja con <strong>datos sensibles</strong> (casos, personas desaparecidas, listados).
+            Tu rol trabaja con <strong>datos sensibles</strong> (solicitudes, personas desaparecidas, listados).
             Para proteger esa información, primero debes <strong>verificar tu identidad</strong> — se hace una sola vez.
             Hasta completarla no tendrás acceso a esas herramientas.
           </p>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, etiquetaPais, zonaPais } from '@/lib/constantes';
+import { ROLES, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, ETIQUETA_GRUPO_REGISTRO, AREAS_REGISTRO, etiquetaPais, zonaPais } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
 import GestionUsuarioModal from './GestionUsuarioModal';
@@ -20,7 +20,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, estado_presencia, ultima_conexion, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, grupo_interes, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, estado_presencia, ultima_conexion, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
@@ -193,6 +193,16 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                 <div className="muted" style={{ fontSize: '.9rem' }}>
                   {[p.organizacion, p.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
                 </div>
+                {(() => {
+                  const postula = p.grupo_interes
+                    ? (ETIQUETA_GRUPO_REGISTRO[p.grupo_interes] ?? p.grupo_interes)
+                    : (AREAS_REGISTRO.find((a) => a.valor === p.area_registro)?.etiqueta ?? null);
+                  return postula ? (
+                    <div style={{ marginTop: 4 }}>
+                      <Pill tono="neutra" punto={false}>Postula a: {postula}</Pill>
+                    </div>
+                  ) : null;
+                })()}
                 {p.motivo && (
                   <div style={{ fontSize: '.9rem', marginTop: 4 }}>
                     <span className="muted">Motivo:</span> {p.motivo}

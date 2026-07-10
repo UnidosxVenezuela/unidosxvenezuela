@@ -23,12 +23,12 @@ export default async function NuevoCasoPage() {
       const enRevision = (vi as any)?.estado === 'pendiente';
       return (
         <div style={{ maxWidth: 640 }}>
-          <Link href="/casos" className="muted">← Casos</Link>
+          <Link href="/casos" className="muted">← Solicitudes</Link>
           <div className="tarjeta" style={{ marginTop: 8 }}>
             <h1 className="fila" style={{ gap: 8 }}><Icono nombre="llave" size={22} /> Completa tu verificación de identidad</h1>
             <p className="muted" style={{ marginTop: 4 }}>
-              Para <strong>reportar casos</strong> necesitas tu <strong>verificación de identidad</strong> aprobada (una sola vez: selfie + documento).
-              {enRevision ? ' Tu verificación está en revisión; en cuanto la aprueben podrás crear casos.' : ' Cuando la administración la apruebe, podrás crear casos.'}
+              Para <strong>reportar solicitudes</strong> necesitas tu <strong>verificación de identidad</strong> aprobada (una sola vez: selfie + documento).
+              {enRevision ? ' Tu verificación está en revisión; en cuanto la aprueben podrás crear solicitudes.' : ' Cuando la administración la apruebe, podrás crear solicitudes.'}
             </p>
             {!enRevision && <Link className="btn btn-primario" href="/verificacion"><Icono nombre="ok" size={16} /> Ir a mi verificación</Link>}
           </div>
@@ -39,30 +39,30 @@ export default async function NuevoCasoPage() {
 
   return (
     <div style={{ maxWidth: 640 }}>
-      <Link href="/casos" className="muted">← Casos</Link>
-      <Consejo id="caso-nuevo" titulo="Reportar bien un caso">
-        Pon un <strong>título claro</strong>, la fuente y su enlace, y adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
+      <Link href="/casos" className="muted">← Solicitudes</Link>
+      <Consejo id="caso-nuevo" titulo="Reportar bien una solicitud">
+        Da un <strong>título claro</strong>, marca la <strong>ubicación en el mapa</strong>, e indica la fuente, el responsable y qué se necesita. Adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
       </Consejo>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
-          <h1>Nuevo caso</h1>
-          <p className="muted sub">Registra la información que llega para verificar: título, categoría, fuente, fecha y archivos de respaldo.</p>
+          <h1>Nueva solicitud</h1>
+          <p className="muted sub">Cada información que llega es una solicitud con ubicación. Responde: qué es, dónde, cuándo, quién es la fuente, quién es el responsable y qué se necesita.</p>
         </div>
       </div>
       <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
         <TituloConDuplicados esAdmin={esAdministrador(perfil)} />
         <div className="campo">
-          <label htmlFor="descripcion">Descripción</label>
-          <textarea id="descripcion" name="descripcion" className="input" rows={3} />
+          <label htmlFor="descripcion">¿Qué se necesita o qué se ofrece?</label>
+          <textarea id="descripcion" name="descripcion" className="input" rows={3} placeholder="Descripción concreta, clara y actualizada de la ayuda solicitada u ofrecida." />
         </div>
         <CamposCaso />
         <div className="campo">
           <label htmlFor="archivos">Adjuntar archivos (opcional)</label>
           <input id="archivos" name="archivos" className="input" type="file" multiple
                  accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" />
-          <p className="muted" style={{ fontSize: '.8rem', margin: '4px 0 0' }}>Capturas, fotos o documentos que respalden el caso (hasta 10 MB cada uno).</p>
+          <p className="muted" style={{ fontSize: '.8rem', margin: '4px 0 0' }}>Capturas, fotos o documentos que respalden la solicitud (hasta 10 MB cada uno).</p>
         </div>
-        <BotonEnviar cargando="Creando…">Crear caso</BotonEnviar>
+        <BotonEnviar cargando="Creando…">Crear solicitud</BotonEnviar>
       </form>
     </div>
   );

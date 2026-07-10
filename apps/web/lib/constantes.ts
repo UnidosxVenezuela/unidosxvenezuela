@@ -140,7 +140,7 @@ export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
 /** Opciones de área que se ofrecen en el registro (a qué área desea postular). */
 export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general'; etiqueta: string; ayuda: string }[] = [
   { valor: 'verificacion', etiqueta: 'Verificación y búsqueda de personas',
-    ayuda: 'Gestión de casos, verificación, búsqueda de personas (incluye menores/NNA) y enlace con familias.' },
+    ayuda: 'Gestión de solicitudes, verificación, búsqueda de personas (incluye menores/NNA) y enlace con familias.' },
   { valor: 'digitalizacion', etiqueta: 'Digitalización de listados',
     ayuda: 'Capturar listas de personas de hospitales y albergues (foto/OCR, a mano o CSV) y ubicarlas en el mapa.' },
   { valor: 'redes', etiqueta: 'Redes sociales y contenido',
@@ -150,6 +150,44 @@ export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | '
   { valor: 'general', etiqueta: 'Voluntariado general / otra área',
     ayuda: 'Apoyo y otras áreas. La coordinación te ubicará según tu perfil.' },
 ];
+/**
+ * Grupos concretos que se ofrecen en el registro (a qué GRUPO desea postular la
+ * persona), agrupados por área para el desplegable. El `area` de la sección se envía
+ * como `area_registro` (ruteo del aviso al admin de área) y `grupo` como `grupo_interes`.
+ * Elegir el grupo concreto es más claro que un área amplia.
+ * NOTA: la plataforma ya no hace digitalización de listados ni búsqueda de personas
+ * (incluida NNA); esos grupos no se ofrecen en el registro. El foco es la gestión de
+ * solicitudes de ayuda con ubicación y el resto de labores (contenido, acopio,
+ * captación, apoyo psicosocial).
+ */
+export const GRUPOS_REGISTRO: {
+  seccion: string;
+  area: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general';
+  opciones: { grupo: string; etiqueta: string }[];
+}[] = [
+  { seccion: 'Gestión y verificación de la información', area: 'verificacion', opciones: [
+    { grupo: 'gestion_casos', etiqueta: 'Recopilación y Gestión de la Información' },
+    { grupo: 'verificacion',  etiqueta: 'Verificación de información' },
+  ] },
+  { seccion: 'Redes sociales y contenido', area: 'redes', opciones: [
+    { grupo: 'redaccion',      etiqueta: 'Redacción' },
+    { grupo: 'redes_sociales', etiqueta: 'Community Manager' },
+    { grupo: 'diseno_grafico', etiqueta: 'Diseño Gráfico' },
+    { grupo: 'edicion_video',  etiqueta: 'Edición de Videos' },
+    { grupo: 'influencers',    etiqueta: 'Influencers' },
+  ] },
+  { seccion: 'Logística y acopio', area: 'logistica', opciones: [
+    { grupo: 'gestion_acopio', etiqueta: 'Gestión de Acopio' },
+  ] },
+  { seccion: 'Otras áreas', area: 'general', opciones: [
+    { grupo: 'captacion',         etiqueta: 'Captación de Oportunidades' },
+    { grupo: 'apoyo_psicosocial', etiqueta: 'Apoyo Psicosocial' },
+    { grupo: 'general',           etiqueta: 'Voluntariado general / otra área' },
+  ] },
+];
+/** Clave de grupo (o 'general') → etiqueta legible; para mostrar la postulación en el panel de admin. */
+export const ETIQUETA_GRUPO_REGISTRO: Record<string, string> =
+  Object.fromEntries(GRUPOS_REGISTRO.flatMap((s) => s.opciones.map((o) => [o.grupo, o.etiqueta])));
 
 // ── País desde el que ayuda cada persona (para su zona horaria y planificación) ──
 // Se guarda el código ISO 3166-1 alfa-2 (p. ej. 'VE'). `utc` es un desfase

@@ -66,10 +66,10 @@ export default async function Dashboard() {
 
   const acciones: Accion[] = [];
   if (flags.gestionCasos && !flags.verificacion) {
-    acciones.push({ href: '/casos/nuevo', titulo: 'Reportar un caso', descripcion: 'Envía información para verificar', icono: 'mas', color: 'var(--azul)', tinte: '#eef2ff' });
-    acciones.push({ href: '/casos', titulo: 'Mis casos', descripcion: 'Da seguimiento a su estado', icono: 'documento', color: 'var(--azul)', tinte: '#eef2ff' });
+    acciones.push({ href: '/casos/nuevo', titulo: 'Reportar una solicitud', descripcion: 'Envía información para verificar', icono: 'mas', color: 'var(--azul)', tinte: '#eef2ff' });
+    acciones.push({ href: '/casos', titulo: 'Mis solicitudes', descripcion: 'Da seguimiento a su estado', icono: 'documento', color: 'var(--azul)', tinte: '#eef2ff' });
   }
-  if (flags.verificacion) acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Verificar casos', descripcion: 'Confirma o descarta otros casos', icono: 'ok', color: '#16a34a', tinte: '#dcfce7' });
+  if (flags.verificacion) acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Verificar solicitudes', descripcion: 'Confirma o descarta otras solicitudes', icono: 'ok', color: '#16a34a', tinte: '#dcfce7' });
   if (flags.busqueda && !flags.admin) acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Buscar desaparecidos', descripcion: 'Toma y verifica casos de desaparecidos', icono: 'buscar', color: '#0e7490', tinte: '#cffafe' });
   if (flags.envioRedaccion) acciones.push({ href: '/envio-redaccion', titulo: 'Envío a Redacción', descripcion: 'Pasa los confirmados a Redacción', icono: 'cohete', color: '#9d2463', tinte: '#fce7f3' });
   if (flags.psicosocial) acciones.push({ href: '/psicosocial', titulo: 'Apoyo Psicosocial', descripcion: flags.admin ? 'Supervisa el área' : 'Acompaña tus casos', icono: 'corazon', color: '#b91c1c', tinte: '#fee2e2' });

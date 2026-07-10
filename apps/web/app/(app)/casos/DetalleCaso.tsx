@@ -15,9 +15,9 @@ const EXPLICA_ESTADO: Record<string, string> = {
   pendiente: 'Todavía no lo ha tomado nadie; está pendiente de revisión.',
   en_proceso: 'Alguien ya lo tomó y lo está revisando.',
   confirmado: 'La información fue validada; el equipo de Envío a Redacción lo tomará.',
-  falso: 'La información es falsa, antigua o el caso ya fue resuelto. No continúa en el flujo.',
-  enviado_redaccion: 'El caso fue enviado a Redacción: el flujo de verificación terminó.',
-  resuelto: 'La ayuda se entregó (Logística) y el caso quedó atendido. Ciclo cerrado.',
+  falso: 'La información es falsa, antigua o la solicitud ya fue resuelta. No continúa en el flujo.',
+  enviado_redaccion: 'La solicitud fue enviada a Redacción: el flujo de verificación terminó.',
+  resuelto: 'La ayuda se entregó (Logística) y la solicitud quedó atendida. Ciclo cerrado.',
 };
 
 /**
@@ -38,9 +38,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
 
   // Texto largo para la línea de tiempo del historial.
   const describir = (accion: string, meta: any) => {
-    if (accion === 'casos:insert') return 'Caso creado';
-    if (accion === 'casos:delete') return 'Caso eliminado';
-    if (accion === 'casos:edicion') return 'Editó los datos del caso';
+    if (accion === 'casos:insert') return 'Solicitud creada';
+    if (accion === 'casos:delete') return 'Solicitud eliminada';
+    if (accion === 'casos:edicion') return 'Editó los datos de la solicitud';
     if (accion === 'casos:derivado') return 'Derivado a Logística';
     if (accion === 'casos:copia') return 'Redacción copió la información';
     if (accion === 'casos:descarga') return 'Redacción descargó la información';
@@ -57,8 +57,8 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
 
   // Texto corto de lo que hizo cada persona (resumen de participantes).
   const accionCorta = (accion: string, meta: any): string => {
-    if (accion === 'casos:insert') return 'Creó el caso';
-    if (accion === 'casos:delete') return 'Eliminó el caso';
+    if (accion === 'casos:insert') return 'Creó la solicitud';
+    if (accion === 'casos:delete') return 'Eliminó la solicitud';
     if (accion === 'casos:edicion') return 'Editó los datos';
     if (accion === 'casos:derivado') return 'Derivó a Logística';
     if (accion === 'casos:copia') return 'Copió (Redacción)';
@@ -83,14 +83,14 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     if (!p.acciones.includes(etiqueta)) p.acciones.push(etiqueta);
     participantes.set(actorId, p);
   };
-  if (caso.creado_por) sumar(caso.creado_por, 'Creó el caso');
+  if (caso.creado_por) sumar(caso.creado_por, 'Creó la solicitud');
   for (const h of (historial ?? [])) sumar(h.actor_id, accionCorta(h.accion, h.metadata));
 
   return (
     <div>
       <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div className="muted" style={{ fontSize: '.8rem' }}>Caso #{String(caso.numero).padStart(5, '0')}</div>
+          <div className="muted" style={{ fontSize: '.8rem' }}>Solicitud #{String(caso.numero).padStart(5, '0')}</div>
           <h2 style={{ margin: '2px 0' }}>{caso.titulo}</h2>
           <EstadoCaso estado={caso.estado} />
         </div>
@@ -143,11 +143,11 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
             <form action={derivarCasoLogistica}>
               <input type="hidden" name="caso_id" value={caso.id} />
               <input type="hidden" name="volver" value={volver} />
-              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.9rem' }}>Convierte esta solicitud de ayuda en una tarea de Logística (insumo), enlazada al caso, para coordinar la entrega.</p>
+              <p className="muted" style={{ margin: '0 0 8px', fontSize: '.9rem' }}>Convierte esta solicitud de ayuda en una tarea de Logística (insumo), enlazada a la solicitud, para coordinar la entrega.</p>
               <button className="btn btn-primario" type="submit"><Icono nombre="camion" size={16} /> Derivar a Logística</button>
             </form>
           ) : (
-            <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>Cuando el caso esté <strong>confirmado</strong>, la Verificación podrá derivarlo a Logística para coordinar la entrega.</p>
+            <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>Cuando la solicitud esté <strong>confirmada</strong>, la Verificación podrá derivarla a Logística para coordinar la entrega.</p>
           )}
         </div>
       )}
@@ -175,7 +175,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
 
       {puedeEditar && caso.estado === 'enviado_redaccion' && (
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
-          <p className="muted" style={{ margin: 0 }}>Este caso ya fue <strong>enviado a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
+          <p className="muted" style={{ margin: 0 }}>Esta solicitud ya fue <strong>enviada a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
         </div>
       )}
       {puedeTomar && caso.estado !== 'enviado_redaccion' && caso.asignado_a !== miId && (
@@ -188,9 +188,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
                 <Icono nombre="avisos" size={14} /> Ya lo está trabajando <strong>{nombres.get(caso.asignado_a) ?? 'otra persona'}</strong>. Si vas a continuarlo, tómalo tú.
               </span>
             ) : (
-              <span className="muted" style={{ fontSize: '.9rem' }}>¿Vas a trabajar este caso? <strong>Tómalo</strong> para dejar constancia de que lo estás verificando.</span>
+              <span className="muted" style={{ fontSize: '.9rem' }}>¿Vas a trabajar esta solicitud? <strong>Tómalo</strong> para dejar constancia de que lo estás verificando.</span>
             )}
-            <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Tomar caso</button>
+            <button className="btn btn-primario" type="submit"><Icono nombre="ok" size={16} /> Tomar solicitud</button>
           </div>
         </form>
       )}
@@ -199,14 +199,14 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           {/* Decisión del verificador: confirmar o descartar, bien visibles. El cambio
               de estado libre queda como opción avanzada. */}
           <div className="tarjeta">
-            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> ¿Qué haces con este caso?</h3>
+            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> ¿Qué haces con esta solicitud?</h3>
             {caso.estado !== 'confirmado' && (
               <form action={cambiarEstadoCaso}>
                 <input type="hidden" name="caso_id" value={caso.id} />
                 <input type="hidden" name="volver" value={volver} />
                 <input type="hidden" name="estado" value="confirmado" />
                 <button className="btn btn-acento" type="submit" style={{ width: '100%' }}>
-                  <Icono nombre="ok" size={16} /> Confirmar caso
+                  <Icono nombre="ok" size={16} /> Confirmar solicitud
                 </button>
               </form>
             )}
@@ -218,7 +218,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
                 <textarea name="motivo" className="input" rows={2} required maxLength={500}
                   placeholder="Motivo del descarte…" style={{ marginTop: 4 }} />
                 <BotonConfirmar
-                  mensaje={'¿Descartar este caso como falso? Saldrá del flujo de verificación y quedará registrado el motivo.'}
+                  mensaje={'¿Descartar esta solicitud como falsa? Saldrá del flujo de verificación y quedará registrado el motivo.'}
                   className="btn btn-peligro" style={{ width: '100%', marginTop: 6 }}>
                   <Icono nombre="cerrar" size={15} /> Descartar (falso)
                 </BotonConfirmar>
@@ -229,7 +229,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
               <form action={cambiarEstadoCaso} style={{ marginTop: 8 }}>
                 <input type="hidden" name="caso_id" value={caso.id} />
                 <input type="hidden" name="volver" value={volver} />
-                <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }} aria-label="Estado del caso">
+                <select name="estado" className="input" defaultValue={caso.estado} style={{ width: '100%' }} aria-label="Estado de la solicitud">
                   {ESTADOS_CASO.filter((e) => e !== 'enviado_redaccion').map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_CASO[e]}</option>)}
                 </select>
                 <button className="btn" type="submit" style={{ width: '100%', marginTop: 8 }}>Guardar estado</button>
@@ -250,7 +250,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </>
       ) : (
         <div className="tarjeta">
-          <p className="muted" style={{ margin: 0 }}>Enviaste este caso para verificación. El equipo de Verificación decidirá si se confirma o se descarta.</p>
+          <p className="muted" style={{ margin: 0 }}>Enviaste esta solicitud para verificación. El equipo de Verificación decidirá si se confirma o se descarta.</p>
         </div>
       )}
 
@@ -271,7 +271,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       </div>
 
       <div className="tarjeta">
-        <h3 className="aside-titulo"><Icono nombre="filtro" size={16} /> Estados del caso</h3>
+        <h3 className="aside-titulo"><Icono nombre="filtro" size={16} /> Estados de la solicitud</h3>
         <div className="leyenda">
           {ESTADOS_CASO.map((e) => (
             <div key={e} className="leyenda-fila">
@@ -284,13 +284,13 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
 
       {esAdmin && (
         <form action={eliminarCaso} className="tarjeta" style={{ borderColor: '#fecaca' }}>
-          <h3 className="aside-titulo" style={{ color: 'var(--critica)' }}><Icono nombre="basura" size={16} /> Eliminar caso</h3>
+          <h3 className="aside-titulo" style={{ color: 'var(--critica)' }}><Icono nombre="basura" size={16} /> Eliminar solicitud</h3>
           <input type="hidden" name="caso_id" value={caso.id} />
-          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Solo un administrador puede borrar un caso. Esta acción no se puede deshacer.</p>
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Solo un administrador puede borrar una solicitud. Esta acción no se puede deshacer.</p>
           <BotonConfirmar
-            mensaje={'¿Eliminar definitivamente el caso "' + caso.titulo + '"? Esta acción no se puede deshacer.'}
+            mensaje={'¿Eliminar definitivamente la solicitud "' + caso.titulo + '"? Esta acción no se puede deshacer.'}
             className="btn btn-peligro" style={{ width: '100%' }}>
-            <Icono nombre="basura" size={16} /> Eliminar caso
+            <Icono nombre="basura" size={16} /> Eliminar solicitud
           </BotonConfirmar>
         </form>
       )}

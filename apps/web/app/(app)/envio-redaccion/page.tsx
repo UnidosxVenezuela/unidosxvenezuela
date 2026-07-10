@@ -37,14 +37,14 @@ export default async function EnvioRedaccionPage() {
       <div className="pagina-cab">
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="cohete" size={24} /> Envío a Redacción</h1>
-          <p className="muted sub">Casos verificados y confirmados, listos para pasarlos a Redacción. Al enviarlos, el flujo de verificación termina.</p>
+          <p className="muted sub">Solicitudes verificadas y confirmadas, listas para pasarlas a Redacción. Al enviarlos, el flujo de verificación termina.</p>
         </div>
         <BotonActualizar />
       </div>
 
       <h2>Confirmados por enviar <span className="insignia aviso">{(confirmados ?? []).length}</span></h2>
       {(confirmados ?? []).length === 0 ? (
-        <EstadoVacio icono="ok" titulo="Nada pendiente por enviar" texto="Cuando Verificación confirme un caso, aparecerá aquí para enviarlo a Redacción." />
+        <EstadoVacio icono="ok" titulo="Nada pendiente por enviar" texto="Cuando Verificación confirme una solicitud, aparecerá aquí para enviarla a Redacción." />
       ) : (
         (confirmados as any[]).map((c) => (
           <div key={c.id} className="tarjeta">
