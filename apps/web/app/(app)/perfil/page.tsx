@@ -107,7 +107,7 @@ export default async function PerfilPage({
       </form>
 
       {/* Avisos por Telegram (0139): canal opcional y adicional a la campana y al push. */}
-      <div className="tarjeta" style={{ marginTop: 12 }}>
+      <div id="avisos-telegram" className="tarjeta" style={{ marginTop: 12, scrollMarginTop: 80 }}>
         <h2 style={{ marginTop: 0 }}>Avisos por Telegram</h2>
         <p className="muted" style={{ marginTop: 0 }}>
           Recibe los mismos avisos también por Telegram, con un botón que abre la app. Es opcional
