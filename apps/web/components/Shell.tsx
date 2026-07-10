@@ -7,12 +7,13 @@ import NavLateral from './NavLateral';
 import CampanaNotificaciones from './CampanaNotificaciones';
 import Presencia from './Presencia';
 import { ToggleConsejos } from './Consejos';
+import BotonTelegram from './BotonTelegram';
 import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
 
 import type { NavFlags } from '@/lib/nav-flags';
 
-type Usuario = { nombre: string; rol?: string | null; email?: string | null; avatarUrl?: string | null; estadoPresencia?: string | null };
+type Usuario = { nombre: string; rol?: string | null; email?: string | null; avatarUrl?: string | null; estadoPresencia?: string | null; telegramVinculado?: boolean };
 
 /**
  * Shell de la app: barra lateral (colapsable en escritorio, cajón off-canvas en
@@ -87,6 +88,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
           </div>
           <div className="topbar-der">
             <ToggleConsejos />
+            <BotonTelegram vinculado={usuario.telegramVinculado} />
             <Presencia estadoInicial={usuario.estadoPresencia} />
             <CampanaNotificaciones />
             <UserChip nombre={usuario.nombre} rol={usuario.rol} email={usuario.email} avatarUrl={usuario.avatarUrl} />

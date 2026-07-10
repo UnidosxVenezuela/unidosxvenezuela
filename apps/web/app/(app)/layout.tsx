@@ -48,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           email: user?.email,
           avatarUrl: perfil?.avatar_url ?? null,
           estadoPresencia: (perfil as { estado_presencia?: string | null } | null)?.estado_presencia ?? 'conectado',
+          telegramVinculado: !!(perfil as { telegram_chat_id?: string | null } | null)?.telegram_chat_id,
         }}
         nav={flags}
       >
