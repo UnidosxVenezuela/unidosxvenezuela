@@ -15,25 +15,20 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
     { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
   ];
-  // «Casos» es la mesa de Recopilación/Verificación (Otras informaciones). Los
-  // buscadores tienen su propio espacio «Desaparecidos» (no se reescribe «Casos»,
-  // así los roles mixtos conservan ambas herramientas).
+  // «Solicitudes» es la mesa de Recopilación/Verificación: toda información llega como
+  // solicitud con ubicación. Los módulos de Búsqueda de personas y Digitalización se
+  // retiraron del menú (la plataforma ya no hace esas labores); sus rutas/datos previos
+  // siguen existiendo, solo no se enlazan aquí.
   if (flags.gestionCasos || flags.verificacion) {
-    enlaces.push({ href: '/casos', etiqueta: 'Casos', icono: flags.verificacion ? 'ok' : 'documento' });
+    enlaces.push({ href: '/casos', etiqueta: 'Solicitudes', icono: flags.verificacion ? 'ok' : 'documento' });
   }
-  if (flags.busqueda) {
-    enlaces.push({ href: '/busqueda', etiqueta: 'Desaparecidos', icono: 'usuario' });
-    enlaces.push({ href: '/coincidencias', etiqueta: 'Coincidencias', icono: 'enlace' });
-  }
-  if (flags.enlace && !flags.busqueda) enlaces.push({ href: '/busqueda/enlace', etiqueta: 'Enlace de contacto', icono: 'whatsapp' });
   if (flags.envioRedaccion) enlaces.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) enlaces.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
-  if (flags.acopio || flags.digitalizacion) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
+  if (flags.acopio) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
   if (flags.acopio) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
   }
-  if (flags.digitalizacion) enlaces.push({ href: '/digitalizacion', etiqueta: 'Digitalización', icono: 'imagen' });
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
   if (flags.captacion) enlaces.push({ href: '/captacion', etiqueta: 'Captación', icono: 'enlace' });
