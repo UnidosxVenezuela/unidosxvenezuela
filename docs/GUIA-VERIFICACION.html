@@ -1,0 +1,258 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --ok:#047857; --aviso:#a16207; --crit:#b91c1c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.5; font-size:11.5pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:16pt; color:var(--azul); margin:0 0 .35rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:12.5pt; color:var(--azul-osc); margin:1rem 0 .3rem; }
+  p{ margin:.4rem 0; }
+  a{ color:var(--azul); text-decoration:none; }
+  small{ color:var(--suave); }
+  .pagina{ padding:2mm 0; }
+  section{ break-inside:avoid; margin-bottom:14px; }
+  .lead{ color:var(--suave); font-size:11pt; }
+  .cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .tri{ height:14px; display:flex; }
+  .cover .tri i{ flex:1; } .tri .a{ background:var(--azul);} .tri .y{ background:var(--amarillo);} .tri .r{ background:var(--rojo);}
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 24mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:32pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .punto{ width:12px; height:12px; border-radius:50%; background:
+     conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  .grid{ display:grid; gap:10px; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
+  .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
+  .card h4{ margin:.1rem 0 .2rem; font-size:11.5pt; color:var(--azul-osc); }
+  .card p{ margin:.15rem 0; font-size:10pt; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:9px 13px; margin:10px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:10pt; margin:6px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:6px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9.5pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .pill{ display:inline-block; font-size:8.5pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .p-gray{ background:#eef1f6; color:#475569; } .p-amber{ background:#fef3c7; color:#92400e; }
+  .p-green{ background:#dcfce7; color:#166534; } .p-blue{ background:#dbeafe; color:#1e40af; }
+  .p-red{ background:#fee2e2; color:#991b1b; }
+  figure{ margin:12px 0; text-align:center; break-inside:avoid; }
+  figcaption{ font-size:9pt; color:var(--suave); margin-top:4px; }
+  .chk{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .chk div{ background:#f8fafc; border:1px solid var(--borde); border-radius:10px; padding:8px 12px; font-size:10pt; }
+  .chk b{ color:var(--ok); }
+  .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+</style>
+
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
+    <h1>Verificación</h1>
+    <div class="sub">El equipo que <b>valida</b> cada solicitud: la revisa y decide si se
+      <b>confirma</b> o se <b>descarta</b>. Es el filtro de calidad de la plataforma.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
+    <div class="pie">Versión imprimible · Julio 2026 · Grupo «Verificación de información»</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- 1. QUÉ ES -->
+<section class="pagina">
+  <h2>1 · Qué es este equipo</h2>
+  <p class="lead">El equipo de <b>Verificación</b> es el <b>filtro de calidad</b>: recibe las solicitudes que
+  crea Recopilación y decide, con criterio, cuáles son <b>reales, vigentes y bien documentadas</b>. Lo que
+  confirmas avanza; lo que descartas sale del flujo con un motivo registrado.</p>
+  <div class="grid g3">
+    <div class="card"><h4>Revisa</h4><p>Toma cada solicitud pendiente y comprueba fuente, ubicación y contacto.</p></div>
+    <div class="card"><h4>Decide</h4><p><b>Confirma</b> lo válido · <b>descarta</b> lo falso, viejo o duplicado.</p></div>
+    <div class="card"><h4>Registra</h4><p>Toda decisión queda auditada; el motivo del descarte se guarda.</p></div>
+  </div>
+  <div class="callout"><b>En una frase:</b> tú no reportas ni entregas — tú <b>decides qué es verdad</b>.
+  De tu criterio depende que la ayuda llegue a información fiable.</div>
+</section>
+
+<!-- 2. DÓNDE ENCAJAS -->
+<section class="pagina">
+  <h2>2 · Dónde encajas en el flujo</h2>
+  <figure>
+    <svg width="620" height="80" viewBox="0 0 660 80" role="img" aria-label="Flujo: tu equipo es Verificación">
+      <defs><marker id="a" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="11" font-weight="700">
+        <rect x="6" y="26" width="150" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="81" y="48" fill="#475569">Recopilación</text>
+        <rect x="180" y="26" width="140" height="34" rx="17" fill="#0033A0"/><text x="250" y="48" fill="#fff">Verificación</text>
+        <rect x="344" y="26" width="160" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="424" y="48" fill="#475569">Envío a Redacción</text>
+        <rect x="528" y="26" width="126" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="591" y="48" fill="#475569">Redacción / Logística</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.6" fill="none">
+        <line x1="156" y1="43" x2="178" y2="43" marker-end="url(#a)"/>
+        <line x1="320" y1="43" x2="342" y2="43" marker-end="url(#a)"/>
+        <line x1="504" y1="43" x2="526" y2="43" marker-end="url(#a)"/>
+      </g>
+      <text x="250" y="18" text-anchor="middle" font-size="9" font-weight="800" fill="#0033A0">TÚ ESTÁS AQUÍ</text>
+    </svg>
+  </figure>
+  <p>Recibes lo que <b>Recopilación</b> reporta y lo dejas listo para <b>Envío a Redacción</b> (y, si es una
+  solicitud de insumo, para <b>Logística</b>). Cuando tomas una solicitud te llega un aviso: <b>«Nuevo caso por
+  verificar»</b>.</p>
+  <div class="callout ok"><b>Buena noticia:</b> tu rol <b>no</b> exige segunda verificación de identidad. Con tu
+  cuenta verificada y el rol de Verificación ya puedes trabajar el tablero de Solicitudes.</div>
+</section>
+
+<!-- 3. TU TABLERO -->
+<section class="pagina">
+  <h2>3 · Tu tablero: «Solicitudes»</h2>
+  <p>En el menú <b>«Solicitudes»</b> ves el tablero con indicadores y filtros pensados para verificar:</p>
+  <div class="grid g3">
+    <div class="card"><h4>Indicadores</h4><p>Total · <b>Pendientes</b> (sin tomar) · <b>En proceso</b> · Confirmados y activos · Falsos / resueltos.</p></div>
+    <div class="card"><h4>Filtros</h4><p>Búsqueda por título/descripción/fuente, y filtros por <b>Estado</b> y <b>Categoría</b>.</p></div>
+    <div class="card"><h4>Señales</h4><p>La etiqueta <span class="pill p-amber">+2 días</span> marca lo antiguo; «Tomado por…» indica quién lo trabaja.</p></div>
+  </div>
+  <p><b>«Listos para redacción»:</b> abajo del tablero verás las solicitudes ya <b>confirmadas y activas</b>,
+  listas para pasar a la siguiente etapa. No aparece «Nueva solicitud»: crear es tarea de Recopilación.</p>
+</section>
+
+<!-- 4. LA DECISIÓN -->
+<section class="pagina">
+  <h2>4 · La decisión: confirmar o descartar</h2>
+  <p>Abre la solicitud, pulsa <b>«Tomar solicitud»</b> (pasa a <b>En proceso</b> y queda a tu nombre) y decide:</p>
+  <figure>
+    <svg width="640" height="300" viewBox="0 0 680 310" role="img" aria-label="Decisión de verificación">
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
+      <!-- tomar -->
+      <rect x="10" y="112" width="150" height="56" rx="10" fill="#fef3c7" stroke="#f2c14e"/>
+      <text x="85" y="136" text-anchor="middle" font-size="12" font-weight="800" fill="#92400e">Tomar solicitud</text>
+      <text x="85" y="153" text-anchor="middle" font-size="9" fill="#a16207">→ En proceso</text>
+      <!-- diamante -->
+      <polygon points="330,66 456,140 330,214 204,140" fill="#eff4ff" stroke="#0033A0" stroke-width="1.6"/>
+      <text x="330" y="126" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0033A0">¿Real, vigente,</text>
+      <text x="330" y="142" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0033A0">con fuente y</text>
+      <text x="330" y="158" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0033A0">ubicación clara?</text>
+      <!-- confirmar -->
+      <rect x="500" y="60" width="170" height="52" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
+      <text x="585" y="82" text-anchor="middle" font-size="12" font-weight="800" fill="#166534">Confirmar solicitud</text>
+      <text x="585" y="99" text-anchor="middle" font-size="9" fill="#15803d">→ Confirmado y activo</text>
+      <!-- descartar -->
+      <rect x="500" y="176" width="170" height="52" rx="10" fill="#fee2e2" stroke="#eda3a3"/>
+      <text x="585" y="198" text-anchor="middle" font-size="12" font-weight="800" fill="#991b1b">Descartar (falso)</text>
+      <text x="585" y="215" text-anchor="middle" font-size="9" fill="#b91c1c">indica el motivo · sale del flujo</text>
+      <!-- flechas -->
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="160" y1="140" x2="202" y2="140" marker-end="url(#ar)"/>
+        <path d="M456,140 C476,120 480,100 498,92" marker-end="url(#ar)"/>
+        <path d="M456,140 C476,164 480,188 498,200" marker-end="url(#ar)"/>
+      </g>
+      <text x="486" y="104" font-size="11" font-weight="800" fill="#166534">SÍ</text>
+      <text x="486" y="182" font-size="11" font-weight="800" fill="#991b1b">NO</text>
+      <!-- salida confirmado -->
+      <text x="585" y="128" text-anchor="middle" font-size="8.5" fill="#15803d">luego: Envío a Redacción / Logística</text>
+    </svg>
+    <figcaption>Tomar → revisar → confirmar (si cumple) o descartar con motivo (si no).</figcaption>
+  </figure>
+  <div class="callout warn"><b>Descartar exige un motivo.</b> Si intentas descartar sin escribirlo, la app te
+  detiene: «Indica el motivo para descartar la solicitud.» El motivo queda guardado en la solicitud.</div>
+</section>
+
+<!-- 5. CHECKLIST -->
+<section class="pagina">
+  <h2>5 · Antes de confirmar, revisa</h2>
+  <div class="chk">
+    <div><b>✔ Fuente confiable</b> — red oficial, persona u organización identificable.</div>
+    <div><b>✔ Ubicación clara</b> — el pin del mapa corresponde al lugar real.</div>
+    <div><b>✔ Contacto / responsable</b> — hay a quién acudir para dar seguimiento.</div>
+    <div><b>✔ Vigencia</b> — publicada o confirmada en las últimas 48 h (o reconfirmada).</div>
+    <div><b>✔ No es duplicado</b> — no repite otra solicitud ya registrada.</div>
+    <div><b>✔ Enlace seguro</b> — si trae enlace, la app no lo marcó como peligroso.</div>
+  </div>
+  <div class="callout">Si algo no cuadra pero podría ser real, deja una <b>nota</b> y mantenla <b>En proceso</b>
+  hasta confirmarlo. No confirmes por las dudas: confirmar es afirmar que es verdad.</div>
+</section>
+
+<!-- 6. ALCANCE -->
+<section class="pagina">
+  <h2>6 · Tu alcance: qué sí y qué no</h2>
+  <table>
+    <thead><tr><th style="width:50%">Sí puedes</th><th>No te corresponde</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Tomar, <b>confirmar</b> y <b>descartar</b> (con motivo) solicitudes de «Otras informaciones».</td>
+        <td><b>Crear</b> solicitudes — eso es de Recopilación (no verás «Nueva solicitud»).</td>
+      </tr>
+      <tr>
+        <td>Editar los datos de una solicitud y dejar <b>notas</b> mientras no esté enviada a Redacción.</td>
+        <td><b>Enviar a Redacción</b> — lo hace el equipo de Envío a Redacción.</td>
+      </tr>
+      <tr>
+        <td><b>Derivar a Logística</b> las solicitudes de insumo ya confirmadas.</td>
+        <td>Tocar casos de <b>Desaparecidos</b> (ese flujo se retiró) ni <b>eliminar</b> (solo administración).</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>El estado «Enviado a Redacción» está bloqueado para ti</b> a propósito: el selector
+  avanzado no lo ofrece y, si se intenta, la app avisa «El paso a Redacción lo hace el equipo de Envío a Redacción».
+  Una solicitud ya enviada se muestra bloqueada: su estado no se cambia desde aquí.</div>
+</section>
+
+<!-- 7. NOTIFICACIONES -->
+<section class="pagina">
+  <h2>7 · Avisos que recibes y disparas</h2>
+  <div class="grid g2">
+    <div class="card"><span class="n" style="background:#0033A0">↓</span><h4>Recibes</h4>
+      <p>Cuando entra una solicitud nueva: «<b>Nuevo caso por verificar</b> — Llegó un caso nuevo para verificar. Ábrelo para revisarlo».</p></div>
+    <div class="card"><span class="n" style="background:#047857">↑</span><h4>Disparas (automático)</h4>
+      <p>Al confirmar o descartar, el <b>reportante</b> recibe «Tu caso fue confirmado» o «Tu caso fue descartado». Tú no haces nada extra.</p></div>
+  </div>
+  <div class="callout ok"><b>Recomendación:</b> vincula tu <b>Telegram</b> desde tu perfil (botón «Telegram» en la
+  barra superior). Así te llegan al instante las solicitudes nuevas por verificar, sin depender del navegador.</div>
+</section>
+
+<!-- 8. BLINDAJE -->
+<section class="pagina">
+  <h2>8 · Blindaje y buenas prácticas</h2>
+  <div class="callout blind"><b>Datos sensibles y menores (NNA):</b> los <b>apellidos</b> se ocultan salvo a la
+  administración; los <b>avisos</b> (campana, push, Telegram) son <b>discretos</b>; los <b>archivos</b> son
+  privados (enlaces temporales). Una solicitud <b>nunca</b> es de «desaparecidos»: ese flujo se retiró.</div>
+  <div class="grid g2">
+    <div class="card"><h4>Sé consistente</h4><p>Confirma con el mismo criterio siempre: fuente + ubicación + contacto + vigencia.</p></div>
+    <div class="card"><h4>Explica el descarte</h4><p>Un buen motivo ayuda a quien reportó a mejorar la próxima vez.</p></div>
+    <div class="card"><h4>Ante la duda, nota</h4><p>Deja constancia y mantén «En proceso»; no confirmes ni descartes sin base.</p></div>
+    <div class="card"><h4>Cuida la privacidad</h4><p>No copies datos personales fuera de la plataforma; el registro te respalda.</p></div>
+  </div>
+</section>
+
+<!-- 9. FAQ -->
+<section class="pagina">
+  <h2>9 · Preguntas frecuentes</h2>
+  <h3>¿Puedo crear una solicitud?</h3>
+  <p>No: crear es de Recopilación. Tú tomas, confirmas o descartas lo que ya está reportado.</p>
+  <h3>Confirmé una solicitud, ¿la envío a Redacción?</h3>
+  <p>No desde aquí. Al confirmarla, queda en «Listos para redacción» y el equipo de <b>Envío a Redacción</b> la pasa.</p>
+  <h3>Me equivoqué al confirmar/descartar.</h3>
+  <p>Usa «Cambiar estado manualmente (avanzado)» para corregir (no ofrece «Enviado a Redacción»), o pídelo a la
+  administración. Todo cambio queda registrado.</p>
+  <h3>Una solicitud parece de un menor o una desaparición.</h3>
+  <p>No se gestiona por aquí (ese flujo se retiró). Síguelo con la coordinación según el protocolo.</p>
+
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía del equipo de Verificación · Julio 2026.<br>
+    Nota técnica: rol <code>verificador</code> («Verificación»), grupo <code>verificacion</code> («Verificación de
+    información»). <code>puedeVerificar = ['admin','verificador']</code>; <b>sin</b> puerta de 2ª verificación.
+    Acciones en <code>/casos</code>: <code>tomarCaso</code> → en_proceso, <code>cambiarEstadoCaso</code> (confirmado),
+    <code>descartarCaso</code> (falso, con motivo). El paso a <code>enviado_redaccion</code> lo hace el rol
+    <code>redaccion</code> (RPC <code>enviar_caso_redaccion</code>). PDF generado desde
+    <code>docs/GUIA-VERIFICACION.html</code>.
+  </div>
+</section>

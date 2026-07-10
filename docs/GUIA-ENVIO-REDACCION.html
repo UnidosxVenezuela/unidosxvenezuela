@@ -1,0 +1,226 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --ok:#047857; --aviso:#a16207; --crit:#b91c1c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.5; font-size:11.5pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:16pt; color:var(--azul); margin:0 0 .35rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:12.5pt; color:var(--azul-osc); margin:1rem 0 .3rem; }
+  p{ margin:.4rem 0; }
+  a{ color:var(--azul); text-decoration:none; }
+  small{ color:var(--suave); }
+  .pagina{ padding:2mm 0; }
+  section{ break-inside:avoid; margin-bottom:14px; }
+  .lead{ color:var(--suave); font-size:11pt; }
+  .cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .tri{ height:14px; display:flex; }
+  .cover .tri i{ flex:1; } .tri .a{ background:var(--azul);} .tri .y{ background:var(--amarillo);} .tri .r{ background:var(--rojo);}
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 24mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:30pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .punto{ width:12px; height:12px; border-radius:50%; background:
+     conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  .grid{ display:grid; gap:10px; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
+  .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
+  .card h4{ margin:.1rem 0 .2rem; font-size:11.5pt; color:var(--azul-osc); }
+  .card p{ margin:.15rem 0; font-size:10pt; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:9px 13px; margin:10px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:10pt; margin:6px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:6px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9.5pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .pill{ display:inline-block; font-size:8.5pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .p-green{ background:#dcfce7; color:#166534; } .p-blue{ background:#dbeafe; color:#1e40af; }
+  figure{ margin:12px 0; text-align:center; break-inside:avoid; }
+  figcaption{ font-size:9pt; color:var(--suave); margin-top:4px; }
+  .steps{ display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; margin:8px 0; }
+  .step{ flex:1; min-width:120px; border:1px solid var(--borde); border-radius:10px; padding:8px 10px; background:#fff; }
+  .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
+  .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+</style>
+
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
+    <h1>Envío a Redacción</h1>
+    <div class="sub">El <b>puente</b> entre la verificación y el contenido: toma las solicitudes
+      <b>confirmadas</b> y las <b>pasa a Redacción</b> para que se cuente la historia.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
+    <div class="pie">Versión imprimible · Julio 2026 · Grupo «Redacción»</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- 1 -->
+<section class="pagina">
+  <h2>1 · Qué es este equipo</h2>
+  <p class="lead">El equipo de <b>Envío a Redacción</b> es el <b>puente</b> del flujo: recoge las solicitudes que
+  Verificación ya <b>confirmó</b> y las <b>entrega a Redacción</b> para producir el contenido (piezas, gráficas,
+  videos, publicaciones). Con tu envío, el <b>flujo de verificación termina</b>.</p>
+  <div class="grid g3">
+    <div class="card"><h4>Recoge</h4><p>Reúne las solicitudes <b>confirmadas y activas</b>, listas para contar.</p></div>
+    <div class="card"><h4>Entrega</h4><p>Las pasa a Redacción con el botón <b>«Enviar a Redacción»</b>.</p></div>
+    <div class="card"><h4>Comparte el material</h4><p><b>Ver · Copiar · Descargar</b> la información para el equipo de contenido.</p></div>
+  </div>
+  <div class="callout"><b>En una frase:</b> tú aseguras que <b>ninguna solicitud confirmada se quede sin contar</b>.
+  Eres el enlace entre lo verificado y lo que se publica.</div>
+</section>
+
+<!-- 2 -->
+<section class="pagina">
+  <h2>2 · Dónde encajas en el flujo</h2>
+  <figure>
+    <svg width="620" height="80" viewBox="0 0 660 80" role="img" aria-label="Flujo: tu equipo es Envío a Redacción">
+      <defs><marker id="a" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="11" font-weight="700">
+        <rect x="6" y="26" width="150" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="81" y="48" fill="#475569">Recopilación</text>
+        <rect x="180" y="26" width="140" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="250" y="48" fill="#475569">Verificación</text>
+        <rect x="344" y="26" width="160" height="34" rx="17" fill="#0033A0"/><text x="424" y="48" fill="#fff">Envío a Redacción</text>
+        <rect x="528" y="26" width="126" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="591" y="48" fill="#475569">Redacción / contenido</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.6" fill="none">
+        <line x1="156" y1="43" x2="178" y2="43" marker-end="url(#a)"/>
+        <line x1="320" y1="43" x2="342" y2="43" marker-end="url(#a)"/>
+        <line x1="504" y1="43" x2="526" y2="43" marker-end="url(#a)"/>
+      </g>
+      <text x="424" y="18" text-anchor="middle" font-size="9" font-weight="800" fill="#0033A0">TÚ ESTÁS AQUÍ</text>
+    </svg>
+  </figure>
+  <p>Tomas lo que <b>Verificación</b> confirmó y lo dejas en manos de <b>Redacción</b> (que luego pasa a Diseño,
+  Video y Redes Sociales). Tu rol <b>no</b> exige segunda verificación de identidad.</p>
+  <div class="callout warn"><b>Importante — no hay aviso automático.</b> El envío <b>no</b> genera notificación. Te
+  enteras de lo que hay por enviar mirando tu tablero, que se <b>actualiza solo</b> (en tiempo real). Conviene
+  revisarlo con frecuencia para que nada confirmado se quede esperando.</div>
+</section>
+
+<!-- 3 -->
+<section class="pagina">
+  <h2>3 · Tu módulo: «Envío a Redacción»</h2>
+  <p>Tiene dos listas claras:</p>
+  <div class="grid g2">
+    <div class="card"><h4><span class="pill p-green">Confirmados por enviar</span></h4>
+      <p>Las solicitudes ya confirmadas por Verificación, de la más antigua a la más nueva. Son tu <b>cola de trabajo</b>.</p></div>
+    <div class="card"><h4><span class="pill p-blue">Enviados a Redacción</span></h4>
+      <p>Las que ya pasaste (marcadas «Enviado a Redacción»), de la más reciente a la más antigua. Tu <b>historial</b>.</p></div>
+  </div>
+  <p>Si «Confirmados por enviar» está vacío, verás «Nada pendiente por enviar»: cuando Verificación confirme algo,
+  aparecerá ahí.</p>
+</section>
+
+<!-- 4 -->
+<section class="pagina">
+  <h2>4 · Cómo enviar a Redacción</h2>
+  <div class="steps">
+    <div class="step"><span class="sn">PASO 1</span><p>En <b>«Confirmados por enviar»</b>, abre la solicitud y revisa que esté completa.</p></div>
+    <div class="step"><span class="sn">PASO 2</span><p>Pulsa <b>«Enviar a Redacción»</b>.</p></div>
+    <div class="step"><span class="sn">PASO 3</span><p>Confirma en el aviso: «¿Enviar «…» a Redacción?».</p></div>
+    <div class="step"><span class="sn">PASO 4</span><p>Pasa a <b>«Enviados a Redacción»</b>. El flujo de verificación terminó.</p></div>
+  </div>
+  <figure>
+    <svg width="640" height="120" viewBox="0 0 680 120" role="img" aria-label="La cola de envío a Redacción">
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
+      <rect x="8" y="40" width="180" height="52" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
+      <text x="98" y="63" text-anchor="middle" font-size="11.5" font-weight="800" fill="#166534">Confirmados</text>
+      <text x="98" y="80" text-anchor="middle" font-size="11.5" font-weight="800" fill="#166534">por enviar</text>
+      <rect x="392" y="40" width="180" height="52" rx="10" fill="#dbeafe" stroke="#93b4f0"/>
+      <text x="482" y="63" text-anchor="middle" font-size="11.5" font-weight="800" fill="#1e40af">Enviados a</text>
+      <text x="482" y="80" text-anchor="middle" font-size="11.5" font-weight="800" fill="#1e40af">Redacción</text>
+      <rect x="600" y="46" width="72" height="40" rx="10" fill="#eef1f6" stroke="#cbd5e1"/>
+      <text x="636" y="70" text-anchor="middle" font-size="10" font-weight="800" fill="#475569">Redacción</text>
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="188" y1="66" x2="390" y2="66" marker-end="url(#ar2)"/>
+        <line x1="572" y1="66" x2="598" y2="66" marker-end="url(#ar2)"/>
+      </g>
+      <text x="289" y="52" text-anchor="middle" font-size="11" font-weight="800" fill="#0033A0">Enviar a Redacción</text>
+      <text x="289" y="86" text-anchor="middle" font-size="9" fill="#64748b">(solo solicitudes confirmadas)</text>
+    </svg>
+    <figcaption>De la cola de confirmados al historial de enviados, y de ahí al equipo de Redacción.</figcaption>
+  </figure>
+  <div class="callout warn"><b>Reglas del envío:</b> solo se envían solicitudes <b>confirmadas</b> («Solo se envían
+  casos confirmados»); las de <b>Desaparecidos</b> nunca pasan por aquí; y solo tu equipo (o la administración)
+  puede enviar.</div>
+</section>
+
+<!-- 5 -->
+<section class="pagina">
+  <h2>5 · Entregar el material a Redacción</h2>
+  <p>En cada solicitud tienes tres herramientas para pasarle la información al equipo de contenido, y <b>quedan
+  registradas</b> (se sabe quién copió o descargó):</p>
+  <div class="grid g3">
+    <div class="card"><h4>👁 Ver</h4><p>Abre la solicitud completa para leerla.</p></div>
+    <div class="card"><h4>⧉ Copiar</h4><p>Copia el texto de la solicitud al portapapeles para pegarlo donde redacta el equipo.</p></div>
+    <div class="card"><h4>⬇ Descargar</h4><p>Baja un archivo de texto (<code>caso-NNNNN.txt</code>) con toda la información.</p></div>
+  </div>
+  <div class="callout"><b>Nota:</b> el paso de la información a Redacción es <b>manual y trazable</b> — tú les
+  compartes el material. La producción del contenido (piezas, gráficas, videos) ocurre después, en el módulo de
+  contenido del equipo de Redacción, Diseño y Redes.</div>
+</section>
+
+<!-- 6 -->
+<section class="pagina">
+  <h2>6 · Tu alcance: qué sí y qué no</h2>
+  <table>
+    <thead><tr><th style="width:50%">Sí puedes</th><th>No te corresponde</th></tr></thead>
+    <tbody>
+      <tr><td><b>Enviar a Redacción</b> las solicitudes confirmadas.</td><td><b>Crear</b> ni <b>verificar</b> solicitudes (Recopilación y Verificación).</td></tr>
+      <tr><td><b>Ver, copiar y descargar</b> la información (queda registrado).</td><td>Enviar algo <b>no confirmado</b> o de <b>Desaparecidos</b> (la app lo impide).</td></tr>
+      <tr><td>Editar los datos de una solicitud confirmada o enviada.</td><td><b>Eliminar</b> solicitudes (solo administración).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 7 -->
+<section class="pagina">
+  <h2>7 · Blindaje y buenas prácticas</h2>
+  <div class="callout blind"><b>Datos sensibles y menores (NNA):</b> los <b>apellidos</b> se ocultan salvo a la
+  administración; los <b>archivos</b> son privados. Al <b>copiar o descargar</b>, manejas la información con
+  cuidado: compártela solo por los canales del equipo y no la publiques tal cual sin el trabajo de Redacción.</div>
+  <div class="grid g2">
+    <div class="card"><h4>Revisa el tablero seguido</h4><p>Como no hay aviso, la constancia evita que se acumulen confirmados sin enviar.</p></div>
+    <div class="card"><h4>Envía lo que esté listo</h4><p>Si a una solicitud le falta algo, avisa a Verificación antes de enviarla.</p></div>
+    <div class="card"><h4>Ordena por antigüedad</h4><p>La cola va de lo más viejo a lo más nuevo: atiende primero lo que lleva más tiempo.</p></div>
+    <div class="card"><h4>Deja rastro claro</h4><p>Usa «Copiar/Descargar» (auditado) en vez de reescribir a mano.</p></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="pagina">
+  <h2>8 · Preguntas frecuentes</h2>
+  <h3>No me llega ningún aviso.</h3>
+  <p>Es normal: el envío no genera notificación. Revisa tu tablero «Envío a Redacción» con frecuencia; se actualiza
+  solo en tiempo real.</p>
+  <h3>¿Puedo enviar una solicitud que aún no está confirmada?</h3>
+  <p>No: solo se envían las <b>confirmadas</b>. Si crees que debería confirmarse, coordínalo con Verificación.</p>
+  <h3>Envié una por error.</h3>
+  <p>Coordina con la administración para revertir el estado; todo cambio queda registrado.</p>
+  <h3>¿Yo escribo el contenido?</h3>
+  <p>Tu rol es <b>enviar</b> y <b>entregar el material</b>. La redacción de las piezas la hace el equipo de contenido
+  (Redacción, Diseño, Video, Redes).</p>
+
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía del equipo de Envío a Redacción · Julio 2026.<br>
+    Nota técnica: rol <code>redaccion</code> («Envío a Redacción»), grupo <code>redaccion</code> («Redacción»).
+    Módulo <code>/envio-redaccion</code>: listas «Confirmados por enviar» (estado <code>confirmado</code>) y
+    «Enviados a Redacción» (<code>enviado_redaccion</code>). Botón «Enviar a Redacción» → RPC
+    <code>enviar_caso_redaccion</code> (solo <code>redaccion</code>/admin, solo confirmados, no Desaparecidos).
+    Sin puerta de 2ª verificación; sin notificación en el envío. PDF generado desde
+    <code>docs/GUIA-ENVIO-REDACCION.html</code>.
+  </div>
+</section>
