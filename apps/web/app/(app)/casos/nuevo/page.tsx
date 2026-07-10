@@ -40,20 +40,20 @@ export default async function NuevoCasoPage() {
   return (
     <div style={{ maxWidth: 640 }}>
       <Link href="/casos" className="muted">← Casos</Link>
-      <Consejo id="caso-nuevo" titulo="Reportar bien un caso">
-        Pon un <strong>título claro</strong>, la fuente y su enlace, y adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
+      <Consejo id="caso-nuevo" titulo="Reportar bien una solicitud">
+        Da un <strong>título claro</strong>, marca la <strong>ubicación en el mapa</strong>, e indica la fuente, el responsable y qué se necesita. Adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
       </Consejo>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
           <h1>Nuevo caso</h1>
-          <p className="muted sub">Registra la información que llega para verificar: título, categoría, fuente, fecha y archivos de respaldo.</p>
+          <p className="muted sub">Cada información que llega es una solicitud con ubicación. Responde: qué es, dónde, cuándo, quién es la fuente, quién es el responsable y qué se necesita.</p>
         </div>
       </div>
       <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
         <TituloConDuplicados esAdmin={esAdministrador(perfil)} />
         <div className="campo">
-          <label htmlFor="descripcion">Descripción</label>
-          <textarea id="descripcion" name="descripcion" className="input" rows={3} />
+          <label htmlFor="descripcion">¿Qué se necesita o qué se ofrece?</label>
+          <textarea id="descripcion" name="descripcion" className="input" rows={3} placeholder="Descripción concreta, clara y actualizada de la ayuda solicitada u ofrecida." />
         </div>
         <CamposCaso />
         <div className="campo">

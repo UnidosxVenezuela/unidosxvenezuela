@@ -1,95 +1,41 @@
 'use client';
-import { useState } from 'react';
-import { CATEGORIAS_CASO, SITUACIONES_BUSQUEDA } from '@/lib/constantes';
 import AvisoEnlace from '@/components/AvisoEnlace';
 import BloqueRequerimiento from '../BloqueRequerimiento';
 
-// Campos del caso: categoría, fecha, fuente y enlace. Cuando la categoría es
-// «Desaparecidos», el formulario se despliega para capturar los datos de la persona
-// y del reporte (edad, sexo, última ubicación, situación, quién reporta, es NNA), de
-// modo que la ficha del Grupo de Búsqueda nazca lo más completa posible (0100).
-export default function CamposCaso({ defecto = CATEGORIAS_CASO[1] }: { defecto?: string }) {
-  const [cat, setCat] = useState(defecto);
-  const esDesaparecido = cat === 'Desaparecidos';
+// Ya no se clasifica el tipo de caso ni se hace búsqueda de personas: toda información
+// que llega se trata como una «solicitud con ubicación» (categoría fija 'Otras
+// informaciones' + requerimiento con lugar en el mapa). El formulario se enfoca en las
+// preguntas del circuito de ayuda: qué es (título + descripción, arriba), cuándo, quién
+// es la fuente, quién es el responsable, dónde ocurre y qué se necesita/ofrece.
+export default function CamposCaso() {
   return (
     <>
+      {/* Sin clasificación: toda información entra como solicitud del lado de Verificación. */}
+      <input type="hidden" name="categoria" value="Otras informaciones" />
       <div className="grid grid-2">
         <div className="campo">
-          <label htmlFor="categoria">Categoría</label>
-          <select id="categoria" name="categoria" className="input" value={cat} onChange={(e) => setCat(e.target.value)}>
-            {CATEGORIAS_CASO.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-        <div className="campo">
-          <label htmlFor="fecha_publicacion">{esDesaparecido ? 'Fecha de desaparición' : 'Fecha de publicación'}</label>
+          <label htmlFor="fecha_publicacion">¿Cuándo se publicó o confirmó?</label>
           <input id="fecha_publicacion" name="fecha_publicacion" className="input" type="date" />
         </div>
         <div className="campo">
-          <label htmlFor="fuente">Fuente</label>
-          <input id="fuente" name="fuente" className="input" placeholder={esDesaparecido ? 'Ej.: Familia · reporte directo' : 'Ej.: Facebook - Familia Pérez'} />
+          <label htmlFor="fuente">¿Quién es la fuente?</label>
+          <input id="fuente" name="fuente" className="input" placeholder="Red oficial, persona, grupo o contacto directo" />
         </div>
+      </div>
+      <div className="grid grid-2">
         <div className="campo">
           <label htmlFor="fuente_url">Enlace de la fuente (opcional)</label>
           <AvisoEnlace name="fuente_url" />
         </div>
-      </div>
-
-      {esDesaparecido && (
-        <div className="tarjeta" style={{ background: 'var(--gris-claro, #f8fafc)', borderColor: '#cbd5e1', marginBottom: 12 }}>
-          <strong>Datos de la persona desaparecida</strong>
-          <p className="muted" style={{ fontSize: '.82rem', margin: '2px 0 10px' }}>
-            El <strong>título</strong> del caso es el nombre completo de la persona. Completa lo que sepas; el Grupo de Búsqueda podrá afinarlo después.
-          </p>
-          <div className="grid grid-2">
-            <div className="campo">
-              <label htmlFor="edad">Edad</label>
-              <input id="edad" name="edad" type="number" min={0} max={130} className="input" placeholder="Años" />
-            </div>
-            <div className="campo">
-              <label htmlFor="sexo">Sexo</label>
-              <select id="sexo" name="sexo" className="input" defaultValue="">
-                <option value="">Sin especificar</option>
-                <option value="m">Masculino</option>
-                <option value="f">Femenino</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-          </div>
-          <div className="campo">
-            <label htmlFor="ultima_ubicacion">Última ubicación conocida</label>
-            <input id="ultima_ubicacion" name="ultima_ubicacion" className="input" placeholder="Sector, referencia, hora aproximada…" />
-          </div>
-          <div className="grid grid-2">
-            <div className="campo">
-              <label htmlFor="situacion">Situación</label>
-              <select id="situacion" name="situacion" className="input" defaultValue="">
-                <option value="">Sin especificar</option>
-                {SITUACIONES_BUSQUEDA.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
-              </select>
-            </div>
-            <div className="campo">
-              <label htmlFor="reporta_telefono">Teléfono de quien reporta</label>
-              <input id="reporta_telefono" name="reporta_telefono" type="tel" className="input" placeholder="Ej.: 0412 000 0000" />
-            </div>
-          </div>
-          <div className="campo">
-            <label htmlFor="reporta_nombre">Nombre de quien reporta</label>
-            <input id="reporta_nombre" name="reporta_nombre" className="input" placeholder="Familiar o persona que reporta" />
-          </div>
-          <label className="fila" style={{ gap: 8, alignItems: 'flex-start', marginTop: 4, cursor: 'pointer' }}>
-            <input type="checkbox" name="es_nna" style={{ marginTop: 3 }} />
-            <span>
-              La persona es <strong>menor de edad (NNA)</strong>
-              <span className="muted" style={{ display: 'block', fontSize: '.8rem' }}>
-                Irá al equipo especializado de menores y no será visible para el buscador general.
-              </span>
-            </span>
-          </label>
+        <div className="campo">
+          <label htmlFor="contacto">¿Quién es el responsable o referente?</label>
+          <input id="contacto" name="contacto" className="input" placeholder="Teléfono, WhatsApp, organización o punto de contacto" />
         </div>
-      )}
-
-      {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
-      {!esDesaparecido && <BloqueRequerimiento />}
+      </div>
+      <BloqueRequerimiento fijo />
+      <p className="muted" style={{ fontSize: '.8rem', marginTop: 2 }}>
+        <strong>Vigencia:</strong> la información debe haberse publicado o confirmado en las últimas <strong>48 horas</strong>. Antes de enviar, revisa que esté completa, con los contactos correctos, la ubicación clara y el enlace de la fuente.
+      </p>
     </>
   );
 }

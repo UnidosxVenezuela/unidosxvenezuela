@@ -96,7 +96,9 @@ export async function crearCaso(formData: FormData) {
     const v = validarArchivo(file.name, file.size, 10);
     if (!v.ok) throw new Error(v.motivo || 'Archivo no admitido.');
   }
-  const categoria = opt(formData.get('categoria'));
+  // Ya no se clasifica el tipo de caso: toda información entra como «solicitud con
+  // ubicación» del lado de Verificación (nunca 'Desaparecidos', la frontera con Búsqueda).
+  const categoria = 'Otras informaciones';
   const { data, error } = await supabase.from('casos').insert({
     titulo,
     descripcion: opt(formData.get('descripcion')),
@@ -104,14 +106,11 @@ export async function crearCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
-    // Nace «pendiente» (sin asignar) para «Otras informaciones»; los Desaparecidos
-    // entran de una vez al flujo de Búsqueda, así que arrancan «en proceso».
-    estado: categoria === 'Desaparecidos' ? 'en_proceso' : 'pendiente',
+    contacto: opt(formData.get('contacto')),
+    estado: 'pendiente',
     creado_por: user.id,
-    // Pista para el Grupo de Búsqueda: solo aplica a «Desaparecidos». Si se marca,
-    // el disparador (0098) crea la ficha ya clasificada como NNA → va al Buscador NNA.
-    es_nna: txt(formData.get('es_nna')) === 'on',
-    // Solicitud de ayuda con ubicación (Fase 1): campos vacíos si no se marcó.
+    es_nna: false,
+    // Toda información es una solicitud con ubicación (el formulario fija es_requerimiento).
     ...datosRequerimiento(formData, categoria),
   }).select('id').single();
   if (error) {
@@ -122,23 +121,6 @@ export async function crearCaso(formData: FormData) {
     throw new Error('No se pudo crear el caso: ' + error.message);
   }
   const casoId = data!.id as string;
-
-  // Desaparecidos: vuelca los datos de la persona/reporte en la ficha del Grupo de
-  // Búsqueda (creada por el disparador). Best-effort: si falla, el caso queda igual y
-  // el equipo de Búsqueda podrá completar la ficha. La RPC (0100) valida y escopa.
-  if (categoria === 'Desaparecidos') {
-    const edadStr = txt(formData.get('edad'));
-    const edadNum = edadStr ? Math.trunc(Number(edadStr)) : null;
-    await supabase.rpc('completar_ficha_busqueda', {
-      p_caso: casoId,
-      p_edad: edadNum !== null && Number.isFinite(edadNum) ? edadNum : null,
-      p_sexo: opt(formData.get('sexo')),
-      p_ultima_ubicacion: opt(formData.get('ultima_ubicacion')),
-      p_situacion: opt(formData.get('situacion')),
-      p_reporta_nombre: opt(formData.get('reporta_nombre')),
-      p_reporta_telefono: opt(formData.get('reporta_telefono')),
-    });
-  }
 
   // Adjuntos de respaldo (opcional): al bucket privado 'adjuntos', carpeta casos/<id>.
   for (const file of archivos.slice(0, 10)) {
@@ -278,6 +260,7 @@ export async function editarCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
+    contacto: opt(formData.get('contacto')),
     actualizado_en: new Date().toISOString(),
     // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
     ...datosRequerimiento(formData, categoria),

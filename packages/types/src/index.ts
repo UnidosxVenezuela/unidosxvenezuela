@@ -188,6 +188,7 @@ export interface Caso {
   categoria: string | null;
   fuente: string | null;
   fuente_url: string | null;
+  contacto: string | null;   // responsable/referente: teléfono, WhatsApp, organización
   fecha_publicacion: string | null;
   asignado_a: string | null;
   estado: EstadoCaso;
