@@ -155,23 +155,19 @@ export const AREAS_REGISTRO: { valor: 'verificacion' | 'redes' | 'logistica' | '
  * persona), agrupados por área para el desplegable. El `area` de la sección se envía
  * como `area_registro` (ruteo del aviso al admin de área) y `grupo` como `grupo_interes`.
  * Elegir el grupo concreto es más claro que un área amplia.
- * BLINDAJE: la Búsqueda de Menores (NNA) y los roles internos de QA NO se ofrecen aquí
- * (no son de autoselección). Quien quiera búsqueda de menores entra por «Búsqueda de
- * personas» y un admin lo deriva tras la 2ª verificación de identidad.
+ * NOTA: la plataforma ya no hace digitalización de listados ni búsqueda de personas
+ * (incluida NNA); esos grupos no se ofrecen en el registro. El foco es la gestión de
+ * solicitudes de ayuda con ubicación y el resto de labores (contenido, acopio,
+ * captación, apoyo psicosocial).
  */
 export const GRUPOS_REGISTRO: {
   seccion: string;
   area: 'verificacion' | 'redes' | 'logistica' | 'digitalizacion' | 'general';
   opciones: { grupo: string; etiqueta: string }[];
 }[] = [
-  { seccion: 'Verificación y búsqueda de personas', area: 'verificacion', opciones: [
-    { grupo: 'gestion_casos',   etiqueta: 'Recopilación y Gestión de la Información' },
-    { grupo: 'verificacion',    etiqueta: 'Verificación de información' },
-    { grupo: 'busqueda',        etiqueta: 'Búsqueda de personas' },
-    { grupo: 'enlace_contacto', etiqueta: 'Enlace con familias' },
-  ] },
-  { seccion: 'Digitalización de listados', area: 'digitalizacion', opciones: [
-    { grupo: 'digitalizacion', etiqueta: 'Digitalización de listados (foto/OCR y mapa)' },
+  { seccion: 'Gestión y verificación de la información', area: 'verificacion', opciones: [
+    { grupo: 'gestion_casos', etiqueta: 'Recopilación y Gestión de la Información' },
+    { grupo: 'verificacion',  etiqueta: 'Verificación de información' },
   ] },
   { seccion: 'Redes sociales y contenido', area: 'redes', opciones: [
     { grupo: 'redaccion',      etiqueta: 'Redacción' },
