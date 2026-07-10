@@ -99,6 +99,8 @@ export interface Perfil {
   contacto_emergencia?: string | null; // deber de cuidado: «Nombre (relación) · teléfono»
   estado_presencia?: string | null;    // 'conectado' | 'ocupado' (elección de la persona)
   ultima_conexion?: string | null;     // último latido (ISO) — para online/«hace cuánto»
+  telegram_chat_id?: string | null;    // chat de Telegram vinculado (canal de avisos, 0139)
+  telegram_username?: string | null;   // @usuario de Telegram (solo para mostrar)
   avatar_url: string | null;
   habilidades: string[];
   creado_en: string;
