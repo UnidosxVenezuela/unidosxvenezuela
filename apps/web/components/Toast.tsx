@@ -5,6 +5,7 @@ import { animate } from 'animejs';
 import { exito, error as sonidoError } from '@/lib/sonido';
 import { sinMovimiento } from '@/lib/anime';
 import Icono from './Icono';
+import CheckDibujado from './CheckDibujado';
 
 const VIDA_MS = 3500; // cuánto dura visible un aviso de éxito antes de auto-cerrarse
 
@@ -69,7 +70,7 @@ export default function Toast() {
       role={aviso.tipo === 'ok' ? 'status' : 'alert'}
       aria-live={aviso.tipo === 'ok' ? 'polite' : 'assertive'}
       onClick={cerrar} title="Toca para cerrar">
-      <span className="toast-ico"><Icono nombre={aviso.tipo === 'ok' ? 'ok' : 'avisos'} size={18} /></span>
+      <span className="toast-ico">{aviso.tipo === 'ok' ? <CheckDibujado size={18} /> : <Icono nombre="avisos" size={18} />}</span>
       <span className="toast-txt">{aviso.texto}</span>
       <span className="toast-x" aria-hidden="true"><Icono nombre="cerrar" size={15} /></span>
       {aviso.tipo === 'ok' && !reduce && <span className="toast-barra" ref={barraRef} aria-hidden="true" />}
