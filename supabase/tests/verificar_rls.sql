@@ -1185,4 +1185,56 @@ begin;
   end $$;
 rollback;
 
+-- ══ Verificación de oportunidades de donación (0144) ══
+
+\echo '== Test 57: solo Verificación fija el resultado de verificación de una oferta (0144) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000fc01', 'verif-op@test.local'),
+    ('00000000-0000-0000-0000-00000000fc02', 'logi-op@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000fc01';
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000fc02';
+  insert into public.oportunidades_donacion (id, organizacion, creado_por)
+    values ('00000000-0000-0000-0000-00000000fc0f', '_TEST_verif_oferta', '00000000-0000-0000-0000-00000000fc02');
+  -- Verificador: SÍ fija el resultado (vía la RPC).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fc01')::text, true);
+  select public.verificar_oportunidad_donacion('00000000-0000-0000-0000-00000000fc0f', 'verificada', 'Organización confirmada');
+  do $$ declare e text; begin
+    select estado_verificacion into e from public.oportunidades_donacion where id = '00000000-0000-0000-0000-00000000fc0f';
+    if e is distinct from 'verificada' then raise exception 'FALLO: el verificador no marcó la oferta como verificada (%)', e; end if;
+  end $$;
+  reset role;
+  -- Logística (no verificador): NO puede verificar (es función de Verificación).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fc02')::text, true);
+  do $$ begin
+    begin
+      perform public.verificar_oportunidad_donacion('00000000-0000-0000-0000-00000000fc0f', 'observada', 'x');
+      raise exception 'FALLO: Logística pudo verificar una oferta';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 58: registrar una oferta avisa también a Verificación (0144) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000fc11', 'verif-n@test.local'),
+    ('00000000-0000-0000-0000-00000000fc12', 'reco-n@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador',  roles_extra = '{}', verificado = true, nombre_completo = 'VerifN' where id = '00000000-0000-0000-0000-00000000fc11';
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000fc12';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fc12')::text, true);
+  insert into public.oportunidades_donacion (organizacion, creado_por)
+    values ('_TEST_aviso_verif', '00000000-0000-0000-0000-00000000fc12');
+  reset role;  -- las notificaciones son privadas del destinatario
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000fc11' and tipo = 'oportunidad_donacion';
+    if n < 1 then raise exception 'FALLO: Verificación no recibió aviso de la nueva oferta (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

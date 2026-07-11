@@ -161,6 +161,24 @@ export async function conectarConSolicitud(formData: FormData) {
   redirigirOk('/insumos/oportunidades/' + oportunidad_id, 'Donación conectada a la solicitud. 💛');
 }
 
+// ── Verificación de la oferta (equipo de Verificación) ──
+// La autorización real la impone la RPC verificar_oportunidad_donacion (puede_verificar);
+// aquí solo se enruta. No toca el pipeline de contacto de Logística.
+export async function verificarOportunidad(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('id'));
+  const estado = txt(formData.get('estado'));
+  if (!id) throw new Error('Falta la oportunidad.');
+  const { error } = await supabase.rpc('verificar_oportunidad_donacion', {
+    p_id: id, p_estado: estado, p_nota: txt(formData.get('nota')).slice(0, 500) || null,
+  });
+  if (error) throw new Error('No se pudo registrar la verificación: ' + error.message);
+  revalidatePath('/insumos/oportunidades'); revalidatePath('/insumos/oportunidades/' + id);
+  redirigirOk('/insumos/oportunidades/' + id, 'Verificación registrada.');
+}
+
 // ── Eliminar la oportunidad (Logística) ──
 export async function eliminarOportunidad(formData: FormData) {
   const { supabase } = await exigirLogistica();

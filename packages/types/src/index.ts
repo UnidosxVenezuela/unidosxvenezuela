@@ -193,6 +193,8 @@ export type TipoOferta = 'especie' | 'dinero' | 'servicio' | 'transporte' | 'otr
 export type EstadoOferta = 'nueva' | 'contactada' | 'en_conversacion' | 'comprometida' | 'cumplida' | 'descartada';
 export type CanalContacto = 'llamada' | 'whatsapp' | 'correo' | 'reunion' | 'otro';
 export type ResultadoContacto = 'positivo' | 'pendiente' | 'sin_respuesta' | 'negativo';
+/** Resultado de la verificación de una oferta (lo fija el equipo de Verificación, 0144). */
+export type EstadoVerificacionOferta = 'pendiente' | 'verificada' | 'observada';
 
 export interface OportunidadDonacion {
   id: string;
@@ -206,6 +208,11 @@ export interface OportunidadDonacion {
   enlace: string | null;
   estado: EstadoOferta;
   asignado_a: string | null;
+  // Verificación de la oferta (0144): la fija el equipo de Verificación.
+  estado_verificacion: EstadoVerificacionOferta;
+  verificada_por: string | null;
+  verificada_en: string | null;
+  nota_verificacion: string | null;
   creado_por: string | null;
   creado_en: string;
   actualizado_en: string;
