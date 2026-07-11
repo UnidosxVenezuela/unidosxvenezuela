@@ -1,7 +1,7 @@
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { flagsDeNavegacion } from '@/lib/nav-flags';
-import AnimarEntrada from '@/components/AnimarEntrada';
+import RevelarScroll from '@/components/RevelarScroll';
 import Icono from '@/components/Icono';
 
 /**
@@ -21,7 +21,7 @@ export default async function AyudaPage() {
   );
 
   return (
-    <AnimarEntrada>
+    <RevelarScroll>
       <div className="pagina-cab">
         <div>
           <h1>Ayuda</h1>
@@ -116,6 +116,6 @@ export default async function AyudaPage() {
           ¿Necesitas algo que no ves aquí? Escríbele al líder de tu grupo o a la administración. 💛💙❤️
         </p>
       </div>
-    </AnimarEntrada>
+    </RevelarScroll>
   );
 }

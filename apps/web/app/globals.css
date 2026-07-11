@@ -66,14 +66,20 @@ h2 { font-size: 1.15rem; margin: 1.2rem 0 .5rem; }
   box-shadow: 0 0 0 2px rgba(255,255,255,.35);
 }
 .auth-marca .punto { box-shadow: 0 0 0 2px rgba(0,51,160,.18); }
-.nav-lateral { display: flex; flex-direction: column; gap: 2px; padding: 8px; overflow-y: auto; flex: 1; }
+.nav-lateral { display: flex; flex-direction: column; gap: 2px; padding: 8px; overflow-y: auto; flex: 1; position: relative; }
 .nav-lateral a {
   display: flex; align-items: center; gap: 10px; color: #dbe4ff; text-decoration: none;
   font-weight: 600; padding: 10px 12px; border-radius: 10px; border-left: 3px solid transparent;
 }
 .nav-lateral a:hover { background: rgba(255,255,255,.10); color: #fff; }
+/* El fondo marca el ítem activo (fallback sin JS); la barra amarilla la dibuja
+   `.nav-indicador`, que se desliza entre ítems (ver NavLateral.tsx). */
 .nav-lateral a.activo {
-  background: rgba(255,255,255,.14); color: #fff; border-left-color: var(--amarillo);
+  background: rgba(255,255,255,.14); color: #fff;
+}
+.nav-indicador {
+  position: absolute; left: 0; top: 0; width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--amarillo); pointer-events: none; will-change: transform;
 }
 .sidebar-pie {
   border-top: 1px solid rgba(255,255,255,.15); padding: 12px; display: flex;
@@ -350,6 +356,11 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
    Insertada solo cuando se permite el movimiento (ver Toast.tsx). */
 .toast-barra { position: absolute; left: 12px; right: 12px; bottom: 6px; height: 3px; border-radius: 2px;
   background: #16a34a; opacity: .38; transform-origin: left center; }
+
+/* Barra de progreso del OCR (digitalización): el relleno avanza (scaleX) hacia el
+   porcentaje real vía anime.js, suavizando los saltos de Tesseract. */
+.ocr-barra { position: relative; height: 4px; border-radius: 3px; background: var(--borde); overflow: hidden; margin: 8px 0 0; }
+.ocr-barra-fill { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(0); background: var(--azul); border-radius: 3px; }
 .toast-err { border-left-color: var(--rojo); }
 .toast-err .toast-ico { background: #fee2e2; color: var(--rojo); }
 @media (max-width: 560px) { .toast { left: 16px; right: 16px; max-width: none; } }
