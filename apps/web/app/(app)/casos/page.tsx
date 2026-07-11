@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
@@ -255,7 +255,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                     </div>
                   </td>
                   <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
-                  <td>{c.fuente_url ? <a href={c.fuente_url} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—')}</td>
+                  <td>{(() => { const h = hrefSeguro(c.fuente_url); return h ? <a href={h} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—'); })()}</td>
                   <td><EstadoCaso estado={c.estado} /></td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                 </tr>

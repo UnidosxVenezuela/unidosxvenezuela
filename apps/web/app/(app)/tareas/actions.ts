@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
+import { validarArchivo } from '@/lib/validaciones';
 import type { EstadoTarea, Prioridad } from '@unidos/types';
 
 function txt(v: FormDataEntryValue | null): string { return String(v ?? '').trim(); }
@@ -151,7 +152,8 @@ export async function subirAdjuntoTarea(formData: FormData): Promise<{ error?: s
   const clase = txt(formData.get('clase')) || 'material';
   const file = formData.get('file');
   if (!(file instanceof File) || file.size === 0) return { error: 'No se recibió el archivo.' };
-  if (file.size > 25 * 1024 * 1024) return { error: 'El archivo no debe superar 25 MB.' };
+  const val = validarArchivo(file.name, file.size, 25);  // lista blanca de tipos (no svg/html/exe)
+  if (!val.ok) return { error: val.motivo };
   const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
   const path = `${tareaId}/${Date.now()}-${safe}`;
   try {

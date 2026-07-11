@@ -945,4 +945,37 @@ begin;
   end $$;
 rollback;
 
+-- ══ Endurecimiento de perfil (0140) ══
+
+\echo '== Test 46: un usuario NO puede cambiar su propio area_registro (0140) =='
+begin;
+  update public.perfiles set rol = 'voluntario', verificado = true, area_registro = 'general' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    begin
+      update public.perfiles set area_registro = 'verificacion' where id = v_uid;
+      raise exception 'FALLO: un usuario cambió su propio area_registro (escalada de alcance de área)';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;  -- el trigger lo bloqueó = esperado
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 47: coordinación SÍ puede cambiar su area_registro (no se sobre-bloquea) =='
+begin;
+  update public.perfiles set rol = 'admin', verificado = true, area_registro = 'general' where id = :'admin';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  do $$
+  declare v_uid uuid := (current_setting('request.jwt.claims')::json ->> 'sub')::uuid;
+  begin
+    update public.perfiles set area_registro = 'verificacion' where id = v_uid;  -- admin/coordinación: permitido
+  exception when others then
+    raise exception 'FALLO: un admin no pudo cambiar su propio area_registro (sobre-bloqueo): %', sqlerrm;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
