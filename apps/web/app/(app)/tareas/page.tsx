@@ -9,6 +9,7 @@ import {
   ESTADOS, PRIORIDADES, CATEGORIAS, clasePrioridad, claseEstado, RANGO_PRIORIDAD,
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import ResaltarNuevos from '@/components/ResaltarNuevos';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonEnviar from '@/components/BotonEnviar';
@@ -209,8 +210,9 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
         <EstadoVacio icono="tareas" titulo="No hay tareas abiertas" texto="No hay tareas abiertas en esta categoría ahora mismo. Prueba con otra categoría o vuelve más tarde." />
       ) : (
         <div className="grid grid-2">
+          <ResaltarNuevos>
           {abiertas.map((t) => (
-            <div key={t.id} className="tarjeta">
+            <div key={t.id} data-fila className="tarjeta">
               <Badges t={t} />
               <h3 style={{ margin: '8px 0 4px' }}><Link href={hrefDetalleTarea(searchParams, t.id)}>{t.titulo}</Link></h3>
               {t.descripcion && <p className="muted" style={{ marginTop: 0 }}>{String(t.descripcion).slice(0, 140)}</p>}
@@ -227,6 +229,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
               )}
             </div>
           ))}
+          </ResaltarNuevos>
         </div>
       )}
 
