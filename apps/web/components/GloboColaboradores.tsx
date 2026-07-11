@@ -21,10 +21,19 @@ const PHI_VE = 0.45; // giro con el que Venezuela queda de frente al cargar
 export default function GloboColaboradores({ paises }: { paises: { pais: string; n: number }[] }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const [listo, setListo] = useState(false);
+  const [sinWebgl, setSinWebgl] = useState(false);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+    // El globo usa WebGL (cobe). En dispositivos/navegadores sin WebGL (deshabilitado,
+    // bloqueado o sin aceleración) getContext devuelve null y cobe reventaría con
+    // "reading 'enable'", tumbando TODO el panel. Como el globo es decorativo, si no
+    // hay WebGL simplemente no lo mostramos y el panel sigue funcionando.
+    let hayWebgl = false;
+    try { hayWebgl = !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl')); } catch { hayWebgl = false; }
+    if (!hayWebgl) { setSinWebgl(true); return; }
+
     let width = 0;
     let phi = PHI_VE;
     const onResize = () => { width = canvas.offsetWidth; };
@@ -44,31 +53,41 @@ export default function GloboColaboradores({ paises }: { paises: { pais: string;
     const ve = COORDS.VE;
     if (ve) markers.push({ location: ve, size: 0.12 });
 
-    const globe = createGlobe(canvas, {
-      devicePixelRatio: 2,
-      width: width * 2,
-      height: width * 2,
-      phi: PHI_VE,
-      theta: 0.2,
-      dark: 0,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 5,
-      baseColor: [0.82, 0.86, 0.95],
-      markerColor: [1, 0.82, 0.08], // amarillo de la bandera venezolana
-      glowColor: [0.92, 0.95, 1],
-      markers,
-      onRender: (state) => {
-        state.phi = phi;
-        phi += 0.004; // giro lento y continuo
-        state.width = width * 2;
-        state.height = width * 2;
-      },
-    });
+    let globe: ReturnType<typeof createGlobe>;
+    try {
+      globe = createGlobe(canvas, {
+        devicePixelRatio: 2,
+        width: width * 2,
+        height: width * 2,
+        phi: PHI_VE,
+        theta: 0.2,
+        dark: 0,
+        diffuse: 1.2,
+        mapSamples: 16000,
+        mapBrightness: 5,
+        baseColor: [0.82, 0.86, 0.95],
+        markerColor: [1, 0.82, 0.08], // amarillo de la bandera venezolana
+        glowColor: [0.92, 0.95, 1],
+        markers,
+        onRender: (state) => {
+          state.phi = phi;
+          phi += 0.004; // giro lento y continuo
+          state.width = width * 2;
+          state.height = width * 2;
+        },
+      });
+    } catch {
+      // Cualquier fallo de WebGL/cobe: ocultar el globo sin tumbar el panel.
+      setSinWebgl(true);
+      window.removeEventListener('resize', onResize);
+      return;
+    }
     const timer = setTimeout(() => setListo(true), 120);
-    return () => { globe.destroy(); clearTimeout(timer); window.removeEventListener('resize', onResize); };
+    return () => { try { globe.destroy(); } catch { /* nada */ } clearTimeout(timer); window.removeEventListener('resize', onResize); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paises]);
+
+  if (sinWebgl) return null; // sin WebGL: el panel funciona igual, solo sin el globo decorativo
 
   return (
     <div className="globo-wrap">
