@@ -978,9 +978,128 @@ begin;
   end $$;
 rollback;
 
+-- ══ Donaciones e Insumos: oportunidades de donación (0141) ══
+
+\echo '== Test 48: una oferta se crea SOLO como propia (Recopilación incluida) (0141) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000de01', 'recop@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true, nombre_completo = 'Recop'
+    where id = '00000000-0000-0000-0000-00000000de01';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de01')::text, true);
+  -- Propia: permitido (así Recopilación capta ofertas).
+  insert into public.oportunidades_donacion (organizacion, creado_por)
+    values ('_TEST_ONG_propia', '00000000-0000-0000-0000-00000000de01');
+  -- Ajena (creado_por != uid): la RLS lo niega.
+  do $$ begin
+    begin
+      insert into public.oportunidades_donacion (organizacion, creado_por)
+        values ('_TEST_ONG_ajena', '00000000-0000-0000-0000-0000000000aa');
+      raise exception 'FALLO: se creó una oferta a nombre de otra persona';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
+\echo '== Test 49: solo Logística cambia el estado de una oferta (0141) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000de11', 'reco2@test.local'),
+    ('00000000-0000-0000-0000-00000000de12', 'logi2@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de11';
+  update public.perfiles set rol = 'logistica',    roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de12';
+  insert into public.oportunidades_donacion (id, organizacion, creado_por)
+    values ('00000000-0000-0000-0000-00000000de1f', '_TEST_gestion', '00000000-0000-0000-0000-00000000de11');
+  -- Recopilación (creadora) NO gestiona: el UPDATE no ve la fila (0 filas).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de11')::text, true);
+  do $$ declare n int; begin
+    update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: Recopilación cambió el estado de una oferta (n=%)', n; end if;
+  end $$;
+  reset role;
+  -- Logística SÍ.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de12')::text, true);
+  do $$ declare e text; begin
+    update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+    select estado into e from public.oportunidades_donacion where id = '00000000-0000-0000-0000-00000000de1f';
+    if e is distinct from 'contactada' then raise exception 'FALLO: Logística no pudo avanzar el estado (%)', e; end if;
+  end $$;
+rollback;
+
+\echo '== Test 50: bitácora de oportunidad — autor = uid, y se lee (0141) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000de21', 'logi3@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de21';
+  insert into public.oportunidades_donacion (id, organizacion, creado_por)
+    values ('00000000-0000-0000-0000-00000000de2f', '_TEST_bitac', '00000000-0000-0000-0000-00000000de21');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de21')::text, true);
+  -- Nota a nombre de otro autor: negada.
+  do $$ begin
+    begin
+      insert into public.bitacora_oportunidad (oportunidad_id, autor_id, contenido)
+        values ('00000000-0000-0000-0000-00000000de2f', '00000000-0000-0000-0000-0000000000aa', 'x');
+      raise exception 'FALLO: se registró una nota a nombre de otro autor';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+  -- Propia: permitido y legible.
+  insert into public.bitacora_oportunidad (oportunidad_id, autor_id, contenido, canal, resultado)
+    values ('00000000-0000-0000-0000-00000000de2f', '00000000-0000-0000-0000-00000000de21', 'Llamé, interesados', 'llamada', 'positivo');
+  do $$ declare n int; begin
+    select count(*) into n from public.bitacora_oportunidad where oportunidad_id = '00000000-0000-0000-0000-00000000de2f';
+    if n < 1 then raise exception 'FALLO: no se pudo leer la bitácora propia'; end if;
+  end $$;
+rollback;
+
+\echo '== Test 51: al registrar una oferta se avisa a Logística (0141) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000de31', 'logi4@test.local'),
+    ('00000000-0000-0000-0000-00000000de32', 'reco4@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica',    roles_extra = '{}', verificado = true, nombre_completo = 'Logi4' where id = '00000000-0000-0000-0000-00000000de31';
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de32';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de32')::text, true);
+  insert into public.oportunidades_donacion (organizacion, creado_por)
+    values ('_TEST_aviso', '00000000-0000-0000-0000-00000000de32');
+  reset role;  -- las notificaciones son privadas del destinatario
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000de31' and tipo = 'oportunidad_donacion';
+    if n < 1 then raise exception 'FALLO: Logística no recibió aviso de la nueva oferta (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 52: conectar una oferta crea una donación ligada por oportunidad_id (0141) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000de41', 'logi5@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de41';
+  insert into public.oportunidades_donacion (id, organizacion, creado_por)
+    values ('00000000-0000-0000-0000-00000000de4f', '_TEST_conecta', '00000000-0000-0000-0000-00000000de41');
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado)
+    values ('00000000-0000-0000-0000-00000000de4e', '_TEST_sol_conecta', 'agua', 'media', 'solicitado');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de41')::text, true);
+  insert into public.donaciones (donante, tipo, estado, solicitud_id, oportunidad_id, creado_por)
+    values ('_TEST_conecta', 'especie', 'comprometida',
+            '00000000-0000-0000-0000-00000000de4e', '00000000-0000-0000-0000-00000000de4f', '00000000-0000-0000-0000-00000000de41');
+  update public.oportunidades_donacion set estado = 'comprometida' where id = '00000000-0000-0000-0000-00000000de4f';
+  do $$ declare n int; begin
+    select count(*) into n from public.donaciones
+      where oportunidad_id = '00000000-0000-0000-0000-00000000de4f' and solicitud_id = '00000000-0000-0000-0000-00000000de4e';
+    if n < 1 then raise exception 'FALLO: la donación conectada no quedó ligada a la oferta'; end if;
+  end $$;
+rollback;
+
 -- ══ Verificación: «Requiere información adicional» → aviso a Recopilación (0142) ══
 
-\echo '== Test 48: marcar «Requiere información adicional» avisa a quien reportó el caso (0142) =='
+\echo '== Test 53: marcar «Requiere información adicional» avisa a quien reportó el caso (0142) =='
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-00000000ef01', 'verif-ri@test.local'),

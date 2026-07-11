@@ -183,6 +183,44 @@ export interface Oportunidad {
 /** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
 export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';
 
+/**
+ * Donaciones e Insumos (0141): «oportunidad de donación» = la OFERTA (empresa /
+ * proyecto / persona que ofrece ayudar), un lead con pipeline de contacto. Es
+ * distinta de la `Oportunidad` de Captación (CRM de alianzas) — de ahí el sufijo
+ * «Oferta» para no colisionar con EstadoOportunidad/CategoriaOportunidad.
+ */
+export type TipoOferta = 'especie' | 'dinero' | 'servicio' | 'transporte' | 'otro';
+export type EstadoOferta = 'nueva' | 'contactada' | 'en_conversacion' | 'comprometida' | 'cumplida' | 'descartada';
+export type CanalContacto = 'llamada' | 'whatsapp' | 'correo' | 'reunion' | 'otro';
+export type ResultadoContacto = 'positivo' | 'pendiente' | 'sin_respuesta' | 'negativo';
+
+export interface OportunidadDonacion {
+  id: string;
+  organizacion: string;
+  contacto: string | null;
+  tipo_oferta: TipoOferta;
+  cubre_tipos: TipoInsumo[];        // tipos de insumo que puede cubrir (para sugerencias de emparejamiento)
+  descripcion: string | null;
+  monto_estimado: number | null;
+  ubicacion: string | null;
+  enlace: string | null;
+  estado: EstadoOferta;
+  asignado_a: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
+
+export interface BitacoraOportunidad {
+  id: string;
+  oportunidad_id: string;
+  autor_id: string | null;
+  contenido: string;
+  canal: CanalContacto | null;
+  resultado: ResultadoContacto | null;
+  creado_en: string;
+}
+
 export interface Caso {
   id: string;
   numero: number;

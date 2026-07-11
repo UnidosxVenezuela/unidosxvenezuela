@@ -30,7 +30,13 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   if (flags.acopio) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
   if (flags.acopio) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
-    enlaces.push({ href: '/insumos', etiqueta: 'Insumos', icono: 'camion' });
+    enlaces.push({ href: '/insumos', etiqueta: 'Donaciones e Insumos', icono: 'camion' });
+  }
+  // Oportunidades de donación (ofertas): Recopilación las capta sin ver toda la
+  // sección de Logística. Quien ya tiene «Donaciones e Insumos» las alcanza desde
+  // ahí (evita resaltar dos ítems por el prefijo /insumos compartido).
+  if (!flags.acopio && flags.gestionCasos) {
+    enlaces.push({ href: '/insumos/oportunidades', etiqueta: 'Oportunidades de donación', icono: 'corazon' });
   }
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });

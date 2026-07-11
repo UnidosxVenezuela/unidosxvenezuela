@@ -12,7 +12,7 @@ export default async function NuevaSolicitudPage() {
 
   return (
     <div>
-      <Link href="/insumos" className="muted">← Insumos</Link>
+      <Link href="/insumos" className="muted">← Donaciones e Insumos</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
           <h1>Nueva solicitud de insumo</h1>
