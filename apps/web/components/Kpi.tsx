@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Icono from './Icono';
+import NumeroAnimado from './NumeroAnimado';
 
 /**
  * Tarjeta KPI del panel: "icon tile" tintado + etiqueta + número grande + subtítulo.
@@ -13,7 +14,9 @@ export default function Kpi({ etiqueta, valor, sub, color = 'var(--texto)', icon
       <span className="kpi-ico" style={{ background: tinte, color }}><Icono nombre={icono} size={22} /></span>
       <div style={{ minWidth: 0 }}>
         <div style={{ color: 'var(--texto-suave)', fontWeight: 600, fontSize: '.88rem' }}>{etiqueta}</div>
-        <div style={{ fontSize: '1.9rem', fontWeight: 800, color, lineHeight: 1.1 }}>{valor}</div>
+        <div style={{ fontSize: '1.9rem', fontWeight: 800, color, lineHeight: 1.1 }}>
+          {typeof valor === 'number' ? <NumeroAnimado valor={valor} /> : valor}
+        </div>
         {sub && <div className="muted" style={{ fontSize: '.78rem' }}>{sub}</div>}
       </div>
     </div>
