@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
   ETIQUETA_TIPO_INSUMO, ETIQUETA_CANAL, CANALES, ETIQUETA_RESULTADO, claseResultadoOferta,
   ETIQUETA_ESTADO_DONACION, claseEstadoDonacion, ETIQUETA_PRIORIDAD, clasePrioridad, hrefSeguro,
+  ETIQUETA_ESTADO_VERIF, ESTADOS_VERIF, claseEstadoVerif,
 } from '@/lib/constantes';
 import { fechaHora, fechaCorta } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
@@ -16,7 +17,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import {
   cambiarEstadoOportunidad, asignarOportunidad, registrarContactoOportunidad,
-  eliminarContactoOportunidad, conectarConSolicitud, eliminarOportunidad,
+  eliminarContactoOportunidad, conectarConSolicitud, eliminarOportunidad, verificarOportunidad,
 } from '../actions';
 
 const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
@@ -25,16 +26,17 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   const { user, perfil } = await requireUsuario();
   if (!puedeRegistrarOportunidad(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
+  const esVerif = puedeVerificar(perfil);
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
 
   const { data: o } = await supabase.from('oportunidades_donacion')
-    .select('*, asignado:perfiles!oportunidades_donacion_asignado_a_fkey(nombre_completo), autor:perfiles!oportunidades_donacion_creado_por_fkey(nombre_completo)')
+    .select('*, asignado:perfiles!oportunidades_donacion_asignado_a_fkey(nombre_completo), autor:perfiles!oportunidades_donacion_creado_por_fkey(nombre_completo), verificador:perfiles!oportunidades_donacion_verificada_por_fkey(nombre_completo)')
     .eq('id', params.id).maybeSingle();
   if (!o) notFound();
   const oo = o as any;
-  // Recopilación solo ve las que registró; Logística ve todas.
-  if (!gestor && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
+  // Recopilación ve las que registró; Logística y Verificación ven todas.
+  if (!gestor && !esVerif && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
 
   const cubre = (oo.cubre_tipos ?? []) as string[];
   const link = hrefSeguro(oo.enlace);
@@ -81,6 +83,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
         <h1 style={{ margin: 0, gap: 8, flexWrap: 'wrap' }} className="fila">
           {oo.organizacion}
           <Pill tono={tonoDeClase(claseEstadoOferta(oo.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[oo.estado] ?? oo.estado}</Pill>
+          <Pill tono={tonoDeClase(claseEstadoVerif(oo.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[oo.estado_verificacion] ?? oo.estado_verificacion}</Pill>
         </h1>
       </div>
       <p className="muted sub">
@@ -212,6 +215,31 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
         </div>
 
         <aside className="grupo-aside">
+          {/* Verificación de la oferta: la revisa y marca el equipo de Verificación
+              (existencia, contacto, canales oficiales). No toca el pipeline de Logística. */}
+          <div className="tarjeta" style={{ borderColor: '#bfdbfe' }}>
+            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Verificación</h3>
+            <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+              <Pill tono={tonoDeClase(claseEstadoVerif(oo.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[oo.estado_verificacion] ?? oo.estado_verificacion}</Pill>
+              {oo.verificada_en && oo.verificador?.nombre_completo && <span className="muted" style={{ fontSize: '.8rem' }}>{nombreMostrado(oo.verificador.nombre_completo, esAdmin)} · {fechaCorta(oo.verificada_en)}</span>}
+            </div>
+            {oo.nota_verificacion && <p className="muted" style={{ margin: '8px 0 0', fontSize: '.85rem', whiteSpace: 'pre-wrap' }}>{oo.nota_verificacion}</p>}
+            {esVerif ? (
+              <form action={verificarOportunidad} style={{ marginTop: 10 }}>
+                <input type="hidden" name="id" value={id} />
+                <textarea name="nota" className="input" rows={2} placeholder="Nota de verificación (existencia, contacto, canales oficiales…)" defaultValue={oo.nota_verificacion ?? ''} maxLength={500} />
+                <div className="fila" style={{ gap: 6, marginTop: 8, alignItems: 'center' }}>
+                  <select name="estado" className="input" defaultValue={oo.estado_verificacion} style={{ width: 'auto' }}>
+                    {ESTADOS_VERIF.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_VERIF[e]}</option>)}
+                  </select>
+                  <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={15} /> Guardar</BotonEnviar>
+                </div>
+              </form>
+            ) : (
+              <p className="muted" style={{ margin: '8px 0 0', fontSize: '.82rem' }}>La revisa el equipo de Verificación.</p>
+            )}
+          </div>
+
           {gestor ? (
             <>
               {/* Estado del pipeline */}

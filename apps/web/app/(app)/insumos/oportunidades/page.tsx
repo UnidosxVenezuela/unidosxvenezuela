@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
   ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_ESTADO_DONACION, ESTADOS_DONACION,
+  ETIQUETA_ESTADO_VERIF, claseEstadoVerif,
 } from '@/lib/constantes';
 import { fechaCorta } from '@/lib/fechas';
 import Icono from '@/components/Icono';
@@ -23,13 +24,15 @@ export default async function OportunidadesPage() {
   const { user, perfil } = await requireUsuario();
   if (!puedeRegistrarOportunidad(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
+  const esVerif = puedeVerificar(perfil);
+  const verTablero = gestor || esVerif;  // Logística y Verificación ven todo el tablero
   const supabase = await createClient();
 
-  // Logística ve todas; Recopilación ve solo las que registró.
+  // Logística/Verificación ven todas; Recopilación ve solo las que registró.
   let query = supabase.from('oportunidades_donacion')
-    .select('id, organizacion, tipo_oferta, cubre_tipos, estado, monto_estimado, ubicacion, creado_en')
+    .select('id, organizacion, tipo_oferta, cubre_tipos, estado, estado_verificacion, monto_estimado, ubicacion, creado_en')
     .order('creado_en', { ascending: false });
-  if (!gestor) query = query.eq('creado_por', user.id);
+  if (!verTablero) query = query.eq('creado_por', user.id);
   const { data } = await query;
   const ops = (data ?? []) as any[];
   const activas = ops.filter((o) => o.estado !== 'descartada');
@@ -104,7 +107,7 @@ export default async function OportunidadesPage() {
           titulo="Aún no hay oportunidades"
           texto="Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes."
         />
-      ) : gestor ? (
+      ) : verTablero ? (
         <>
           <ResaltarNuevos>
             <div className="tablero-insumos" style={{ marginTop: 16 }}>
@@ -143,13 +146,16 @@ export default async function OportunidadesPage() {
                   <td><Link href={'/insumos/oportunidades/' + o.id}><strong>{o.organizacion}</strong></Link>
                     <div className="muted" style={{ fontSize: '.8rem' }}>{fechaCorta(o.creado_en)}</div></td>
                   <td className="muted">{ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta}</td>
-                  <td><Pill tono={tonoDeClase(claseEstadoOferta(o.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}</Pill></td>
+                  <td>
+                    <Pill tono={tonoDeClase(claseEstadoOferta(o.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}</Pill>
+                    <div style={{ marginTop: 4 }}><Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill></div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table></div>
           <p className="muted" style={{ fontSize: '.82rem', marginTop: 10, marginBottom: 0 }}>
-            El equipo de Logística se encarga de contactar y emparejar cada oferta con las solicitudes.
+            El equipo de Logística contacta y empareja cada oferta; el de Verificación la verifica.
           </p>
         </div>
       )}
@@ -208,6 +214,7 @@ function TarjetaOferta({ o }: { o: any }) {
         {o.tipo_oferta === 'dinero' && o.monto_estimado != null && <span className="muted" style={{ fontSize: '.8rem' }}>≈ {o.monto_estimado}</span>}
       </div>
       <strong style={{ display: 'block', margin: '6px 0 2px' }}>{o.organizacion}</strong>
+      <Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill>
       {(o.cubre_tipos ?? []).length > 0 && (
         <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
           {(o.cubre_tipos as string[]).map((t) => <span key={t} className="insignia" style={{ fontSize: '.72rem' }}>{ETIQUETA_TIPO_INSUMO[t] ?? t}</span>)}

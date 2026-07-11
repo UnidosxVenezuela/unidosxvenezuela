@@ -338,6 +338,16 @@ export function claseResultadoOferta(e: string): string {
   if (e === 'negativo') return 'critica';
   return '';
 }
+// Resultado de verificación de una oferta (lo fija el equipo de Verificación, 0144).
+export const ETIQUETA_ESTADO_VERIF: Record<string, string> = {
+  pendiente: 'Pendiente de verificar', verificada: 'Verificada', observada: 'Observada',
+};
+export const ESTADOS_VERIF = ['verificada', 'observada', 'pendiente'];
+export function claseEstadoVerif(e: string): string {
+  if (e === 'verificada') return 'ok';
+  if (e === 'observada') return 'critica';
+  return 'aviso';
+}
 
 // Roles de la "cadena de contenido" (de la información a la publicación). Los
 // coordinadores y líderes pueden asignarlos como roles ADICIONALES a voluntarios
