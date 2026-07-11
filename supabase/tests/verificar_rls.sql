@@ -1097,4 +1097,28 @@ begin;
   end $$;
 rollback;
 
+-- ══ Verificación: «Requiere información adicional» → aviso a Recopilación (0142) ══
+
+\echo '== Test 53: marcar «Requiere información adicional» avisa a quien reportó el caso (0142) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000ef01', 'verif-ri@test.local'),
+    ('00000000-0000-0000-0000-00000000ef02', 'recop-ri@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true, nombre_completo = 'Verif-RI'
+    where id = '00000000-0000-0000-0000-00000000ef01';
+  update public.perfiles set nombre_completo = 'Recop-RI', verificado = true where id = '00000000-0000-0000-0000-00000000ef02';
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000ef03', '_TEST_requiere_info', 'Otras informaciones', 'en_proceso', '00000000-0000-0000-0000-00000000ef02');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000ef01')::text, true);
+  update public.casos set info_requerida = 'Falta el contacto y la ubicación', estado = 'en_proceso', asignado_a = null
+    where id = '00000000-0000-0000-0000-00000000ef03';
+  reset role;  -- la notificación es privada del destinatario
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000ef02' and tipo = 'caso_requiere_info';
+    if n < 1 then raise exception 'FALLO: Recopilación no recibió el aviso de «requiere info» (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

@@ -7,7 +7,7 @@ import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
-import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica } from './actions';
+import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -35,6 +35,18 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   const avatares = new Map<string, string | null>((perfiles ?? []).map((p: any) => [p.id, p.avatar_url]));
   const waFuente = hrefSeguro(caso.fuente_url);
   const etiquetaEstado = (e?: string) => (e ? (ETIQUETA_ESTADO_CASO[e as keyof typeof ETIQUETA_ESTADO_CASO] ?? e) : '');
+
+  // Checklist de «datos mínimos» del procedimiento de Verificación: ✓ presente / ⚠ falta.
+  // Para las solicitudes de ayuda se suman ubicación y tipo de necesidad.
+  const chkItems: [string, boolean][] = [
+    ['Descripción clara', !!caso.descripcion],
+    ['Fuente identificable', !!(caso.fuente || caso.fuente_url)],
+    ['Fecha de la información', !!caso.fecha_publicacion],
+    ['Contacto / referente', !!caso.contacto],
+    ...(caso.es_requerimiento
+      ? ([['Ubicación en el mapa', caso.lat != null && caso.lng != null], ['Tipo de necesidad', !!caso.req_tipo]] as [string, boolean][])
+      : []),
+  ];
 
   // Texto largo para la línea de tiempo del historial.
   const describir = (accion: string, meta: any) => {
@@ -96,6 +108,19 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
         <Link href={cerrarHref} className="btn" style={{ minHeight: 34, padding: '4px 10px' }} aria-label="Cerrar">✕</Link>
       </div>
+
+      {caso.info_requerida && (
+        <div className="tarjeta" style={{ marginTop: 12, background: '#fffbeb', borderColor: '#fde68a' }}>
+          <div className="fila" style={{ gap: 8, alignItems: 'flex-start' }}>
+            <Icono nombre="avisos" size={18} />
+            <div>
+              <strong>Requiere información adicional</strong>
+              <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>{caso.info_requerida}</p>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: '.82rem' }}>Devuelta a quien la reportó (Recopilación) para completarla. Al corregir los datos, el aviso se retira.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <p style={{ marginTop: 0 }}>{caso.descripcion || <span className="muted">Sin descripción</span>}</p>
@@ -196,6 +221,26 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       )}
       {puedeEditar && caso.estado !== 'enviado_redaccion' ? (
         <>
+          {/* Checklist de verificación (procedimiento del equipo): ¿es real, vigente y
+              está completa? Los «datos mínimos» se marcan según los campos presentes. */}
+          <div className="tarjeta">
+            <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Checklist de verificación</h3>
+            <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>¿Es <strong>real</strong>, <strong>vigente</strong> y está <strong>completa</strong>? Si falta algo, usa «Requiere información adicional» en vez de descartar.</p>
+            <div className="leyenda">
+              {chkItems.map(([et, ok]) => (
+                <div key={et} className="leyenda-fila">
+                  <Icono nombre={ok ? 'ok' : 'avisos'} size={15} />
+                  <span className={ok ? undefined : 'muted'}>{et}{ok ? '' : ' — falta'}</span>
+                </div>
+              ))}
+            </div>
+            <p className="muted" style={{ margin: '8px 0 0', fontSize: '.8rem' }}>
+              {caso.es_requerimiento
+                ? 'Solicitud de ayuda: confirma quién solicita, qué necesita, la ubicación, el contacto y que la necesidad siga vigente.'
+                : 'Información: confirma la fuente, que los datos sean suficientes y que siga vigente antes de confirmar.'}
+            </p>
+          </div>
+
           {/* Decisión del verificador: confirmar o descartar, bien visibles. El cambio
               de estado libre queda como opción avanzada. */}
           <div className="tarjeta">
@@ -210,8 +255,22 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
                 </button>
               </form>
             )}
+            {/* Requiere información adicional: devuelve el caso a Recopilación con el
+                motivo (no lo descarta). Avisa a quien lo reportó (trigger 0142). */}
+            <form action={requerirInfoCaso} style={{ marginTop: 12 }}>
+              <input type="hidden" name="caso_id" value={caso.id} />
+              <input type="hidden" name="volver" value={volver} />
+              <label className="muted" style={{ fontSize: '.85rem' }}>¿Falta un dato o hay contradicciones? Devuélvela a Recopilación indicando qué completar:</label>
+              <textarea name="motivo" className="input" rows={2} required maxLength={500}
+                placeholder="Qué información falta (contacto, ubicación, vigencia…)" style={{ marginTop: 4 }} />
+              <BotonConfirmar
+                mensaje={'¿Devolver esta solicitud a Recopilación como «Requiere información adicional»? Se avisará a quien la reportó con el motivo.'}
+                className="btn" style={{ width: '100%', marginTop: 6 }}>
+                <Icono nombre="avisos" size={15} /> Requiere información adicional
+              </BotonConfirmar>
+            </form>
             {caso.estado !== 'falso' && (
-              <form action={descartarCaso} style={{ marginTop: caso.estado !== 'confirmado' ? 12 : 0 }}>
+              <form action={descartarCaso} style={{ marginTop: 12 }}>
                 <input type="hidden" name="caso_id" value={caso.id} />
                 <input type="hidden" name="volver" value={volver} />
                 <label className="muted" style={{ fontSize: '.85rem' }}>¿Es falso, antiguo o duplicado? Descártalo indicando el motivo:</label>

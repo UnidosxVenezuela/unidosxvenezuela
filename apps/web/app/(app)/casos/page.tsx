@@ -23,7 +23,7 @@ import FiltroSelect from '@/components/FiltroSelect';
 import { nombreMostrado } from '@/lib/nombre';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, actualizado_en';
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -140,7 +140,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, estado, notas, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
       supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', searchParams.caso).maybeSingle(),
@@ -256,7 +256,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   </td>
                   <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
                   <td>{(() => { const h = hrefSeguro(c.fuente_url); return h ? <a href={h} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—'); })()}</td>
-                  <td><EstadoCaso estado={c.estado} /></td>
+                  <td>
+                    <EstadoCaso estado={c.estado} />
+                    {c.info_requerida && <div style={{ marginTop: 4 }}><Pill tono="aviso" punto={false}>Requiere info</Pill></div>}
+                  </td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                 </tr>
               ))}
