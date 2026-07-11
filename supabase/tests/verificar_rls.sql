@@ -1121,4 +1121,68 @@ begin;
   end $$;
 rollback;
 
+-- ══ Supervisión de Recopilación: líderes/coordinadores ven el área (0143) ══
+
+\echo '== Test 54: el LÍDER de Recopilación supervisa las solicitudes del equipo (0143) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000fa01', 'lidrec@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}', verificado = true where id = '00000000-0000-0000-0000-00000000fa01';
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values ('00000000-0000-0000-0000-00000000fa01', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
+  update public.grupos set lider_id = '00000000-0000-0000-0000-00000000fa01' where clave = 'gestion_casos';
+  -- Una solicitud de «Otras informaciones» creada por otra persona (no el líder).
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000fa0c', '_TEST_sol_equipo', 'Otras informaciones', 'en_proceso', null);
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fa01')::text, true);
+  do $$ declare n int; begin
+    if not public.es_mando_recopilacion() then raise exception 'FALLO: el líder no resultó es_mando_recopilacion()'; end if;
+    select count(*) into n from public.casos where id = '00000000-0000-0000-0000-00000000fa0c';
+    if n <> 1 then raise exception 'FALLO: el líder de Recopilación no ve la solicitud del equipo (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 55: el COORDINADOR de Recopilación también supervisa (0143) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000fa11', 'coordrec@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}', verificado = true where id = '00000000-0000-0000-0000-00000000fa11';
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values ('00000000-0000-0000-0000-00000000fa11', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
+  do $$ declare gid uuid; begin
+    select id into gid from public.grupos where clave = 'gestion_casos' limit 1;
+    insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+      values (gid, '00000000-0000-0000-0000-00000000fa11', 'coordinador')
+      on conflict (grupo_id, perfil_id) do update set rol_en_grupo = 'coordinador';
+  end $$;
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000fa1c', '_TEST_sol_coord', 'Otras informaciones', 'pendiente', null);
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fa11')::text, true);
+  do $$ declare n int; begin
+    if not public.es_mando_recopilacion() then raise exception 'FALLO: el coordinador no resultó es_mando_recopilacion()'; end if;
+    select count(*) into n from public.casos where id = '00000000-0000-0000-0000-00000000fa1c';
+    if n <> 1 then raise exception 'FALLO: el coordinador de Recopilación no ve la solicitud del equipo (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 56: un recopilador SIN mando NO ve solicitudes ajenas (0143) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000fb01', 'rec-plain@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{recopilacion}', verificado = true where id = '00000000-0000-0000-0000-00000000fb01';
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values ('00000000-0000-0000-0000-00000000fb01', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000fb0c', '_TEST_ajena', 'Otras informaciones', 'en_proceso', null);
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fb01')::text, true);
+  do $$ declare n int; begin
+    if public.es_mando_recopilacion() then raise exception 'FALLO: un recopilador sin liderazgo resultó mando'; end if;
+    select count(*) into n from public.casos where id = '00000000-0000-0000-0000-00000000fb0c';
+    if n <> 0 then raise exception 'FALLO: un recopilador sin mando vio una solicitud ajena (n=%)', n; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
