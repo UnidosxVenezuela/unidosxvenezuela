@@ -136,6 +136,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     const s = p.toString();
     return '/casos' + (s ? '?' + s : '');
   };
+  // El paso «Envío a Redacción» del flujo enlaza a esa sección solo para quien puede
+  // entrar (admin/redacción); el resto (Recopilación, Verificación) va a la lista de
+  // solicitudes ya enviadas, para no caer en una redirección.
+  if (!esAdmin && !rolesU.includes('redaccion')) {
+    const ultimo = pasos[pasos.length - 1];
+    if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
+  }
 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
@@ -164,15 +171,20 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </div>
       </div>
 
-      {verifica && <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
+      {/* Tarjetas de resumen: se muestran a TODOS los que acceden (Recopilación
+          incluida). Los conteos son RLS-scoped, así que cada quien ve los suyos:
+          un recopilador ve sus solicitudes; un mando/admin ve las del área. */}
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Total de solicitudes" valor={total.count ?? 0} sub={soloBusqueda ? 'Desaparecidos' : 'Todos los registros'} color="var(--azul)" icono="documento" tinte="#eef2ff" href={kpiHref()} />
         <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href={kpiHref('pendiente')} />
         <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href={kpiHref('en_proceso')} />
         <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href={kpiHref('confirmado,enviado_redaccion')} />
         <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href={kpiHref('falso,resuelto')} />
-      </div>}
+      </div>
 
-      {esAdministrador(perfil) && <>
+      {/* Tira del flujo: para todos menos quien solo ve Desaparecidos (esos tienen su
+          propio flujo en /busqueda). Los conteos también son RLS-scoped. */}
+      {!soloBusqueda && <>
       <p className="muted" style={{ margin: '0 0 6px', fontWeight: 600 }}>El flujo · toca una etapa para abrirla</p>
       <FlujoTrabajo pasos={pasos} />
       </>}
