@@ -210,6 +210,14 @@ export function puedeLogistica(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']);
 }
 
+// ¿Puede REGISTRAR una oportunidad de donación (oferta)? Logística (que las
+// gestiona) y Recopilación (que capta ofertas, no solo solicitudes). Gatea el alta
+// y la ruta /insumos/oportunidades sin abrir toda la sección de Logística (0141).
+// La RLS es la fuente de verdad: cualquier verificado puede crear la SUYA.
+export function puedeRegistrarOportunidad(e?: EntradaRoles) {
+  return puedeLogistica(e) || puedeRecopilar(e);
+}
+
 // Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige
 // por admin/coordinación general: solo el equipo psicosocial entra al módulo.
 export function puedePsicosocial(e?: EntradaRoles) {

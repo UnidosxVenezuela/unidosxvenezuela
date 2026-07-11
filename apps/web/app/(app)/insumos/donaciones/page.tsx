@@ -22,7 +22,7 @@ export default async function DonacionesPage() {
 
   return (
     <div>
-      <Link href="/insumos" className="muted">← Insumos</Link>
+      <Link href="/insumos" className="muted">← Donaciones e Insumos</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div><h1>Donaciones</h1><p className="muted sub">Registra donaciones (dinero o especie) y síguelas hasta asignarlas a una solicitud.</p></div>
       </div>
