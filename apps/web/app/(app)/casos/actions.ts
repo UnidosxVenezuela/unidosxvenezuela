@@ -159,7 +159,7 @@ export async function cambiarEstadoCaso(formData: FormData) {
   const estado = txt(formData.get('estado')) as EstadoCaso;
   if (estado === 'enviado_redaccion') throw new Error('El paso a Redacción lo hace el equipo de Envío a Redacción.');
   const { error } = await supabase.from('casos')
-    .update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
+    .update({ estado, info_requerida: null, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
   redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
@@ -177,10 +177,32 @@ export async function descartarCaso(formData: FormData) {
   const sello = `[Descartado ${new Date().toISOString().slice(0, 10)}] ${motivo}`;
   const notas = ((actual as { notas?: string | null } | null)?.notas ? (actual as any).notas + '\n' : '') + sello;
   const { error } = await supabase.from('casos')
-    .update({ estado: 'falso', notas, actualizado_en: new Date().toISOString() }).eq('id', id);
+    .update({ estado: 'falso', notas, info_requerida: null, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) return redirigirError(volver, 'No se pudo descartar la solicitud: ' + error.message);
   revalidatePath('/casos');
   redirigirOk(volver, 'Solicitud descartada. Quedó registrado el motivo.');
+}
+
+// «Requiere información adicional» (procedimiento del equipo de Verificación): el
+// caso NO se descarta; vuelve a Recopilación para que lo complete. Guarda el motivo
+// en info_requerida (el trigger 0142 avisa a quien lo reportó), lo deja en_proceso y
+// libera la asignación para que el área anterior lo retome. El motivo queda anexado
+// a las notas para dejar constancia.
+export async function requerirInfoCaso(formData: FormData) {
+  const { supabase } = await exigirCasos(true);
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const motivo = txt(formData.get('motivo')).slice(0, 500);
+  if (!motivo) return redirigirError(volver, 'Indica qué información falta para poder verificar.');
+  const { data: actual } = await supabase.from('casos').select('notas').eq('id', id).single();
+  const sello = `[Requiere info ${new Date().toISOString().slice(0, 10)}] ${motivo}`;
+  const notas = ((actual as { notas?: string | null } | null)?.notas ? (actual as any).notas + '\n' : '') + sello;
+  const { error } = await supabase.from('casos')
+    .update({ estado: 'en_proceso', info_requerida: motivo, asignado_a: null, notas, actualizado_en: new Date().toISOString() })
+    .eq('id', id);
+  if (error) return redirigirError(volver, 'No se pudo devolver la solicitud: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk(volver, 'Devuelta a Recopilación. Se avisó a quien la reportó con el motivo.');
 }
 
 // «Tomar» un caso para trabajarlo (se lo asigna a sí mismo). Pensado para el
@@ -261,6 +283,8 @@ export async function editarCaso(formData: FormData) {
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     contacto: opt(formData.get('contacto')),
+    // Al corregir/completar los datos se limpia el aviso «Requiere información adicional».
+    info_requerida: null,
     actualizado_en: new Date().toISOString(),
     // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
     ...datosRequerimiento(formData, categoria),

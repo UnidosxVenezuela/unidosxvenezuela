@@ -47,9 +47,20 @@ export default async function AyudaPage() {
 
       {f.verificacion && (
         <S icono="ok" titulo="Verificación (tu función)">
-          <li>Verificas las solicitudes de <strong>«Otras informaciones»</strong> (los <em>desaparecidos</em> los atiende el Grupo de Búsqueda): decides <strong>Confirmado y activo</strong> si es verídico, o <strong>Falso / resuelto</strong> si no procede.</li>
-          <li>Abre cada solicitud para ver su descripción, fuente, adjuntos y dejar <strong>notas</strong>.</li>
-          <li>Los confirmados pasan al equipo de <strong>Envío a Redacción</strong> (tú no los envías).</li>
+          <li>Tu misión: revisar que la información sea <strong>real, vigente y completa</strong> antes de que avance. La pregunta clave de cada caso es: <strong>¿es real? ¿es vigente? ¿está completa?</strong> Si alguna respuesta es <strong>no</strong>, no continúa.</li>
+          <li><strong>Toma una solicitud a la vez.</strong> Ábrela y usa el <strong>checklist de verificación</strong> del detalle (datos mínimos: descripción, fuente, fecha, contacto y —si es solicitud de ayuda— ubicación y tipo de necesidad).</li>
+          <li>Tienes <strong>tres resultados</strong>:
+            <ul>
+              <li>🟢 <strong>Confirmar</strong> (validada): es verídica, vigente y completa. Pasa al equipo de <strong>Envío a Redacción</strong> (tú no la envías).</li>
+              <li>🟡 <strong>Requiere información adicional</strong>: le falta un dato o hay contradicciones. <strong>No la descartes</strong>: escribe qué falta y se <strong>devuelve a Recopilación</strong> (se avisa a quien la reportó). Cuando completen los datos, el aviso se retira solo.</li>
+              <li>🔴 <strong>Descartar</strong> (falso / no verificable / vencida): indica el motivo; queda registrado y sale del flujo.</li>
+            </ul>
+          </li>
+          <li><strong>Rutina:</strong> lee completa la solicitud, revisa la <strong>fecha</strong>, identifica la <strong>fuente</strong>, revisa el <strong>contacto</strong> y la <strong>ubicación</strong>, confirma que la necesidad <strong>siga vigente</strong> y busca <strong>evidencia</strong> (publicación reciente, confirmación, red oficial).</li>
+          <li><strong>Contacto formal:</strong> si necesitas contactar a una persona u organización, <strong>no lo hagas desde tu perfil personal</strong>: avísale a la coordinación, que define el canal oficial; redacta el texto y compártelo con ella.</li>
+          <li><strong>Ante dudas, no decidas sola:</strong> el circuito es <strong>Verificadora → Coordinadora → líder</strong>. Consulta siempre que haya datos <strong>sensibles</strong>, información <strong>contradictoria</strong>, posible <strong>duplicado</strong>, algo <strong>urgente</strong> o cualquier caso fuera del procedimiento.</li>
+          <li><strong>Qué NO hacer:</strong> no publiques información, no compartas datos ni capturas fuera del equipo, no prometas ayuda, no marques como validada una solicitud incompleta y no cierres casos dudosos sin consultar.</li>
+          <li>Recuerda: verificas <strong>«Otras informaciones»</strong>; los <em>desaparecidos</em> los atiende el Grupo de Búsqueda.</li>
         </S>
       )}
 
