@@ -1,6 +1,6 @@
 'use client';
 import { useLayoutEffect, useRef } from 'react';
-import anime from 'animejs';
+import { animate, stagger } from 'animejs';
 
 /** Anima la entrada (fade + slide) de los elementos `selector` dentro del panel. */
 export default function AnimarEntrada({
@@ -20,13 +20,13 @@ export default function AnimarEntrada({
     // Estado inicial antes de pintar → sin parpadeo.
     targets.forEach((t) => { t.style.opacity = '0'; });
     try {
-      anime({
-        targets,
+      // anime.js v4: API modular (`animate` + `stagger` con nombre; `ease` en vez de `easing`).
+      animate(targets, {
         opacity: [0, 1],
         translateY: [14, 0],
-        delay: anime.stagger(55),
+        delay: stagger(55),
         duration: 480,
-        easing: 'easeOutCubic',
+        ease: 'outCubic',
       });
     } catch {
       // Si la animación falla, nunca dejamos las tarjetas invisibles.
