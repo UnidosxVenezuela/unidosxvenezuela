@@ -4,7 +4,7 @@ import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad } from '@/lib
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
-  ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO,
+  ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_ESTADO_DONACION, ESTADOS_DONACION,
 } from '@/lib/constantes';
 import { fechaCorta } from '@/lib/fechas';
 import Icono from '@/components/Icono';
@@ -13,9 +13,11 @@ import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonEnviar from '@/components/BotonEnviar';
+import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import ResaltarNuevos from '@/components/ResaltarNuevos';
 import { crearOportunidad } from './actions';
+import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 
 export default async function OportunidadesPage() {
   const { user, perfil } = await requireUsuario();
@@ -33,6 +35,16 @@ export default async function OportunidadesPage() {
   const activas = ops.filter((o) => o.estado !== 'descartada');
   const descartadas = ops.filter((o) => o.estado === 'descartada');
   const porEstado = (e: string) => activas.filter((o) => o.estado === e);
+
+  // Donaciones concretadas (solo Logística): se crean al conectar una oferta con una
+  // solicitud; aquí se les da seguimiento (estado) y se pueden borrar.
+  let donaciones: any[] = [];
+  if (gestor) {
+    const { data: dons } = await supabase.from('donaciones')
+      .select('id, donante, tipo, descripcion, monto, estado, solicitudes_insumo(titulo)')
+      .order('creado_en', { ascending: false });
+    donaciones = (dons ?? []) as any[];
+  }
 
   return (
     <AnimarEntrada>
@@ -140,6 +152,49 @@ export default async function OportunidadesPage() {
             El equipo de Logística se encarga de contactar y emparejar cada oferta con las solicitudes.
           </p>
         </div>
+      )}
+
+      {/* Donaciones concretadas (Logística): se crean al «Conectar» una oferta con una
+          solicitud desde el detalle. Aquí se les sigue el estado y se pueden borrar. */}
+      {gestor && (
+        <details className="tarjeta" style={{ marginTop: 20 }} open={donaciones.length > 0}>
+          <summary className="fila" style={{ gap: 6, cursor: 'pointer', fontWeight: 600 }}>
+            <Icono nombre="corazon" size={16} /> Donaciones concretadas ({donaciones.length})
+          </summary>
+          {donaciones.length === 0 ? (
+            <p className="muted" style={{ margin: '10px 0 0', fontSize: '.85rem' }}>
+              Aún no hay donaciones. Se crean al <strong>conectar</strong> una oferta con una solicitud desde el detalle de una oportunidad.
+            </p>
+          ) : (
+            <div className="tabla-scroll" style={{ marginTop: 10 }}><table>
+              <thead><tr><th>Donante</th><th>Aporte</th><th>Para</th><th>Estado</th><th></th></tr></thead>
+              <tbody>
+                {donaciones.map((d) => (
+                  <tr key={d.id}>
+                    <td><strong>{d.donante}</strong><div className="muted" style={{ fontSize: '.8rem' }}>{d.tipo === 'dinero' ? 'Dinero' : 'Especie'}</div></td>
+                    <td>{d.tipo === 'dinero' && d.monto != null ? d.monto : (d.descripcion || '—')}</td>
+                    <td className="muted">{d.solicitudes_insumo?.titulo || '—'}</td>
+                    <td>
+                      <form action={cambiarEstadoDonacion} className="fila" style={{ gap: 4, flexWrap: 'nowrap' }}>
+                        <input type="hidden" name="id" value={d.id} />
+                        <select name="estado" defaultValue={d.estado} className="input" style={{ minHeight: 30, padding: '2px 6px', width: 'auto' }}>
+                          {ESTADOS_DONACION.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_DONACION[e] ?? e}</option>)}
+                        </select>
+                        <button className="btn" style={{ minHeight: 30, padding: '2px 8px' }}>OK</button>
+                      </form>
+                    </td>
+                    <td>
+                      <form action={eliminarDonacion}>
+                        <input type="hidden" name="id" value={d.id} />
+                        <BotonConfirmar mensaje="¿Eliminar esta donación?" className="btn btn-peligro" style={{ minHeight: 30, padding: '2px 8px' }}><Icono nombre="basura" size={14} /></BotonConfirmar>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table></div>
+          )}
+        </details>
       )}
     </AnimarEntrada>
   );

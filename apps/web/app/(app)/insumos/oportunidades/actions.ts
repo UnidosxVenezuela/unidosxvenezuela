@@ -157,7 +157,7 @@ export async function conectarConSolicitud(formData: FormData) {
   await supabase.from('oportunidades_donacion')
     .update({ estado: 'comprometida', actualizado_en: new Date().toISOString() }).eq('id', oportunidad_id);
   revalidatePath('/insumos/oportunidades/' + oportunidad_id);
-  revalidatePath('/insumos/donaciones');
+  revalidatePath('/insumos/oportunidades');
   redirigirOk('/insumos/oportunidades/' + oportunidad_id, 'Donación conectada a la solicitud. 💛');
 }
 
