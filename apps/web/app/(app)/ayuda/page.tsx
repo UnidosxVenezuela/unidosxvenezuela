@@ -33,15 +33,18 @@ export default async function AyudaPage() {
         <li><strong>Panel:</strong> tu inicio, con accesos a tus funciones y tu resumen.</li>
         <li><strong>Grupos:</strong> tu equipo. Ahí están las <strong>tareas</strong>, los <strong>anuncios fijados</strong>, las reuniones y la pizarra de tu grupo. A los grupos te agrega la administración o el líder.</li>
         <li><strong>Mis horas:</strong> registra tu tiempo de voluntariado; suma al total de la comunidad.</li>
-        <li><strong>Avisos:</strong> la campana te avisa de asignaciones y novedades.</li>
+        <li><strong>Avisos:</strong> la campana te avisa de asignaciones y novedades. Puedes recibirlos también por <strong>notificaciones del navegador</strong> y <strong>Telegram</strong> (vincúlalo con el botón «Telegram» de la barra superior).</li>
         <li><strong>Mi perfil:</strong> tu foto, WhatsApp y habilidades (menú de arriba a la derecha).</li>
       </S>
 
       {f.gestionCasos && !f.verificacion && (
-        <S icono="documento" titulo="Gestión de solicitudes (tu función)">
-          <li>Con <strong>«Reportar una solicitud»</strong> registras la información que llega: título, categoría (<em>Desaparecidos</em> u <em>Otras informaciones</em>), fuente, fecha y <strong>archivos de respaldo</strong>.</li>
-          <li>En <strong>Gestión de solicitudes</strong> ves <strong>solo tus solicitudes</strong> y su estado. El equipo de Verificación decide si se confirman.</li>
-          <li>Sé prudente con los datos sensibles: escribe solo lo necesario.</li>
+        <S icono="documento" titulo="Recopilación · Solicitudes (tu función)">
+          <li>Con <strong>«Nueva solicitud»</strong> conviertes lo que llega en una <strong>solicitud con ubicación</strong>: título, descripción, fuente, fecha, <strong>contacto</strong>, el <strong>pin en el mapa</strong> y <strong>archivos de respaldo</strong>. Toda información entra así (ya no se clasifica el tipo).</li>
+          <li>Ves <strong>tus solicitudes</strong> y su estado; los <strong>líderes y coordinadores</strong> del grupo ven el tablero de <strong>todo el equipo</strong>. El equipo de <strong>Verificación</strong> decide si se confirman.</li>
+          <li><strong>Marca puntos del mapa:</strong> si la solicitud es un <strong>albergue, hospital o centro de acopio</strong> (fijo o temporal), márcalo en el bloque de ubicación. Al <strong>verificarse</strong>, se crea automáticamente su <strong>centro en el mapa</strong> para Logística.</li>
+          <li>También captas <strong>oportunidades de donación</strong> (ofertas de quien quiere ayudar) desde su sección.</li>
+          <li>Si Verificación te devuelve una solicitud como <strong>«Requiere información»</strong>, complétala y vuelve a enviarla (el aviso se retira solo).</li>
+          <li>Sé prudente con los datos sensibles: escribe solo lo necesario. Necesitas tu <strong>2ª verificación de identidad</strong> aprobada.</li>
         </S>
       )}
 
@@ -56,11 +59,21 @@ export default async function AyudaPage() {
               <li>🔴 <strong>Descartar</strong> (falso / no verificable / vencida): indica el motivo; queda registrado y sale del flujo.</li>
             </ul>
           </li>
+          <li><strong>También verificas las oportunidades de donación:</strong> en <strong>«Oportunidades de donación»</strong> marca cada oferta como <strong>Verificada</strong> (real y seria) u <strong>Observada</strong> (con una nota de lo que falta). No gestionas su contacto: eso es de Logística.</li>
+          <li><strong>Solicitudes que son un punto del mapa:</strong> si Recopilación la marcó como albergue/hospital/centro de acopio, al <strong>confirmarla</strong> se crea automáticamente su <strong>centro en el mapa</strong>. Confírmala solo si el lugar es real y está bien ubicado.</li>
           <li><strong>Rutina:</strong> lee completa la solicitud, revisa la <strong>fecha</strong>, identifica la <strong>fuente</strong>, revisa el <strong>contacto</strong> y la <strong>ubicación</strong>, confirma que la necesidad <strong>siga vigente</strong> y busca <strong>evidencia</strong> (publicación reciente, confirmación, red oficial).</li>
           <li><strong>Contacto formal:</strong> si necesitas contactar a una persona u organización, <strong>no lo hagas desde tu perfil personal</strong>: avísale a la coordinación, que define el canal oficial; redacta el texto y compártelo con ella.</li>
           <li><strong>Ante dudas, no decidas sola:</strong> el circuito es <strong>Verificadora → Coordinadora → líder</strong>. Consulta siempre que haya datos <strong>sensibles</strong>, información <strong>contradictoria</strong>, posible <strong>duplicado</strong>, algo <strong>urgente</strong> o cualquier caso fuera del procedimiento.</li>
           <li><strong>Qué NO hacer:</strong> no publiques información, no compartas datos ni capturas fuera del equipo, no prometas ayuda, no marques como validada una solicitud incompleta y no cierres casos dudosos sin consultar.</li>
           <li>Recuerda: verificas <strong>«Otras informaciones»</strong>; los <em>desaparecidos</em> los atiende el Grupo de Búsqueda.</li>
+        </S>
+      )}
+
+      {(f.gestionCasos || f.verificacion) && !f.acopio && (
+        <S icono="corazon" titulo="Oportunidades de donación">
+          <li>Una <strong>oportunidad de donación</strong> es una <strong>oferta</strong>: una empresa, proyecto o persona que quiere aportar (insumos, dinero, servicio, transporte).</li>
+          <li><strong>Recopilación</strong> la <strong>registra</strong> con «Registrar oportunidad» (organización, tipo, qué cubre, contacto).</li>
+          <li><strong>Verificación</strong> la <strong>verifica u observa</strong>; luego <strong>Logística</strong> contacta, la empareja con una solicitud y concreta la donación.</li>
         </S>
       )}
 
@@ -108,9 +121,37 @@ export default async function AyudaPage() {
       )}
 
       {f.acopio && (
-        <S icono="camion" titulo="Gestión de Acopio (tu función)">
-          <li><strong>Centros de acopio:</strong> mantén al día los puntos, sus necesidades y su urgencia; ubícalos en el <strong>Mapa</strong>.</li>
-          <li><strong>Donaciones e Insumos:</strong> gestiona las solicitudes (Solicitado → En gestión → En ruta → Entregado), las oportunidades de donación (ofertas que se emparejan con las solicitudes), proveedores, envíos y donaciones.</li>
+        <S icono="camion" titulo="Logística y Acopio (tu función)">
+          <li><strong>Centros de acopio:</strong> mantén al día los puntos, su inventario, capacidad (camas), necesidades y urgencia; ubícalos en el <strong>Mapa</strong>. Algunos <strong>centros nacen ya verificados</strong> desde una solicitud que Recopilación marcó como punto: recibes un aviso y completas sus datos (el admin de Logística asigna quién lo gestiona).</li>
+          <li><strong>Oportunidades de donación:</strong> lleva el pipeline de cada oferta (contacto en la <strong>bitácora</strong>, estados), <strong>empareja</strong> la oferta con una solicitud y <strong>concreta la donación</strong>. «Donaciones» quedó <strong>integrada aquí</strong> (no es una sección aparte). Prioriza las ofertas <strong>verificadas</strong> por Verificación.</li>
+          <li><strong>Solicitudes de insumo:</strong> atiéndelas desde el centro más cercano con stock (Solicitado → En ruta → Entregado). Al entregar, la solicitud de origen queda <strong>resuelta</strong>.</li>
+        </S>
+      )}
+
+      {f.contenido && (
+        <S icono="imagen" titulo="Contenido (tu función)">
+          <li>En <strong>Contenido</strong> produces y publicas las piezas: el pipeline va <strong>Redacción → Diseño → Video → Redes → Publicado</strong>.</li>
+          <li>Trabaja tu etapa y pasa la pieza a la siguiente; puedes adjuntar el archivo final. Cada traspaso avisa al equipo que sigue.</li>
+        </S>
+      )}
+
+      {f.captacion && (
+        <S icono="enlace" titulo="Captación de oportunidades (tu función)">
+          <li>En <strong>Captación</strong> registras y clasificas <strong>contactos estratégicos</strong> (fundaciones, organizaciones, empresas, proyectos, alianzas).</li>
+          <li>Muévelos por su estado (<strong>Investigación → Verificado → Enviado</strong>). Ves solo esta sección.</li>
+        </S>
+      )}
+
+      {f.aliados && (
+        <S icono="enlace" titulo="Datos aliados (tu función)">
+          <li>En <strong>«Datos aliados»</strong> consultas la base compartida de <strong>endpoints</strong> de plataformas aliadas (URL, método, formato, notas de autenticación).</li>
+        </S>
+      )}
+
+      {f.panelAdmin && !f.admin && (
+        <S icono="admin" titulo="Administración de tu área (tu función)">
+          <li>Como <strong>admin de área</strong> gestionas <strong>solo tu área</strong>: sus usuarios, su grupo y sus secciones operativas. No ves ni administras otras áreas.</li>
+          <li>Aprueba los registros que te llegan de tu área y asigna a tu equipo. Para operar las secciones sensibles necesitas tu <strong>2ª verificación</strong> aprobada.</li>
         </S>
       )}
 
