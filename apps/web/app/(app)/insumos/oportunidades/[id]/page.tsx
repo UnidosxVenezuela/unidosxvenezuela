@@ -159,7 +159,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
                   ))}
                 </tbody>
               </table></div>
-              <p className="muted" style={{ fontSize: '.8rem', margin: '10px 0 0' }}>Sigue el detalle de cada donación en <Link href="/insumos/donaciones">Donaciones</Link>.</p>
+              <p className="muted" style={{ fontSize: '.8rem', margin: '10px 0 0' }}>Sigue el estado de cada donación en <Link href="/insumos/oportunidades">Oportunidades de donación</Link>.</p>
               </div>
             </>
           )}

@@ -126,37 +126,23 @@ export async function eliminarEnvio(formData: FormData) {
 }
 
 // ── Donaciones ──
-export async function crearDonacion(formData: FormData) {
-  const { supabase, userId } = await usuario();
-  const donante = String(formData.get('donante') ?? '').trim();
-  if (!donante) throw new Error('El nombre del donante es obligatorio.');
-  const montoRaw = String(formData.get('monto') ?? '').trim();
-  const { error } = await supabase.from('donaciones').insert({
-    donante,
-    tipo: String(formData.get('tipo') ?? 'especie'),
-    descripcion: String(formData.get('descripcion') ?? '').trim() || null,
-    monto: montoRaw ? Number(montoRaw) : null,
-    solicitud_id: String(formData.get('solicitud_id') ?? '').trim() || null,
-    creado_por: userId,
-  });
-  if (error) throw new Error('No se pudo registrar la donación: ' + error.message);
-  revalidatePath('/insumos/donaciones');
-  redirigirOk('/insumos/donaciones', 'Donación registrada');
-}
-
+// Una donación se CREA al conectar una oferta con una solicitud (ver
+// conectarConSolicitud en oportunidades/actions.ts). Su lista, con seguimiento de
+// estado y borrado, vive dentro de «Oportunidades de donación» (flujo unificado);
+// ya no hay una sección «Donaciones» aparte ni alta directa.
 export async function cambiarEstadoDonacion(formData: FormData) {
   const { supabase } = await usuario();
   const { error } = await supabase.from('donaciones')
     .update({ estado: String(formData.get('estado')) }).eq('id', String(formData.get('id')));
   if (error) throw new Error('No se pudo actualizar: ' + error.message);
-  revalidatePath('/insumos/donaciones');
-  redirigirOk('/insumos/donaciones', 'Donación actualizada');
+  revalidatePath('/insumos/oportunidades');
+  redirigirOk('/insumos/oportunidades', 'Donación actualizada');
 }
 
 export async function eliminarDonacion(formData: FormData) {
   const { supabase } = await usuario();
   const { error } = await supabase.from('donaciones').delete().eq('id', String(formData.get('id')));
   if (error) throw new Error('No se pudo eliminar: ' + error.message);
-  revalidatePath('/insumos/donaciones');
-  redirigirOk('/insumos/donaciones', 'Donación eliminada');
+  revalidatePath('/insumos/oportunidades');
+  redirigirOk('/insumos/oportunidades', 'Donación eliminada');
 }
