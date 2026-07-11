@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, PRIORIDADES, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
+import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, PRIORIDADES, ETIQUETA_PRIORIDAD, TIPOS_LUGAR, ETIQUETA_TIPO_LUGAR } from '@/lib/constantes';
 import SelectorUbicacionMapa from '@/components/SelectorUbicacionMapa';
 import LimiteError from '@/components/LimiteError';
 import Icono from '@/components/Icono';
@@ -12,6 +12,8 @@ type Defaults = {
   req_tipo?: string | null;
   req_cantidad?: string | null;
   req_urgencia?: string | null;
+  punto_tipo?: string | null;
+  punto_temporal?: boolean;
 };
 
 /**
@@ -69,6 +71,26 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
           <div className="campo">
             <label htmlFor="req_cantidad">Cantidad estimada (opcional)</label>
             <input id="req_cantidad" name="req_cantidad" className="input" placeholder="Ej.: 50 cajas de agua · 200 raciones" defaultValue={defaults.req_cantidad ?? ''} />
+          </div>
+
+          {/* ¿Es un punto FIJO/TEMPORAL del mapa? Al verificarse la solicitud, se crea el centro (0145). */}
+          <div className="tarjeta" style={{ background: '#fff', borderColor: '#c7d2fe', marginTop: 10 }}>
+            <div className="campo" style={{ margin: 0 }}>
+              <label htmlFor="punto_tipo" className="fila" style={{ gap: 6 }}>
+                <Icono nombre="mapa" size={15} /> ¿Es un punto del mapa? (albergue, hospital, centro de acopio)
+              </label>
+              <select id="punto_tipo" name="punto_tipo" className="input" defaultValue={defaults.punto_tipo ?? ''}>
+                <option value="">— No, es solo una solicitud —</option>
+                {TIPOS_LUGAR.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_LUGAR[t]}</option>)}
+              </select>
+            </div>
+            <label className="fila" style={{ gap: 8, marginTop: 8, cursor: 'pointer' }}>
+              <input type="checkbox" name="punto_temporal" defaultChecked={!!defaults.punto_temporal} />
+              <span>Es un punto <b>temporal</b> (no permanente)</span>
+            </label>
+            <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>
+              Si eliges un tipo, al <b>verificarse</b> esta solicitud se creará automáticamente el punto en el mapa para que Logística lo gestione.
+            </p>
           </div>
         </div>
       )}

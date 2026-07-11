@@ -17,6 +17,7 @@ function numOpt(v: FormDataEntryValue | null): number | null {
 // Valores válidos de los enums reutilizados (public.tipo_insumo, public.prioridad).
 const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refugio', 'otro'];
 const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
+const TIPOS_LUGAR_VAL = ['hospital', 'albergue', 'acopio', 'otro'];
 
 // Campos de «solicitud de ayuda con ubicación» (Propuesta Fase 1). Si el bloque no
 // está activo, DEVUELVE los campos en null/false (así al desmarcarlo se limpian).
@@ -24,8 +25,10 @@ const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
 // el CHECK de la BD (0112) es el respaldo.
 function datosRequerimiento(formData: FormData, categoria: string | null) {
   const es = txt(formData.get('es_requerimiento')) === 'on';
+  // Nota: NO se toca `punto_acopio_id` (lo fija el trigger al verificar); solo la marca.
   if (!es) {
-    return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null };
+    return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null,
+      punto_tipo: null, punto_temporal: false };
   }
   if (categoria === 'Desaparecidos') {
     throw new Error('Una solicitud de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
@@ -37,12 +40,16 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
   }
   const tipo = opt(formData.get('req_tipo'));
   const urg = opt(formData.get('req_urgencia'));
+  // Punto del mapa (0145): si se elige un tipo válido, al confirmarse se crea el centro.
+  const puntoTipo = opt(formData.get('punto_tipo'));
   return {
     es_requerimiento: true,
     lat, lng,
     req_tipo: tipo && TIPOS_INSUMO_VAL.includes(tipo) ? tipo : null,
     req_cantidad: opt(formData.get('req_cantidad')),
     req_urgencia: urg && PRIORIDADES_VAL.includes(urg) ? urg : 'media',
+    punto_tipo: puntoTipo && TIPOS_LUGAR_VAL.includes(puntoTipo) ? puntoTipo : null,
+    punto_temporal: txt(formData.get('punto_temporal')) === 'on',
   };
 }
 

@@ -51,6 +51,7 @@ export default function Mapa({ puntos, tareas, lugares = [], solicitudes = [] }:
     for (const p of puntos) {
       const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
         `<strong>${esc(p.nombre)}</strong>` +
+        (p.tipo ? `<br/>${esc(ETIQ_TIPO_LUGAR[p.tipo] ?? p.tipo)}${p.temporal ? ' · Temporal' : ''}` : '') +
         (p.necesita ? `<br/><b>Necesita:</b> ${esc(p.necesita)}` : '') +
         (p.capacidad ? `<br/><b>Capacidad:</b> ${esc(p.capacidad)}` : '') +
         (p.recibe ? `<br/><b>Recibe:</b> ${esc(p.recibe)}` : '') +

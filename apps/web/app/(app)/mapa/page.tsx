@@ -17,7 +17,7 @@ export default async function MapaPage() {
 
   const [{ data: puntosData }, { data: tareasData }, { data: lugaresData }, { data: solicitudesData }] = await Promise.all([
     supabase.from('puntos_acopio')
-      .select('id, nombre, direccion, responsable, telefono, recibe, necesita, horario, capacidad, urgencia, lat, lng, activo, creado_por, creado_en, actualizado_en')
+      .select('id, nombre, tipo, temporal, direccion, responsable, telefono, recibe, necesita, horario, capacidad, urgencia, lat, lng, activo, creado_por, creado_en, actualizado_en')
       .eq('activo', true),
     supabase.from('tareas')
       .select('id, titulo, lat, lng, categoria')

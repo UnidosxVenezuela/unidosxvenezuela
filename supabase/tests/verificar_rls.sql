@@ -1237,4 +1237,73 @@ begin;
   end $$;
 rollback;
 
+-- ══ Puntos del mapa desde solicitudes verificadas (0145) ══
+
+\echo '== Test 59: confirmar una solicitud marcada como punto crea el centro en el mapa (0145) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000fd01', 'logi-pt@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000fd01';
+  -- Solicitud marcada como ALBERGUE temporal, con ubicación, pendiente.
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, contacto, punto_tipo, punto_temporal, creado_por)
+    values ('00000000-0000-0000-0000-00000000fd0c', '_TEST_albergue_norte', 'Otras informaciones', 'pendiente',
+            true, 10.5, -66.9, 'Coordinador Pérez', 'albergue', true, null);
+  -- Aún NO hay centro (no está confirmada).
+  do $$ declare n int; begin
+    select count(*) into n from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd0c';
+    if n <> 0 then raise exception 'FALLO: se creó el centro antes de confirmar (n=%)', n; end if;
+  end $$;
+  -- Confirmar la solicitud → el trigger crea el centro.
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000fd0c';
+  do $$ declare r public.puntos_acopio; begin
+    select * into r from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd0c';
+    if r.id is null then raise exception 'FALLO: no se creó el centro al confirmar el punto'; end if;
+    if r.tipo <> 'albergue' then raise exception 'FALLO: tipo del centro incorrecto (%)', r.tipo; end if;
+    if r.nombre <> '_TEST_albergue_norte' then raise exception 'FALLO: nombre del centro incorrecto (%)', r.nombre; end if;
+    if r.creado_por is not null then raise exception 'FALLO: el centro debería nacer sin dueño'; end if;
+    if r.temporal is distinct from true then raise exception 'FALLO: la etiqueta temporal no se copió'; end if;
+    if r.lat <> 10.5 or r.lng <> -66.9 then raise exception 'FALLO: ubicación del centro incorrecta'; end if;
+  end $$;
+  -- La solicitud quedó enlazada a su centro.
+  do $$ declare pid uuid; begin
+    select punto_acopio_id into pid from public.casos where id = '00000000-0000-0000-0000-00000000fd0c';
+    if pid is null then raise exception 'FALLO: la solicitud no quedó enlazada a su centro'; end if;
+  end $$;
+  -- Se avisó a Logística.
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000fd01' and tipo = 'punto_creado';
+    if n < 1 then raise exception 'FALLO: Logística no recibió aviso del punto creado (n=%)', n; end if;
+  end $$;
+  -- IDEMPOTENTE: reabrir y volver a confirmar NO crea un segundo centro.
+  update public.casos set estado = 'en_proceso' where id = '00000000-0000-0000-0000-00000000fd0c';
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000fd0c';
+  do $$ declare n int; begin
+    select count(*) into n from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd0c';
+    if n <> 1 then raise exception 'FALLO: el punto se duplicó al reconfirmar (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 60: solicitud sin punto_tipo no crea centro; un punto exige ubicación (0145) =='
+begin;
+  -- Sin punto_tipo → confirmar NO crea centro.
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, creado_por)
+    values ('00000000-0000-0000-0000-00000000fd21', '_TEST_solo_solicitud', 'Otras informaciones', 'pendiente', true, 10.0, -66.0, null);
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000fd21';
+  do $$ declare n int; begin
+    select count(*) into n from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd21';
+    if n <> 0 then raise exception 'FALLO: se creó un centro para una solicitud normal (n=%)', n; end if;
+  end $$;
+  -- Un punto sin ubicación viola el CHECK chk_casos_punto_ubicacion.
+  do $$ begin
+    begin
+      insert into public.casos (id, titulo, categoria, estado, punto_tipo)
+        values ('00000000-0000-0000-0000-00000000fd22', '_TEST_punto_sin_ubic', 'Otras informaciones', 'pendiente', 'hospital');
+      raise exception 'FALLO: se permitió un punto sin ubicación';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
