@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import ResaltarNuevos from '@/components/ResaltarNuevos';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import ActivarNotificaciones from '@/components/ActivarNotificaciones';
@@ -89,9 +90,10 @@ export default async function NotificacionesPage() {
           <p className="muted" style={{ marginBottom: 0 }}>No tienes notificaciones.</p>
         </div>
       ) : (
+      <ResaltarNuevos>
       <div className="tarjeta">
         {items.map((it) => (
-          <div key={it.id} className="fila" style={{
+          <div key={it.id} data-fila className="fila" style={{
             justifyContent: 'space-between',
             borderBottom: '1px solid var(--borde)', padding: '10px 0',
             background: it.leida ? 'transparent' : '#eef3ff',
@@ -116,6 +118,7 @@ export default async function NotificacionesPage() {
           </div>
         ))}
       </div>
+      </ResaltarNuevos>
       )}
     </div>
   );

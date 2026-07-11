@@ -4,6 +4,7 @@ import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { SENSIBILIDADES, ETIQUETA_SENSIBILIDAD, claseSensibilidad } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import ResaltarNuevos from '@/components/ResaltarNuevos';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Avatar from '@/components/Avatar';
 import { crearPublicacion, comentarPublicacion } from './actions';
@@ -84,8 +85,9 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
         <div className="tarjeta vacio"><p className="muted">Aún no hay publicaciones. Sé el primero en compartir un aviso.</p></div>
       )}
 
+      <ResaltarNuevos>
       {posts.map((p) => (
-        <div key={p.id} className="tarjeta">
+        <div key={p.id} data-fila className="tarjeta">
           <div className="fila" style={{ justifyContent: 'space-between' }}>
             <span className="celda-persona"><Avatar nombre={p.autor?.nombre_completo} url={p.autor?.avatar_url} size={28} /> <strong>{p.autor?.nombre_completo ?? 'Anónimo'}</strong></span>
             <Pill tono={tonoDeClase(claseSensibilidad(p.sensibilidad))}>
@@ -121,6 +123,7 @@ export default async function TablonPage({ searchParams }: { searchParams: { gru
           </details>
         </div>
       ))}
+      </ResaltarNuevos>
     </div>
   );
 }
