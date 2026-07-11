@@ -8,6 +8,7 @@ import Consejo from '@/components/Consejos';
 import { ETAPAS_CONTENIDO, ETIQUETA_ETAPA, ETIQUETA_DESTINO, claseEtapa, ROL_DE_ETAPA } from '@/lib/constantes';
 import type { EtapaContenido } from '@unidos/types';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import ResaltarNuevos from '@/components/ResaltarNuevos';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import BotonActualizar from '@/components/BotonActualizar';
 import Icono from '@/components/Icono';
@@ -110,6 +111,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
               texto="Crea una con «Nueva pieza»: Redacción escribe el contenido y la descripción, pasa a Diseño o Video para producir la pieza, y termina en Redes Sociales para publicar."
             />
           ) : (
+            <ResaltarNuevos>
             <div className="tablero">
               {ETAPAS_CONTENIDO.map((e) => (
                 <div key={e} className="tablero-col">
@@ -120,7 +122,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
                   {porEtapa(e).map((p) => {
                     const a = autoria(p);
                     return (
-                      <Link key={p.id} href={hrefPieza(p.id)} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0, display: 'block' }}>
+                      <Link key={p.id} data-fila href={hrefPieza(p.id)} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0, display: 'block' }}>
                         <strong style={{ display: 'block' }}>{p.titulo}</strong>
                         <div style={{ marginTop: 8, fontSize: '.82rem' }}>
                           {p.asignado_a
@@ -138,6 +140,7 @@ export default async function ContenidoPage({ searchParams }: { searchParams: SP
                 </div>
               ))}
             </div>
+            </ResaltarNuevos>
           )}
         </div>
         {drawerPieza && (

@@ -9,6 +9,7 @@ import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import ResaltarNuevos from '@/components/ResaltarNuevos';
 
 export default async function InsumosPage() {
   const { perfil } = await requireUsuario();
@@ -47,6 +48,7 @@ export default async function InsumosPage() {
           accion={{ href: '/insumos/nueva', etiqueta: 'Nueva solicitud' }}
         />
       ) : (
+        <ResaltarNuevos>
         <div className="tablero-insumos">
           {ESTADOS_INSUMO.map((e) => (
             <div key={e} className="tablero-col">
@@ -56,7 +58,7 @@ export default async function InsumosPage() {
               </h3>
               {porEstado(e).length === 0 && <p className="muted" style={{ fontSize: '.85rem', margin: '0 4px' }}>—</p>}
               {porEstado(e).map((s) => (
-                <Link key={s.id} href={'/insumos/' + s.id} className="tarjeta insumo-card">
+                <Link key={s.id} data-fila href={'/insumos/' + s.id} className="tarjeta insumo-card">
                   <div className="fila" style={{ justifyContent: 'space-between', gap: 6 }}>
                     <span className="insignia">{ETIQUETA_TIPO_INSUMO[s.tipo] ?? s.tipo}</span>
                     <Pill tono={tonoDeClase(clasePrioridad(s.urgencia))} punto={false}>
@@ -73,6 +75,7 @@ export default async function InsumosPage() {
             </div>
           ))}
         </div>
+        </ResaltarNuevos>
       )}
     </AnimarEntrada>
   );

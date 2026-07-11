@@ -1,5 +1,7 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { animate } from 'animejs';
+import { sinMovimiento } from '@/lib/anime';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
@@ -237,6 +239,14 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
   const [pickId, setPickId] = useState(0);
   const [estado, setEstado] = useState<'idle' | 'procesando' | 'listo'>('idle');
   const [progreso, setProgreso] = useState(0);
+  const barraRef = useRef<HTMLSpanElement>(null);
+  // El relleno avanza suave hacia el % real (Tesseract lo entrega a saltos).
+  useEffect(() => {
+    const b = barraRef.current;
+    if (!b) return;
+    if (sinMovimiento()) { b.style.transform = `scaleX(${progreso / 100})`; return; }
+    animate(b, { scaleX: progreso / 100, duration: 300, ease: 'outQuad' });
+  }, [progreso]);
   const [filas, setFilas] = useState<Fila[]>([]);
   const [csvInfo, setCsvInfo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -406,6 +416,7 @@ export default function AsistenteDigitalizacion({ tiposPermitidos, centros }: { 
               </button>
               {estado === 'listo' && filas.length > 0 && <span className="muted" style={{ fontSize: '.85rem' }}>{filas.length} líneas detectadas · revisa y corrige abajo</span>}
             </div>
+            {estado === 'procesando' && <div className="ocr-barra" role="progressbar" aria-label="Progreso del reconocimiento" aria-valuenow={progreso} aria-valuemin={0} aria-valuemax={100}><span ref={barraRef} className="ocr-barra-fill" /></div>}
             <p className="muted" style={{ fontSize: '.8rem', margin: '8px 0 0' }}>
               {archivoOriginal && <>Endereza (<strong>girar</strong>) y <strong>recorta</strong> la foto para dejar solo la lista: mejora mucho el reconocimiento. </>}
               El texto se mejora y reconoce <strong>en tu dispositivo</strong>; la imagen no se envía a terceros.
