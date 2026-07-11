@@ -346,6 +346,10 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 .toast-x { color: var(--texto-suave); flex-shrink: 0; display: inline-flex; }
 .toast-ok { border-left-color: #16a34a; }
 .toast-ok .toast-ico { background: #d1fae5; color: #16a34a; }
+/* Barra de autocierre del aviso de éxito: se agota (scaleX 1→0) vía anime.js.
+   Insertada solo cuando se permite el movimiento (ver Toast.tsx). */
+.toast-barra { position: absolute; left: 12px; right: 12px; bottom: 6px; height: 3px; border-radius: 2px;
+  background: #16a34a; opacity: .38; transform-origin: left center; }
 .toast-err { border-left-color: var(--rojo); }
 .toast-err .toast-ico { background: #fee2e2; color: var(--rojo); }
 @media (max-width: 560px) { .toast { left: 16px; right: 16px; max-width: none; } }
