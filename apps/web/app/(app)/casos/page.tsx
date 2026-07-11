@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
@@ -23,7 +23,7 @@ import FiltroSelect from '@/components/FiltroSelect';
 import { nombreMostrado } from '@/lib/nombre';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en';
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, punto_tipo';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -147,7 +147,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, punto_tipo, punto_temporal, punto_acopio_id').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
       supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', searchParams.caso).maybeSingle(),
@@ -266,7 +266,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                       {c.asignado_a && <div className="muted" style={{ fontSize: '.76rem', marginTop: 2 }}><Icono nombre="grupos" size={11} /> Tomado por {nombresCaso.get(c.asignado_a) ?? '—'}</div>}
                     </div>
                   </td>
-                  <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}</td>
+                  <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}{c.punto_tipo && <div style={{ marginTop: 4 }}><Pill tono={TONO_TIPO_LUGAR[c.punto_tipo] ?? 'info'} punto={false}>Punto: {ETIQUETA_TIPO_LUGAR[c.punto_tipo] ?? c.punto_tipo}</Pill></div>}</td>
                   <td>{(() => { const h = hrefSeguro(c.fuente_url); return h ? <a href={h} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—'); })()}</td>
                   <td>
                     <EstadoCaso estado={c.estado} />

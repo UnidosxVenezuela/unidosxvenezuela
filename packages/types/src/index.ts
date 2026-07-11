@@ -183,6 +183,10 @@ export interface Oportunidad {
 /** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
 export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';
 
+/** Tipo de un punto/lugar del mapa (hospital/albergue/acopio/otro). Lo comparten los
+ *  «lugares» de Digitalización, los centros de acopio y las solicitudes marcadas como punto (0145). */
+export type TipoLugar = 'hospital' | 'albergue' | 'acopio' | 'otro';
+
 /**
  * Donaciones e Insumos (0141): «oportunidad de donación» = la OFERTA (empresa /
  * proyecto / persona que ofrece ayudar), un lead con pipeline de contacto. Es
@@ -252,6 +256,12 @@ export interface Caso {
   req_tipo: TipoInsumo | null;
   req_cantidad: string | null;
   req_urgencia: Prioridad | null;
+  // Punto del mapa (0145): si `punto_tipo` no es null, esta solicitud declara un
+  // hospital / albergue / centro de acopio que, al CONFIRMARSE, crea su centro en el
+  // mapa (puntos_acopio) enlazado por `punto_acopio_id`. `punto_temporal` es etiqueta.
+  punto_tipo: TipoLugar | null;
+  punto_temporal: boolean;
+  punto_acopio_id: string | null;
 }
 
 /** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */
@@ -354,9 +364,13 @@ export interface PuntoAcopio {
   nombre: string;
   // Tipo de lugar (Digitalización): hospital | albergue | acopio | otro.
   // Los centros creados a mano quedan como 'acopio' (default en BD, 0126).
-  tipo: 'hospital' | 'albergue' | 'acopio' | 'otro';
+  tipo: TipoLugar;
   // Lugar de Digitalización que dio origen al centro (null si se creó a mano).
   lugar_id: string | null;
+  // Solicitud (caso) que dio origen al centro al verificarse (null si no viene de una solicitud, 0145).
+  caso_id: string | null;
+  // Punto temporal (albergue/acopio no permanente): etiqueta informativa (0145).
+  temporal: boolean;
   direccion: string | null;
   responsable: string | null;
   telefono: string | null;

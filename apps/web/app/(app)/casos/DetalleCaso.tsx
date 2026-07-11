@@ -1,6 +1,6 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
@@ -45,6 +45,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     ['Contacto / referente', !!caso.contacto],
     ...(caso.es_requerimiento
       ? ([['Ubicación en el mapa', caso.lat != null && caso.lng != null], ['Tipo de necesidad', !!caso.req_tipo]] as [string, boolean][])
+      : []),
+    ...(caso.punto_tipo
+      ? ([['Punto del mapa: existe y está bien ubicado', caso.lat != null && caso.lng != null]] as [string, boolean][])
       : []),
   ];
 
@@ -139,6 +142,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10, padding: '8px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8 }}>
             <Icono nombre="ubicacion" size={16} />
             <strong>Solicitud de ayuda</strong>
+            {caso.punto_tipo && <Pill tono={TONO_TIPO_LUGAR[caso.punto_tipo] ?? 'info'} punto={false}>Punto: {ETIQUETA_TIPO_LUGAR[caso.punto_tipo] ?? caso.punto_tipo}{caso.punto_temporal ? ' · temporal' : ''}</Pill>}
             {caso.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[caso.req_tipo] ?? caso.req_tipo}</Pill>}
             {caso.req_urgencia && <Pill tono="aviso" punto={false}>{ETIQUETA_PRIORIDAD[caso.req_urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? caso.req_urgencia}</Pill>}
             {caso.req_cantidad && <span className="muted" style={{ fontSize: '.85rem' }}>· {caso.req_cantidad}</span>}
@@ -245,6 +249,18 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
               de estado libre queda como opción avanzada. */}
           <div className="tarjeta">
             <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> ¿Qué haces con esta solicitud?</h3>
+            {caso.punto_tipo && (
+              caso.punto_acopio_id ? (
+                <p className="fila" style={{ gap: 6, margin: '0 0 8px', fontSize: '.85rem', color: '#047857' }}>
+                  <Icono nombre="ok" size={14} /> Punto creado en el mapa para Logística.{esAdmin && <> <Link href="/mapa">Verlo ↗</Link></>}
+                </p>
+              ) : (
+                <div className="fila" style={{ gap: 6, alignItems: 'flex-start', margin: '0 0 8px', padding: '6px 8px', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8 }}>
+                  <Icono nombre="mapa" size={15} />
+                  <span style={{ fontSize: '.85rem' }}>Esta solicitud es un punto (<b>{ETIQUETA_TIPO_LUGAR[caso.punto_tipo] ?? caso.punto_tipo}</b>). Al <b>confirmarla</b>, se creará automáticamente en el mapa para que Logística lo gestione.</span>
+                </div>
+              )
+            )}
             {caso.estado !== 'confirmado' && (
               <form action={cambiarEstadoCaso}>
                 <input type="hidden" name="caso_id" value={caso.id} />
