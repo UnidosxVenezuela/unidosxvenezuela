@@ -25,6 +25,12 @@
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "4eabc66183767153e404b39d1b839b1c37f2d82d86f0a0d7e880a579d8d62336"
     },
+    "huashu-design": {
+      "source": "alchaincyf/huashu-design",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "0212563d4ba7716ade4d6d071ffb3d79fcc98db17e7f783cfe6d47007b6a36bb"
+    },
     "review-animations": {
       "source": "emilkowalski/skill",
       "sourceType": "github",
