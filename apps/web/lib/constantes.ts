@@ -299,6 +299,46 @@ export function claseEstadoDonacion(e: string): string {
 }
 export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón', 'Otro'];
 
+// ── Oportunidades de donación (la OFERTA, 0141) ──
+// Un lead con pipeline de contacto: empresa/proyecto/persona que ofrece ayudar.
+export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {
+  especie: 'En especie', dinero: 'Dinero', servicio: 'Servicio', transporte: 'Transporte', otro: 'Otro',
+};
+export const TIPOS_OFERTA = Object.keys(ETIQUETA_TIPO_OFERTA);
+export const ETIQUETA_ESTADO_OFERTA: Record<string, string> = {
+  nueva: 'Nueva', contactada: 'Contactada', en_conversacion: 'En conversación',
+  comprometida: 'Comprometida', cumplida: 'Cumplida', descartada: 'Descartada',
+};
+/** Columnas del tablero (el estado 'descartada' se muestra aparte). */
+export const ESTADOS_OFERTA = ['nueva', 'contactada', 'en_conversacion', 'comprometida', 'cumplida'];
+export function claseEstadoOferta(e: string): string {
+  if (e === 'cumplida') return 'ok';
+  if (e === 'comprometida') return 'info';
+  if (e === 'en_conversacion') return 'aviso';
+  if (e === 'descartada') return 'critica';
+  return '';
+}
+/** Siguiente paso del pipeline (para el botón «Avanzar»); null si ya está al final. */
+export function siguienteEstadoOferta(e: string): string | null {
+  const orden = ['nueva', 'contactada', 'en_conversacion', 'comprometida', 'cumplida'];
+  const i = orden.indexOf(e);
+  return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
+}
+// Bitácora de contacto: canal y resultado de cada gestión.
+export const ETIQUETA_CANAL: Record<string, string> = {
+  llamada: 'Llamada', whatsapp: 'WhatsApp', correo: 'Correo', reunion: 'Reunión', otro: 'Otro',
+};
+export const CANALES = Object.keys(ETIQUETA_CANAL);
+export const ETIQUETA_RESULTADO: Record<string, string> = {
+  positivo: 'Positivo', pendiente: 'Pendiente', sin_respuesta: 'Sin respuesta', negativo: 'Negativo',
+};
+export function claseResultadoOferta(e: string): string {
+  if (e === 'positivo') return 'ok';
+  if (e === 'pendiente') return 'aviso';
+  if (e === 'negativo') return 'critica';
+  return '';
+}
+
 // Roles de la "cadena de contenido" (de la información a la publicación). Los
 // coordinadores y líderes pueden asignarlos como roles ADICIONALES a voluntarios
 // o a sí mismos, para sumarlos al flujo de trabajo (no a otros mandos).

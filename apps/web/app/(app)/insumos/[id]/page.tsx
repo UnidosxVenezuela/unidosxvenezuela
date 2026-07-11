@@ -24,7 +24,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, caso_id, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
     .eq('id', id).single();
   const s: any = sData;
-  if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Insumos</Link></div>;
+  if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Donaciones e Insumos</Link></div>;
 
   // Caso de ayuda de origen, si la solicitud fue derivada de un caso (Fase 2). Se
   // obtiene por RPC curada (Logística no lee casos por RLS).
@@ -52,7 +52,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   return (
     <div>
       <RealtimeRefrescar tabla="envios" filtro={'solicitud_id=eq.' + id} />
-      <Link href="/insumos" className="muted">← Insumos</Link>
+      <Link href="/insumos" className="muted">← Donaciones e Insumos</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{s.titulo}</h1>
         <span className="fila" style={{ gap: 6 }}>
