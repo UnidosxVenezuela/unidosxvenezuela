@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, PRIORIDADES, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import SelectorUbicacionMapa from '@/components/SelectorUbicacionMapa';
+import LimiteError from '@/components/LimiteError';
 import Icono from '@/components/Icono';
 
 type Defaults = {
@@ -47,7 +48,9 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
 
       {mostrar && (
         <div style={{ marginTop: 10 }}>
-          <SelectorUbicacionMapa latInicial={defaults.lat ?? null} lngInicial={defaults.lng ?? null} />
+          <LimiteError fallback={<p className="muted" style={{ fontSize: '.85rem' }}>El mapa no está disponible en este dispositivo (WebGL desactivado, p. ej. en Modo de bajo consumo). Puedes continuar; la ubicación en el mapa es opcional.</p>}>
+            <SelectorUbicacionMapa latInicial={defaults.lat ?? null} lngInicial={defaults.lng ?? null} />
+          </LimiteError>
           <div className="grid grid-2" style={{ marginTop: 10 }}>
             <div className="campo">
               <label htmlFor="req_tipo">¿Qué se necesita? (tipo)</label>

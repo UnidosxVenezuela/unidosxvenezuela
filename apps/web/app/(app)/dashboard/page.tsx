@@ -10,6 +10,7 @@ import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
 import GloboColaboradores from '@/components/GloboColaboradores';
+import LimiteError from '@/components/LimiteError';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import { kpisDeRol } from '@/lib/kpis-panel';
 
@@ -158,7 +159,7 @@ export default async function Dashboard() {
             'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'
           )}
         </p>
-        <GloboColaboradores paises={paisesColab} />
+        <LimiteError><GloboColaboradores paises={paisesColab} /></LimiteError>
       </div>
     </AnimarEntrada>
   );

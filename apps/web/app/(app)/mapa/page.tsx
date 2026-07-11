@@ -4,6 +4,7 @@ import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import Mapa from '@/components/Mapa';
+import LimiteError from '@/components/LimiteError';
 import Icono from '@/components/Icono';
 import type { PuntoAcopio } from '@unidos/types';
 
@@ -55,7 +56,9 @@ export default async function MapaPage() {
           <span className="leyenda-pin" style={{ background: '#0D9488' }} /> requerimiento con ubicación)</>}.
         Para crear o editar centros, entra a <strong>Centros de acopio</strong>.
       </p>
-      <Mapa puntos={puntos} tareas={tareas} lugares={lugares} solicitudes={solicitudes} />
+      <LimiteError fallback={<div className="tarjeta"><p className="muted" style={{ margin: 0 }}>El mapa no está disponible en este dispositivo (WebGL desactivado, p. ej. en Modo de bajo consumo). Prueba con la aceleración por hardware activada u otro navegador.</p></div>}>
+        <Mapa puntos={puntos} tareas={tareas} lugares={lugares} solicitudes={solicitudes} />
+      </LimiteError>
     </div>
   );
 }
