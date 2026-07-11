@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { redirigirOk, redirigirError, redirigirClave } from '@/lib/flash';
 import { esEnlaceWhatsappValido, esEnlaceHttpsValido } from '@/lib/constantes';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
+import { validarArchivo } from '@/lib/validaciones';
 import { crearCuentaConRol } from '@/lib/altaUsuario';
 import type { Rol } from '@unidos/types';
 
@@ -75,7 +76,8 @@ export async function fijarMensaje(formData: FormData) {
   let adjPath: string | null = null, adjTipo: string | null = null, adjNombre: string | null = null;
   const file = formData.get('file');
   if (file instanceof File && file.size > 0) {
-    if (file.size > 10 * 1024 * 1024) throw new Error('El archivo supera 10 MB.');
+    const val = validarArchivo(file.name, file.size, 10);  // lista blanca de tipos (no svg/html/exe)
+    if (!val.ok) throw new Error(val.motivo);
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
     const { path } = await subirArchivo(supabase, 'grupos', `${grupoId}/${Date.now()}-${safe}`, file, { publico: false, upsert: false });
     adjPath = path;

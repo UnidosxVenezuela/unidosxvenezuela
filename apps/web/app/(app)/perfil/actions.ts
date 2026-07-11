@@ -74,9 +74,14 @@ export async function subirAvatar(formData: FormData): Promise<{ url?: string; e
   if (!user) return { error: 'No autenticado.' };
   const file = formData.get('file');
   if (!(file instanceof File) || file.size === 0) return { error: 'No se recibió el archivo.' };
-  if (!file.type.startsWith('image/')) return { error: 'Elige un archivo de imagen.' };
+  // Solo imágenes RASTER: un SVG (o un tipo declarado como SVG) puede llevar script y
+  // el bucket de avatares es público. Se valida MIME y extensión (nada de svg/html).
+  const RASTER_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+  const RASTER_EXT = new Set(['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif']);
+  if (!RASTER_MIME.has(file.type)) return { error: 'Usa una imagen JPG, PNG, WEBP o GIF.' };
   if (file.size > 5 * 1024 * 1024) return { error: 'La imagen no debe superar 5 MB.' };
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  if (!RASTER_EXT.has(ext)) return { error: 'Usa una imagen JPG, PNG, WEBP o GIF.' };
   try {
     const { publicUrl } = await subirArchivo(supabase, 'avatares', `${user.id}/avatar.${ext}`, file, { publico: true });
     const urlFinal = (publicUrl ?? '') + '?t=' + Date.now();

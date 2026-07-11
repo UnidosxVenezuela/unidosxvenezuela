@@ -560,7 +560,9 @@ export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
 // las claves/roles de estas listas (y poner grupos.activa=true, migración 0138) para
 // reactivarlos. `ETIQUETA_ROL`/`ROLES` se conservan completos para mostrar y filtrar lo existente.
 export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion'];
-export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador'];
+// Incluye `admin_digitalizacion`: su área quedó vacía con 0138 (sin grupos/roles que
+// administrar), así que no debe ofrecerse para asignar mientras siga desactivada.
+export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador', 'admin_digitalizacion'];
 /** Roles que un admin puede asignar (excluye los retirados y el aliado, que va por su flujo). */
 export const ROLES_ASIGNABLES: Rol[] = ROLES.filter((r) => !ROLES_INACTIVOS.includes(r) && r !== 'lider_plataforma_aliada');
 
