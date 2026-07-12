@@ -1,0 +1,130 @@
+<meta charset="utf-8">
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.42; font-size:11pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 4px; gap:12px; }
+  .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.06; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9.5pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 8px; font-size:10.5pt; }
+  .tool{ border:1px solid var(--borde); border-radius:12px; padding:9px 13px; margin-top:9px; background:#fff; break-inside:avoid; page-break-inside:avoid; }
+  .tool h2{ font-size:12.5pt; color:var(--azul-osc); margin:0 0 3px; display:flex; align-items:center; gap:9px; }
+  .tool h2 .emoji{ font-size:15pt; }
+  .tool p{ margin:2px 0; font-size:10pt; }
+  .tool .como{ margin-top:5px; font-size:9.3pt; color:#334155; background:#f6f8fb; border-radius:8px; padding:6px 9px; }
+  .tool .como b{ color:var(--azul); }
+  .util{ border:2px solid var(--amarillo); border-radius:12px; padding:11px 15px; margin-top:13px; background:#fffdf3; page-break-inside:avoid; }
+  .util h2{ font-size:13.5pt; color:var(--azul); margin:0 0 3px; }
+  .util .lead{ font-size:9.8pt; color:var(--suave); margin:0 0 7px; }
+  .util ul{ margin:0; padding:0; list-style:none; }
+  .util li{ font-size:9.8pt; padding:5px 0 5px 23px; position:relative; border-bottom:1px dashed #f0e6c0; }
+  .util li:last-child{ border-bottom:0; }
+  .util li b{ color:var(--azul-osc); }
+  .util li:before{ content:'✔'; position:absolute; left:2px; top:5px; color:var(--ok); font-weight:800; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:11px; font-size:10pt; }
+  .rec b{ color:var(--azul-osc); }
+  .pie{ margin-top:12px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  /* ── Mockup del panel ── */
+  .mock{ border:1px solid #d7deea; border-radius:12px; overflow:hidden; margin:10px 0 2px; box-shadow:0 3px 12px rgba(15,23,42,.08); break-inside:avoid; page-break-inside:avoid; }
+  .mock .bar{ background:#eef2f8; border-bottom:1px solid #e2e8f0; padding:6px 10px; display:flex; align-items:center; gap:5px; }
+  .mock .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .mock .url{ margin-left:8px; font-size:8pt; color:#64748b; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:2px 9px; }
+  .mock .body{ padding:11px 13px; background:#fff; }
+  .mock .gtit{ font-size:12.5pt; font-weight:800; color:var(--azul); margin:0; }
+  .mock .btnrow{ display:flex; gap:7px; margin:8px 0 4px; flex-wrap:wrap; }
+  .mock .b{ display:inline-flex; align-items:center; gap:5px; font-size:8.5pt; font-weight:700; border-radius:8px; padding:5px 11px; border:1px solid #cbd5e1; color:#334155; background:#fff; }
+  .mock .b.wa{ background:#25d366; color:#fff; border-color:#25d366; }
+  .mock .sec{ font-size:9.5pt; font-weight:800; color:var(--azul-osc); margin:11px 0 5px; display:flex; align-items:center; gap:6px; }
+  .mock .anuncio{ border:1px solid #e2e8f0; border-left:3px solid var(--amarillo); border-radius:8px; padding:7px 10px; font-size:8.7pt; color:#334155; background:#fffdf5; }
+  .mock .anuncio .meta{ color:#94a3b8; font-size:7.5pt; margin-top:4px; }
+  .mock table{ width:100%; border-collapse:collapse; font-size:8.7pt; }
+  .mock th{ text-align:left; font-size:7.3pt; color:#64748b; text-transform:uppercase; letter-spacing:.02em; border-bottom:1px solid #e2e8f0; padding:3px 6px; }
+  .mock td{ border-bottom:1px solid #f1f5f9; padding:5px 6px; color:#334155; }
+  .mock td a{ color:var(--azul); text-decoration:none; font-weight:600; }
+  .mock .pill{ display:inline-block; font-size:7.5pt; font-weight:700; border-radius:999px; padding:1px 7px; }
+  .mock .p-crit{ background:#fee2e2; color:#b91c1c; } .mock .p-alta{ background:#ffedd5; color:#9a3412; }
+  .mock .e-prog{ background:#dbeafe; color:#1d4ed8; } .mock .e-pend{ background:#f1f5f9; color:#475569; }
+  .mock .newbtn{ display:inline-block; background:var(--azul); color:#fff; font-weight:800; font-size:8.5pt; border-radius:8px; padding:5px 12px; margin-top:9px; }
+  .mock .hi{ box-shadow:0 0 0 3px #FFCE00, 0 0 0 5px rgba(255,206,0,.4); }
+  .mock .hint{ font-size:8pt; color:#a16207; font-weight:800; margin-left:8px; }
+  .mockcap{ font-size:8pt; color:var(--suave); text-align:center; margin:2px 0 0; }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Las herramientas de tu grupo</h1>
+  <span class="rp">GUÍA · Grupos</span>
+</div>
+<p class="sub">Cada grupo tiene su propio espacio para <b>organizarse en un solo lugar</b>: anuncios, tareas, videollamadas y una pizarra. Así lo importante no se pierde en el chat. Entra desde el menú <b>«Grupos» → tu grupo</b>.</p>
+
+<div class="mock">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">Grupos › Recopilación · Caracas</span></div>
+  <div class="body">
+    <p class="gtit">Recopilación · Caracas</p>
+    <div class="btnrow">
+      <span class="b wa">🟢 WhatsApp del grupo</span>
+      <span class="b">🖊️ Pizarra</span>
+    </div>
+    <div class="sec">📌 Anuncios fijados</div>
+    <div class="anuncio">Reunión de coordinación hoy 6:00 pm. Traer el avance de sus zonas.
+      <div class="meta">Fijado por Coordinación · hoy 9:14 am</div>
+    </div>
+    <div class="sec">✅ Tareas del grupo</div>
+    <table>
+      <thead><tr><th>Tarea</th><th>Prioridad</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td><a>Verificar 5 solicitudes de Petare</a></td><td><span class="pill p-crit">Crítica</span></td><td><span class="pill e-prog">En progreso</span></td></tr>
+        <tr><td><a>Confirmar contacto del centro de acopio</a></td><td><span class="pill p-alta">Alta</span></td><td><span class="pill e-pend">Pendiente</span></td></tr>
+      </tbody>
+    </table>
+    <div><span class="newbtn hi">＋ Nueva tarea</span><span class="hint">← crea y asigna trabajo aquí</span></div>
+  </div>
+</div>
+<p class="mockcap">Así se ve tu grupo: los <b>anuncios</b> arriba, las <b>tareas</b> con su prioridad y estado, y los botones de <b>WhatsApp</b> y <b>Pizarra</b>.</p>
+
+<div class="tool">
+  <h2><span class="emoji">📌</span> Anuncios fijados <span style="font-size:9pt;color:var(--suave);font-weight:600">(los avisos del grupo)</span></h2>
+  <p>Mensajes <b>importantes que quedan fijados arriba</b> para que todos los vean, aunque el chat siga corriendo: horarios, acuerdos, recordatorios, un documento o una foto de respaldo.</p>
+  <p class="como"><b>Cómo:</b> el <b>líder o coordinador</b> usa <b>«Fijar anuncio»</b> (columna derecha), escribe el mensaje y, si quiere, adjunta una imagen o archivo. Para quitarlo, la papelera junto al anuncio.</p>
+</div>
+
+<div class="tool">
+  <h2><span class="emoji">✅</span> Tareas del grupo</h2>
+  <p>El <b>trabajo repartido y con seguimiento</b>: cada tarea tiene <b>responsable</b>, <b>prioridad</b> (crítica, alta, media, baja), <b>fecha de vencimiento</b> y un <b>estado</b> (pendiente → en progreso → completada).</p>
+  <p class="como"><b>Cómo:</b> pulsa <b>«Nueva tarea»</b> (o «Tareas» en el menú), escribe el título, elige a <b>quién se la asignas</b>, la prioridad y la fecha. Ve el detalle de cada una con <b>«Ver todas →»</b>.</p>
+</div>
+
+<div class="tool">
+  <h2><span class="emoji">🎥</span> Videollamadas</h2>
+  <p>Las <b>reuniones del grupo</b> agendadas con día y hora. Cuando la reunión está <b>en curso</b>, aparece el botón <b>«Unirse»</b> con el enlace (Meet, Zoom…).</p>
+  <p class="como"><b>Cómo:</b> el mando usa <b>«Programar videollamada»</b> (título, enlace, inicio y duración). El enlace solo se muestra mientras la reunión está activa, por seguridad.</p>
+</div>
+
+<div class="tool">
+  <h2><span class="emoji">🖊️</span> Pizarra <span style="font-size:9pt;color:var(--suave);font-weight:600">(el pizarrón compartido)</span></h2>
+  <p>Un <b>lienzo en blanco compartido</b> para dibujar, hacer esquemas, mapas rápidos o listas a mano entre todos. Se <b>guarda solo</b> y se actualiza <b>en vivo</b>: si otra persona dibuja, lo ves al instante.</p>
+  <p class="como"><b>Cómo:</b> botón <b>«Pizarra»</b> arriba del grupo. Dibuja con las herramientas; cuando aparece <b>«Guardado ✓»</b> ya quedó registrado para el equipo.</p>
+</div>
+
+<div class="util">
+  <h2>¿Para qué sirven las tareas en tu grupo?</h2>
+  <p class="lead">Las tareas convierten el «hay que hacer esto» del chat en trabajo <b>claro, con dueño y con fecha</b>. Para un grupo de Recopilación (o cualquier equipo) son útiles para:</p>
+  <ul>
+    <li><b>Repartir sin pisarse:</b> asigna <b>zonas o parroquias</b> (o fuentes) a cada integrante, para cubrir todo el territorio y que dos personas no reporten lo mismo.</li>
+    <li><b>Dar seguimiento a lo pendiente:</b> «<i>verificar estas 5 solicitudes</i>», «<i>volver a llamar a este contacto mañana</i>» — con responsable y vencimiento, no se olvida.</li>
+    <li><b>Priorizar lo urgente:</b> marca <b>crítica/alta</b> lo que no puede esperar; el equipo ve de un vistazo qué atender primero.</li>
+    <li><b>Incorporar a los nuevos:</b> la <b>primera tarea</b> a quien llega («familiarízate con la app», «reporta tu primer caso») guía su arranque.</li>
+    <li><b>Coordinar empujones:</b> jornadas de carga de datos, cierres de listas o barridos de una zona, con todos apuntando a lo mismo.</li>
+    <li><b>Que el líder tenga el pulso:</b> el estado (pendiente / en progreso / completada) muestra <b>cómo va el equipo</b> sin tener que preguntar uno por uno.</li>
+  </ul>
+</div>
+
+<div class="rec"><b>Recuerda:</b> los <b>anuncios, tareas y reuniones</b> los crea el <b>líder o coordinador</b>; todos los integrantes los ven y los atienden. La <b>pizarra</b> y el <b>WhatsApp</b> son de todo el grupo. Cuando te asignan o te avisan algo, te llega por la <b>campana</b> 🔔 (y por <b>Telegram</b> si lo vinculaste). Cuida siempre los <b>datos sensibles</b>: no los pongas en anuncios ni pizarra si no hace falta.</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Herramientas del grupo</span>
+  <span>Guía · Julio 2026</span>
+</div>

@@ -10,7 +10,7 @@
   .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9.5pt; white-space:nowrap; }
   .sub{ color:var(--suave); margin:0 0 10px; font-size:10.5pt; }
   .pv{ list-style:none; padding:0; margin:6px 0 0; }
-  .pv li{ display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--borde); align-items:flex-start; }
+  .pv li{ display:flex; gap:12px; padding:6px 0; border-bottom:1px solid var(--borde); align-items:flex-start; }
   .pv li:last-child{ border-bottom:0; }
   .pv .n{ flex:0 0 auto; width:29px; height:29px; border-radius:50%; background:var(--azul); color:#fff; font-weight:800; font-size:12.5pt; display:flex; align-items:center; justify-content:center; }
   .pv .c{ font-size:10.5pt; padding-top:2px; } .pv .c b{ color:var(--azul-osc); }
@@ -19,9 +19,24 @@
   .next b{ color:#065f46; }
   .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:10px; font-size:10pt; }
   .rec b{ color:var(--azul-osc); }
-  .pie{ margin-top:14px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .pie{ margin-top:9px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
   .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
     background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .mock{ border:1px solid #d7deea; border-radius:12px; overflow:hidden; margin:10px 0 3px; box-shadow:0 3px 12px rgba(15,23,42,.08); }
+  .mock .bar{ background:#eef2f8; border-bottom:1px solid #e2e8f0; padding:6px 10px; display:flex; align-items:center; gap:5px; }
+  .mock .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .mock .url{ margin-left:8px; font-size:8pt; color:#64748b; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:2px 9px; }
+  .mock .body{ padding:11px 13px; background:#fff; }
+  .mock .mtit{ font-size:12pt; font-weight:800; color:var(--azul); margin:0 0 8px; }
+  .mock .campo{ margin:0 0 7px; } .mock label{ display:block; font-size:8pt; color:#334155; font-weight:700; margin-bottom:2px; }
+  .mock .inp{ border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:8.5pt; color:#94a3b8; background:#fff; }
+  .mock .g2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .mock .btn{ display:inline-block; background:var(--azul); color:#fff; font-weight:800; font-size:9pt; border-radius:8px; padding:7px 15px; }
+  .mock .hi{ box-shadow:0 0 0 3px #FFCE00, 0 0 0 5px rgba(255,206,0,.35); }
+  .mock .hint{ font-size:8.5pt; color:#a16207; font-weight:800; margin-left:8px; }
+  .mock .cbx{ display:inline-flex; align-items:center; gap:6px; font-size:8.5pt; color:#334155; margin-right:10px; }
+  .mock .cbx .box{ width:13px; height:13px; border:1.5px solid var(--azul); border-radius:3px; background:var(--azul); color:#fff; font-size:9pt; line-height:12px; text-align:center; font-weight:800; }
+  .mockcap{ font-size:8pt; color:var(--suave); text-align:center; margin:1px 0 0; }
 </style>
 <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
 <div class="head">
@@ -29,6 +44,27 @@
   <span class="rp">PASO A PASO · Recopilador</span>
 </div>
 <p class="sub">Ejemplo: una empresa, proyecto o persona quiere <b>aportar ayuda</b>. Regístrala como una <b>oportunidad de donación</b> (oferta).</p>
+
+<div class="mock">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">Oportunidades de donación › Registrar</span></div>
+  <div class="body">
+    <div class="mtit">Registrar una oportunidad de donación</div>
+    <div class="g2">
+      <div class="campo"><label>¿Quién ofrece?</label><div class="inp">Panadería La Espiga</div></div>
+      <div class="campo"><label>Tipo de oferta</label><div class="inp">Especie ▾</div></div>
+    </div>
+    <div class="campo"><label>Contacto — nombre · teléfono · correo</label><div class="inp">Ana Ríos · 0414-000 00 00 · ana@espiga.com</div></div>
+    <div class="campo"><label>¿Qué tipos de insumo puede cubrir?</label>
+      <div style="margin-top:2px"><span class="cbx"><span class="box">✓</span> Alimentos</span><span class="cbx"><span class="box">✓</span> Higiene</span></div>
+    </div>
+    <div class="g2">
+      <div class="campo"><label>Monto estimado <span style="font-weight:400;color:#94a3b8">(si es dinero)</span></label><div class="inp">—</div></div>
+      <div class="campo"><label>Ubicación / Enlace <span style="font-weight:400;color:#94a3b8">(opcional)</span></label><div class="inp">Chacao, Caracas</div></div>
+    </div>
+    <div style="margin-top:4px"><span class="btn hi">Registrar oportunidad</span><span class="hint">← al final, pulsa aquí</span></div>
+  </div>
+</div>
+<p class="mockcap">Así se ve «Registrar una oportunidad de donación». Lo más importante es el <b>contacto</b>; el botón amarillo resaltado es el paso final.</p>
 
 <ul class="pv">
   <li><span class="n">1</span><span class="c">Abre <b>«Oportunidades de donación»</b> en el menú.</span></li>

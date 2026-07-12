@@ -9,7 +9,7 @@
   .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.06; }
   .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9.5pt; white-space:nowrap; }
   .sub{ color:var(--suave); margin:0 0 8px; font-size:10.5pt; }
-  .fn{ border:1px solid var(--borde); border-radius:12px; padding:10px 13px; margin-top:9px; background:#fff; }
+  .fn{ border:1px solid var(--borde); border-radius:12px; padding:10px 13px; margin-top:9px; background:#fff; break-inside:avoid; page-break-inside:avoid; }
   .fn h2{ font-size:12pt; color:var(--azul-osc); margin:0 0 3px; display:flex; align-items:center; gap:8px; }
   .fn h2 .n{ flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:var(--azul); color:#fff; font-weight:800; font-size:11pt; display:flex; align-items:center; justify-content:center; }
   .fn p{ margin:2px 0; font-size:10pt; } .fn p b{ color:var(--azul-osc); }
@@ -19,11 +19,25 @@
   .card{ border-radius:12px; padding:9px 12px; font-size:9.7pt; }
   .card.l{ background:#eef3ff; border:1px solid #c7d2fe; } .card.c{ background:#fff7ed; border:1px solid #fed7aa; }
   .card h3{ margin:0 0 3px; font-size:10.5pt; } .card.l h3{ color:var(--azul-osc);} .card.c h3{ color:#9a3412;}
-  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:10px; font-size:10pt; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:10px; font-size:10pt; break-inside:avoid; page-break-inside:avoid; }
   .rec b{ color:var(--azul-osc); }
   .pie{ margin-top:12px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
   .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
     background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .mock{ border:1px solid #d7deea; border-radius:12px; overflow:hidden; margin:9px 0 3px; box-shadow:0 3px 12px rgba(15,23,42,.08); break-inside:avoid; page-break-inside:avoid; }
+  .mock .bar{ background:#eef2f8; border-bottom:1px solid #e2e8f0; padding:6px 10px; display:flex; align-items:center; gap:5px; }
+  .mock .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .mock .url{ margin-left:8px; font-size:8pt; color:#64748b; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:2px 9px; }
+  .mock .body{ padding:11px 13px; background:#fff; }
+  .mock .mtit{ font-size:12pt; font-weight:800; color:var(--azul); margin:0 0 8px; }
+  .mock .campo{ margin:0 0 7px; } .mock label{ display:block; font-size:8pt; color:#334155; font-weight:700; margin-bottom:2px; }
+  .mock .inp{ border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:8.5pt; color:#94a3b8; background:#fff; }
+  .mock .g2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .mock .btn{ display:inline-block; background:var(--azul); color:#fff; font-weight:800; font-size:9pt; border-radius:8px; padding:6px 13px; }
+  .mock .btn.c{ background:#9a3412; }
+  .mock .hi{ box-shadow:0 0 0 3px #FFCE00, 0 0 0 5px rgba(255,206,0,.35); }
+  .mock .hint{ font-size:8pt; color:#64748b; font-weight:600; margin-left:7px; }
+  .mockcap{ font-size:8pt; color:var(--suave); text-align:center; margin:1px 0 6px; }
 </style>
 <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
 <div class="head">
@@ -31,6 +45,22 @@
   <span class="rp">FUNCIONES EXCLUSIVAS</span>
 </div>
 <p class="sub">Además de tu trabajo del día a día, tú <b>acompañas y organizas a tu equipo</b>. Esto es lo que <b>solo tú</b> puedes hacer, y cómo se usa.</p>
+
+<div class="mock">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">Grupos › Mi grupo › Agregar integrante</span></div>
+  <div class="body">
+    <div class="mtit">Agregar integrante al grupo</div>
+    <div class="campo"><label>Nombre completo</label><div class="inp">María Pérez</div></div>
+    <div class="g2">
+      <div class="campo"><label>WhatsApp (código + número)</label><div class="inp">+58 · 414 000 00 00</div></div>
+      <div class="campo"><label>Correo (opcional)</label><div class="inp">maria@correo.com</div></div>
+    </div>
+    <div class="campo"><label>Organización (opcional)</label><div class="inp">—</div></div>
+    <div style="margin-top:2px"><span class="btn hi">Crear cuenta</span><span class="hint">si eres líder → crea la cuenta y muestra una contraseña temporal</span></div>
+    <div style="margin-top:6px"><span class="btn c">Enviar a confirmación</span><span class="hint">si eres coordinador → el líder la confirma</span></div>
+  </div>
+</div>
+<p class="mockcap">La ventana «Agregar integrante» (función 3). Según tu rol verás el botón <b>Crear cuenta</b> o <b>Enviar a confirmación</b>.</p>
 
 <div class="fn">
   <h2><span class="n">1</span> Supervisar a tu equipo</h2>
