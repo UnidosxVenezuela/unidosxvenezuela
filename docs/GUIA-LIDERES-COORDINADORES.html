@@ -1,0 +1,68 @@
+<meta charset="utf-8">
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.42; font-size:11pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 4px; gap:12px; }
+  .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.06; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9.5pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 8px; font-size:10.5pt; }
+  .fn{ border:1px solid var(--borde); border-radius:12px; padding:10px 13px; margin-top:9px; background:#fff; }
+  .fn h2{ font-size:12pt; color:var(--azul-osc); margin:0 0 3px; display:flex; align-items:center; gap:8px; }
+  .fn h2 .n{ flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:var(--azul); color:#fff; font-weight:800; font-size:11pt; display:flex; align-items:center; justify-content:center; }
+  .fn p{ margin:2px 0; font-size:10pt; } .fn p b{ color:var(--azul-osc); }
+  .fn .como{ margin-top:4px; font-size:9.5pt; color:#334155; background:#f6f8fb; border-radius:8px; padding:6px 9px; }
+  .fn .como b{ color:var(--azul); }
+  .dos{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:9px; }
+  .card{ border-radius:12px; padding:9px 12px; font-size:9.7pt; }
+  .card.l{ background:#eef3ff; border:1px solid #c7d2fe; } .card.c{ background:#fff7ed; border:1px solid #fed7aa; }
+  .card h3{ margin:0 0 3px; font-size:10.5pt; } .card.l h3{ color:var(--azul-osc);} .card.c h3{ color:#9a3412;}
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:10px; font-size:10pt; }
+  .rec b{ color:var(--azul-osc); }
+  .pie{ margin-top:12px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Líderes y coordinadores</h1>
+  <span class="rp">FUNCIONES EXCLUSIVAS</span>
+</div>
+<p class="sub">Además de tu trabajo del día a día, tú <b>acompañas y organizas a tu equipo</b>. Esto es lo que <b>solo tú</b> puedes hacer, y cómo se usa.</p>
+
+<div class="fn">
+  <h2><span class="n">1</span> Supervisar a tu equipo</h2>
+  <p>Ves el <b>tablero completo de tu área</b> —todas las solicitudes/trabajos del equipo, no solo los tuyos— con las <b>tarjetas de números</b> y la tira de flujo, para acompañar y que nada se quede sin atender.</p>
+  <p class="como"><b>Cómo:</b> entra a la sección de tu equipo (p. ej. <b>«Solicitudes»</b>): como mando verás el trabajo de todo el grupo, no solo el tuyo.</p>
+</div>
+
+<div class="fn">
+  <h2><span class="n">2</span> Gestionar tu grupo</h2>
+  <p>Administras a los <b>integrantes</b>, publicas <b>anuncios fijados</b>, agendas <b>reuniones</b>, usas la <b>pizarra</b> y el WhatsApp del grupo.</p>
+  <p class="como"><b>Cómo:</b> menú <b>«Grupos»</b> → abre <b>tu grupo</b>. Ahí tienes todas esas herramientas en un solo lugar.</p>
+</div>
+
+<div class="fn">
+  <h2><span class="n">3</span> Dar de alta integrantes</h2>
+  <p>Creas cuentas nuevas con el <b>rol de tu grupo</b>, sin pasar por la administración general.</p>
+  <p class="como"><b>Cómo:</b> en tu grupo pulsa <b>«Agregar integrante»</b> y completa <b>Nombre completo</b>, <b>WhatsApp</b> (o correo) y organización. Si el rol exige <b>2ª verificación</b>, la persona deberá completarla antes de operar.</p>
+  <div class="dos">
+    <div class="card l"><h3>Si eres líder</h3>La cuenta se crea <b>directo</b> y se te muestra una <b>contraseña temporal</b> para compartir. Botón: <b>«Crear cuenta»</b>.</div>
+    <div class="card c"><h3>Si eres coordinador</h3>Pulsas <b>«Enviar a confirmación»</b>: el <b>líder</b> del grupo la confirma antes de crearse la cuenta.</div>
+  </div>
+</div>
+
+<div class="fn">
+  <h2><span class="n">4</span> Asignar tareas</h2>
+  <p>Creas y asignas <b>tareas</b> a tu equipo, con prioridad y fecha de vencimiento, y sigues su avance.</p>
+  <p class="como"><b>Cómo:</b> desde <b>«Tareas»</b> o desde tu grupo, «Nueva tarea» → elige a quién se la asignas.</p>
+</div>
+
+<div class="rec"><b>Líder vs. coordinador:</b> un grupo tiene <b>un líder</b> (confirma las altas de los coordinadores y gestiona el liderazgo) y puede tener <b>varios coordinadores</b> (apoyan, proponen altas y supervisan). Ambos cuidan los <b>datos sensibles</b> y, ante dudas (algo urgente, contradictorio o fuera del procedimiento), siguen el circuito de consulta con la coordinación.</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Líderes y coordinadores</span>
+  <span>Guía · Julio 2026</span>
+</div>

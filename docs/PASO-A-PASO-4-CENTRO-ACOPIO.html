@@ -1,0 +1,52 @@
+<meta charset="utf-8">
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.42; font-size:11pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 4px; gap:12px; }
+  .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.06; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9.5pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 10px; font-size:10.5pt; }
+  .pv{ list-style:none; padding:0; margin:6px 0 0; }
+  .pv li{ display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--borde); align-items:flex-start; }
+  .pv li:last-child{ border-bottom:0; }
+  .pv .n{ flex:0 0 auto; width:29px; height:29px; border-radius:50%; background:var(--azul); color:#fff; font-weight:800; font-size:12.5pt; display:flex; align-items:center; justify-content:center; }
+  .pv .c{ font-size:10.5pt; padding-top:2px; } .pv .c b{ color:var(--azul-osc); }
+  .pv .n.hl{ background:var(--rojo); }
+  .tag{ display:inline-block; background:#fee2e2; border:1px solid #fecaca; color:#991b1b; font-weight:700; font-size:8pt; border-radius:999px; padding:1px 7px; margin-left:4px; vertical-align:middle; }
+  .next{ border-left:4px solid var(--ok); background:#ecfdf5; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:12px; font-size:10pt; }
+  .next b{ color:#065f46; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:10px; font-size:10pt; }
+  .rec b{ color:var(--azul-osc); }
+  .pie{ margin-top:14px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Cómo marcar un centro de acopio</h1>
+  <span class="rp">PASO A PASO · Recopilador</span>
+</div>
+<p class="sub">Ejemplo: un <b>punto donde se recibe o entrega ayuda</b> (una iglesia, un galpón, una escuela). Se registra como <b>solicitud ubicada</b> y, al verificarse, aparece en el <b>mapa</b>.</p>
+
+<ul class="pv">
+  <li><span class="n">1</span><span class="c">Abre <b>«Solicitudes» → «Nueva solicitud»</b>.</span></li>
+  <li><span class="n">2</span><span class="c"><b>Título:</b> el nombre del punto. Ej.: «<i>Centro de acopio Parroquia San José</i>».</span></li>
+  <li><span class="n">3</span><span class="c"><b>Descripción:</b> qué recibe o qué le hace falta (agua, alimentos, higiene…), si lo sabes.</span></li>
+  <li><span class="n">4</span><span class="c"><b>¿Dónde ocurre?:</b> marca el <b>pin en el mapa</b>, en la entrada del punto. Es obligatorio.</span></li>
+  <li><span class="n hl">5</span><span class="c">En <b>«¿Es un punto del mapa?»</b> elige <b>«Centro de acopio»</b>. <span class="tag">clave</span></span></li>
+  <li><span class="n hl">6</span><span class="c">Si es <b>temporal</b> (abre solo por esta emergencia), marca <b>«Es un punto temporal»</b>. Si es fijo, déjalo sin marcar.</span></li>
+  <li><span class="n">7</span><span class="c">Añade el <b>contacto</b> (responsable / teléfono) y adjuntos si tienes.</span></li>
+  <li><span class="n">8</span><span class="c">Pulsa <b>«Crear solicitud»</b>. ✅ Listo.</span></li>
+</ul>
+
+<div class="next"><b>✅ Qué pasa después:</b> al <b>confirmarlo</b> Verificación, aparece <b>automáticamente como centro de acopio en el mapa</b>. <b>Logística</b> recibe un aviso y lo gestiona: <b>inventario</b>, capacidad (camas), <b>donaciones</b> y <b>necesidades</b>.</div>
+
+<div class="rec"><b>Recuerda:</b> «Centro de acopio» es para puntos de recolección/entrega; para un <b>albergue</b> usa el tipo «Albergue»; para un hospital, «Hospital». Marca el pin con cuidado: ese punto se publica en el mapa.</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Recopilación</span>
+  <span>Paso a paso · Julio 2026</span>
+</div>
