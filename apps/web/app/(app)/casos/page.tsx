@@ -23,7 +23,7 @@ import FiltroSelect from '@/components/FiltroSelect';
 import { nombreMostrado } from '@/lib/nombre';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, punto_tipo';
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -112,6 +112,14 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   }
   const { data: casos } = await q;
 
+  // punto_tipo (0145) best-effort: si la migración aún no está aplicada en la base, se
+  // omite sin romper el tablero (se consulta aparte para no arrastrar el error a la página).
+  const puntoPorCaso = new Map<string, string>();
+  if ((casos ?? []).length) {
+    const { data: pts } = await supabase.from('casos').select('id, punto_tipo').in('id', (casos as any[]).map((c) => c.id));
+    for (const r of ((pts ?? []) as any[])) if (r.punto_tipo) puntoPorCaso.set(r.id, r.punto_tipo);
+  }
+
   const { data: listos } = await supabase.from('casos')
     .select('id, numero, titulo, asignado_a').eq('estado', 'confirmado')
     .order('actualizado_en', { ascending: false }).limit(8);
@@ -147,13 +155,18 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
-      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, punto_tipo, punto_temporal, punto_acopio_id').eq('id', searchParams.caso).single(),
+      supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
       supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
       supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', searchParams.caso).maybeSingle(),
     ]);
     drawerCaso = dc; drawerHist = dh ?? []; drawerSol = ds;
     if (drawerCaso) {
+      // Campos de «punto del mapa» (0145) best-effort: si faltan las columnas, el
+      // detalle igual abre (sin la info de punto) en vez de romper el render.
+      const { data: dpunto } = await supabase.from('casos')
+        .select('punto_tipo, punto_temporal, punto_acopio_id').eq('id', searchParams.caso).maybeSingle();
+      if (dpunto) Object.assign(drawerCaso, dpunto);
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
@@ -266,7 +279,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                       {c.asignado_a && <div className="muted" style={{ fontSize: '.76rem', marginTop: 2 }}><Icono nombre="grupos" size={11} /> Tomado por {nombresCaso.get(c.asignado_a) ?? '—'}</div>}
                     </div>
                   </td>
-                  <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}{c.punto_tipo && <div style={{ marginTop: 4 }}><Pill tono={TONO_TIPO_LUGAR[c.punto_tipo] ?? 'info'} punto={false}>Punto: {ETIQUETA_TIPO_LUGAR[c.punto_tipo] ?? c.punto_tipo}</Pill></div>}</td>
+                  <td>{c.categoria ? <BadgeCategoria>{c.categoria}</BadgeCategoria> : '—'}{(() => { const pt = puntoPorCaso.get(c.id); return pt ? <div style={{ marginTop: 4 }}><Pill tono={TONO_TIPO_LUGAR[pt] ?? 'info'} punto={false}>Punto: {ETIQUETA_TIPO_LUGAR[pt] ?? pt}</Pill></div> : null; })()}</td>
                   <td>{(() => { const h = hrefSeguro(c.fuente_url); return h ? <a href={h} target="_blank" rel="noopener noreferrer">{c.fuente || 'enlace'}</a> : (c.fuente || '—'); })()}</td>
                   <td>
                     <EstadoCaso estado={c.estado} />

@@ -6,7 +6,7 @@ import Consejo from '@/components/Consejos';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_CATEGORIA,
-  ESTADOS, PRIORIDADES, CATEGORIAS, clasePrioridad, claseEstado, RANGO_PRIORIDAD,
+  ESTADOS, PRIORIDADES, CATEGORIAS, clasePrioridad, claseEstado, claseTarjetaEstado, RANGO_PRIORIDAD,
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import ResaltarNuevos from '@/components/ResaltarNuevos';
@@ -54,7 +54,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle, verFull = false }: {
   return (
     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))' }}>
       {tareas.map((t) => (
-        <div key={t.id} className="tarjeta tarea-card">
+        <div key={t.id} className={'tarjeta tarea-card ' + claseTarjetaEstado(t.estado)}>
           <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
             <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
               <BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria>
@@ -212,7 +212,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
         <div className="grid grid-2">
           <ResaltarNuevos>
           {abiertas.map((t) => (
-            <div key={t.id} data-fila className="tarjeta">
+            <div key={t.id} data-fila className={'tarjeta ' + claseTarjetaEstado(t.estado)}>
               <Badges t={t} />
               <h3 style={{ margin: '8px 0 4px' }}><Link href={hrefDetalleTarea(searchParams, t.id)}>{t.titulo}</Link></h3>
               {t.descripcion && <p className="muted" style={{ marginTop: 0 }}>{String(t.descripcion).slice(0, 140)}</p>}

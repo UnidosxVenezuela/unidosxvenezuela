@@ -19,6 +19,17 @@ const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refug
 const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
 const TIPOS_LUGAR_VAL = ['hospital', 'albergue', 'acopio', 'otro'];
 
+// Detecta el error de «columna inexistente» de las columnas de PUNTO del mapa (0145).
+// Si esa migración aún no se aplicó en la base, permite reintentar el insert/update
+// sin esos campos para que reportar/editar una solicitud NUNCA se bloquee.
+function faltanColumnasPunto(error: { message?: string; code?: string } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.code === '42703') return true; // undefined_column
+  const m = (error.message || '').toLowerCase();
+  return /punto_tipo|punto_temporal|punto_acopio/.test(m)
+    || (/column/.test(m) && /does not exist|no existe/.test(m));
+}
+
 // Campos de «solicitud de ayuda con ubicación» (Propuesta Fase 1). Si el bloque no
 // está activo, DEVUELVE los campos en null/false (así al desmarcarlo se limpian).
 // Un requerimiento exige ubicación y NUNCA es 'Desaparecidos' (frontera con Búsqueda);
@@ -106,7 +117,7 @@ export async function crearCaso(formData: FormData) {
   // Ya no se clasifica el tipo de caso: toda información entra como «solicitud con
   // ubicación» del lado de Verificación (nunca 'Desaparecidos', la frontera con Búsqueda).
   const categoria = 'Otras informaciones';
-  const { data, error } = await supabase.from('casos').insert({
+  const fila: Record<string, unknown> = {
     titulo,
     descripcion: opt(formData.get('descripcion')),
     categoria,
@@ -119,7 +130,14 @@ export async function crearCaso(formData: FormData) {
     es_nna: false,
     // Toda información es una solicitud con ubicación (el formulario fija es_requerimiento).
     ...datosRequerimiento(formData, categoria),
-  }).select('id').single();
+  };
+  let { data, error } = await supabase.from('casos').insert(fila).select('id').single();
+  // Resiliencia: si la migración 0145 («punto del mapa») aún no está aplicada en la
+  // base, se reintenta sin esos campos para que reportar una solicitud no se bloquee.
+  if (error && faltanColumnasPunto(error)) {
+    const sinPunto = { ...fila }; delete sinPunto.punto_tipo; delete sinPunto.punto_temporal;
+    ({ data, error } = await supabase.from('casos').insert(sinPunto).select('id').single());
+  }
   if (error) {
     // La RLS exige admin o recopilación con 2ª verificación aprobada. Mensaje claro.
     if (/row-level security|violates row-level/i.test(error.message)) {
@@ -282,7 +300,7 @@ export async function editarCaso(formData: FormData) {
   if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
   await exigirEnlaceSeguro(an.url ?? fuenteUrl);
   const categoria = opt(formData.get('categoria'));
-  const { error } = await supabase.from('casos').update({
+  const cambios: Record<string, unknown> = {
     titulo,
     descripcion: opt(formData.get('descripcion')),
     categoria,
@@ -295,7 +313,13 @@ export async function editarCaso(formData: FormData) {
     actualizado_en: new Date().toISOString(),
     // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
     ...datosRequerimiento(formData, categoria),
-  }).eq('id', id);
+  };
+  let { error } = await supabase.from('casos').update(cambios).eq('id', id);
+  // Resiliencia ante 0145 no aplicada (mismas columnas de «punto del mapa»).
+  if (error && faltanColumnasPunto(error)) {
+    const sinPunto = { ...cambios }; delete sinPunto.punto_tipo; delete sinPunto.punto_temporal;
+    ({ error } = await supabase.from('casos').update(sinPunto).eq('id', id));
+  }
   if (error) throw new Error('No se pudo editar la solicitud: ' + error.message);
   // Registro explícito de la edición (además del trigger de auditoría).
   await supabase.rpc('registrar_evento_caso', { p_caso: id, p_accion: 'edicion' });

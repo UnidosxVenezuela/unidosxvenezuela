@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, esAdminGeneral, esMandoPsicosocial, rolesDe, areaDeAdmin } from '@/lib/auth';
 import { nombreMostrado } from '@/lib/nombre';
 import { createClient } from '@/lib/supabase/server';
-import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, RANGO_PRIORIDAD, etiquetaPais, zonaPais, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
+import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA_ROL, ROLES_CADENA_CONTENIDO, ROLES_SEGUNDA_VERIFICACION, clasePrioridad, claseEstado, claseTarjetaEstado, RANGO_PRIORIDAD, etiquetaPais, zonaPais, GRUPOS_POR_AREA_ADMIN } from '@/lib/constantes';
 import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
@@ -268,7 +268,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 <thead><tr><th>Tarea</th><th>Prioridad</th><th>Estado</th></tr></thead>
                 <tbody>
                   {tareas.map((t) => (
-                    <tr key={t.id}>
+                    <tr key={t.id} className={claseTarjetaEstado(t.estado)}>
                       <td><Link href={'/tareas/' + t.id}>{t.titulo}</Link></td>
                       <td><Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD] ?? t.prioridad}</Pill></td>
                       <td><Pill tono={tonoDeClase(claseEstado(t.estado))}>{ETIQUETA_ESTADO[t.estado as keyof typeof ETIQUETA_ESTADO] ?? t.estado}</Pill></td>
