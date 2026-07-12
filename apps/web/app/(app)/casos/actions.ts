@@ -46,21 +46,37 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
   }
   const lat = numOpt(formData.get('lat'));
   const lng = numOpt(formData.get('lng'));
-  if (lat === null || lng === null || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-    throw new Error('Marca la ubicación en el mapa (toca o arrastra el pin).');
-  }
+  const tieneUbic = lat !== null && lng !== null && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
   const tipo = opt(formData.get('req_tipo'));
   const urg = opt(formData.get('req_urgencia'));
-  // Punto del mapa (0145): si se elige un tipo válido, al confirmarse se crea el centro.
-  const puntoTipo = opt(formData.get('punto_tipo'));
+  const reqTipo = tipo && TIPOS_INSUMO_VAL.includes(tipo) ? tipo : null;
+  const reqCant = opt(formData.get('req_cantidad'));
+  const reqUrg = urg && PRIORIDADES_VAL.includes(urg) ? urg : 'media';
+  // Punto del mapa (0145): si se elige un tipo válido y HAY ubicación, al confirmarse se crea el centro.
+  let puntoTipo = opt(formData.get('punto_tipo'));
+  puntoTipo = puntoTipo && TIPOS_LUGAR_VAL.includes(puntoTipo) ? puntoTipo : null;
+
+  // La UBICACIÓN es OPCIONAL. Mucha gente reporta desde equipos donde el mapa no carga
+  // (WebGL / modo de bajo consumo) o sin poner el pin. Antes esto lanzaba un error duro
+  // («Marca la ubicación…») que ROMPÍA el reporte y mostraba la página de error genérica.
+  // Ahora, sin ubicación se registra igual como solicitud SIN ubicar: se guarda con
+  // es_requerimiento=false (así satisface el CHECK 0112, que exige lat/lng solo cuando es
+  // requerimiento) y Verificación puede pedir la ubicación con «Requiere información».
+  // Un PUNTO del mapa sí necesita coordenadas: si se marcó sin ubicar, se guarda como
+  // solicitud normal (sin la marca de punto), nunca se bloquea el reporte.
+  if (!tieneUbic) {
+    return { es_requerimiento: false, lat: null, lng: null,
+      req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,
+      punto_tipo: null, punto_temporal: false };
+  }
   return {
     es_requerimiento: true,
     lat, lng,
-    req_tipo: tipo && TIPOS_INSUMO_VAL.includes(tipo) ? tipo : null,
-    req_cantidad: opt(formData.get('req_cantidad')),
-    req_urgencia: urg && PRIORIDADES_VAL.includes(urg) ? urg : 'media',
-    punto_tipo: puntoTipo && TIPOS_LUGAR_VAL.includes(puntoTipo) ? puntoTipo : null,
-    punto_temporal: txt(formData.get('punto_temporal')) === 'on',
+    req_tipo: reqTipo,
+    req_cantidad: reqCant,
+    req_urgencia: reqUrg,
+    punto_tipo: puntoTipo,
+    punto_temporal: puntoTipo ? txt(formData.get('punto_temporal')) === 'on' : false,
   };
 }
 

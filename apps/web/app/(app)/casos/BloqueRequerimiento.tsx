@@ -33,7 +33,7 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
           <input type="hidden" name="es_requerimiento" value="on" />
           <strong className="fila" style={{ gap: 6 }}><Icono nombre="ubicacion" size={15} /> ¿Dónde ocurre? — ubicación de la solicitud</strong>
           <p className="muted" style={{ fontSize: '.82rem', margin: '2px 0 0' }}>
-            Marca el lugar en el mapa (toca o arrastra el pin). Toda solicitud debe tener una ubicación clara.
+            Marca el lugar en el mapa (toca o arrastra el pin). Ayuda mucho a coordinar la respuesta. Si el mapa no carga o aún no sabes el punto exacto, puedes continuar: la solicitud se registra igual y se podrá ubicar después.
           </p>
         </>
       ) : (
@@ -89,7 +89,7 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
               <span>Es un punto <b>temporal</b> (no permanente)</span>
             </label>
             <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>
-              Si eliges un tipo, al <b>verificarse</b> esta solicitud se creará automáticamente el punto en el mapa para que Logística lo gestione.
+              Si eliges un tipo, al <b>verificarse</b> esta solicitud se creará automáticamente el punto en el mapa para que Logística lo gestione. Para eso, <b>marca también su ubicación</b> arriba; sin ubicación se guarda como solicitud normal.
             </p>
           </div>
         </div>
