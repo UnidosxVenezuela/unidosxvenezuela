@@ -464,6 +464,22 @@ a.tarjeta:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24
 .tarea-card { margin-bottom: 0; }
 .tarea-card h3 { font-size: 1.05rem; line-height: 1.25; }
 
+/* Tarjeta/fila de TAREA coloreada según su estado, para entender el avance de un
+   vistazo: verde = completada · amarillo = en progreso · rojo = bloqueada/cancelada
+   · gris = pendiente/asignada. Se aplica a las tarjetas de /tareas y a las filas de
+   «Tareas del grupo». */
+.tarea-est-ok, .tarea-est-aviso, .tarea-est-critica, .tarea-est-neutra { border-left: 5px solid transparent; }
+.tarea-est-ok      { border-left-color: #16a34a; background: #f0fdf4; }
+.tarea-est-aviso   { border-left-color: #d97706; background: #fffbeb; }
+.tarea-est-critica { border-left-color: #dc2626; background: #fef2f2; }
+.tarea-est-neutra  { border-left-color: #cbd5e1; }
+/* En tablas el borde izquierdo no se pinta sobre el <tr>: se usa el fondo + un
+   acento en la primera celda. */
+tr.tarea-est-ok      { background: #f0fdf4; } tr.tarea-est-ok      td:first-child { box-shadow: inset 4px 0 0 #16a34a; }
+tr.tarea-est-aviso   { background: #fffbeb; } tr.tarea-est-aviso   td:first-child { box-shadow: inset 4px 0 0 #d97706; }
+tr.tarea-est-critica { background: #fef2f2; } tr.tarea-est-critica td:first-child { box-shadow: inset 4px 0 0 #dc2626; }
+tr.tarea-est-neutra  td:first-child { box-shadow: inset 4px 0 0 #cbd5e1; }
+
 /* Celdas de tabla: título en dos líneas + persona con avatar */
 .celda-titulo strong { display: block; font-weight: 700; }
 .celda-titulo .desc { color: var(--texto-suave); font-size: .82rem; }

@@ -638,6 +638,12 @@ export function claseEstado(e: EstadoTarea): string {
   return '';
 }
 
+/** Clase para pintar la TARJETA/FILA de una tarea con el color de su estado
+ *  (verde=completada, amarillo=en progreso, rojo=bloqueada/cancelada, gris=pendiente/asignada). */
+export function claseTarjetaEstado(e: EstadoTarea): string {
+  return 'tarea-est-' + (claseEstado(e) || 'neutra');
+}
+
 export const ETIQUETA_SENSIBILIDAD: Record<NivelSensibilidad, string> = {
   publica: 'Pública',
   interna: 'Interna',
