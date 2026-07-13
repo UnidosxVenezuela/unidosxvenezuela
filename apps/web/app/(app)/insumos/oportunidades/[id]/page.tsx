@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esAdministrador, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
@@ -24,7 +24,8 @@ const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, 
 
 export default async function OportunidadDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
-  if (!puedeRegistrarOportunidad(perfil)) redirect('/dashboard');
+  const esCapt = esCaptacion(perfil);  // Captación: consulta para alianzas (solo lectura)
+  if (!puedeRegistrarOportunidad(perfil) && !esCapt) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const esVerif = puedeVerificar(perfil);
   const esAdmin = esAdministrador(perfil);
@@ -35,8 +36,8 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
     .eq('id', params.id).maybeSingle();
   if (!o) notFound();
   const oo = o as any;
-  // Recopilación ve las que registró; Logística y Verificación ven todas.
-  if (!gestor && !esVerif && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
+  // Recopilación ve las que registró; Logística, Verificación y Captación ven todas.
+  if (!gestor && !esVerif && !esCapt && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
 
   const cubre = (oo.cubre_tipos ?? []) as string[];
   const link = hrefSeguro(oo.enlace);
@@ -279,6 +280,13 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
                 </form>
               </div>
             </>
+          ) : esCapt && oo.creado_por !== user.id ? (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Alianzas y convenios</h3>
+              <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+                Vista de solo lectura. Usa este contacto para explorar <strong>alianzas, convenios o futuras donaciones</strong>; la gestión y el emparejamiento los lleva Logística.
+              </p>
+            </div>
           ) : (
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="corazon" size={16} /> Tu oferta registrada</h3>

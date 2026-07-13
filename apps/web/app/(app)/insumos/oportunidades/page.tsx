@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
@@ -22,13 +22,15 @@ import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 
 export default async function OportunidadesPage() {
   const { user, perfil } = await requireUsuario();
-  if (!puedeRegistrarOportunidad(perfil)) redirect('/dashboard');
+  const puedeRegistrar = puedeRegistrarOportunidad(perfil);  // Logística + Recopilación (dan de alta)
+  const esCapt = esCaptacion(perfil);                        // Captación: consulta para alianzas (solo lectura)
+  if (!puedeRegistrar && !esCapt) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const esVerif = puedeVerificar(perfil);
-  const verTablero = gestor || esVerif;  // Logística y Verificación ven todo el tablero
+  const verTablero = gestor || esVerif || esCapt;  // Logística, Verificación y Captación ven todo el tablero
   const supabase = await createClient();
 
-  // Logística/Verificación ven todas; Recopilación ve solo las que registró.
+  // Logística, Verificación y Captación ven todas; Recopilación ve solo las que registró.
   let query = supabase.from('oportunidades_donacion')
     .select('id, organizacion, tipo_oferta, cubre_tipos, estado, estado_verificacion, monto_estimado, ubicacion, creado_en')
     .order('creado_en', { ascending: false });
@@ -64,7 +66,14 @@ export default async function OportunidadesPage() {
         <div className="fila"><BotonActualizar /></div>
       </div>
 
-      {/* Alta de una oferta: la puede registrar Logística y Recopilación */}
+      {esCapt && !gestor && !esVerif && (
+        <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
+          <Icono nombre="enlace" size={15} /> Vista de solo lectura para explorar posibles <strong>alianzas, convenios o futuras donaciones</strong>. La gestión y el emparejamiento los lleva Logística.
+        </p>
+      )}
+
+      {/* Alta de una oferta: la puede registrar Logística y Recopilación (Captación es solo lectura) */}
+      {puedeRegistrar && (
       <details className="tarjeta" style={{ maxWidth: 720 }} open={ops.length === 0}>
         <summary className="fila" style={{ gap: 6, cursor: 'pointer', fontWeight: 600 }}>
           <Icono nombre="mas" size={16} /> Registrar una oportunidad de donación
@@ -100,12 +109,15 @@ export default async function OportunidadesPage() {
           <BotonEnviar className="btn btn-primario"><Icono nombre="corazon" size={16} /> Registrar oportunidad</BotonEnviar>
         </form>
       </details>
+      )}
 
       {ops.length === 0 ? (
         <EstadoVacio
           icono="corazon"
           titulo="Aún no hay oportunidades"
-          texto="Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes."
+          texto={puedeRegistrar
+            ? 'Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes.'
+            : 'Cuando se registren oportunidades de donación aparecerán aquí para explorar posibles alianzas.'}
         />
       ) : verTablero ? (
         <>
