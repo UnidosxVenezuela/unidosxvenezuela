@@ -191,25 +191,25 @@
     <div class="flujo">
       <div class="paso az"><span class="n">1</span><b>Recopilación reporta</b><span class="est">Pendiente</span></div>
       <div class="fl">→</div>
-      <div class="paso az"><span class="n">2</span><b>Verificación la toma y revisa</b><span class="est">En proceso</span></div>
+      <div class="paso az"><span class="n">2</span><b>Verificación confirma</b><span class="est">Confirmada</span></div>
       <div class="fl">→</div>
-      <div class="paso ve"><span class="n">3</span><b>Se confirma</b><span class="est">Confirmada</span></div>
+      <div class="paso am"><span class="n">3</span><b>Logística busca cómo cubrirla</b><span class="est">En gestión</span></div>
     </div>
-    <p class="muted" style="margin:10px 0 5px">Ya <strong>confirmada</strong>, la solicitud sigue <strong>dos vías</strong> (según el caso):</p>
+    <p class="muted" style="margin:10px 0 5px">Al confirmarse, la solicitud entra <strong>sola</strong> a <strong>Logística</strong> (primera parada). Desde ahí hay <strong>dos desenlaces</strong>:</p>
     <div class="grid2">
-      <div class="rama" style="--c:var(--amarillo-d)">
-        <b>🚚 Logística — entrega la ayuda</b>
-        <p class="muted">Si es una <strong>solicitud de ayuda con ubicación</strong>, se deriva como <em>solicitud de insumo</em>: Solicitado → En ruta → <strong style="color:var(--verde)">Entregado</strong> → Resuelta.</p>
+      <div class="rama" style="--c:var(--verde)">
+        <b>✅ Se cubre con donaciones</b>
+        <p class="muted"><strong>Logística</strong> la gestiona y entrega: Solicitado → En ruta → <strong style="color:var(--verde)">Entregado</strong> → <strong>Resuelta</strong>.</p>
       </div>
       <div class="rama" style="--c:#6b7280">
-        <b>📣 Envío a Redacción — difunde</b>
-        <p class="muted"><strong>Redacción</strong> toma las solicitudes confirmadas y <strong>crea y publica el contenido</strong> en redes para movilizar la ayuda.</p>
+        <b>📣 No se pudo cubrir → Redacción</b>
+        <p class="muted">Si no hay forma de cubrirla, Logística la marca <strong>«no se pudo cubrir»</strong> y <strong>recién ahí</strong> pasa a <strong>Redacción</strong>, que la <strong>difunde en redes</strong> para ampliar el alcance.</p>
       </div>
     </div>
     <div class="nota">
       En el paso 2, Verificación decide: <strong>confirmar</strong>, <strong>pedir más datos</strong>
       («Requiere información adicional» → vuelve a Recopilación con el motivo) o <strong>descartar</strong>
-      (falsa, antigua o duplicada).
+      (falsa, antigua o duplicada). <strong>Redacción solo recibe lo que Logística no pudo cubrir.</strong>
     </div>
   </div>
 
@@ -255,9 +255,9 @@
         <div>Rol · Fase →</div>
         <div>Captar / Reportar</div>
         <div>Verificar</div>
-        <div>Difundir / Gestionar</div>
-        <div>Emparejar</div>
-        <div>Entregar</div>
+        <div>Gestionar</div>
+        <div>Emparejar / Entregar</div>
+        <div>Difundir (si no se cubre)</div>
       </div>
       <div class="pano-fila">
         <div class="pano-rol"><span class="pt" style="background:var(--rojo)"></span>Captación</div>
@@ -272,12 +272,12 @@
         <div class="pano-track"><span class="barra" style="grid-column:2/3;background:var(--azul-d)">Confirma / verifica</span></div>
       </div>
       <div class="pano-fila">
-        <div class="pano-rol"><span class="pt" style="background:#6b7280"></span>Envío a Redacción</div>
-        <div class="pano-track"><span class="barra" style="grid-column:3/4;background:#6b7280">Difunde en redes</span></div>
+        <div class="pano-rol"><span class="pt" style="background:var(--amarillo-d)"></span>Logística</div>
+        <div class="pano-track"><span class="barra" style="grid-column:3/5;background:var(--amarillo-d)">Gestiona · empareja · entrega</span></div>
       </div>
       <div class="pano-fila">
-        <div class="pano-rol"><span class="pt" style="background:var(--amarillo-d)"></span>Logística</div>
-        <div class="pano-track"><span class="barra" style="grid-column:3/6;background:var(--amarillo-d)">Gestiona la oferta · empareja · entrega</span></div>
+        <div class="pano-rol"><span class="pt" style="background:#6b7280"></span>Envío a Redacción</div>
+        <div class="pano-track"><span class="barra" style="grid-column:5/6;background:#6b7280">Difunde si no se cubre</span></div>
       </div>
       <div class="pano-fila">
         <div class="pano-rol"><span class="pt" style="background:#111827"></span>Administración</div>
@@ -286,8 +286,8 @@
     </div>
     <p class="muted" style="font-size:.78rem; margin-top:6px">Lectura rápida: <strong style="color:var(--rojo)">Captación</strong>
     abastece las ofertas; <strong style="color:var(--azul)">Recopilación</strong> abre ambos caminos (reporta solicitudes
-    y registra ofertas); <strong>Verificación</strong> es el filtro común; <strong>Redacción</strong> difunde las
-    solicitudes confirmadas; <strong style="color:var(--amarillo-d)">Logística</strong> cierra emparejando y entregando.</p>
+    y registra ofertas); <strong>Verificación</strong> es el filtro común; <strong style="color:var(--amarillo-d)">Logística</strong>
+    gestiona y entrega; y <strong>Redacción</strong> difunde <strong>solo lo que Logística no pudo cubrir</strong>.</p>
   </div>
 
   <!-- ════════ ROLES + ESTADOS ════════ -->
@@ -299,7 +299,7 @@
         <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Recopilación</strong><br><span class="muted">Reporta solicitudes y registra ofertas de donación.</span></span></div>
         <div class="rol"><span class="p" style="background:var(--azul-d)"></span><span><strong>Verificación</strong><br><span class="muted">Confirma solicitudes y verifica ofertas.</span></span></div>
         <div class="rol"><span class="p" style="background:var(--amarillo-d)"></span><span><strong>Logística</strong><br><span class="muted">Empareja, gestiona y entrega.</span></span></div>
-        <div class="rol"><span class="p" style="background:#6b7280"></span><span><strong>Envío a Redacción</strong><br><span class="muted">Difunde solicitudes confirmadas.</span></span></div>
+        <div class="rol"><span class="p" style="background:#6b7280"></span><span><strong>Envío a Redacción</strong><br><span class="muted">Difunde lo que Logística no pudo cubrir.</span></span></div>
         <div class="rol"><span class="p" style="background:#111827"></span><span><strong>Administración</strong><br><span class="muted">Supervisa y corrige si hace falta.</span></span></div>
       </div>
     </div>
