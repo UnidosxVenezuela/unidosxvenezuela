@@ -72,8 +72,23 @@ export async function crearTarea(formData: FormData) {
 export async function cambiarEstado(formData: FormData) {
   const supabase = await createClient();
   const id = txt(formData.get('tarea_id'));
-  const { error } = await supabase.from('tareas')
-    .update({ estado: txt(formData.get('estado')) as EstadoTarea }).eq('id', id);
+  const estado = txt(formData.get('estado')) as EstadoTarea;
+
+  // Dar una tarea por COMPLETADA la confirma un MANDO (admin, coordinación o el líder del
+  // grupo), no cualquiera que pueda editar. Espeja la regla de la UI y cierra el hueco de
+  // que el asignado/creador la cierre por una petición directa (la RLS sí les deja editar).
+  if (estado === 'completada') {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user?.id ?? '').maybeSingle();
+    const roles = [(yo as any)?.rol, ...(((yo as any)?.roles_extra as string[] | null) ?? [])];
+    const { data: t } = await supabase.from('tareas').select('grupo_id, grupos(lider_id)').eq('id', id).maybeSingle();
+    const esLider = !!(t as any)?.grupos?.lider_id && (t as any).grupos.lider_id === user?.id;
+    if (!(roles.includes('admin') || roles.includes('coordinador') || esLider)) {
+      throw new Error('Solo la coordinación o el líder del grupo pueden dar una tarea por completada.');
+    }
+  }
+
+  const { error } = await supabase.from('tareas').update({ estado }).eq('id', id);
   if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
@@ -84,17 +99,19 @@ export async function actualizarAsignacion(formData: FormData) {
   const supabase = await createClient();
   const id = txt(formData.get('tarea_id'));
   const asignado = opt(formData.get('asignado_a'));
+  const { data: t } = await supabase.from('tareas').select('grupo_id, estado').eq('id', id).single();
   // Reasignar solo a un miembro del propio grupo de la tarea (el trigger 0101 lo blinda).
-  if (asignado) {
-    const { data: t } = await supabase.from('tareas').select('grupo_id').eq('id', id).single();
-    if (t?.grupo_id && !(await esDelGrupo(supabase, t.grupo_id, asignado))) {
-      throw new Error('Solo puedes asignar la tarea a un miembro del grupo.');
-    }
+  if (asignado && t?.grupo_id && !(await esDelGrupo(supabase, t.grupo_id, asignado))) {
+    throw new Error('Solo puedes asignar la tarea a un miembro del grupo.');
   }
-  const { error } = await supabase.from('tareas').update({
+  const cambios: Record<string, unknown> = {
     asignado_a: asignado,
     prioridad: txt(formData.get('prioridad')) as Prioridad,
-  }).eq('id', id);
+  };
+  // Al asignar una tarea que estaba 'pendiente', pásala a 'asignada' (consistente con
+  // crearTarea y tomar_tarea, para que el estado refleje que ya tiene responsable).
+  if (asignado && (t as any)?.estado === 'pendiente') cambios.estado = 'asignada' as EstadoTarea;
+  const { error } = await supabase.from('tareas').update(cambios).eq('id', id);
   if (error) throw new Error('No se pudo actualizar la tarea: ' + error.message);
   // El responsable asignado también cuenta como participante (para el cupo).
   if (asignado) await supabase.from('tarea_personas').upsert({ tarea_id: id, perfil_id: asignado }, { onConflict: 'tarea_id,perfil_id', ignoreDuplicates: true });

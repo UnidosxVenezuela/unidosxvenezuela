@@ -89,8 +89,9 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
             </select>
           </div>
           <div className="campo">
-            <label htmlFor="cupo">Límite de personas (opcional)</label>
-            <input id="cupo" name="cupo" className="input" type="number" min={1} placeholder="Sin límite" />
+            <label htmlFor="cupo">Cupo de personas</label>
+            <input id="cupo" name="cupo" className="input" type="number" min={1} placeholder="1 — una sola persona" />
+            <p className="muted" style={{ fontSize: '.78rem', margin: '4px 0 0' }}>Vacío = <strong>una sola persona</strong>. Pon 2 o más solo si quieres que <strong>varias colaboren</strong>.</p>
           </div>
           <div className="campo">
             <label htmlFor="vence_en">Vence</label>
@@ -100,8 +101,7 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
         </div>
         <CapturarUbicacion />
         <p className="muted" style={{ fontSize: '.85rem' }}>
-          Si dejas <strong>Sin asignar</strong>, la tarea queda <strong>abierta</strong> y cualquier
-          miembro del grupo podrá tomarla. Solo se puede asignar a <strong>personas del grupo</strong>.
+          Si la <strong>asignas</strong> a alguien y dejas el <strong>cupo vacío</strong>, la tarea es <strong>solo de esa persona</strong>: nadie más puede sumarse. Si la dejas <strong>Sin asignar</strong>, queda <strong>abierta</strong> y un miembro del grupo puede tomarla. Con un <strong>cupo de 2 o más</strong>, varias personas del grupo podrán unirse. Solo se asigna a <strong>personas del grupo</strong>.
         </p>
         <BotonEnviar cargando="Creando…">Crear tarea</BotonEnviar>
       </form>
