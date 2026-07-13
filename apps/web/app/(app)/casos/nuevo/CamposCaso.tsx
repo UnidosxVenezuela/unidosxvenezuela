@@ -6,7 +6,8 @@ import BloqueRequerimiento from '../BloqueRequerimiento';
 // que llega se trata como una «solicitud con ubicación» (categoría fija 'Otras
 // informaciones' + requerimiento con lugar en el mapa). El formulario se enfoca en las
 // preguntas del circuito de ayuda: qué es (título + descripción, arriba), cuándo, quién
-// es la fuente, quién es el responsable, dónde ocurre y qué se necesita/ofrece.
+// es la fuente, quién es el responsable, dónde ocurre y qué se necesita. Los
+// ofrecimientos NO van aquí: se registran en «Oportunidades de donación».
 export default function CamposCaso() {
   return (
     <>

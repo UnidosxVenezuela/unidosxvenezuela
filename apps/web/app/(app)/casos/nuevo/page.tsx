@@ -52,8 +52,8 @@ export default async function NuevoCasoPage() {
       <form action={crearCaso} className="tarjeta" style={{ marginTop: 12 }}>
         <TituloConDuplicados esAdmin={esAdministrador(perfil)} />
         <div className="campo">
-          <label htmlFor="descripcion">¿Qué se necesita o qué se ofrece?</label>
-          <textarea id="descripcion" name="descripcion" className="input" rows={3} placeholder="Descripción concreta, clara y actualizada de la ayuda solicitada u ofrecida." />
+          <label htmlFor="descripcion">¿Qué se necesita?</label>
+          <textarea id="descripcion" name="descripcion" className="input" rows={3} placeholder="Descripción concreta, clara y actualizada de la ayuda solicitada." />
         </div>
         <CamposCaso />
         <div className="campo">
