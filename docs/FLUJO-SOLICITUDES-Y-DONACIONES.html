@@ -51,6 +51,9 @@
 
   .nota{ border-left:4px solid var(--amarillo); background:#fffdf2; padding:7px 11px; border-radius:0 8px 8px 0; margin:8px 0; }
   .bloque{ page-break-inside:avoid; }
+  .rama{ border:1.4px solid var(--borde); border-left:4px solid var(--c,var(--azul)); border-radius:8px; padding:8px 11px; background:#fff; }
+  .rama b{ display:block; font-size:.9rem; margin-bottom:2px; }
+  .rama p{ margin:2px 0 0; font-size:.8rem; }
 
   /* Leyendas / tablas */
   .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -117,7 +120,8 @@
 
       <!-- Carril derecho (rojo) -->
       <rect x="470" y="78" width="220" height="46" class="bx" fill="#fff" stroke="#CF142B" stroke-width="1.6"/>
-      <text x="580" y="106" class="lbl cn">Se registra la oferta</text>
+      <text x="580" y="100" class="lbl cn">Se registra la oferta</text>
+      <text x="580" y="116" class="cn" style="font:600 11px sans-serif;fill:#5b6472">(Recopilación o Logística)</text>
       <rect x="470" y="150" width="220" height="46" class="bx" fill="#fff" stroke="#CF142B" stroke-width="1.6"/>
       <text x="580" y="178" class="lbl cn">Verificación verifica</text>
       <rect x="470" y="222" width="220" height="46" class="bx" fill="#fdeef0" stroke="#CF142B" stroke-width="1.6"/>
@@ -154,26 +158,32 @@
       <div class="fl">→</div>
       <div class="paso az"><span class="n">2</span><b>Verificación la toma y revisa</b><span class="est">En proceso</span></div>
       <div class="fl">→</div>
-      <div class="paso az"><span class="n">3</span><b>Se confirma</b><span class="est">Confirmada</span></div>
-      <div class="fl">→</div>
-      <div class="paso am"><span class="n">4</span><b>Logística entrega la ayuda</b><span class="est">Solicitado → Entregado</span></div>
-      <div class="fl">→</div>
-      <div class="paso ve"><span class="n">5</span><b>Ciclo cerrado</b><span class="est">Resuelta</span></div>
+      <div class="paso ve"><span class="n">3</span><b>Se confirma</b><span class="est">Confirmada</span></div>
+    </div>
+    <p class="muted" style="margin:10px 0 5px">Ya <strong>confirmada</strong>, la solicitud sigue <strong>dos vías</strong> (según el caso):</p>
+    <div class="grid2">
+      <div class="rama" style="--c:var(--amarillo-d)">
+        <b>🚚 Logística — entrega la ayuda</b>
+        <p class="muted">Si es una <strong>solicitud de ayuda con ubicación</strong>, se deriva como <em>solicitud de insumo</em>: Solicitado → En ruta → <strong style="color:var(--verde)">Entregado</strong> → Resuelta.</p>
+      </div>
+      <div class="rama" style="--c:#6b7280">
+        <b>📣 Envío a Redacción — difunde</b>
+        <p class="muted"><strong>Redacción</strong> toma las solicitudes confirmadas y <strong>crea y publica el contenido</strong> en redes para movilizar la ayuda.</p>
+      </div>
     </div>
     <div class="nota">
       En el paso 2, Verificación decide: <strong>confirmar</strong>, <strong>pedir más datos</strong>
       («Requiere información adicional» → vuelve a Recopilación con el motivo) o <strong>descartar</strong>
-      (falsa, antigua o duplicada). Si es una <strong>solicitud de ayuda con ubicación</strong>, al confirmarse
-      se <strong>deriva a Logística</strong> como <em>solicitud de insumo</em> para coordinar la entrega.
+      (falsa, antigua o duplicada).
     </div>
   </div>
 
   <!-- ════════ FLUJO DONACIONES ════════ -->
   <div class="bloque">
     <h2><span class="ic" style="background:var(--rojo)"></span>El camino de una <span style="color:var(--rojo)">donación</span> (una oferta)</h2>
-    <p class="muted">Quien quiere ayudar (empresa, proyecto o persona) se registra como <strong>oportunidad de donación</strong>:</p>
+    <p class="muted">Quien quiere ayudar (empresa, proyecto o persona) se registra como <strong>oportunidad de donación</strong> —la ingresa <strong>Recopilación o Logística</strong>—:</p>
     <div class="flujo">
-      <div class="paso ro"><span class="n">1</span><b>Se registra la oferta</b><span class="est">Nueva</span></div>
+      <div class="paso ro"><span class="n">1</span><b>Recopilación o Logística registra la oferta</b><span class="est">Nueva</span></div>
       <div class="fl">→</div>
       <div class="paso ro"><span class="n">2</span><b>Verificación verifica</b><span class="est">Existencia · contacto</span></div>
       <div class="fl">→</div>
@@ -205,7 +215,7 @@
     <div>
       <h2 style="border:none;margin-bottom:4px">Quién interviene</h2>
       <div class="roles">
-        <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Recopilación</strong><br><span class="muted">Reporta las solicitudes.</span></span></div>
+        <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Recopilación</strong><br><span class="muted">Reporta solicitudes y registra ofertas de donación.</span></span></div>
         <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Verificación</strong><br><span class="muted">Confirma solicitudes y verifica ofertas.</span></span></div>
         <div class="rol"><span class="p" style="background:var(--amarillo-d)"></span><span><strong>Logística</strong><br><span class="muted">Empareja, gestiona y entrega.</span></span></div>
         <div class="rol"><span class="p" style="background:var(--rojo)"></span><span><strong>Captación</strong><br><span class="muted">Explora alianzas y convenios.</span></span></div>
