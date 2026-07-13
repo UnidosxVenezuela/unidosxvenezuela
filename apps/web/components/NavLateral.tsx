@@ -33,9 +33,10 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     enlaces.push({ href: '/insumos', etiqueta: 'Donaciones e Insumos', icono: 'camion' });
   }
   // Oportunidades de donación (ofertas): Recopilación las capta y Verificación las
-  // verifica, sin ver toda la sección de Logística. Quien ya tiene «Donaciones e
-  // Insumos» las alcanza desde ahí (evita resaltar dos ítems por el prefijo /insumos).
-  if (!flags.acopio && (flags.gestionCasos || flags.verificacion)) {
+  // verifica; Captación las consulta (solo lectura) para explorar alianzas y convenios.
+  // Todo sin ver la sección de Logística. Quien ya tiene «Donaciones e Insumos» las
+  // alcanza desde ahí (evita resaltar dos ítems por el prefijo /insumos).
+  if (!flags.acopio && (flags.gestionCasos || flags.verificacion || flags.captacion)) {
     enlaces.push({ href: '/insumos/oportunidades', etiqueta: 'Oportunidades de donación', icono: 'corazon' });
   }
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
