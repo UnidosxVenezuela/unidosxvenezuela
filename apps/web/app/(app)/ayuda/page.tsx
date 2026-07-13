@@ -108,7 +108,7 @@ export default async function AyudaPage() {
       )}
 
       {f.acopio && (
-        <S icono="camion" titulo="Gestión de Acopio (tu función)">
+        <S icono="camion" titulo="Logística (tu función)">
           <li><strong>Centros de acopio:</strong> mantén al día los puntos, sus necesidades y su urgencia; ubícalos en el <strong>Mapa</strong>.</li>
           <li><strong>Donaciones e Insumos:</strong> gestiona las solicitudes (Solicitado → En gestión → En ruta → Entregado), las oportunidades de donación (ofertas que se emparejan con las solicitudes), proveedores, envíos y donaciones.</li>
         </S>

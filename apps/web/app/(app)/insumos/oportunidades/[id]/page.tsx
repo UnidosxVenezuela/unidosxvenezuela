@@ -11,6 +11,7 @@ import {
 import { fechaHora, fechaCorta } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
 import Icono from '@/components/Icono';
+import Avatar from '@/components/Avatar';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -21,6 +22,16 @@ import {
 } from '../actions';
 
 const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
+
+// Explicación de cada estado del pipeline de la oportunidad (leyenda de seguimiento).
+const EXPLICA_OFERTA: Record<string, string> = {
+  nueva: 'Recién registrada; aún sin contactar.',
+  contactada: 'Ya se hizo el primer contacto con quien ofrece.',
+  en_conversacion: 'En conversación para concretar la ayuda.',
+  comprometida: 'Se comprometió a donar; conectada con una solicitud.',
+  cumplida: 'La donación se concretó. Ciclo cerrado.',
+  descartada: 'No continúa (no se concretó o no aplica).',
+};
 
 export default async function OportunidadDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -44,13 +55,14 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   const id = oo.id as string;
 
   // Bitácora + conexiones ya hechas (todos los que ven la ficha).
-  const [{ data: bitac }, { data: cnx }] = await Promise.all([
+  const [{ data: bitac }, { data: cnx }, { data: perfilesData }] = await Promise.all([
     supabase.from('bitacora_oportunidad')
-      .select('id, contenido, canal, resultado, creado_en, autor:perfiles!bitacora_oportunidad_autor_id_fkey(nombre_completo)')
+      .select('id, contenido, canal, resultado, creado_en, autor_id, autor:perfiles!bitacora_oportunidad_autor_id_fkey(nombre_completo)')
       .eq('oportunidad_id', id).order('creado_en', { ascending: false }),
     supabase.from('donaciones')
-      .select('id, donante, tipo, monto, estado, solicitudes_insumo(titulo)')
+      .select('id, donante, tipo, monto, estado, creado_en, solicitudes_insumo(titulo)')
       .eq('oportunidad_id', id).order('creado_en', { ascending: false }),
+    supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
   ]);
   const bitacora = (bitac ?? []) as any[];
   const conexiones = (cnx ?? []) as any[];
@@ -75,6 +87,27 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   }
 
   const otrosEstados = [...ESTADOS_OFERTA.filter((e) => e !== oo.estado), 'descartada'];
+
+  // ── Seguimiento (derivado de los datos existentes; sin auditoría dedicada) ──
+  // Quién ha intervenido + línea de tiempo de la oportunidad, con avatares.
+  const perfilMap = new Map<string, { nombre: string | null; avatar: string | null }>(
+    (perfilesData ?? []).map((p: any) => [p.id, { nombre: p.nombre_completo, avatar: p.avatar_url }])
+  );
+  const nomP = (idp?: string | null) => (idp ? (nombreMostrado(perfilMap.get(idp)?.nombre, esAdmin) || '—') : '—');
+  const avaP = (idp?: string | null) => (idp ? (perfilMap.get(idp)?.avatar ?? null) : null);
+  const intervino = new Map<string, string[]>();
+  const addInt = (idp: string | null | undefined, etq: string) => {
+    if (!idp) return; const a = intervino.get(idp) ?? []; if (!a.includes(etq)) a.push(etq); intervino.set(idp, a);
+  };
+  addInt(oo.creado_por, 'Registró la oportunidad');
+  if (oo.verificada_por) addInt(oo.verificada_por, 'Verificó');
+  if (oo.asignado_a) addInt(oo.asignado_a, 'Responsable');
+  for (const n of bitacora) addInt(n.autor_id, 'Registró gestiones');
+  const eventos: { cuando: string; icono: string; texto: string; quien?: string | null }[] = [];
+  if (oo.creado_en) eventos.push({ cuando: oo.creado_en, icono: 'mas', texto: 'Oportunidad registrada', quien: oo.creado_por });
+  if (oo.verificada_en) eventos.push({ cuando: oo.verificada_en, icono: 'ok', texto: 'Verificación: ' + (ETIQUETA_ESTADO_VERIF[oo.estado_verificacion] ?? oo.estado_verificacion), quien: oo.verificada_por });
+  for (const c of conexiones) if (c.creado_en) eventos.push({ cuando: c.creado_en, icono: 'corazon', texto: 'Donación conectada' + (c.solicitudes_insumo?.titulo ? ' · ' + c.solicitudes_insumo.titulo : ''), quien: null });
+  eventos.sort((a, b) => (a.cuando < b.cuando ? 1 : -1));
 
   return (
     <div>
@@ -213,6 +246,57 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
               <p style={{ whiteSpace: 'pre-wrap', margin: '8px 0 0' }}>{n.contenido}</p>
             </div>
           ))}
+
+          {/* Quién ha intervenido (derivado: creador, verificador, responsable, autores de bitácora) */}
+          {intervino.size > 0 && (
+            <>
+              <h2 className="fila" style={{ gap: 6 }}><Icono nombre="grupos" size={20} /> Quién ha intervenido</h2>
+              <div className="tarjeta">
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: 10 }}>
+                  {[...intervino.entries()].map(([idp, acciones]) => (
+                    <li key={idp} className="fila" style={{ gap: 10, alignItems: 'center' }}>
+                      <Avatar nombre={nomP(idp)} url={avaP(idp)} size={30} />
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{nomP(idp)}</div>
+                        <div className="fila" style={{ gap: 4, flexWrap: 'wrap' }}>
+                          {acciones.map((a) => <Pill key={a} tono="neutra" punto={false}>{a}</Pill>)}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
+          {/* Historial / actividad (línea de vida derivada; el detalle de contacto está en la bitácora) */}
+          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="historial" size={20} /> Historial / actividad</h2>
+          <div className="tarjeta">
+            {eventos.length === 0 ? <p className="muted" style={{ margin: 0 }}>Sin actividad todavía.</p> : (
+              <ul className="timeline">
+                {eventos.map((e, i) => (
+                  <li key={i}>
+                    <div className="fila" style={{ gap: 6, fontWeight: 600 }}><Icono nombre={e.icono} size={15} /> {e.texto}</div>
+                    <div className="muted" style={{ fontSize: '.8rem' }}>{fechaHora(e.cuando)}{e.quien ? ' · ' + nomP(e.quien) : ''}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {bitacora.length > 0 && <p className="muted" style={{ fontSize: '.8rem', margin: '10px 0 0' }}>Las gestiones de contacto están en la <strong>bitácora</strong>, más arriba.</p>}
+          </div>
+
+          {/* Estados de la oportunidad (leyenda) */}
+          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="filtro" size={20} /> Estados de la oportunidad</h2>
+          <div className="tarjeta">
+            <div className="leyenda">
+              {[...ESTADOS_OFERTA, 'descartada'].map((e) => (
+                <div key={e} className="leyenda-fila">
+                  <Pill tono={tonoDeClase(claseEstadoOferta(e))} punto={false}>{ETIQUETA_ESTADO_OFERTA[e] ?? e}</Pill>
+                  <span className="muted">{EXPLICA_OFERTA[e]}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         <aside className="grupo-aside">
