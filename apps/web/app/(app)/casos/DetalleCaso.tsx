@@ -322,7 +322,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
               </form>
             )}
             <details style={{ marginTop: 12 }}>
-              <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem' }}>Cambiar estado manualmente (avanzado)</summary>
+              <summary className="fila" style={{ cursor: 'pointer', fontSize: '.9rem', fontWeight: 700, color: 'var(--critica)', gap: 6 }}><Icono nombre="avisos" size={15} /> Cambiar estado manualmente (avanzado)</summary>
               <form action={cambiarEstadoCaso} style={{ marginTop: 8 }}>
                 <input type="hidden" name="caso_id" value={caso.id} />
                 <input type="hidden" name="volver" value={volver} />

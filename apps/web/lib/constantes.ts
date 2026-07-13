@@ -177,7 +177,7 @@ export const GRUPOS_REGISTRO: {
     { grupo: 'influencers',    etiqueta: 'Influencers' },
   ] },
   { seccion: 'Logística y acopio', area: 'logistica', opciones: [
-    { grupo: 'gestion_acopio', etiqueta: 'Gestión de Acopio' },
+    { grupo: 'gestion_acopio', etiqueta: 'Logística' },
   ] },
   { seccion: 'Otras áreas', area: 'general', opciones: [
     { grupo: 'captacion',         etiqueta: 'Captación de Oportunidades' },
