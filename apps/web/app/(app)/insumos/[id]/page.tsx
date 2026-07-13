@@ -5,11 +5,18 @@ import { requireUsuario, puedeLogistica, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
+import { urlFirmada } from '@/lib/storage';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega } from '../actions';
+
+// WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
+function waLink(contacto: string | null): string | null {
+  const d = ((contacto ?? '').match(/\d/g) ?? []).join('');
+  return d.length >= 7 ? 'https://wa.me/' + d : null;
+}
 
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
@@ -21,14 +28,14 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   const id = params.id;
 
   const { data: sData } = await supabase.from('solicitudes_insumo')
-    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, caso_id, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
+    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
     .eq('id', id).single();
   const s: any = sData;
   if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Logística</Link></div>;
 
   // Caso de ayuda de origen, si la solicitud fue derivada de un caso (Fase 2). Se
   // obtiene por RPC curada (Logística no lee casos por RLS).
-  let origen: { numero: number; titulo: string } | null = null;
+  let origen: { numero: number; titulo: string; contacto: string | null; lat: number | null; lng: number | null } | null = null;
   if (s.caso_id) {
     const { data: co } = await supabase.rpc('caso_de_solicitud', { p_caso: s.caso_id });
     origen = ((co as any[]) ?? [])[0] ?? null;
@@ -40,6 +47,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
   ]);
   const sig = siguienteEstadoInsumo(s.estado);
+  const evidenciaUrl = s.entrega_evidencia_path ? await urlFirmada(supabase, 'entregas', s.entrega_evidencia_path, 3600) : null;
 
   // Sugerencia de centros de acopio cercanos CON existencias (Fase 3), solo para
   // solicitudes derivadas de un caso y aún abiertas. RPC curada por haversine.
@@ -79,6 +87,25 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               <div>Solicitado por {nombreMostrado(s.perfiles?.nombre_completo, verFull) || '—'} · {fechaHora(s.creado_en)}</div>
             </div>
           </div>
+
+          {gestor && origen && (origen.contacto || (origen.lat != null && origen.lng != null)) && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="whatsapp" size={16} /> Contacto del solicitante</h3>
+              {origen.contacto && (
+                <div className="fila" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span>{origen.contacto}</span>
+                  {waLink(origen.contacto) && <a className="btn" style={{ minHeight: 32, padding: '2px 10px' }} href={waLink(origen.contacto)!} target="_blank" rel="noreferrer noopener"><Icono nombre="whatsapp" size={14} /> WhatsApp</a>}
+                </div>
+              )}
+              {origen.lat != null && origen.lng != null && (
+                <div className="fila" style={{ gap: 6, marginTop: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span className="muted" style={{ fontSize: '.85rem' }}><Icono nombre="ubicacion" size={13} /> {origen.lat.toFixed(5)}, {origen.lng.toFixed(5)}</span>
+                  <a className="btn" style={{ minHeight: 32, padding: '2px 10px' }} href={'https://www.google.com/maps?q=' + origen.lat + ',' + origen.lng} target="_blank" rel="noreferrer noopener">Ver en mapa ↗</a>
+                </div>
+              )}
+              <p className="muted" style={{ margin: '8px 0 0', fontSize: '.8rem' }}>Confirma las coordenadas exactas con el solicitante antes del traslado.</p>
+            </div>
+          )}
 
           <h2 className="fila" style={{ gap: 6 }}><Icono nombre="camion" size={20} /> Envíos</h2>
           {(envios ?? []).length === 0 ? (
@@ -135,6 +162,19 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               </form>
             </div>
           )}
+          {gestor && s.estado === 'entregado' && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Evidencia de entrega</h3>
+              {evidenciaUrl && <img src={evidenciaUrl} alt="Evidencia de entrega" style={{ width: '100%', maxHeight: 260, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--borde)', marginBottom: 8 }} />}
+              {s.entrega_nota && <p style={{ whiteSpace: 'pre-wrap', margin: '0 0 8px' }}>{s.entrega_nota}</p>}
+              <form action={guardarEvidenciaEntrega}>
+                <input type="hidden" name="id" value={id} />
+                <div className="campo"><label>Nota de entrega</label><input name="nota" className="input" defaultValue={s.entrega_nota ?? ''} placeholder="Quién recibió, hora, observaciones…" /></div>
+                <div className="campo"><label>Foto (opcional)</label><input name="evidencia" type="file" accept="image/*" className="input" /></div>
+                <button className="btn btn-primario" type="submit">Guardar evidencia</button>
+              </form>
+            </div>
+          )}
         </div>
 
         {gestor && (
@@ -147,8 +187,32 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <input type="hidden" name="estado" value={sig} />
                   <button className="btn btn-primario" style={{ width: '100%' }}>Avanzar a «{ETIQUETA_ESTADO_INSUMO[sig] ?? sig}»</button>
                 </form>
-              ) : <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud entregada ✅</p>}
-              {s.estado !== 'cancelado' && s.estado !== 'entregado' && (
+              ) : s.estado === 'entregado' ? (
+                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud entregada ✅</p>
+              ) : s.estado === 'cancelado' ? (
+                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud cancelada.</p>
+              ) : null}
+
+              {['solicitado', 'en_gestion', 'en_ruta'].includes(s.estado) && (
+                <form action={cambiarEstadoSolicitud} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="id" value={id} />
+                  <input type="hidden" name="estado" value="no_disponible" />
+                  <BotonConfirmar mensaje="¿Marcar que Logística no pudo cubrir esta solicitud? Pasará a Redacción para difundirla públicamente." className="btn" style={{ width: '100%' }}>No se pudo cubrir → Redacción</BotonConfirmar>
+                </form>
+              )}
+
+              {s.estado === 'no_disponible' && (
+                <div style={{ marginTop: 8 }}>
+                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Marcada como <strong style={{ color: 'var(--texto)' }}>no cubierta</strong>: pasó a Redacción para difusión pública.</p>
+                  <form action={cambiarEstadoSolicitud}>
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="estado" value="solicitado" />
+                    <button className="btn" style={{ width: '100%' }} type="submit">Reactivar (volver a intentar)</button>
+                  </form>
+                </div>
+              )}
+
+              {s.estado !== 'cancelado' && s.estado !== 'entregado' && s.estado !== 'no_disponible' && (
                 <form action={cambiarEstadoSolicitud} style={{ marginTop: 8 }}>
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value="cancelado" />

@@ -181,7 +181,7 @@ export interface Oportunidad {
 }
 
 /** Tipo de insumo (enum public.tipo_insumo, 0050). Reutilizado por los casos-requerimiento. */
-export type TipoInsumo = 'medicamentos' | 'alimentos' | 'agua' | 'higiene' | 'refugio' | 'otro';
+export type TipoInsumo = 'medicamentos' | 'materiales' | 'alimentos' | 'agua' | 'maquinaria' | 'higiene' | 'refugio' | 'otro';
 
 /** Tipo de un punto/lugar del mapa (hospital/albergue/acopio/otro). Lo comparten los
  *  «lugares» de Digitalización, los centros de acopio y las solicitudes marcadas como punto (0145). */
@@ -262,6 +262,9 @@ export interface Caso {
   punto_tipo: TipoLugar | null;
   punto_temporal: boolean;
   punto_acopio_id: string | null;
+  // Difusión (0149): cuando Logística marca una solicitud derivada como «No se pudo
+  // cubrir», el caso queda para difusión y recién ahí lo recibe Redacción.
+  requiere_difusion: boolean;
 }
 
 /** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */
