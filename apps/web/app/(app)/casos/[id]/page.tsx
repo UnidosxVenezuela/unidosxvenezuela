@@ -18,6 +18,10 @@ export default async function CasoDetallePage({ params }: { params: { id: string
     puedeOperar = (vi as any)?.estado === 'aprobada';
   }
   const verifica = puedeVerificar(perfil) || accesoBusqueda || puedeOperar; // cambia estado / toma (RLS aplica categoría + 2ª verif)
+  // Los líderes/coordinadores del grupo de Verificación pueden revertir una solicitud
+  // finalizada (migración 0147). Si la función aún no existe, rpc devuelve error → false.
+  const { data: mandoVerif } = await supabase.rpc('es_mando_verificacion');
+  const esMandoVerif = mandoVerif === true;
   const id = params.id;
 
   const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
@@ -47,7 +51,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
-          esAdmin={esAdministrador(perfil)} puedeTomar={verifica} miId={user!.id} solicitud={sol} />
+          esAdmin={esAdministrador(perfil)} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} solicitud={sol} />
       </div>
     </div>
   );

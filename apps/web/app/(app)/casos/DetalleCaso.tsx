@@ -24,8 +24,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, puedeTomar = false, miId, solicitud = null }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any;
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -160,6 +160,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         )}
       </div>
 
+      {/* Observaciones de verificación: lo que anota el equipo de Verificación.
+          Visibles para TODOS los que abren la solicitud (transparencia). Se agregan
+          y editan en el bloque de decisión de verificación (más abajo). */}
+      {caso.notas && (
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Observaciones de verificación</h3>
+          <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{caso.notas}</p>
+        </div>
+      )}
+
       {caso.es_requerimiento && (
         <div className="tarjeta" style={{ borderColor: '#99f6e4' }}>
           <h3 className="aside-titulo"><Icono nombre="camion" size={16} /> Respuesta · Logística</h3>
@@ -202,11 +212,12 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
       )}
 
-      {/* Regresar a verificación (solo admin): aún estando finalizada —confirmada,
-          enviada a Redacción, descartada (falso) o resuelta— un administrador puede
-          reabrirla y devolverla a verificación si hubo un error. Vuelve a «en proceso»
-          (no dispara los triggers de confirmación) y queda registrado en el historial. */}
-      {esAdmin && ['confirmado', 'enviado_redaccion', 'falso', 'resuelto'].includes(caso.estado) && (
+      {/* Regresar a verificación (admin y mandos de verificación): aún estando
+          finalizada —confirmada, enviada a Redacción, descartada (falso) o resuelta—
+          un administrador o un líder/coordinador de verificación puede reabrirla y
+          devolverla a verificación si hubo un error. Vuelve a «en proceso» (no dispara
+          los triggers de confirmación) y queda registrado en el historial. */}
+      {(esAdmin || esMandoVerif) && ['confirmado', 'enviado_redaccion', 'falso', 'resuelto'].includes(caso.estado) && (
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
           <h3 className="aside-titulo"><Icono nombre="historial" size={16} /> Regresar a verificación</h3>
           <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
@@ -224,7 +235,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </form>
         </div>
       )}
-      {puedeEditar && !esAdmin && caso.estado === 'enviado_redaccion' && (
+      {puedeEditar && !esAdmin && !esMandoVerif && caso.estado === 'enviado_redaccion' && (
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
           <p className="muted" style={{ margin: 0 }}>Esta solicitud ya fue <strong>enviada a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
         </div>
@@ -335,14 +346,14 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
 
           <form action={actualizarCaso} className="tarjeta">
-            <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Notas</h3>
+            <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Observaciones de verificación</h3>
             <input type="hidden" name="caso_id" value={caso.id} />
             <input type="hidden" name="volver" value={volver} />
             <div className="campo">
-              <label>Notas / observaciones</label>
-              <textarea name="notas" className="input" rows={3} defaultValue={caso.notas ?? ''} />
+              <label>Observaciones de la verificación <span className="muted">(las verá todo el equipo que abra la solicitud)</span></label>
+              <textarea name="notas" className="input" rows={3} defaultValue={caso.notas ?? ''} placeholder="Qué se revisó, con quién se confirmó, hallazgos…" />
             </div>
-            <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar</button>
+            <button className="btn btn-primario" type="submit" style={{ width: '100%' }}>Guardar observaciones</button>
           </form>
         </>
       ) : (
