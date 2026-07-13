@@ -202,7 +202,29 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
       )}
 
-      {puedeEditar && caso.estado === 'enviado_redaccion' && (
+      {/* Regresar a verificación (solo admin): aún estando finalizada —confirmada,
+          enviada a Redacción, descartada (falso) o resuelta— un administrador puede
+          reabrirla y devolverla a verificación si hubo un error. Vuelve a «en proceso»
+          (no dispara los triggers de confirmación) y queda registrado en el historial. */}
+      {esAdmin && ['confirmado', 'enviado_redaccion', 'falso', 'resuelto'].includes(caso.estado) && (
+        <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
+          <h3 className="aside-titulo"><Icono nombre="historial" size={16} /> Regresar a verificación</h3>
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>
+            Esta solicitud ya está <strong>{etiquetaEstado(caso.estado)}</strong>. Si hubo un error, puedes regresarla a <strong>verificación</strong> para revisarla de nuevo. Queda registrado en el historial.
+          </p>
+          <form action={cambiarEstadoCaso}>
+            <input type="hidden" name="caso_id" value={caso.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <input type="hidden" name="estado" value="en_proceso" />
+            <BotonConfirmar
+              mensaje={'¿Regresar esta solicitud a verificación? Volverá al flujo para revisarse de nuevo.'}
+              className="btn btn-primario" style={{ width: '100%' }}>
+              <Icono nombre="historial" size={15} /> Regresar a verificación
+            </BotonConfirmar>
+          </form>
+        </div>
+      )}
+      {puedeEditar && !esAdmin && caso.estado === 'enviado_redaccion' && (
         <div className="tarjeta" style={{ borderColor: 'var(--azul)' }}>
           <p className="muted" style={{ margin: 0 }}>Esta solicitud ya fue <strong>enviada a Redacción</strong>: el flujo de verificación terminó y su estado no se cambia desde aquí.</p>
         </div>
