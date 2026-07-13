@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { subirArchivo } from '@/lib/storage';
 import { redirigirOk } from '@/lib/flash';
 
 async function usuario() {
@@ -61,6 +62,28 @@ export async function asignarCentroSolicitud(formData: FormData) {
   if (error) throw new Error('No se pudo asignar el centro: ' + error.message);
   revalidatePath('/insumos/' + id);
   redirigirOk('/insumos/' + id, 'Centro de acopio asignado');
+}
+
+// Evidencia de entrega (Fase 3, paso 6 del flujograma): foto y/o nota que respalda
+// que el recurso llegó. La RLS (solins_update) exige puede_logistica().
+export async function guardarEvidenciaEntrega(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const nota = String(formData.get('nota') ?? '').trim() || null;
+  const patch: Record<string, unknown> = { entrega_nota: nota, actualizado_en: new Date().toISOString() };
+  const file = formData.get('evidencia');
+  if (file instanceof File && file.size > 0) {
+    if (file.size > 8 * 1024 * 1024) throw new Error('La imagen no puede superar 8 MB.');
+    if (!file.type.startsWith('image/')) throw new Error('La evidencia debe ser una imagen.');
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'jpg';
+    const ruta = id + '/' + Date.now() + '.' + ext;
+    const { path } = await subirArchivo(supabase, 'entregas', ruta, file, { publico: false });
+    patch.entrega_evidencia_path = path;
+  }
+  const { error } = await supabase.from('solicitudes_insumo').update(patch).eq('id', id);
+  if (error) throw new Error('No se pudo guardar la evidencia: ' + error.message);
+  revalidatePath('/insumos/' + id);
+  redirigirOk('/insumos/' + id, 'Evidencia guardada');
 }
 
 export async function eliminarSolicitud(formData: FormData) {

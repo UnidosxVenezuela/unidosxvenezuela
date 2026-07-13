@@ -267,19 +267,30 @@ export function codigoPais(entrada?: string | null): string | null {
 }
 
 // ── Insumos / Logística ──
+// Categorías de material alineadas al flujograma de Logística (MO-CRGI-LOG-01):
+// Salud y medicinas · Materiales/EPP/herramientas · Alimentos y agua · Maquinaria/rescate.
 export const ETIQUETA_TIPO_INSUMO: Record<string, string> = {
-  medicamentos: 'Medicamentos', alimentos: 'Alimentos', agua: 'Agua', higiene: 'Higiene', refugio: 'Refugio', otro: 'Otro',
+  medicamentos: 'Salud y medicinas',
+  materiales: 'Materiales y herramientas',
+  alimentos: 'Alimentos',
+  agua: 'Agua',
+  maquinaria: 'Maquinaria pesada / Rescate',
+  higiene: 'Higiene',
+  refugio: 'Refugio',
+  otro: 'Otro',
 };
 export const TIPOS_INSUMO = Object.keys(ETIQUETA_TIPO_INSUMO);
 export const ETIQUETA_ESTADO_INSUMO: Record<string, string> = {
-  solicitado: 'Solicitado', en_gestion: 'En gestión', en_ruta: 'En ruta', entregado: 'Entregado', cancelado: 'Cancelado',
+  solicitado: 'Solicitado', en_gestion: 'En gestión', en_ruta: 'En ruta', entregado: 'Entregado',
+  no_disponible: 'No se pudo cubrir', cancelado: 'Cancelado',
 };
-/** Orden del tablero (el estado 'cancelado' se muestra aparte). */
+/** Orden del tablero (los estados 'no_disponible'/'cancelado' se muestran aparte). */
 export const ESTADOS_INSUMO = ['solicitado', 'en_gestion', 'en_ruta', 'entregado'];
 export function claseEstadoInsumo(e: string): string {
   if (e === 'entregado') return 'ok';
   if (e === 'en_ruta') return 'info';
   if (e === 'en_gestion') return 'aviso';
+  if (e === 'no_disponible') return 'aviso';
   if (e === 'cancelado') return 'critica';
   return '';
 }
