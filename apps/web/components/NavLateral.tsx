@@ -30,7 +30,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   if (flags.acopio) enlaces.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
   if (flags.acopio) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
-    enlaces.push({ href: '/insumos', etiqueta: 'Donaciones e Insumos', icono: 'camion' });
+    enlaces.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
   }
   // Oportunidades de donación (ofertas): Recopilación las capta y Verificación las
   // verifica; Captación las consulta (solo lectura) para explorar alianzas y convenios.
