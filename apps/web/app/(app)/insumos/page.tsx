@@ -34,7 +34,7 @@ export default async function InsumosPage() {
       <RealtimeRefrescar tabla="solicitudes_insumo" />
       <div className="pagina-cab">
         <div>
-          <h1>Donaciones e Insumos</h1>
+          <h1>Logística</h1>
           <p className="muted sub">Conecta las dos caras de la ayuda: las solicitudes de los centros de acopio y las ofertas de quienes quieren donar, hasta la entrega.</p>
         </div>
         <div className="fila">

@@ -17,7 +17,7 @@ export default async function ProveedoresPage() {
 
   return (
     <div>
-      <Link href="/insumos" className="muted">← Donaciones e Insumos</Link>
+      <Link href="/insumos" className="muted">← Logística</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div><h1>Proveedores</h1><p className="muted sub">Directorio de proveedores y transportistas para gestionar las solicitudes.</p></div>
       </div>

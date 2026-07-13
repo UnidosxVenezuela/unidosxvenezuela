@@ -74,7 +74,7 @@ export default async function Dashboard() {
   if (flags.busqueda && !flags.admin) acciones.push({ href: '/casos?estado=en_proceso', titulo: 'Buscar desaparecidos', descripcion: 'Toma y verifica casos de desaparecidos', icono: 'buscar', color: '#0e7490', tinte: '#cffafe' });
   if (flags.envioRedaccion) acciones.push({ href: '/envio-redaccion', titulo: 'Envío a Redacción', descripcion: 'Pasa los confirmados a Redacción', icono: 'cohete', color: '#9d2463', tinte: '#fce7f3' });
   if (flags.psicosocial) acciones.push({ href: '/psicosocial', titulo: 'Apoyo Psicosocial', descripcion: flags.admin ? 'Supervisa el área' : 'Acompaña tus casos', icono: 'corazon', color: '#b91c1c', tinte: '#fee2e2' });
-  if (flags.acopio) acciones.push({ href: '/insumos', titulo: 'Donaciones e Insumos', descripcion: 'Solicitudes y ofertas de donación', icono: 'camion', color: '#a16207', tinte: '#fef9c3' });
+  if (flags.acopio) acciones.push({ href: '/insumos', titulo: 'Logística', descripcion: 'Solicitudes y ofertas de donación', icono: 'camion', color: '#a16207', tinte: '#fef9c3' });
   acciones.push({ href: '/grupos', titulo: 'Mis grupos', descripcion: 'Tu equipo, tareas y anuncios', icono: 'grupos', color: '#16a34a', tinte: '#dcfce7' });
   acciones.push({ href: '/horas', titulo: 'Registrar mis horas', descripcion: 'Suma tu tiempo de voluntariado', icono: 'reloj', color: '#9d2463', tinte: '#fce7f3' });
 

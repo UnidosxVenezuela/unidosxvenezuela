@@ -54,7 +54,7 @@ export default async function OportunidadesPage() {
   return (
     <AnimarEntrada>
       <RealtimeRefrescar tabla="oportunidades_donacion" />
-      <Link href="/insumos" className="muted">← Donaciones e Insumos</Link>
+      <Link href="/insumos" className="muted">← Logística</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
           <h1>Oportunidades de donación</h1>
