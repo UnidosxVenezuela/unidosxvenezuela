@@ -152,7 +152,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
   }
 
-  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null;
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false;
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia').eq('id', searchParams.caso).single(),
@@ -162,6 +162,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     ]);
     drawerCaso = dc; drawerHist = dh ?? []; drawerSol = ds;
     if (drawerCaso) {
+      // Los mandos de verificación (líder/coordinador) pueden revertir (migración 0147).
+      // Si la función aún no existe, rpc devuelve error → false (no rompe).
+      const { data: mandoVerif } = await supabase.rpc('es_mando_verificacion');
+      esMandoVerif = mandoVerif === true;
       // Campos de «punto del mapa» (0145) best-effort: si faltan las columnas, el
       // detalle igual abre (sin la info de punto) en vez de romper el render.
       const { data: dpunto } = await supabase.from('casos')
@@ -299,7 +303,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la solicitud ' + drawerCaso.titulo}>
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
-                esAdmin={esAdmin} puedeTomar={verifica} miId={user!.id} />
+                esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} />
             </DrawerModal>
           </>
         )}
