@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Flujo de Solicitudes y Donaciones · Apoyo por Venezuela</title>
+<style>
+  :root{
+    --azul:#0033A0; --azul-d:#00246e; --amarillo:#FFCE00; --amarillo-d:#b98f00;
+    --rojo:#CF142B; --rojo-d:#9e0f21; --verde:#16a34a;
+    --texto:#15213b; --muted:#5b6472; --borde:#d9e0ec; --tinte:#f4f7fc;
+  }
+  @page{ size:A4; margin:14mm 12mm; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--texto); font-size:11.2px; line-height:1.5;
+  }
+  .doc{ max-width:800px; margin:0 auto; padding:6px 4px 24px; }
+  h1{ font-size:1.7rem; margin:0; letter-spacing:-.01em; }
+  h2{ font-size:1.12rem; margin:22px 0 8px; padding-bottom:5px; border-bottom:2px solid var(--borde); }
+  h2 .ic{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:7px; vertical-align:middle; }
+  p{ margin:6px 0; }
+  .muted{ color:var(--muted); }
+  .lede{ font-size:1.02rem; }
+  strong{ color:var(--texto); }
+
+  /* Encabezado */
+  .head{ display:flex; align-items:center; gap:12px; }
+  .head .mark{ width:44px; height:44px; border-radius:50%; flex:0 0 auto;
+    background:conic-gradient(from 210deg, var(--amarillo) 0 33%, var(--azul) 33% 66%, var(--rojo) 66% 100%);
+    box-shadow:0 0 0 3px #fff, 0 0 0 4px var(--borde); }
+  .tira{ height:6px; border-radius:6px; margin:10px 0 4px;
+    background:linear-gradient(90deg, var(--amarillo) 0 33.3%, var(--azul) 33.3% 66.6%, var(--rojo) 66.6% 100%); }
+
+  /* Diagrama de convergencia */
+  .hero{ border:1px solid var(--borde); border-radius:14px; padding:8px; background:var(--tinte); margin:14px 0 4px; }
+  .hero svg{ display:block; width:100%; height:auto; }
+
+  /* Flujo por pasos (chips) */
+  .flujo{ display:flex; align-items:stretch; flex-wrap:wrap; gap:5px; margin:8px 0 2px; }
+  .paso{ flex:1 1 0; min-width:118px; border:1.4px solid var(--borde); border-top:4px solid var(--c,var(--azul));
+    border-radius:10px; padding:7px 9px; background:#fff; }
+  .paso .n{ display:inline-flex; width:17px; height:17px; border-radius:50%; background:var(--c,var(--azul)); color:#fff;
+    font-size:.72rem; font-weight:800; align-items:center; justify-content:center; margin-bottom:3px; }
+  .paso b{ display:block; font-size:.86rem; line-height:1.25; }
+  .paso .est{ display:inline-block; margin-top:4px; font-size:.68rem; font-weight:700; color:var(--muted);
+    background:var(--tinte); border:1px solid var(--borde); border-radius:20px; padding:1px 7px; }
+  .fl{ flex:0 0 auto; align-self:center; color:#aab4c5; font-weight:900; font-size:1.1rem; }
+  .az{ --c:var(--azul); } .ro{ --c:var(--rojo); } .am{ --c:var(--amarillo-d); } .ve{ --c:var(--verde); }
+
+  .nota{ border-left:4px solid var(--amarillo); background:#fffdf2; padding:7px 11px; border-radius:0 8px 8px 0; margin:8px 0; }
+  .bloque{ page-break-inside:avoid; }
+
+  /* Leyendas / tablas */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  table{ width:100%; border-collapse:collapse; font-size:.82rem; margin:4px 0; }
+  th,td{ text-align:left; padding:5px 7px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ color:var(--muted); font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; }
+  .chip{ display:inline-block; font-size:.72rem; font-weight:700; border-radius:20px; padding:1px 8px; border:1px solid; }
+  .c-az{ color:var(--azul); border-color:#bcd0f7; background:#eef3fe; }
+  .c-ro{ color:var(--rojo); border-color:#f6c9cf; background:#fdeef0; }
+  .c-am{ color:var(--amarillo-d); border-color:#f3e2a1; background:#fff9e6; }
+  .c-ve{ color:var(--verde); border-color:#bde5c8; background:#eafaf0; }
+  .roles{ display:grid; grid-template-columns:1fr 1fr; gap:6px 16px; }
+  .rol{ display:flex; gap:8px; align-items:flex-start; padding:3px 0; }
+  .rol .p{ width:10px; height:10px; border-radius:3px; margin-top:4px; flex:0 0 auto; }
+  .pie{ margin-top:16px; padding-top:8px; border-top:1px solid var(--borde); color:var(--muted); font-size:.75rem; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="head">
+    <div class="mark"></div>
+    <div>
+      <h1>Cómo fluyen las solicitudes y las donaciones</h1>
+      <div class="muted" style="font-size:.92rem">Plataforma <strong>Apoyo por Venezuela</strong> · guía visual del proceso</div>
+    </div>
+  </div>
+  <div class="tira"></div>
+
+  <p class="lede">La plataforma une <strong>dos caminos</strong>: las <strong style="color:var(--azul)">necesidades</strong>
+  —las solicitudes de ayuda que la gente reporta— y las <strong style="color:var(--rojo)">ofertas</strong>
+  —las donaciones que empresas, proyectos o personas ofrecen—. Ambas pasan por <strong>Verificación</strong> y se
+  <strong style="color:var(--amarillo-d)">encuentran en Logística</strong>, que las empareja para que la ayuda
+  llegue a quien la necesita. 💛</p>
+
+  <!-- ════════ DIAGRAMA DE CONVERGENCIA ════════ -->
+  <div class="hero bloque">
+    <svg viewBox="0 0 760 452" role="img" aria-label="Diagrama: las necesidades y las ofertas se encuentran en Logística">
+      <defs>
+        <marker id="fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#9aa6bb"/>
+        </marker>
+        <style>
+          .bx{ rx:11; } .lbl{ font:600 13px -apple-system,Segoe UI,Roboto,sans-serif; fill:#15213b; }
+          .lblw{ font:700 13px -apple-system,Segoe UI,Roboto,sans-serif; fill:#fff; }
+          .cn{ text-anchor:middle; } .ar{ stroke:#9aa6bb; stroke-width:2; fill:none; }
+        </style>
+      </defs>
+
+      <!-- Cabeceras de carril -->
+      <rect x="60" y="16" width="240" height="34" rx="9" fill="#0033A0"/>
+      <text x="180" y="38" class="lblw cn">NECESIDADES · Solicitudes</text>
+      <rect x="460" y="16" width="240" height="34" rx="9" fill="#CF142B"/>
+      <text x="580" y="38" class="lblw cn">OFERTAS · Donaciones</text>
+
+      <!-- Carril izquierdo (azul) -->
+      <rect x="70" y="78" width="220" height="46" class="bx" fill="#fff" stroke="#0033A0" stroke-width="1.6"/>
+      <text x="180" y="106" class="lbl cn">Recopilación reporta</text>
+      <rect x="70" y="150" width="220" height="46" class="bx" fill="#fff" stroke="#0033A0" stroke-width="1.6"/>
+      <text x="180" y="178" class="lbl cn">Verificación confirma</text>
+      <rect x="70" y="222" width="220" height="46" class="bx" fill="#eef3fe" stroke="#0033A0" stroke-width="1.6"/>
+      <text x="180" y="243" class="lbl cn">Derivada a Logística</text>
+      <text x="180" y="259" class="cn" style="font:600 11px sans-serif;fill:#5b6472">(solicitud de insumo)</text>
+
+      <!-- Carril derecho (rojo) -->
+      <rect x="470" y="78" width="220" height="46" class="bx" fill="#fff" stroke="#CF142B" stroke-width="1.6"/>
+      <text x="580" y="106" class="lbl cn">Se registra la oferta</text>
+      <rect x="470" y="150" width="220" height="46" class="bx" fill="#fff" stroke="#CF142B" stroke-width="1.6"/>
+      <text x="580" y="178" class="lbl cn">Verificación verifica</text>
+      <rect x="470" y="222" width="220" height="46" class="bx" fill="#fdeef0" stroke="#CF142B" stroke-width="1.6"/>
+      <text x="580" y="250" class="lbl cn">Logística la gestiona</text>
+
+      <!-- Flechas verticales -->
+      <path class="ar" d="M180,124 V148" marker-end="url(#fl)"/>
+      <path class="ar" d="M180,196 V220" marker-end="url(#fl)"/>
+      <path class="ar" d="M580,124 V148" marker-end="url(#fl)"/>
+      <path class="ar" d="M580,196 V220" marker-end="url(#fl)"/>
+
+      <!-- Convergencia -->
+      <path class="ar" d="M180,268 C180,300 250,306 300,316" marker-end="url(#fl)"/>
+      <path class="ar" d="M580,268 C580,300 510,306 460,316" marker-end="url(#fl)"/>
+
+      <rect x="250" y="312" width="260" height="52" class="bx" fill="#FFCE00" stroke="#b98f00" stroke-width="1.6"/>
+      <text x="380" y="335" class="lbl cn" style="font-weight:800">LOGÍSTICA empareja</text>
+      <text x="380" y="353" class="cn" style="font:600 12px sans-serif;fill:#5a4a00">oferta + necesidad</text>
+
+      <path class="ar" d="M380,364 V392" marker-end="url(#fl)"/>
+      <rect x="266" y="392" width="228" height="44" class="bx" fill="#eafaf0" stroke="#16a34a" stroke-width="1.6"/>
+      <text x="380" y="419" class="lbl cn" style="fill:#0f7a37">💛 Donación entregada</text>
+    </svg>
+  </div>
+  <p class="muted cn" style="text-align:center; font-size:.8rem; margin-top:2px">
+    Dos caminos que se verifican por separado y se emparejan en Logística para concretar la ayuda.</p>
+
+  <!-- ════════ FLUJO SOLICITUDES ════════ -->
+  <div class="bloque">
+    <h2><span class="ic" style="background:var(--azul)"></span>El camino de una <span style="color:var(--azul)">solicitud</span> (una necesidad)</h2>
+    <p class="muted">Toda información que llega se trata como una <strong>solicitud con ubicación</strong>. Este es su recorrido:</p>
+    <div class="flujo">
+      <div class="paso az"><span class="n">1</span><b>Recopilación reporta</b><span class="est">Pendiente</span></div>
+      <div class="fl">→</div>
+      <div class="paso az"><span class="n">2</span><b>Verificación la toma y revisa</b><span class="est">En proceso</span></div>
+      <div class="fl">→</div>
+      <div class="paso az"><span class="n">3</span><b>Se confirma</b><span class="est">Confirmada</span></div>
+      <div class="fl">→</div>
+      <div class="paso am"><span class="n">4</span><b>Logística entrega la ayuda</b><span class="est">Solicitado → Entregado</span></div>
+      <div class="fl">→</div>
+      <div class="paso ve"><span class="n">5</span><b>Ciclo cerrado</b><span class="est">Resuelta</span></div>
+    </div>
+    <div class="nota">
+      En el paso 2, Verificación decide: <strong>confirmar</strong>, <strong>pedir más datos</strong>
+      («Requiere información adicional» → vuelve a Recopilación con el motivo) o <strong>descartar</strong>
+      (falsa, antigua o duplicada). Si es una <strong>solicitud de ayuda con ubicación</strong>, al confirmarse
+      se <strong>deriva a Logística</strong> como <em>solicitud de insumo</em> para coordinar la entrega.
+    </div>
+  </div>
+
+  <!-- ════════ FLUJO DONACIONES ════════ -->
+  <div class="bloque">
+    <h2><span class="ic" style="background:var(--rojo)"></span>El camino de una <span style="color:var(--rojo)">donación</span> (una oferta)</h2>
+    <p class="muted">Quien quiere ayudar (empresa, proyecto o persona) se registra como <strong>oportunidad de donación</strong>:</p>
+    <div class="flujo">
+      <div class="paso ro"><span class="n">1</span><b>Se registra la oferta</b><span class="est">Nueva</span></div>
+      <div class="fl">→</div>
+      <div class="paso ro"><span class="n">2</span><b>Verificación verifica</b><span class="est">Existencia · contacto</span></div>
+      <div class="fl">→</div>
+      <div class="paso am"><span class="n">3</span><b>Logística gestiona el contacto</b><span class="est">Contactada → Comprometida</span></div>
+      <div class="fl">→</div>
+      <div class="paso am"><span class="n">4</span><b>Se conecta con una solicitud</b><span class="est">Donación comprometida</span></div>
+      <div class="fl">→</div>
+      <div class="paso ve"><span class="n">5</span><b>Se entrega</b><span class="est">Cumplida</span></div>
+    </div>
+    <div class="nota">
+      <strong>Captación</strong> también consulta las oportunidades (solo lectura) para explorar
+      <strong>alianzas, convenios o futuras donaciones</strong>. Cuando una oferta encaja con una necesidad,
+      <strong>Logística las conecta</strong> y nace una <em>donación</em> ligada a esa solicitud.
+    </div>
+  </div>
+
+  <!-- ════════ EL ENCUENTRO ════════ -->
+  <div class="bloque">
+    <h2><span class="ic" style="background:var(--amarillo-d)"></span>El punto de encuentro</h2>
+    <p>Las <strong style="color:var(--azul)">necesidades</strong> verificadas y las
+    <strong style="color:var(--rojo)">ofertas</strong> verificadas llegan al mismo lugar:
+    <strong style="color:var(--amarillo-d)">Logística</strong>. Ahí se <strong>emparejan</strong> —la oferta que
+    corresponde con la necesidad que corresponde— y se concreta la <strong style="color:var(--verde)">donación</strong>,
+    que se sigue paso a paso hasta que la ayuda llega. Así ninguna oferta se pierde y ninguna necesidad queda sin atender.</p>
+  </div>
+
+  <!-- ════════ ROLES + ESTADOS ════════ -->
+  <div class="grid2 bloque">
+    <div>
+      <h2 style="border:none;margin-bottom:4px">Quién interviene</h2>
+      <div class="roles">
+        <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Recopilación</strong><br><span class="muted">Reporta las solicitudes.</span></span></div>
+        <div class="rol"><span class="p" style="background:var(--azul)"></span><span><strong>Verificación</strong><br><span class="muted">Confirma solicitudes y verifica ofertas.</span></span></div>
+        <div class="rol"><span class="p" style="background:var(--amarillo-d)"></span><span><strong>Logística</strong><br><span class="muted">Empareja, gestiona y entrega.</span></span></div>
+        <div class="rol"><span class="p" style="background:var(--rojo)"></span><span><strong>Captación</strong><br><span class="muted">Explora alianzas y convenios.</span></span></div>
+        <div class="rol"><span class="p" style="background:#6b7280"></span><span><strong>Envío a Redacción</strong><br><span class="muted">Difunde solicitudes confirmadas.</span></span></div>
+        <div class="rol"><span class="p" style="background:#111827"></span><span><strong>Administración</strong><br><span class="muted">Supervisa y corrige si hace falta.</span></span></div>
+      </div>
+    </div>
+    <div>
+      <h2 style="border:none;margin-bottom:4px">Los estados de un vistazo</h2>
+      <table>
+        <tr><th>Solicitud</th><td><span class="chip c-az">Pendiente</span> <span class="chip c-az">En proceso</span> <span class="chip c-ve">Confirmada</span> <span class="chip c-ro">Descartada</span> <span class="chip c-ve">Resuelta</span></td></tr>
+        <tr><th>Oferta</th><td><span class="chip c-ro">Nueva</span> <span class="chip c-ro">Contactada</span> <span class="chip c-am">En conversación</span> <span class="chip c-am">Comprometida</span> <span class="chip c-ve">Cumplida</span></td></tr>
+        <tr><th>Donación</th><td><span class="chip c-am">Comprometida</span> <span class="chip c-am">Recibida</span> <span class="chip c-ve">Asignada</span></td></tr>
+      </table>
+      <p class="muted" style="font-size:.78rem">Cada color acompaña la etapa: azul/rojo al inicio, amarillo en gestión, verde al concretarse.</p>
+    </div>
+  </div>
+
+  <div class="pie">
+    <strong>Apoyo por Venezuela</strong> · Coordinación de respuesta a emergencias · Documento visual del flujo de solicitudes y donaciones.
+  </div>
+
+</div>
+</body>
+</html>
