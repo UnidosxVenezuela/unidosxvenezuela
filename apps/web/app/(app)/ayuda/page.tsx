@@ -94,8 +94,8 @@ export default async function AyudaPage() {
 
       {f.envioRedaccion && (
         <S icono="cohete" titulo="Redacción · Envío a Redacción (tu función)">
-          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves las solicitudes que <strong>Logística no pudo cubrir</strong> con donaciones y que necesitan <strong>difusión pública</strong>.</li>
-          <li>Revisa y toca <strong>«Enviar a Redacción»</strong> para difundirla y ampliar el alcance de la búsqueda de ayuda.</li>
+          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves <strong>todas las solicitudes confirmadas</strong>. Por <strong>rapidez ante la emergencia</strong> se difunden <strong>en paralelo</strong> a la gestión de Logística (no se espera a que Logística termine).</li>
+          <li>Revisa y toca <strong>«Enviar a Redacción»</strong> para difundirla y ampliar el alcance. Las marcadas <strong>«prioriza»</strong> son las que Logística no pudo cubrir: difúndelas primero.</li>
         </S>
       )}
 
@@ -111,7 +111,7 @@ export default async function AyudaPage() {
         <S icono="camion" titulo="Logística (tu función)">
           <li><strong>Recepción y categorización:</strong> las solicitudes verificadas entran solas al panel. Clasifica el <strong>tipo de material</strong> (salud y medicinas, materiales/EPP, alimentos y agua, maquinaria/rescate) y su prioridad.</li>
           <li><strong>Ubicación del insumo:</strong> búscalo en centros de acopio, aliados y donaciones. Usa el <strong>contacto y las coordenadas del solicitante</strong> que aparecen en el detalle de la solicitud.</li>
-          <li><strong>Si NO se puede cubrir:</strong> márcala con <strong>«No se pudo cubrir»</strong> y pasará a <strong>Redacción</strong> para difundirla públicamente y ampliar el alcance.</li>
+          <li><strong>Difusión en paralelo:</strong> toda solicitud confirmada ya está en <strong>Redacción</strong> difundiéndose (por rapidez). Si <strong>NO puedes cubrirla</strong>, márcala <strong>«No se pudo cubrir»</strong>: en Redacción se resalta como <strong>prioridad de difusión</strong>.</li>
           <li><strong>Entrega:</strong> avanza los estados (Solicitado → En gestión → En ruta → Entregado) y, al entregar, adjunta la <strong>evidencia (foto/nota)</strong>. El caso se cierra como <em>resuelto</em>.</li>
           <li><strong>Centros de acopio y donaciones:</strong> mantén al día los puntos y empareja las <strong>oportunidades de donación</strong> con las solicitudes; ubícalos en el <strong>Mapa</strong>.</li>
         </S>
