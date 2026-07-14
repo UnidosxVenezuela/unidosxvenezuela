@@ -113,7 +113,7 @@ export default async function AyudaPage() {
           <li><strong>Ubicación del insumo:</strong> búscalo en centros de acopio, aliados y donaciones. Usa el <strong>contacto y las coordenadas del solicitante</strong> que aparecen en el detalle de la solicitud.</li>
           <li><strong>Difusión en paralelo:</strong> toda solicitud confirmada ya está en <strong>Redacción</strong> difundiéndose (por rapidez). Si <strong>NO puedes cubrirla</strong>, márcala <strong>«No se pudo cubrir»</strong>: en Redacción se resalta como <strong>prioridad de difusión</strong>.</li>
           <li><strong>Entrega:</strong> avanza los estados (Solicitado → En gestión → En ruta → Entregado) y, al entregar, adjunta la <strong>evidencia (foto/nota)</strong>. El caso se cierra como <em>resuelto</em>.</li>
-          <li><strong>Centros de acopio y donaciones:</strong> mantén al día los puntos y empareja las <strong>oportunidades de donación</strong> con las solicitudes; ubícalos en el <strong>Mapa</strong>.</li>
+          <li><strong>Centros de acopio y donaciones:</strong> mantén al día los puntos y empareja los <strong>ofrecimientos (Donación-Ofrecimiento)</strong> con las solicitudes; ubícalos en el <strong>Mapa</strong>.</li>
         </S>
       )}
 

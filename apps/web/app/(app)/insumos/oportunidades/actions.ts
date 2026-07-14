@@ -1,5 +1,5 @@
 'use server';
-// Donaciones e Insumos — Oportunidades de donación (0141): registrar ofertas,
+// Donaciones e Insumos — Donación-Ofrecimiento (0141): registrar ofertas,
 // llevar el pipeline de contacto (bitácora), emparejarlas con las solicitudes que
 // encajan y concretarlas en una donación. La RLS es la fuente de verdad:
 // cualquier verificado crea la SUYA; la gestión (estado/asignar/conectar/borrar)
@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { redirigirOk } from '@/lib/flash';
 import { puedeLogistica, puedeRegistrarOportunidad } from '@/lib/auth';
-import { TIPOS_OFERTA, TIPOS_INSUMO, ESTADOS_OFERTA, CANALES } from '@/lib/constantes';
+import { TIPOS_OFERTA, TIPOS_INSUMO, ESTADOS_OFERTA, CANALES, CLASES_OFERTA, ORIGENES_OFERTA } from '@/lib/constantes';
 import type { Rol } from '@unidos/types';
 
 const ESTADOS_TODOS = [...ESTADOS_OFERTA, 'descartada'];
@@ -27,6 +27,15 @@ function enlaceOpt(v: FormDataEntryValue | null | undefined) {
   if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
   return s.slice(0, 500);
 }
+// Detecta el error de «columna inexistente» de clase/origen (0152). Si esa migración
+// aún no se aplicó, permite reintentar el insert sin esos campos para que registrar un
+// ofrecimiento NUNCA se bloquee (mismo criterio que faltanColumnasPunto en casos).
+function faltanColumnasOfrecimiento(error: { message?: string; code?: string } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.code === '42703') return true; // undefined_column
+  const m = (error.message || '').toLowerCase();
+  return /(clase|origen)/.test(m) && /does not exist|no existe|column/.test(m);
+}
 
 async function perfilActual() {
   const supabase = await createClient();
@@ -37,7 +46,7 @@ async function perfilActual() {
 }
 async function exigirRegistro() {
   const { supabase, user, perfil } = await perfilActual();
-  if (!puedeRegistrarOportunidad(perfil)) throw new Error('No tienes permiso para registrar oportunidades de donación.');
+  if (!puedeRegistrarOportunidad(perfil)) throw new Error('No tienes permiso para registrar un Donación-Ofrecimiento.');
   return { supabase, user };
 }
 async function exigirLogistica() {
@@ -53,11 +62,19 @@ export async function crearOportunidad(formData: FormData) {
   if (!organizacion) throw new Error('Indica quién ofrece la ayuda (organización, proyecto o persona).');
   const tipo_oferta = txt(formData.get('tipo_oferta'));
   if (!TIPOS_OFERTA.includes(tipo_oferta)) throw new Error('Elige un tipo de oferta válido.');
+  // Qué se ofrece (0152): Donación (bienes) o Servicio de ayuda o atención.
+  const claseRaw = txt(formData.get('clase'));
+  const clase = CLASES_OFERTA.includes(claseRaw) ? claseRaw : 'donacion';
+  // Quién ofrece (0152): centro de acopio / persona / organización (opcional).
+  const origenRaw = txt(formData.get('origen'));
+  const origen = ORIGENES_OFERTA.includes(origenRaw) ? origenRaw : null;
   const cubre_tipos = formData.getAll('cubre_tipos').map(String).filter((t) => TIPOS_INSUMO.includes(t));
 
-  const { data: creado, error } = await supabase.from('oportunidades_donacion').insert({
+  const fila: Record<string, unknown> = {
     organizacion,
     contacto: opt(formData.get('contacto')),
+    clase,
+    origen,
     tipo_oferta,
     cubre_tipos,
     descripcion: opt(formData.get('descripcion')),
@@ -65,8 +82,14 @@ export async function crearOportunidad(formData: FormData) {
     ubicacion: opt(formData.get('ubicacion')),
     enlace: enlaceOpt(formData.get('enlace')),
     creado_por: user.id,
-  }).select('id').single();
-  if (error) throw new Error('No se pudo registrar la oportunidad: ' + error.message);
+  };
+  let { data: creado, error } = await supabase.from('oportunidades_donacion').insert(fila).select('id').single();
+  // Si la migración 0152 aún no está aplicada, reintenta sin clase/origen.
+  if (error && faltanColumnasOfrecimiento(error)) {
+    const base = { ...fila }; delete base.clase; delete base.origen;
+    ({ data: creado, error } = await supabase.from('oportunidades_donacion').insert(base).select('id').single());
+  }
+  if (error) throw new Error('No se pudo registrar el ofrecimiento: ' + error.message);
   revalidatePath('/insumos/oportunidades');
   redirigirOk('/insumos/oportunidades/' + creado!.id, 'Oportunidad registrada. 💛');
 }

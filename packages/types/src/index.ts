@@ -194,6 +194,11 @@ export type TipoLugar = 'hospital' | 'albergue' | 'acopio' | 'otro';
  * «Oferta» para no colisionar con EstadoOportunidad/CategoriaOportunidad.
  */
 export type TipoOferta = 'especie' | 'dinero' | 'servicio' | 'transporte' | 'otro';
+/** Qué se ofrece (0152): «Donación» = se entregan bienes/insumos/recursos;
+ *  «Servicio de ayuda o atención» = se brinda una acción/atención, sin entregar bienes. */
+export type ClaseOferta = 'donacion' | 'servicio';
+/** Quién ofrece (0152): para tener claridad del ofrecimiento. */
+export type OrigenOferta = 'centro_acopio' | 'persona' | 'organizacion';
 export type EstadoOferta = 'nueva' | 'contactada' | 'en_conversacion' | 'comprometida' | 'cumplida' | 'descartada';
 export type CanalContacto = 'llamada' | 'whatsapp' | 'correo' | 'reunion' | 'otro';
 export type ResultadoContacto = 'positivo' | 'pendiente' | 'sin_respuesta' | 'negativo';
@@ -204,6 +209,10 @@ export interface OportunidadDonacion {
   id: string;
   organizacion: string;
   contacto: string | null;
+  // Qué se ofrece (0152): «Donación» (bienes) vs «Servicio de ayuda o atención».
+  clase: ClaseOferta;
+  // Quién ofrece (0152): centro de acopio / persona / organización (opcional).
+  origen: OrigenOferta | null;
   tipo_oferta: TipoOferta;
   cubre_tipos: TipoInsumo[];        // tipos de insumo que puede cubrir (para sugerencias de emparejamiento)
   descripcion: string | null;

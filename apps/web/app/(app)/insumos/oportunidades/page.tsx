@@ -6,6 +6,7 @@ import {
   ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
   ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_ESTADO_DONACION, ESTADOS_DONACION,
   ETIQUETA_ESTADO_VERIF, claseEstadoVerif,
+  ETIQUETA_CLASE_OFERTA, CLASES_OFERTA, EXPLICA_CLASE_OFERTA, ETIQUETA_ORIGEN_OFERTA, ORIGENES_OFERTA,
 } from '@/lib/constantes';
 import { fechaCorta } from '@/lib/fechas';
 import Icono from '@/components/Icono';
@@ -31,8 +32,10 @@ export default async function OportunidadesPage() {
   const supabase = await createClient();
 
   // Logística, Verificación y Captación ven todas; Recopilación ve solo las que registró.
+  // `*` para no romper si la migración 0152 (clase/origen) aún no está aplicada: los
+  // campos faltantes simplemente vienen undefined y la tarjeta los omite.
   let query = supabase.from('oportunidades_donacion')
-    .select('id, organizacion, tipo_oferta, cubre_tipos, estado, estado_verificacion, monto_estimado, ubicacion, creado_en')
+    .select('*')
     .order('creado_en', { ascending: false });
   if (!verTablero) query = query.eq('creado_por', user.id);
   const { data } = await query;
@@ -57,10 +60,10 @@ export default async function OportunidadesPage() {
       <Link href="/insumos" className="muted">← Logística</Link>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
-          <h1>Oportunidades de donación</h1>
+          <h1>Donación-Ofrecimiento</h1>
           <p className="muted sub">
-            Registra a quienes ofrecen ayudar (empresas, proyectos, personas), empáréjalos con las
-            solicitudes que encajan y lleva el contacto hasta concretar la donación.
+            Registra a quienes ofrecen ayudar —una <strong>donación</strong> (bienes) o un <strong>servicio de ayuda o atención</strong>—,
+            empáréjalos con las solicitudes que encajan y lleva el contacto hasta concretarlo.
           </p>
         </div>
         <div className="fila"><BotonActualizar /></div>
@@ -76,18 +79,41 @@ export default async function OportunidadesPage() {
       {puedeRegistrar && (
       <details className="tarjeta" style={{ maxWidth: 720 }} open={ops.length === 0}>
         <summary className="fila" style={{ gap: 6, cursor: 'pointer', fontWeight: 600 }}>
-          <Icono nombre="mas" size={16} /> Registrar una oportunidad de donación
+          <Icono nombre="mas" size={16} /> Registrar un ofrecimiento (donación o servicio)
         </summary>
         <form action={crearOportunidad} style={{ marginTop: 12 }}>
+          {/* Qué se ofrece (0152): Donación (bienes) vs Servicio de ayuda o atención. */}
+          <div className="campo">
+            <label>Tipo de ofrecimiento</label>
+            <div className="fila" style={{ gap: 16, flexWrap: 'wrap', marginTop: 4 }}>
+              {CLASES_OFERTA.map((c, i) => (
+                <label key={c} className="fila" style={{ gap: 6, cursor: 'pointer', fontWeight: 400 }}>
+                  <input type="radio" name="clase" value={c} defaultChecked={i === 0} style={{ width: 'auto', minHeight: 0 }} /> {ETIQUETA_CLASE_OFERTA[c]}
+                </label>
+              ))}
+            </div>
+            <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>
+              <strong>Donación:</strong> {EXPLICA_CLASE_OFERTA.donacion}<br />
+              <strong>Servicio de ayuda o atención:</strong> {EXPLICA_CLASE_OFERTA.servicio}
+            </p>
+          </div>
           <div className="grid grid-2">
-            <div className="campo"><label>Quién ofrece</label><input name="organizacion" className="input" required placeholder="Empresa · proyecto · persona" maxLength={160} /></div>
-            <div className="campo"><label>Tipo de oferta</label>
+            <div className="campo"><label>Nombre de quien ofrece</label><input name="organizacion" className="input" required placeholder="Empresa · proyecto · persona" maxLength={160} /></div>
+            <div className="campo"><label>Quién ofrece <span className="muted">(tipo)</span></label>
+              <select name="origen" className="input" defaultValue="">
+                <option value="">— Sin especificar —</option>
+                {ORIGENES_OFERTA.map((o) => <option key={o} value={o}>{ETIQUETA_ORIGEN_OFERTA[o]}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-2">
+            <div className="campo"><label>Forma <span className="muted">(detalle)</span></label>
               <select name="tipo_oferta" className="input" defaultValue="especie">
                 {TIPOS_OFERTA.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_OFERTA[t]}</option>)}
               </select>
             </div>
+            <div className="campo"><label>Contacto</label><input name="contacto" className="input" placeholder="Nombre · teléfono · correo" maxLength={200} /></div>
           </div>
-          <div className="campo"><label>Contacto</label><input name="contacto" className="input" placeholder="Nombre · teléfono · correo" maxLength={200} /></div>
           <div className="campo">
             <label>¿Qué tipos de insumo puede cubrir? <span className="muted">(para sugerir coincidencias)</span></label>
             <div className="fila" style={{ gap: 12, flexWrap: 'wrap', marginTop: 4 }}>
@@ -117,7 +143,7 @@ export default async function OportunidadesPage() {
           titulo="Aún no hay oportunidades"
           texto={puedeRegistrar
             ? 'Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes.'
-            : 'Cuando se registren oportunidades de donación aparecerán aquí para explorar posibles alianzas.'}
+            : 'Cuando se registren ofrecimientos aparecerán aquí para explorar posibles alianzas.'}
         />
       ) : verTablero ? (
         <>
@@ -151,13 +177,13 @@ export default async function OportunidadesPage() {
         <div className="tarjeta" style={{ marginTop: 16 }}>
           <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Las que registraste</h3>
           <div className="tabla-scroll"><table>
-            <thead><tr><th>Quién ofrece</th><th>Oferta</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Quién ofrece</th><th>Tipo</th><th>Estado</th></tr></thead>
             <tbody>
               {ops.map((o) => (
                 <tr key={o.id}>
                   <td><Link href={'/insumos/oportunidades/' + o.id}><strong>{o.organizacion}</strong></Link>
-                    <div className="muted" style={{ fontSize: '.8rem' }}>{fechaCorta(o.creado_en)}</div></td>
-                  <td className="muted">{ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta}</td>
+                    <div className="muted" style={{ fontSize: '.8rem' }}>{o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) + ' · ' : ''}{fechaCorta(o.creado_en)}</div></td>
+                  <td className="muted">{o.clase ? (ETIQUETA_CLASE_OFERTA[o.clase] ?? o.clase) : (ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta)}</td>
                   <td>
                     <Pill tono={tonoDeClase(claseEstadoOferta(o.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}</Pill>
                     <div style={{ marginTop: 4 }}><Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill></div>
@@ -222,10 +248,15 @@ function TarjetaOferta({ o }: { o: any }) {
   return (
     <Link data-fila href={'/insumos/oportunidades/' + o.id} className="tarjeta insumo-card">
       <div className="fila" style={{ justifyContent: 'space-between', gap: 6 }}>
-        <span className="insignia">{ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta}</span>
+        <span className="insignia">{o.clase ? (ETIQUETA_CLASE_OFERTA[o.clase] ?? o.clase) : (ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta)}</span>
         {o.tipo_oferta === 'dinero' && o.monto_estimado != null && <span className="muted" style={{ fontSize: '.8rem' }}>≈ {o.monto_estimado}</span>}
       </div>
       <strong style={{ display: 'block', margin: '6px 0 2px' }}>{o.organizacion}</strong>
+      {(o.origen || o.tipo_oferta) && (
+        <div className="muted" style={{ fontSize: '.78rem', marginBottom: 4 }}>
+          {[o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) : null, ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta].filter(Boolean).join(' · ')}
+        </div>
+      )}
       <Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill>
       {(o.cubre_tipos ?? []).length > 0 && (
         <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
