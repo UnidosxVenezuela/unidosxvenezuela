@@ -37,7 +37,7 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
   // Todo sin ver la sección de Logística. Quien ya tiene «Donaciones e Insumos» las
   // alcanza desde ahí (evita resaltar dos ítems por el prefijo /insumos).
   if (!flags.acopio && (flags.gestionCasos || flags.verificacion || flags.captacion)) {
-    enlaces.push({ href: '/insumos/oportunidades', etiqueta: 'Oportunidades de donación', icono: 'corazon' });
+    enlaces.push({ href: '/insumos/oportunidades', etiqueta: 'Donación-Ofrecimiento', icono: 'corazon' });
   }
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) enlaces.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });

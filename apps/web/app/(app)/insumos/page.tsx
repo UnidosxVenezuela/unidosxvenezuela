@@ -39,7 +39,7 @@ export default async function InsumosPage() {
         </div>
         <div className="fila">
           <BotonActualizar />
-          <Link className="btn" href="/insumos/oportunidades"><Icono nombre="corazon" size={16} /> Oportunidades de donación</Link>
+          <Link className="btn" href="/insumos/oportunidades"><Icono nombre="corazon" size={16} /> Donación-Ofrecimiento</Link>
           <Link className="btn" href="/insumos/proveedores"><Icono nombre="usuario" size={16} /> Proveedores</Link>
           <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
         </div>
@@ -49,7 +49,7 @@ export default async function InsumosPage() {
         <Kpi etiqueta="Solicitudes activas" valor={activas.length} sub="Pedidos en curso" color="var(--azul)" icono="camion" tinte="#eef2ff" />
         <Kpi etiqueta="En ruta" valor={porEstado('en_ruta').length} sub="En camino a destino" color="#a16207" icono="camion" tinte="#fef9c3" />
         <Kpi etiqueta="Entregadas" valor={entregadas} sub="Ciclo cerrado" color="#16a34a" icono="ok" tinte="#d1fae5" />
-        <Kpi etiqueta="Oportunidades de donación" valor={oportCount ?? 0} sub="Ofertas activas" color="#0f766e" icono="corazon" tinte="#f0fdfa" href="/insumos/oportunidades" />
+        <Kpi etiqueta="Donación-Ofrecimiento" valor={oportCount ?? 0} sub="Ofrecimientos activos" color="#0f766e" icono="corazon" tinte="#f0fdfa" href="/insumos/oportunidades" />
       </div>
 
       {activas.length === 0 ? (

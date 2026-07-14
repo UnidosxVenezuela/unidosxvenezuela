@@ -7,6 +7,7 @@ import {
   ETIQUETA_TIPO_INSUMO, ETIQUETA_CANAL, CANALES, ETIQUETA_RESULTADO, claseResultadoOferta,
   ETIQUETA_ESTADO_DONACION, claseEstadoDonacion, ETIQUETA_PRIORIDAD, clasePrioridad, hrefSeguro,
   ETIQUETA_ESTADO_VERIF, ESTADOS_VERIF, claseEstadoVerif,
+  ETIQUETA_CLASE_OFERTA, ETIQUETA_ORIGEN_OFERTA, VERIF_CHECKLIST_OFERTA,
 } from '@/lib/constantes';
 import { fechaHora, fechaCorta } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
@@ -87,6 +88,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   }
 
   const otrosEstados = [...ESTADOS_OFERTA.filter((e) => e !== oo.estado), 'descartada'];
+  // Guía de verificación según el tipo de ofrecimiento (0152): qué confirmar.
+  const checklistVerif = VERIF_CHECKLIST_OFERTA[oo.clase as string] ?? VERIF_CHECKLIST_OFERTA.donacion ?? [];
+  const claseLabel = oo.clase ? (ETIQUETA_CLASE_OFERTA[oo.clase] ?? oo.clase) : 'Donación';
 
   // ── Seguimiento (derivado de los datos existentes; sin auditoría dedicada) ──
   // Quién ha intervenido + línea de tiempo de la oportunidad, con avatares.
@@ -112,7 +116,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   return (
     <div>
       <RealtimeRefrescar tabla="oportunidades_donacion" filtro={'id=eq.' + id} />
-      <Link href="/insumos/oportunidades" className="muted">← Oportunidades de donación</Link>
+      <Link href="/insumos/oportunidades" className="muted">← Donación-Ofrecimiento</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8, flexWrap: 'wrap', gap: 8 }}>
         <h1 style={{ margin: 0, gap: 8, flexWrap: 'wrap' }} className="fila">
           {oo.organizacion}
@@ -121,7 +125,8 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
         </h1>
       </div>
       <p className="muted sub">
-        {ETIQUETA_TIPO_OFERTA[oo.tipo_oferta] ?? oo.tipo_oferta} · registrada {fechaCorta(oo.creado_en)}
+        {oo.clase ? (ETIQUETA_CLASE_OFERTA[oo.clase] ?? oo.clase) : (ETIQUETA_TIPO_OFERTA[oo.tipo_oferta] ?? oo.tipo_oferta)}
+        {oo.origen && <> · {ETIQUETA_ORIGEN_OFERTA[oo.origen] ?? oo.origen}</>} · registrada {fechaCorta(oo.creado_en)}
         {oo.autor?.nombre_completo && <> · por {nombreMostrado(oo.autor.nombre_completo, esAdmin)}</>}
       </p>
 
@@ -130,6 +135,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
           {/* Datos de la oferta */}
           <div className="tarjeta">
             <div className="grid grid-2">
+              <Dato etq="Tipo de ofrecimiento" val={oo.clase ? (ETIQUETA_CLASE_OFERTA[oo.clase] ?? oo.clase) : (ETIQUETA_TIPO_OFERTA[oo.tipo_oferta] ?? oo.tipo_oferta)} />
+              <Dato etq="Quién ofrece" val={oo.origen ? (ETIQUETA_ORIGEN_OFERTA[oo.origen] ?? oo.origen) : '—'} />
+              <Dato etq="Forma" val={ETIQUETA_TIPO_OFERTA[oo.tipo_oferta] ?? oo.tipo_oferta} />
               <Dato etq="Contacto" val={oo.contacto || '—'} />
               <Dato etq="Ubicación" val={oo.ubicacion || '—'} />
               {oo.tipo_oferta === 'dinero' && <Dato etq="Monto estimado" val={oo.monto_estimado != null ? String(oo.monto_estimado) : '—'} />}
@@ -196,7 +204,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
                   ))}
                 </tbody>
               </table></div>
-              <p className="muted" style={{ fontSize: '.8rem', margin: '10px 0 0' }}>Sigue el estado de cada donación en <Link href="/insumos/oportunidades">Oportunidades de donación</Link>.</p>
+              <p className="muted" style={{ fontSize: '.8rem', margin: '10px 0 0' }}>Sigue el estado de cada donación en <Link href="/insumos/oportunidades">Donación-Ofrecimiento</Link>.</p>
               </div>
             </>
           )}
@@ -304,6 +312,13 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
               (existencia, contacto, canales oficiales). No toca el pipeline de Logística. */}
           <div className="tarjeta" style={{ borderColor: '#bfdbfe' }}>
             <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> Verificación</h3>
+            {/* Guía de verificación según el tipo de ofrecimiento (0152). */}
+            <details style={{ margin: '0 0 8px' }}>
+              <summary className="muted" style={{ cursor: 'pointer', fontSize: '.82rem' }}>Qué confirmar · {claseLabel}</summary>
+              <ul className="muted" style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: '.82rem' }}>
+                {checklistVerif.map((it) => <li key={it}>{it}</li>)}
+              </ul>
+            </details>
             <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
               <Pill tono={tonoDeClase(claseEstadoVerif(oo.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[oo.estado_verificacion] ?? oo.estado_verificacion}</Pill>
               {oo.verificada_en && oo.verificador?.nombre_completo && <span className="muted" style={{ fontSize: '.8rem' }}>{nombreMostrado(oo.verificador.nombre_completo, esAdmin)} · {fechaCorta(oo.verificada_en)}</span>}

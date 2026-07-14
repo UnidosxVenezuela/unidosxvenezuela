@@ -316,6 +316,34 @@ export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {
   especie: 'En especie', dinero: 'Dinero', servicio: 'Servicio', transporte: 'Transporte', otro: 'Otro',
 };
 export const TIPOS_OFERTA = Object.keys(ETIQUETA_TIPO_OFERTA);
+
+// ── Qué se ofrece (0152): Donación (bienes) vs Servicio de ayuda o atención ──
+export const ETIQUETA_CLASE_OFERTA: Record<string, string> = {
+  donacion: 'Donación', servicio: 'Servicio de ayuda o atención',
+};
+export const CLASES_OFERTA = Object.keys(ETIQUETA_CLASE_OFERTA);
+/** Explica cada clase (bajo el selector, para elegir bien). */
+export const EXPLICA_CLASE_OFERTA: Record<string, string> = {
+  donacion: 'Se entregan bienes, insumos o recursos (alimentos, agua, medicamentos, ropa, colchones, kits de higiene, materiales, dinero…).',
+  servicio: 'Se brinda una acción o atención por un tiempo, sin entregar bienes (consulta médica o veterinaria, apoyo psicológico, traslado, orientación legal o social, refugio, comidas…).',
+};
+// ── Quién ofrece (0152): para tener claridad del ofrecimiento ──
+export const ETIQUETA_ORIGEN_OFERTA: Record<string, string> = {
+  centro_acopio: 'Centro de acopio', persona: 'Persona', organizacion: 'Organización',
+};
+export const ORIGENES_OFERTA = Object.keys(ETIQUETA_ORIGEN_OFERTA);
+/** Lista de verificación según el tipo de ofrecimiento (guía para Verificación). */
+export const VERIF_CHECKLIST_OFERTA: Record<string, string[]> = {
+  donacion: [
+    'Quién dona', 'Qué se dona', 'Cantidad', 'Cuándo estará disponible',
+    'Cómo y dónde se entrega', 'Quién coordina la entrega', 'Condiciones',
+  ],
+  servicio: [
+    'Quién presta el servicio', 'Qué atención brinda', 'A quién va dirigido', 'Dónde se presta',
+    'Días y horarios', '¿Está activo?', '¿Es gratuito?', '¿Requiere turno o registro?',
+    'Capacidad o restricciones', 'Responsable',
+  ],
+};
 export const ETIQUETA_ESTADO_OFERTA: Record<string, string> = {
   nueva: 'Nueva', contactada: 'Contactada', en_conversacion: 'En conversación',
   comprometida: 'Comprometida', cumplida: 'Cumplida', descartada: 'Descartada',
