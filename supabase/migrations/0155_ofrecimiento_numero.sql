@@ -30,9 +30,12 @@ begin
    where o.id = f.id;
 end $$;
 
--- Alinear la secuencia al máximo actual (para que los NUEVOS sigan la numeración).
+-- Alinear la secuencia para que el PRÓXIMO ofrecimiento tome max+1 (o 1 si no hay ninguno).
+-- Se usa la forma (valor, is_called=false): el siguiente nextval() devuelve exactamente ese
+-- valor. Con la tabla vacía, max→0 y el próximo número es 1 — evita el error «setval: value 0
+-- is out of bounds» (la secuencia arranca en 1) cuando aún no existe ningún ofrecimiento.
 select setval('public.oportunidad_numero_seq',
-              coalesce((select max(numero) from public.oportunidades_donacion), 0), true);
+              coalesce((select max(numero) from public.oportunidades_donacion), 0) + 1, false);
 
 -- Los nuevos ofrecimientos toman el número por defecto de la secuencia; único y no nulo.
 alter table public.oportunidades_donacion
