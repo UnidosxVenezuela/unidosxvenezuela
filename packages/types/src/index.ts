@@ -207,6 +207,7 @@ export type EstadoVerificacionOferta = 'pendiente' | 'verificada' | 'observada';
 
 export interface OportunidadDonacion {
   id: string;
+  numero: number;                   // correlativo legible (0155); la app lo muestra «OF-00001»
   organizacion: string;
   contacto: string | null;
   // Qué se ofrece (0152): «Donación» (bienes) vs «Servicio de ayuda o atención».

@@ -126,6 +126,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
         </h1>
       </div>
       <p className="muted sub">
+        {oo.numero != null && <><strong style={{ color: 'var(--texto)' }}>OF-{String(oo.numero).padStart(5, '0')}</strong> · </>}
         {oo.clase ? (ETIQUETA_CLASE_OFERTA[oo.clase] ?? oo.clase) : (ETIQUETA_TIPO_OFERTA[oo.tipo_oferta] ?? oo.tipo_oferta)}
         {oo.origen && <> · {ETIQUETA_ORIGEN_OFERTA[oo.origen] ?? oo.origen}</>} · registrada {fechaCorta(oo.creado_en)}
         {oo.autor?.nombre_completo && <> · por {nombreMostrado(oo.autor.nombre_completo, esAdmin)}</>}
