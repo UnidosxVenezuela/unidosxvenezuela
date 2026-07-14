@@ -101,7 +101,7 @@ export default async function NuevaTareaPage({ searchParams }: { searchParams: {
         </div>
         <CapturarUbicacion />
         <p className="muted" style={{ fontSize: '.85rem' }}>
-          Si la <strong>asignas</strong> a alguien y dejas el <strong>cupo vacío</strong>, la tarea es <strong>solo de esa persona</strong>: nadie más puede sumarse. Si la dejas <strong>Sin asignar</strong>, queda <strong>abierta</strong> y un miembro del grupo puede tomarla. Con un <strong>cupo de 2 o más</strong>, varias personas del grupo podrán unirse. Solo se asigna a <strong>personas del grupo</strong>.
+          Puedes <strong>asignar la tarea a una o varias personas</strong> del grupo (marca sus casillas). Si <strong>no marcas a nadie</strong>, queda <strong>abierta</strong> y un miembro del grupo puede tomarla. El <strong>cupo</strong> limita cuántas personas pueden colaborar (si asignas a más de esa cantidad, se ajusta solo). Cada persona asignada recibe un aviso. Solo se asigna a <strong>personas del grupo</strong>.
         </p>
         <BotonEnviar cargando="Creando…">Crear tarea</BotonEnviar>
       </form>
