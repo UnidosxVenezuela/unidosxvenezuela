@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerOportunidades, puedeVerificar, esAdminVerificacion, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
@@ -23,12 +23,14 @@ import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 
 export default async function OportunidadesPage() {
   const { user, perfil } = await requireUsuario();
-  const puedeRegistrar = puedeRegistrarOportunidad(perfil);  // Logística + Recopilación (dan de alta)
+  // Entrar a la sección: crean, verifican, supervisan o consultan. Quién DA DE ALTA es
+  // más acotado (puedeRegistrar): Verificación entra a verificar, no a crear.
+  if (!puedeVerOportunidades(perfil)) redirect('/dashboard');
+  const puedeRegistrar = puedeRegistrarOportunidad(perfil);  // SOLO Logística + Recopilación dan de alta
   const esCapt = esCaptacion(perfil);                        // Captación: consulta para alianzas (solo lectura)
-  if (!puedeRegistrar && !esCapt) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const esVerif = puedeVerificar(perfil);
-  const verTablero = gestor || esVerif || esCapt;  // Logística, Verificación y Captación ven todo el tablero
+  const verTablero = gestor || esVerif || esCapt || esAdminVerificacion(perfil);  // Logística, Verificación (y su admin) y Captación ven todo el tablero
   const supabase = await createClient();
 
   // Logística, Verificación y Captación ven todas; Recopilación ve solo las que registró.
