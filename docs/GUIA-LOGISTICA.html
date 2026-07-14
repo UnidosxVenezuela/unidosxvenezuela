@@ -53,6 +53,8 @@
   .steps{ display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; margin:8px 0; }
   .step{ flex:1; min-width:120px; border:1px solid var(--borde); border-radius:10px; padding:8px 10px; background:#fff; position:relative; }
   .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
+  .rama{ border:1px solid var(--borde); border-left:4px solid var(--c,var(--azul)); border-radius:0 10px 10px 0; padding:9px 13px; background:#fff; break-inside:avoid; }
+  .rama b{ display:block; color:var(--azul-osc); margin-bottom:2px; } .rama p{ margin:0; font-size:10pt; }
   .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
   ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
   .mini{ font-size:9.5pt; color:var(--suave); }
@@ -64,11 +66,12 @@
   <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
   <div class="cuerpo">
     <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
-    <h1>Logística y Acopio</h1>
-    <div class="sub">El área que convierte una <b>oferta</b> o una <b>solicitud</b> en una
-      <b>entrega coordinada y trazable</b>: donaciones, oportunidades, centros de acopio e insumos.</div>
+    <h1>Logística y Distribución</h1>
+    <div class="sub">El área que convierte una <b>necesidad</b> o una <b>oferta</b> en una
+      <b>entrega coordinada y trazable</b>. Recepción, categorización, ubicación del insumo,
+      transporte y entrega con evidencia.</div>
     <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
-    <div class="pie">Versión imprimible · Actualizada julio 2026 · Incluye Oportunidades de donación</div>
+    <div class="pie">Versión imprimible · Actualizada julio 2026 · Flujo alineado al manual del equipo (MO-CRGI-LOG-01)</div>
   </div>
   <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
 </div>
@@ -76,202 +79,284 @@
 <!-- ══════════════ 1. QUÉ ES ══════════════ -->
 <section class="pagina">
   <h2>1 · Qué es esta área</h2>
-  <p class="lead">El equipo de <b>Logística y Acopio</b> es <b>la entrega</b>: toma lo que Verificación deja validado y
-  lo <b>concreta</b>. Trabaja dos frentes que terminan en lo mismo —ayuda que llega—: las <b>oportunidades de donación</b>
-  (quién ofrece) y las <b>solicitudes de insumo</b> (quién necesita), apoyado en el <b>mapa</b> y los <b>centros de acopio</b>.</p>
+  <p class="lead">El equipo de <b>Logística y Distribución</b> es <b>la entrega</b>: toma lo que Verificación deja validado
+  y lo <b>concreta</b>. Trabaja dos frentes que terminan en lo mismo —ayuda que llega—: las <b>solicitudes</b> (quién
+  necesita) y las <b>oportunidades de donación</b> (quién ofrece), apoyado en el <b>mapa</b> y los <b>centros de acopio</b>.</p>
   <div class="grid g2">
-    <div class="card"><h4>Oportunidades de donación</h4><p>Ofertas de empresas, proyectos o personas. Las contactas, les
-      das seguimiento y las <b>emparejas</b> con una solicitud para <b>concretar la donación</b>.</p></div>
-    <div class="card"><h4>Solicitudes de insumo</h4><p>Necesidades con ubicación que Verificación deriva. Se atienden
-      desde el <b>centro de acopio más cercano con stock</b>, hasta la entrega.</p></div>
+    <div class="card"><h4>Solicitudes de ayuda</h4><p>Necesidades con ubicación que, al <b>confirmarse</b>, entran
+      <b>solas</b> a tu panel. Las categorizas, buscas cómo cubrirlas y las llevas hasta la entrega.</p></div>
+    <div class="card"><h4>Oportunidades de donación</h4><p>Ofertas de empresas, proyectos o personas. Las contactas,
+      les das seguimiento y las <b>emparejas</b> con una solicitud para <b>concretar la donación</b>.</p></div>
     <div class="card"><h4>Centros de acopio</h4><p>Inventario en tiempo real, donaciones que entran, traspasos entre
       centros y necesidades por prioridad. Cada centro tiene su <b>QR</b> y sus responsables.</p></div>
     <div class="card"><h4>Mapa</h4><p>Solicitudes georreferenciadas y centros de acopio en una sola vista: <b>dónde
       falta qué</b> y quién puede cubrirlo.</p></div>
   </div>
-  <div class="callout"><b>Principio de seguridad:</b> la <b>RLS</b> (seguridad de la base de datos) hace valer quién puede
-  ver y hacer cada cosa. Esta área <b>no</b> maneja datos confidenciales de víctimas, por lo que <b>no</b> exige segunda
-  verificación de identidad: con tu cuenta verificada y el rol de Logística ya operas.</div>
+  <div class="callout"><b>Sin puerta de identidad:</b> esta área <b>no</b> maneja datos confidenciales de víctimas, así que
+  <b>no</b> exige segunda verificación. Con tu cuenta verificada y el rol de Logística ya operas. La <b>RLS</b> (seguridad
+  de la base de datos) hace valer quién ve y hace cada cosa.</div>
 </section>
 
-<!-- ══════════════ NOVEDAD · OPORTUNIDADES ══════════════ -->
+<!-- ══════════════ NOVEDAD · FLUJO NUEVO ══════════════ -->
 <section class="pagina">
-  <h2>★ Novedad · Donaciones, ahora dentro de Oportunidades</h2>
-  <p class="lead">Para un flujo <b>limpio y ordenado</b>, el registro de donaciones se <b>unificó</b> dentro de
-  <b>«Oportunidades de donación»</b>: ya no hay una sección «Donaciones» aparte. Y hay un cambio importante antes de que
-  tú trabajes una oferta: <b>ahora pasa por Verificación</b>.</p>
+  <h2>★ Novedad · Se gestiona y se difunde en paralelo (por rapidez)</h2>
+  <p class="lead">El flujo se alineó al <b>manual del equipo</b> y, <b>por la urgencia</b>, se trabaja en paralelo. Dos
+  cosas importantes en cómo te llega el trabajo:</p>
   <div class="grid g2">
-    <div class="card"><span class="n" style="background:#CF142B">1</span><h4>Un solo lugar</h4>
-      <p>Las ofertas y las donaciones que se concretan viven en <b>«Oportunidades de donación»</b>. Al <b>emparejar</b>
-      una oferta con una solicitud, la donación se crea sola y queda ligada a esa oferta.</p></div>
-    <div class="card"><span class="n" style="background:#E6B800">2</span><h4>Verificación primero <span class="nueva">nuevo</span></h4>
-      <p>Antes de invertir tiempo en contactar, mira el sello de <b>Verificación</b>: <span class="pill p-green">Verificada</span>
-      (real y seria) o <span class="pill p-red">Observada</span> (algo falta; revisa la nota). Prioriza las verificadas.</p></div>
+    <div class="card"><span class="n" style="background:#0033A0">1</span><h4>Entra sola al confirmarse <span class="nueva">nuevo</span></h4>
+      <p>Ya <b>no hay que «derivar» a mano</b>: cuando Verificación <b>confirma</b> una solicitud con ubicación, esta
+      aparece <b>sola</b> en tu panel de Logística y te llega un aviso.</p></div>
+    <div class="card"><span class="n" style="background:#CF142B">2</span><h4>Se difunde en paralelo <span class="nueva">nuevo</span></h4>
+      <p>Por <b>rapidez ante la emergencia</b>, <b>toda solicitud confirmada</b> pasa <b>a la vez</b> a Logística (gestión)
+      y a <b>Redacción</b> (difusión). Si no la puedes cubrir, márcala <b>«No se pudo cubrir»</b>: en Redacción se resalta
+      como <b>prioridad</b>.</p></div>
   </div>
-  <div class="callout ok"><b>Por qué ayuda:</b> el equipo de Verificación filtra las ofertas igual que filtra las
-  solicitudes. Así tú concentras tu esfuerzo en <b>oportunidades confiables</b> y evitas perseguir ofertas que no eran
-  serias. La <b>verificación</b> (Verificación) y tu <b>gestión de contacto</b> (Logística) son dos pistas independientes:
-  una no bloquea a la otra.</div>
+  <div class="callout ok"><b>Por qué ayuda:</b> no se espera a que una vía termine para arrancar la otra. Se intenta cubrir
+  con donantes y acopio <b>al mismo tiempo</b> que se difunde públicamente, para que la ayuda llegue <b>lo antes posible</b>.</div>
 </section>
 
-<!-- ══════════════ 2. FLUJO DE UNA OPORTUNIDAD ══════════════ -->
+<!-- ══════════════ 2. FLUJO DE UNA SOLICITUD ══════════════ -->
 <section class="pagina">
-  <h2>2 · El flujo de una oportunidad de donación</h2>
-  <p>Desde que alguien ofrece ayuda hasta que la donación se concreta y se liga a una solicitud real:</p>
+  <h2>2 · El flujo de una solicitud (una necesidad)</h2>
+  <p>Desde que se reporta hasta que la ayuda llega. Por rapidez, al confirmarse se <b>gestiona y se difunde a la vez</b>:</p>
+  <div class="steps">
+    <div class="step"><span class="sn">1 · RECOPILACIÓN</span><p><b>Reporta</b> la solicitud con ubicación, tipo de insumo, cantidad y urgencia.</p></div>
+    <div class="step"><span class="sn">2 · VERIFICACIÓN</span><p><b>Confirma</b> (o pide más datos / descarta). Solo lo confirmado avanza.</p></div>
+    <div class="step"><span class="sn">3 · LOGÍSTICA</span><p><b>Recibe automáticamente</b> la solicitud. Categoriza, prioriza y <b>busca cómo cubrirla</b>.</p></div>
+  </div>
+  <p style="margin:10px 0 5px"><b>Al confirmarse, la solicitud entra a la vez a las dos vías (en paralelo):</b></p>
+  <div class="grid g2">
+    <div class="rama" style="--c:var(--amarillo-osc)">
+      <b>🚚 Logística — gestiona y entrega</b>
+      <p>Por estados: <span class="pill p-gray">Solicitado</span> → <span class="pill p-amber">En gestión</span>
+      → <span class="pill p-blue">En ruta</span> → <span class="pill p-green">Entregado</span>. Al entregar, el caso queda
+      <b>Resuelto</b> y se avisa a quien reportó. Adjunta la <b>evidencia (foto/nota)</b>.</p>
+    </div>
+    <div class="rama" style="--c:#64748b">
+      <b>📣 Redacción — difunde en redes</b>
+      <p><b>Todas</b> las confirmadas se difunden en paralelo para ampliar el alcance. Si Logística marca
+      <b>«No se pudo cubrir»</b>, esa solicitud se <b>resalta como prioridad</b> de difusión.</p>
+    </div>
+  </div>
+  <div class="callout warn"><b>Reglas del ciclo:</b> entran solas las solicitudes <b>confirmadas y con ubicación</b> (los
+  casos «Desaparecidos» no entran a Logística); una solicitud <b>entregada o cancelada</b> no se reabre (salvo
+  administración); <b>cada cambio de estado queda auditado</b>.</div>
+  <div class="callout ok"><b>Centros que nacen ya verificados:</b> cuando Recopilación marca una solicitud como
+  <b>punto</b> (albergue, hospital, centro de acopio) y Verificación la confirma, el <b>centro aparece solo en el mapa</b>.
+  Nace <b>sin responsable</b>: el admin de Logística asigna quién lo gestiona. En el mapa se distingue si es <b>temporal</b>.</div>
+</section>
+
+<!-- ══════════════ 3. FLUJO DE UNA OPORTUNIDAD ══════════════ -->
+<section class="pagina">
+  <h2>3 · El flujo de una oportunidad de donación (una oferta)</h2>
+  <p>El otro carril: quien <b>ofrece</b> ayuda. Muchas ofertas nacen del trabajo de <b>Captación de Oportunidades</b>
+  (alianzas, empresas, fundaciones). La <b>registra Recopilación</b>; tú la <b>gestionas y concretas</b>.</p>
   <figure>
-    <svg width="660" height="196" viewBox="0 0 700 196" role="img" aria-label="Flujo de una oportunidad de donación">
+    <svg width="660" height="150" viewBox="0 0 700 150" role="img" aria-label="Flujo de una oportunidad de donación">
       <defs><marker id="la" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
       <g text-anchor="middle" font-family="system-ui">
-        <!-- 1 registrar -->
-        <rect x="8" y="60" width="120" height="60" rx="10" fill="#eef3ff" stroke="#bcd0f7"/>
-        <text x="68" y="84" font-size="10.5" font-weight="800" fill="#0033A0">1 · Registrar</text>
-        <text x="68" y="100" font-size="8.5" fill="#556074">Recopilación</text>
-        <text x="68" y="112" font-size="8.5" fill="#556074">(o Logística)</text>
-        <!-- 2 verificar -->
-        <rect x="152" y="60" width="120" height="60" rx="10" fill="#fffbe9" stroke="#e9c94e"/>
-        <text x="212" y="84" font-size="10.5" font-weight="800" fill="#a16207">2 · Verificar</text>
-        <text x="212" y="100" font-size="8.5" fill="#556074">Verificación</text>
-        <text x="212" y="112" font-size="8.5" fill="#556074">verificada / observada</text>
-        <!-- 3 contactar -->
-        <rect x="296" y="60" width="120" height="60" rx="10" fill="#fef2f2" stroke="#f2c0c0"/>
-        <text x="356" y="84" font-size="10.5" font-weight="800" fill="#CF142B">3 · Contactar</text>
-        <text x="356" y="100" font-size="8.5" fill="#556074">Logística · bitácora</text>
-        <text x="356" y="112" font-size="8.5" fill="#556074">llamada · WhatsApp…</text>
-        <!-- 4 emparejar -->
-        <rect x="440" y="60" width="120" height="60" rx="10" fill="#fef2f2" stroke="#f2c0c0"/>
-        <text x="500" y="84" font-size="10.5" font-weight="800" fill="#CF142B">4 · Emparejar</text>
-        <text x="500" y="100" font-size="8.5" fill="#556074">con una solicitud</text>
-        <text x="500" y="112" font-size="8.5" fill="#556074">que encaje</text>
-        <!-- 5 concretar -->
-        <rect x="584" y="60" width="112" height="60" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
-        <text x="640" y="84" font-size="10.5" font-weight="800" fill="#166534">5 · Concretar</text>
-        <text x="640" y="100" font-size="8.5" fill="#15803d">donación creada</text>
-        <text x="640" y="112" font-size="8.5" fill="#15803d">→ comprometida</text>
+        <rect x="8" y="40" width="120" height="60" rx="10" fill="#eef3ff" stroke="#bcd0f7"/>
+        <text x="68" y="64" font-size="10.5" font-weight="800" fill="#0033A0">1 · Registrar</text>
+        <text x="68" y="80" font-size="8.5" fill="#556074">Recopilación</text>
+        <rect x="152" y="40" width="120" height="60" rx="10" fill="#fffbe9" stroke="#e9c94e"/>
+        <text x="212" y="64" font-size="10.5" font-weight="800" fill="#a16207">2 · Verificar</text>
+        <text x="212" y="80" font-size="8.5" fill="#556074">verificada / observada</text>
+        <rect x="296" y="40" width="120" height="60" rx="10" fill="#fef2f2" stroke="#f2c0c0"/>
+        <text x="356" y="64" font-size="10.5" font-weight="800" fill="#CF142B">3 · Contactar</text>
+        <text x="356" y="80" font-size="8.5" fill="#556074">Logística · bitácora</text>
+        <rect x="440" y="40" width="120" height="60" rx="10" fill="#fef2f2" stroke="#f2c0c0"/>
+        <text x="500" y="64" font-size="10.5" font-weight="800" fill="#CF142B">4 · Emparejar</text>
+        <text x="500" y="80" font-size="8.5" fill="#556074">con una solicitud</text>
+        <rect x="584" y="40" width="112" height="60" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
+        <text x="640" y="64" font-size="10.5" font-weight="800" fill="#166534">5 · Concretar</text>
+        <text x="640" y="80" font-size="8.5" fill="#15803d">donación creada</text>
       </g>
       <g stroke="#64748b" stroke-width="1.7" fill="none">
-        <line x1="128" y1="90" x2="150" y2="90" marker-end="url(#la)"/>
-        <line x1="272" y1="90" x2="294" y2="90" marker-end="url(#la)"/>
-        <line x1="416" y1="90" x2="438" y2="90" marker-end="url(#la)"/>
-        <line x1="560" y1="90" x2="582" y2="90" marker-end="url(#la)"/>
+        <line x1="128" y1="70" x2="150" y2="70" marker-end="url(#la)"/>
+        <line x1="272" y1="70" x2="294" y2="70" marker-end="url(#la)"/>
+        <line x1="416" y1="70" x2="438" y2="70" marker-end="url(#la)"/>
+        <line x1="560" y1="70" x2="582" y2="70" marker-end="url(#la)"/>
       </g>
-      <text x="352" y="24" text-anchor="middle" font-size="9" font-weight="800" fill="#CF142B">LOGÍSTICA lleva los pasos 3–5</text>
-      <text x="352" y="150" text-anchor="middle" font-size="9" fill="#94a3b8">Registrar y verificar ocurren antes; tú tomas la oferta ya verificada y la concretas.</text>
+      <text x="352" y="22" text-anchor="middle" font-size="9" font-weight="800" fill="#CF142B">LOGÍSTICA lleva los pasos 3–5</text>
+      <text x="352" y="128" text-anchor="middle" font-size="9" fill="#94a3b8">Registrar y verificar ocurren antes; tú tomas la oferta ya verificada y la concretas.</text>
     </svg>
     <figcaption>De la oferta a la donación concreta. La bitácora de contacto (paso 3) guarda cada llamada o mensaje con su resultado.</figcaption>
   </figure>
-  <div class="callout"><b>Emparejar = concretar:</b> cuando conectas una oferta con una solicitud, la plataforma crea la
-  <b>donación</b> (donante = la organización que ofrece, ligada a esa oferta) y avanza la oportunidad a
-  <span class="pill p-green">Comprometida</span>. Es el momento en que «quien ofrece» y «quien necesita» se encuentran.</div>
+  <div class="callout"><b>Emparejar = concretar:</b> al conectar una oferta con una solicitud, la plataforma crea la
+  <b>donación</b> (ligada a esa oferta) y avanza la oportunidad a <span class="pill p-green">Comprometida</span>. Es el
+  momento en que «quien ofrece» y «quien necesita» se encuentran. <b>Captación</b> también consulta estas ofertas (solo
+  lectura) para seguir cultivando alianzas.</div>
 </section>
 
-<!-- ══════════════ 3. FLUJO DE UNA SOLICITUD DE INSUMO ══════════════ -->
+<!-- ══════════════ 4. CATEGORÍAS Y PRIORIDAD ══════════════ -->
 <section class="pagina">
-  <h2>3 · El flujo de una solicitud de insumo</h2>
-  <p>El otro carril: una <b>necesidad con ubicación</b> que Verificación deriva, atendida desde el acopio.</p>
-  <div class="steps">
-    <div class="step"><span class="sn">PASO 1 · Recopilación</span><p><b>Reportar con ubicación:</b> se crea la solicitud con pin en el mapa, tipo de insumo, cantidad y urgencia.</p></div>
-    <div class="step"><span class="sn">PASO 2 · Verificación</span><p><b>Confirmar:</b> se revisa y se confirma (o descarta). Solo una solicitud <b>confirmada</b> pasa a Logística.</p></div>
-    <div class="step"><span class="sn">PASO 3 · Verificación</span><p><b>Derivar a Logística:</b> crea una <b>solicitud de insumo</b> enlazada. Tu equipo recibe un aviso.</p></div>
-    <div class="step"><span class="sn">PASO 4 · Logística</span><p><b>Atender desde el centro cercano:</b> se ven los centros con stock; se toma y se marca <b>en ruta</b>.</p></div>
-    <div class="step"><span class="sn">PASO 5 · Logística</span><p><b>Entregar → resuelto:</b> al marcar entregada, el caso de origen queda <b>resuelto</b> y se avisa a quien reportó.</p></div>
+  <h2>4 · Categorías de material y prioridad</h2>
+  <p>Al recibir la solicitud, la <b>categorizas</b> (qué tipo de material) y confirmas su <b>prioridad</b>. En esta etapa
+  <b>no</b> se define aún el transporte.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Tipo de material</h4>
+      <p style="margin-top:6px">
+        <span class="pill p-green">Salud y medicinas</span> <span class="pill p-blue">Materiales y herramientas (EPP)</span>
+        <span class="pill p-amber">Alimentos</span> <span class="pill p-amber">Agua</span>
+        <span class="pill p-red">Maquinaria pesada / Rescate</span> <span class="pill p-gray">Higiene · Refugio · Otro</span>
+      </p>
+      <p class="mini">Medicamentos, oxígeno, insumos quirúrgicos · EPP (cascos, guantes, linternas) · raciones, botellones,
+      fórmulas · plantas eléctricas, retroexcavadoras, herramientas de demolición.</p></div>
+    <div class="card"><h4>Prioridad</h4>
+      <p style="margin-top:6px"><span class="pill p-red">Alta / Crítica</span> <span class="pill p-amber">Media</span> <span class="pill p-gray">Baja</span></p>
+      <p class="mini">Según urgencia y criticidad. Marca la prioridad al recibir la solicitud para ordenar la cola de trabajo.</p></div>
   </div>
-  <div class="callout warn"><b>Reglas del ciclo:</b> solo se deriva un caso <b>confirmado</b> y con ubicación; una
-  solicitud <b>entregada o cancelada</b> no se reabre (salvo administración); cada cambio de estado queda auditado.</div>
-  <div class="callout ok"><b>Centros que nacen ya verificados:</b> cuando Recopilación marca una solicitud como
-  <b>punto</b> (albergue, hospital, centro de acopio) y Verificación la confirma, el <b>centro aparece solo en el mapa</b>
-  y recibes un aviso. Nace <b>sin responsable</b>: el admin de Logística asigna quién lo gestiona, y ahí completas camas,
-  inventario y necesidades como en cualquier centro. En el mapa se distingue si es <b>temporal</b>.</div>
-  <h3>Flujos propios del acopio (sin pasar por un caso)</h3>
+  <h3>Canales para ubicar el insumo</h3>
   <ul>
-    <li><b>Donaciones → inventario.</b> Un voluntario registra lo que llega (y de quién) con el <b>QR</b> del centro. Solo suma; nunca descuadra.</li>
-    <li><b>Traspasos entre centros.</b> Con un clic se descuenta en el origen y se suma en el destino, con registro en ambos.</li>
-    <li><b>Salidas y consumo.</b> Se descuenta stock con un motivo; queda en la bitácora.</li>
-    <li><b>Necesidades urgentes.</b> Cada centro marca lo que le falta por prioridad; el panel global lo reúne.</li>
+    <li><b>Centros de acopio</b> propios: la plataforma sugiere el <b>más cercano con stock</b> del tipo pedido.</li>
+    <li><b>Oportunidades de donación</b> (ofertas verificadas) y <b>proveedores</b> del directorio.</li>
+    <li><b>Contacto y coordenadas del solicitante</b> <span class="nueva">nuevo</span>: en el detalle de la solicitud tienes el
+      <b>contacto verificado</b> (con botón de WhatsApp) y las <b>coordenadas</b> (con enlace al mapa) para coordinar la entrega.</li>
   </ul>
 </section>
 
-<!-- ══════════════ 4. ESTADOS ══════════════ -->
+<!-- ══════════════ 5. ESTADOS ══════════════ -->
 <section class="pagina">
-  <h2>4 · Los estados de una oportunidad</h2>
-  <p>Una oferta lleva <b>dos etiquetas independientes</b>: la <b>verificación</b> (la pone Verificación) y la
-  <b>gestión</b> (la llevas tú, Logística). No se pisan.</p>
-  <div class="grid g2">
-    <div class="card"><h4>Verificación <small>(Verificación)</small></h4>
-      <p style="margin-top:6px"><span class="pill p-amber">Pendiente de verificar</span> <span class="pill p-green">Verificada</span> <span class="pill p-red">Observada</span></p>
-      <p class="mini">Prioriza las <b>verificadas</b>. Si está <b>observada</b>, lee la nota antes de invertir tiempo.</p></div>
-    <div class="card"><h4>Gestión <small>(Logística)</small></h4>
-      <p style="margin-top:6px"><span class="pill p-gray">Nueva</span> <span class="pill p-amber">Contactada</span> <span class="pill p-blue">En conversación</span> <span class="pill p-green">Comprometida</span> <span class="pill p-green">Cumplida</span> <span class="pill p-red">Descartada</span></p>
-      <p class="mini">Avanza a medida que contactas, acuerdas y concretas. <b>Comprometida</b> se marca sola al emparejar.</p></div>
-  </div>
+  <h2>5 · Los estados de un vistazo</h2>
+  <h3>Solicitud de insumo <small>(la llevas tú, Logística)</small></h3>
   <table>
-    <thead><tr><th style="width:26%">Estado de gestión</th><th>Qué significa</th></tr></thead>
+    <thead><tr><th style="width:26%">Estado</th><th>Qué significa</th></tr></thead>
     <tbody>
-      <tr><td><span class="pill p-gray">Nueva</span></td><td>Recién registrada; nadie la ha contactado aún.</td></tr>
-      <tr><td><span class="pill p-amber">Contactada</span></td><td>Ya hubo un primer contacto (queda en la bitácora).</td></tr>
-      <tr><td><span class="pill p-blue">En conversación</span></td><td>Se está acordando qué, cuánto y cuándo.</td></tr>
-      <tr><td><span class="pill p-green">Comprometida</span></td><td>Hay un acuerdo firme; suele coincidir con el emparejamiento a una solicitud.</td></tr>
-      <tr><td><span class="pill p-green">Cumplida</span></td><td>La donación se entregó/recibió. Ciclo cerrado.</td></tr>
-      <tr><td><span class="pill p-red">Descartada</span></td><td>No prosperó (sin respuesta, ya no aplica…). Sale del pipeline.</td></tr>
+      <tr><td><span class="pill p-gray">Solicitado</span></td><td>Recién recibida; hay que gestionarla.</td></tr>
+      <tr><td><span class="pill p-amber">En gestión</span></td><td>Se está consiguiendo el insumo (acopio, donante, proveedor).</td></tr>
+      <tr><td><span class="pill p-blue">En ruta</span></td><td>El transporte recogió el insumo y va al punto de entrega.</td></tr>
+      <tr><td><span class="pill p-green">Entregado</span></td><td>Recibido en destino (con evidencia). El caso queda <b>Resuelto</b>.</td></tr>
+      <tr><td><span class="pill p-amber">No se pudo cubrir</span></td><td>Logística no puede cubrirla → en Redacción (que ya la difunde) se marca como <b>prioridad</b>. Reversible.</td></tr>
+      <tr><td><span class="pill p-red">Cancelado</span></td><td>Se anula (duplicada, ya no aplica…). Sale de la cola.</td></tr>
     </tbody>
   </table>
+  <h3>Oportunidad de donación <small>(verificación + gestión, dos etiquetas independientes)</small></h3>
+  <p style="margin:4px 0"><b>Verificación</b> (la pone Verificación): <span class="pill p-amber">Pendiente</span>
+  <span class="pill p-green">Verificada</span> <span class="pill p-red">Observada</span>.
+  &nbsp;<b>Gestión</b> (la llevas tú): <span class="pill p-gray">Nueva</span> <span class="pill p-amber">Contactada</span>
+  <span class="pill p-blue">En conversación</span> <span class="pill p-green">Comprometida</span>
+  <span class="pill p-green">Cumplida</span> <span class="pill p-red">Descartada</span>.</p>
+  <p class="mini">Prioriza las <b>verificadas</b>; <b>Comprometida</b> se marca sola al emparejar. La <b>donación</b> que nace
+  del emparejamiento tiene sus propios estados: <span class="pill p-amber">Comprometida</span>
+  <span class="pill p-blue">Recibida</span> <span class="pill p-green">Asignada</span>.</p>
 </section>
 
-<!-- ══════════════ 5. ROLES ══════════════ -->
+<!-- ══════════════ 6. CENTROS DE ACOPIO ══════════════ -->
 <section class="pagina">
-  <h2>5 · Roles y quién hace qué</h2>
+  <h2>6 · Centros de acopio (funciones propias)</h2>
+  <p>Además de atender solicitudes, Logística mantiene la <b>red de centros</b>. Estos flujos no pasan por un caso:</p>
+  <div class="grid g2">
+    <div class="card"><h4>Inventario en tiempo real</h4><p>Cada producto con categoría, unidad, cantidad y un <b>mínimo de
+      alerta</b>. <b>Etiquetas QR por producto</b> y <b>exportar/imprimir</b> (CSV/PDF).</p></div>
+    <div class="card"><h4>Donaciones → inventario</h4><p>Un voluntario registra lo que llega (y de quién) con el <b>QR</b> del
+      centro. <b>Solo suma</b>; nunca descuadra.</p></div>
+    <div class="card"><h4>Traspasos entre centros</h4><p>Con un clic se <b>descuenta en el origen</b> y se <b>suma en el
+      destino</b>, con registro en ambos.</p></div>
+    <div class="card"><h4>Salidas, necesidades y capacidad</h4><p>Salidas con motivo (bitácora); <b>necesidades urgentes</b>
+      por prioridad con panel global; <b>camas</b> para albergues.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════ 7. ROLES ══════════════ -->
+<section class="pagina">
+  <h2>7 · Roles: quién hace qué</h2>
   <table>
     <thead><tr><th style="width:28%">Rol</th><th>Qué puede hacer</th></tr></thead>
     <tbody>
-      <tr><td><b>Admin · Logística y Acopio</b></td><td>El «jefe del área». Administra el grupo «Gestión de Acopio», opera todos los centros e insumos, ve la capa del mapa y aprueba los registros de su área. No es admin general.</td></tr>
-      <tr><td><b>Logística</b></td><td>Gestiona cualquier centro y la cola de insumos (asignar, en ruta, entregar). Lleva el <b>pipeline de las oportunidades</b> (contacto, emparejamiento, donación). Ve el panel global de necesidades y el mapa.</td></tr>
-      <tr><td><b>Coordinador de centro</b></td><td>Control total de su(s) centro(s): stock, conteos, donaciones, salidas, traspasos y necesidades.</td></tr>
-      <tr><td><b>Voluntario de acopio</b></td><td><b>Solo suma</b>: registra entradas y donaciones con el QR del centro. No descuenta ni fija conteos.</td></tr>
-      <tr><td><b>Recopilación</b> <small>(área vecina)</small></td><td><b>Registra</b> las oportunidades de donación y las solicitudes. No opera acopio.</td></tr>
-      <tr><td><b>Verificación</b> <small>(área vecina)</small></td><td><b>Verifica</b> las solicitudes y las oportunidades de donación. No gestiona el contacto ni el acopio.</td></tr>
+      <tr><td><b>Admin · Logística y Acopio</b></td><td>El «jefe del área». Administra el grupo <b>Logística</b>, opera todos
+        los centros e insumos, ve la capa del mapa y aprueba los registros de su área. <b>No</b> es admin general.</td></tr>
+      <tr><td><b>Logística</b></td><td>Gestiona cualquier centro y la cola de solicitudes (categorizar, gestión, en ruta,
+        entregar, «no se pudo cubrir»). Lleva el <b>pipeline de las oportunidades</b> (contacto, emparejamiento, donación).</td></tr>
+      <tr><td><b>Coordinador responsable de centro</b></td><td>Control total de su(s) centro(s): stock, conteos, donaciones,
+        salidas, traspasos y necesidades.</td></tr>
+      <tr><td><b>Creador del centro</b></td><td>Gestiona por completo el centro que registró, aunque no sea Logística
+        (útil para quien abre un punto en terreno).</td></tr>
+      <tr><td><b>Voluntario de acopio</b></td><td><b>Solo suma</b>: registra entradas y donaciones con el QR del centro. No
+        descuenta, no fija conteos ni elimina.</td></tr>
+      <tr><td><b>Recopilación</b> <small>(vecina)</small></td><td><b>Registra</b> las solicitudes y las oportunidades de donación. No opera acopio.</td></tr>
+      <tr><td><b>Verificación</b> <small>(vecina)</small></td><td><b>Verifica</b> solicitudes y ofertas. No gestiona contacto ni acopio.</td></tr>
+      <tr><td><b>Redacción</b> <small>(vecina)</small></td><td><b>Difunde</b> todas las solicitudes confirmadas (en paralelo); prioriza las que Logística <b>no pudo cubrir</b>.</td></tr>
     </tbody>
   </table>
-  <div class="callout"><b>Grupo del área:</b> «<b>Gestión de Acopio</b>» — quien entra a él obtiene el rol <b>Logística</b>.
-  Los <b>centros de acopio</b> no son grupos: son entidades con ubicación, contacto, inventario y responsables.</div>
 </section>
 
-<!-- ══════════════ 6. HERRAMIENTAS ══════════════ -->
+<!-- ══════════════ 8. LÍDERES Y COORDINADORES ══════════════ -->
 <section class="pagina">
-  <h2>6 · Herramientas (qué hay en cada pantalla)</h2>
+  <h2>8 · Líderes y coordinadores</h2>
+  <p class="lead">El grupo de área se llama <b>«Logística»</b>. Tiene <b>un líder</b> y puede tener <b>varios
+  coordinadores</b>. Ellos organizan al equipo y dan de alta gente, sin ser administradores generales.</p>
+  <div class="grid g2">
+    <div class="card"><span class="n" style="background:#0033A0">L</span><h4>Líder del grupo</h4>
+      <p>Referente del equipo. Desde la <b>página del grupo</b> puede <b>dar de alta usuarios</b> del rol Logística
+      <b>directamente</b>, gestionar miembros, fijar anuncios, reuniones y la pizarra del grupo.</p></div>
+    <div class="card"><span class="n" style="background:#E6B800">C</span><h4>Coordinadores</h4>
+      <p>Apoyan al líder. También pueden <b>proponer altas</b> de usuarios del rol Logística, pero <b>las confirma el
+      líder</b>. Coordinan el día a día de la cola de solicitudes y las oportunidades.</p></div>
+  </div>
+  <h3>Qué pueden hacer (y qué no)</h3>
   <table>
-    <thead><tr><th style="width:34%">Herramienta</th><th>Para qué sirve</th></tr></thead>
+    <thead><tr><th style="width:44%">Acción</th><th>Líder</th><th>Coordinador</th></tr></thead>
     <tbody>
-      <tr><td><b>Donaciones e Insumos</b> <small>(portada)</small></td><td>La puerta del área: accesos a oportunidades, insumos, acopio y mapa, con un resumen de lo pendiente.</td></tr>
-      <tr><td><b>Oportunidades de donación</b></td><td>Tablero de ofertas: registrar, ver el sello de verificación, llevar la bitácora de contacto, emparejar con solicitudes y concretar donaciones.</td></tr>
-      <tr><td><b>Insumos</b></td><td>La cola de solicitudes de insumo (incluidas las derivadas de casos): solicitado → en ruta → entregado.</td></tr>
-      <tr><td><b>Centros de acopio</b></td><td>Lista y ficha de cada centro: inventario, QR, donaciones, traspasos, salidas, necesidades y bitácora. Panel global de necesidades.</td></tr>
+      <tr><td>Dar de alta un usuario del rol Logística</td><td>✅ directo</td><td>✅ lo confirma el líder</td></tr>
+      <tr><td>Gestionar miembros, anuncios y reuniones del grupo</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Operar solicitudes y oportunidades (toda la cola)</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Asignar responsables/voluntarios a un centro</td><td>Admin de área</td><td>Admin de área</td></tr>
+      <tr><td>Crear/eliminar centros, aprobar registros del área</td><td>Admin de área</td><td>Admin de área</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Liderazgo por centro:</b> aparte del grupo, cada <b>centro de acopio</b> tiene su(s)
+  <b>coordinador(es) responsable(s)</b> (los asigna el admin de Logística). Un coordinador de centro manda en <b>su</b>
+  centro; el <b>rol Logística</b> alcanza a <b>todos</b> los centros. Son cosas distintas: el grupo organiza al equipo, el
+  centro organiza un punto físico.</div>
+  <div class="callout ok"><b>Buenas prácticas de mando:</b> reparte la cola por <b>prioridad</b> y cercanía; antes de marcar
+  «no se pudo cubrir», confirma que se agotaron acopio, donantes y proveedores; y mantén al equipo con el <b>Telegram
+  vinculado</b> para recibir avisos de nuevas solicitudes al instante.</div>
+</section>
+
+<!-- ══════════════ 9. HERRAMIENTAS ══════════════ -->
+<section class="pagina">
+  <h2>9 · Herramientas (qué hay en cada pantalla)</h2>
+  <table>
+    <thead><tr><th style="width:32%">Herramienta</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><b>Logística</b> <small>(portada)</small></td><td>El tablero del área: KPIs (activas, en ruta, entregadas,
+        oportunidades) y la cola por estados (Solicitado → En gestión → En ruta → Entregado). Accesos a oportunidades,
+        proveedores y nueva solicitud.</td></tr>
+      <tr><td><b>Detalle de la solicitud</b></td><td>Tipo, cantidad, contacto y coordenadas del solicitante, centros
+        cercanos con stock, envíos (transporte), estado, «no se pudo cubrir» y <b>evidencia de entrega</b>.</td></tr>
+      <tr><td><b>Oportunidades de donación</b></td><td>Tablero de ofertas: sello de verificación, bitácora de contacto,
+        emparejar con solicitudes y concretar donaciones.</td></tr>
+      <tr><td><b>Proveedores</b></td><td>Directorio de proveedores y transportistas para asignarlos a las solicitudes.</td></tr>
+      <tr><td><b>Centros de acopio</b></td><td>Lista y ficha de cada centro: inventario, QR, donaciones, traspasos, salidas,
+        necesidades y bitácora. Panel global de necesidades.</td></tr>
       <tr><td><b>Mapa</b></td><td>Solicitudes con ubicación + centros de acopio en una sola vista.</td></tr>
     </tbody>
   </table>
 </section>
 
-<!-- ══════════════ 7. BLINDAJE ══════════════ -->
+<!-- ══════════════ 10. BLINDAJE ══════════════ -->
 <section class="pagina">
-  <h2>7 · Blindaje y buenas prácticas</h2>
+  <h2>10 · Blindaje y buenas prácticas</h2>
   <div class="callout blind"><b>Datos y trazabilidad:</b> la RLS impone lo que cada rol puede hacer; cada cambio (stock,
   estado, entrega) queda <b>auditado</b>. El <b>mapa público</b> solo muestra puntos confirmados, sin datos personales.
-  Cuida los contactos de las ofertas: son de terceros que confían en la organización.</div>
+  Cuida el contacto del solicitante y de las ofertas: son datos de terceros que confían en la organización.</div>
   <div class="grid g2">
-    <div class="card"><h4>✓ Deja rastro en la bitácora</h4><p>Cada llamada o mensaje a una oferta va con su <b>canal</b> y <b>resultado</b>. Quien continúe sabrá en qué quedó.</p></div>
-    <div class="card"><h4>✓ Prioriza lo verificado</h4><p>Trabaja primero las ofertas <b>verificadas</b>; en las <b>observadas</b>, revisa la nota antes de insistir.</p></div>
+    <div class="card"><h4>✓ Deja evidencia de la entrega</h4><p>Al marcar <b>Entregado</b>, adjunta <b>foto y/o nota</b> (quién recibió, hora). Es el respaldo del ciclo.</p></div>
+    <div class="card"><h4>✓ Intenta cubrir antes de difundir</h4><p>«No se pudo cubrir» es el <b>último recurso</b>. Verifica acopio, donantes y proveedores primero.</p></div>
     <div class="card"><h4>✓ Empareja con criterio</h4><p>Conecta la oferta con la solicitud que <b>de verdad encaja</b> (tipo, cantidad, cercanía). Evita comprometer de más.</p></div>
-    <div class="card"><h4>✓ Atiende desde el centro cercano</h4><p>Usa los <b>centros con stock más próximos</b> a la solicitud: ahorra tiempo y transporte.</p></div>
+    <div class="card"><h4>✓ Atiende desde el centro cercano</h4><p>Usa los <b>centros con stock más próximos</b>: ahorra tiempo y transporte.</p></div>
   </div>
-  <div class="callout ok"><b>Recomendación:</b> vincula tu <b>Telegram</b> desde tu perfil (botón «Telegram» en la barra
-  superior). Así te llegan al instante los avisos de nuevas solicitudes derivadas y de oportunidades registradas.</div>
 
   <div class="footer-note">
-    <b>Apoyo por Venezuela</b> · Guía del equipo de Logística y Acopio · Actualizada julio 2026.<br>
-    Nota técnica (desarrollo): rol <code>logistica</code> / <code>admin_logistica</code>; grupo <code>gestion_acopio</code>;
-    <code>puedeLogistica()</code> sin puerta de identidad. Oportunidades: tabla <code>oportunidades_donacion</code> +
-    <code>bitacora_oportunidad</code>; estados de gestión <code>nueva · contactada · en_conversacion · comprometida ·
-    cumplida · descartada</code>; verificación <code>pendiente · verificada · observada</code>
-    (RPC <code>verificar_oportunidad_donacion()</code>, 0144). Emparejar crea <code>donaciones</code> ligada por
-    <code>oportunidad_id</code> (0141). «Donaciones» integrada en «Oportunidades» para un flujo único.
+    <b>Apoyo por Venezuela</b> · Guía del equipo de Logística y Distribución · Actualizada julio 2026.<br>
+    Nota técnica (desarrollo): rol <code>logistica</code> / <code>admin_logistica</code>; grupo <code>gestion_acopio</code>
+    (se muestra «Logística»); <code>puedeLogistica()</code> sin puerta de identidad. Flujo (0149): al confirmar un caso
+    (<code>es_requerimiento</code>, ubicado, no «Desaparecidos») el trigger <code>autoderivar_caso_confirmado</code> crea la
+    <code>solicitudes_insumo</code>; el estado <code>no_disponible</code> marca <code>casos.requiere_difusion</code> y
+    <code>Envío a Redacción</code> filtra por esa marca. Evidencia en <code>entrega_nota</code>/<code>entrega_evidencia_path</code>
+    (bucket <code>entregas</code>). Contacto/coords vía <code>caso_de_solicitud()</code>. Categorías <code>tipo_insumo</code>
+    += <code>materiales</code>, <code>maquinaria</code>. Oportunidades: <code>oportunidades_donacion</code> (0141/0144).
+    Liderazgo de centro: <code>es_lider_acopio()</code> / <code>puede_gestionar_acopio()</code> (0070).
     PDF generado desde <code>docs/GUIA-LOGISTICA.html</code> (Chromium).
   </div>
 </section>
