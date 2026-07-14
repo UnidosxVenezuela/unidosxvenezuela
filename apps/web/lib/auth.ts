@@ -210,20 +210,20 @@ export function puedeLogistica(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']);
 }
 
-// ¿Puede REGISTRAR (crear) un «Donación-Ofrecimiento»? SOLO quienes captan/gestionan
-// ofertas: Logística (que las gestiona) y Recopilación (que capta ofertas, no solo
-// solicitudes); el admin general entra por puedeLogistica. VERIFICACIÓN NO crea
-// ofrecimientos: solo los VERIFICA (y el admin de Verificaciones los supervisa). Gatea el
-// FORMULARIO de alta y la Server Action. La 0153 refuerza esto en la RLS.
+// ¿Puede REGISTRAR (crear) un «Donación-Ofrecimiento»? SOLO Recopilación (que CAPTA las
+// ofertas) y el admin general. Los demás NO crean: Logística GESTIONA (contacta, empareja,
+// avanza estado), Verificación VERIFICA, la Administración de Verificaciones supervisa y
+// Captación consulta. Gatea el FORMULARIO de alta y la Server Action; la 0153 lo refuerza
+// en la RLS.
 export function puedeRegistrarOportunidad(e?: EntradaRoles) {
-  return puedeLogistica(e) || tieneAlguno(e, ['recopilacion']);
+  return tieneAlguno(e, ['admin', 'recopilacion']);
 }
 
-// ¿Puede ENTRAR a la sección «Donación-Ofrecimiento»? Los que crean (arriba), más el
-// equipo de Verificación (verifica), la Administración de Verificaciones (supervisa) y
-// Captación (consulta). Cada rol ve/hace lo que le toca; solo los de arriba dan de alta.
+// ¿Puede ENTRAR a la sección «Donación-Ofrecimiento»? Quien crea (Recopilación/admin) +
+// Logística (gestiona) + Verificación (verifica) + Administración de Verificaciones
+// (supervisa) + Captación (consulta). Cada rol ve/hace lo suyo; solo Recopilación da de alta.
 export function puedeVerOportunidades(e?: EntradaRoles) {
-  return puedeRegistrarOportunidad(e) || puedeVerificar(e) || esAdminVerificacion(e) || esCaptacion(e);
+  return puedeRegistrarOportunidad(e) || puedeLogistica(e) || puedeVerificar(e) || esAdminVerificacion(e) || esCaptacion(e);
 }
 
 // Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige
