@@ -11,8 +11,21 @@ function textoCaso(c: any): string {
   L.push(c.titulo || '');
   if (c.descripcion) { L.push(''); L.push(c.descripcion); }
   L.push('');
+  if (c.contacto) L.push('Contacto / referente: ' + c.contacto);
+  if (c.es_requerimiento) {
+    const req = [c.req_tipo, c.req_urgencia, c.req_cantidad].filter(Boolean).join(' · ');
+    L.push('Solicitud de ayuda' + (req ? ': ' + req : ''));
+    if (c.lat != null && c.lng != null) L.push('Ubicación: ' + c.lat + ', ' + c.lng);
+  }
   if (c.fuente || c.fuente_url) L.push('Fuente: ' + [c.fuente, c.fuente_url].filter(Boolean).join(' — '));
   if (c.fecha_publicacion) L.push('Fecha de publicación: ' + c.fecha_publicacion);
+  if (c.notas) { L.push(''); L.push('Observaciones de verificación:'); L.push(c.notas); }
+  const adj = (c.adjuntos ?? []) as any[];
+  if (adj.length) {
+    L.push('');
+    L.push('Imágenes y adjuntos (' + adj.length + '):');
+    for (const a of adj) L.push('- ' + (a.nombre || 'archivo') + (a.href ? ' — ' + a.href : ''));
+  }
   return L.join('\n').trim() + '\n';
 }
 
