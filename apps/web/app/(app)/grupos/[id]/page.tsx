@@ -119,6 +119,10 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
   // ── Alta de usuarios delegada (líder directo · coordinador con confirmación) ──
   // Solo grupos de sistema (con rol funcional) permiten dar de alta CON rol.
   const { data: rolDelGrupo } = await supabase.rpc('rol_de_grupo', { p_clave: grupo.clave });
+  // Diferenciar en la lista quién tiene el ROL operativo del grupo (p. ej. Recopilador) de
+  // quién es solo VOLUNTARIO (miembro sin ese rol). rolDelGrupo = rol que otorga el grupo.
+  const tieneRolDelGrupo = (m: any) =>
+    !!rolDelGrupo && [m.perfiles?.rol, ...((m.perfiles?.roles_extra ?? []) as string[])].includes(rolDelGrupo as string);
   const miMembresia = miembros.find((m) => m.perfil_id === user!.id);
   const esCoordAqui = miMembresia?.rol_en_grupo === 'coordinador';
   const puedeDarAlta = !!rolDelGrupo && (puedeGestionar || esCoordAqui);
@@ -362,6 +366,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                           {nombreMostrado(m.perfiles?.nombre_completo, verFull) || '—'}
                         </DisponibilidadHover>
                         {grupo.lider_id === m.perfil_id && <Pill tono="ok" punto={false}>Líder</Pill>}
+                        {rolDelGrupo && (tieneRolDelGrupo(m)
+                          ? <Pill tono="info" punto={false}>{ETIQUETA_ROL[rolDelGrupo as Rol] ?? rolDelGrupo}</Pill>
+                          : <Pill tono="neutra" punto={false}>Voluntario</Pill>)}
                       </span>
                       <div style={{ marginTop: 3 }}><PresenciaTag estado={m.perfiles?.estado_presencia} ultima={m.perfiles?.ultima_conexion} /></div>
                     </td>

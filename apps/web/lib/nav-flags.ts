@@ -30,29 +30,29 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   // secciones operativas siguen dependiendo de los roles/grupos que tenga.
   const areaAdmin = admin || esSuperadmin(perfil) ? null : areaDeAdmin(perfil);
   const roles = rolesDe(perfil);
-  let claves = new Set<string>();
   let clavesLidero = new Set<string>();  // grupos que LIDERO (grupos.lider_id = yo)
   let identidadOK = false;               // 2ª verificación (identidad) aprobada
   if (!admin) {
-    const [{ data: mem }, { data: lid }, { data: vi }] = await Promise.all([
-      supabase.from('miembros_grupo').select('grupos(clave)').eq('perfil_id', userId),
+    const [{ data: lid }, { data: vi }] = await Promise.all([
       supabase.from('grupos').select('clave').eq('lider_id', userId),
       supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', userId).maybeSingle(),
     ]);
-    claves = new Set(((mem ?? []) as any[]).map((m) => m.grupos?.clave).filter(Boolean));
     clavesLidero = new Set(((lid ?? []) as any[]).map((g) => g.clave).filter(Boolean));
     identidadOK = (vi as any)?.estado === 'aprobada';
   }
   // Recopilación y Búsqueda EXIGEN 2ª verificación: sin ella se ocultan Casos y
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
-  const esRecopilacion = claves.has('gestion_casos') || roles.includes('recopilacion');
+  // Acceso a las secciones OPERATIVAS por el ROL, no por la sola membresía del grupo: un
+  // «voluntario» es miembro del grupo SIN el rol (0154) y no debe ver estas secciones. Como
+  // la membresía sí otorga el rol a los no-voluntarios (sincronizar_rol_grupo), pedir el rol
+  // cubre a todos los operativos y deja fuera al voluntario.
+  const esRecopilacion = roles.includes('recopilacion');
   // Búsqueda incluye al Buscador NNA (equipo de menores): comparten el módulo /busqueda.
-  const esBusqueda = claves.has('busqueda') || roles.includes('busqueda')
-    || claves.has('busqueda_nna') || roles.includes('buscador_nna');
-  const esEnlace = claves.has('enlace_contacto') || roles.includes('enlace_contacto');
-  const esDigitalizador = claves.has('digitalizacion') || roles.includes('digitalizador');
+  const esBusqueda = roles.includes('busqueda') || roles.includes('buscador_nna');
+  const esEnlace = roles.includes('enlace_contacto');
+  const esDigitalizador = roles.includes('digitalizador');
   // Verificación de Digitalización (0125): comparte el módulo /digitalizacion (revisa).
-  const esVerifDigit = claves.has('verificacion_digitalizacion') || roles.includes('verificador_digitalizacion');
+  const esVerifDigit = roles.includes('verificador_digitalizacion');
   // Supervisión por área (0105): el admin de área VE (solo lectura) las secciones
   // operativas de su área para supervisarlas; no las opera.
   const supVerif = areaAdmin === 'verificacion';
@@ -64,7 +64,7 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
     areaAdmin,
     gestionCasos: admin || supVerif || (esRecopilacion && identidadOK),
-    verificacion: admin || supVerif || claves.has('verificacion') || roles.includes('verificador'),
+    verificacion: admin || supVerif || roles.includes('verificador'),
     busqueda: admin || supVerif || (esBusqueda && identidadOK),
     // Enlace de contacto: rol propio con 2ª verificación (identidad) obligatoria.
     enlace: admin || supVerif || (esEnlace && identidadOK),
@@ -72,10 +72,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     // La supervisa SU admin de área (supDigit); el admin de Verificaciones ya NO (se
     // separó). «Mapa» aparece para este admin porque se muestra con `acopio || digitalizacion`.
     digitalizacion: admin || supDigit || ((esDigitalizador || esVerifDigit) && identidadOK),
-    envioRedaccion: admin || supRedes || claves.has('redaccion') || roles.includes('redaccion'),
+    envioRedaccion: admin || supRedes || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),
-    acopio: admin || supLogistica || claves.has('gestion_acopio') || roles.includes('logistica'),
+    acopio: admin || supLogistica || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
     // Captación de Oportunidades (0129): rol propio 'captacion' (ve solo esta
