@@ -315,6 +315,12 @@ export async function editarCaso(formData: FormData) {
   const an = analizarUrl(fuenteUrl);
   if (!an.ok) throw new Error(an.motivo || 'El enlace de la fuente no es válido.');
   await exigirEnlaceSeguro(an.url ?? fuenteUrl);
+  // Validar los adjuntos nuevos (opcionales) ANTES de tocar la solicitud.
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of archivos.slice(0, 10)) {
+    const v = validarArchivo(file.name, file.size, 10);
+    if (!v.ok) throw new Error(v.motivo || 'Archivo no admitido.');
+  }
   const categoria = opt(formData.get('categoria'));
   const cambios: Record<string, unknown> = {
     titulo,
@@ -337,6 +343,21 @@ export async function editarCaso(formData: FormData) {
     ({ error } = await supabase.from('casos').update(sinPunto).eq('id', id));
   }
   if (error) throw new Error('No se pudo editar la solicitud: ' + error.message);
+
+  // Adjuntos nuevos (opcional): al bucket privado 'adjuntos', carpeta casos/<id>. Se
+  // SUMAN a los existentes. Mismo patrón que crearCaso; un adjunto fallido no bloquea.
+  for (const file of archivos.slice(0, 10)) {
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    const ruta = `casos/${id}/${Date.now()}-${safe}`;
+    try {
+      await subirArchivo(supabase, 'adjuntos', ruta, file, { publico: false, upsert: false });
+      const { error: eAdj } = await supabase.from('casos_adjuntos').insert({
+        caso_id: id, url: ruta, nombre: file.name, mime: file.type || null, creado_por: user.id,
+      });
+      if (eAdj) await borrarArchivo(supabase, 'adjuntos', [ruta]);
+    } catch { /* un adjunto fallido no bloquea la edición */ }
+  }
+
   // Registro explícito de la edición (además del trigger de auditoría).
   await supabase.rpc('registrar_evento_caso', { p_caso: id, p_accion: 'edicion' });
   revalidatePath('/casos'); revalidatePath('/envio-redaccion');

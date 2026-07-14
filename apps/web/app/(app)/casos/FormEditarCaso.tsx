@@ -31,6 +31,12 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
             punto_tipo: caso.punto_tipo, punto_temporal: caso.punto_temporal,
           }} />
         )}
+        {/* Adjuntar imágenes al editar: se SUMAN a las ya cargadas. Ayuda a que
+            Redacción difunda con evidencia. La subida respeta la RLS del bucket. */}
+        <div className="campo">
+          <label>Adjuntar imágenes <span className="muted">(opcional · se suman a las existentes · hasta 10, máx. 10 MB c/u)</span></label>
+          <input type="file" name="archivos" multiple accept="image/*" className="input" />
+        </div>
         <button className="btn btn-primario" type="submit">Guardar cambios</button>
         <p className="muted" style={{ fontSize: '.8rem', margin: '6px 0 0' }}>Corrige o completa la información. La edición queda registrada en el historial.</p>
       </form>
