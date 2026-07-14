@@ -29,7 +29,11 @@ export async function crearTarea(formData: FormData) {
   if (!user) redirect('/login');
 
   const grupoElegido = opt(formData.get('grupo_id'));
-  const asignadoA = opt(formData.get('asignado_a'));
+  // Se puede asignar a VARIAS personas del grupo (checkboxes → varios 'asignado_a').
+  // La primera marcada es el responsable principal (asignado_a); todas entran como
+  // participantes (tarea_personas) y reciben aviso (trigger 0157).
+  const asignados = [...new Set(formData.getAll('asignado_a').map((v) => String(v).trim()).filter(Boolean))];
+  const asignadoA = asignados[0] ?? null;
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const rolesYo = [yo?.rol, ...(((yo?.roles_extra as (Prioridad | string)[] | null) ?? []))] as string[];
   const esAdmin = rolesYo.includes('admin');
@@ -41,10 +45,17 @@ export async function crearTarea(formData: FormData) {
     const { data: puede } = await supabase.rpc('puede_publicar_en_grupo', { g: grupoElegido });
     if (puede !== true) throw new Error('Solo puedes crear tareas en un grupo que lideras o coordinas.');
   }
-  // La asignación debe ser de un miembro del propio grupo (el trigger 0101 lo blinda).
-  if (asignadoA && grupoElegido && !(await esDelGrupo(supabase, grupoElegido, asignadoA))) {
-    throw new Error('Solo puedes asignar la tarea a un miembro del grupo.');
+  // Cada asignado debe ser miembro del propio grupo (los triggers 0101/0102 lo blindan).
+  if (asignados.length && grupoElegido) {
+    for (const p of asignados) {
+      if (!(await esDelGrupo(supabase, grupoElegido, p))) {
+        throw new Error('Solo puedes asignar la tarea a miembros del grupo.');
+      }
+    }
   }
+  // El cupo debe alcanzar al menos para los asignados: si asignas a varios y no fijas
+  // cupo, se ajusta al número de asignados (para que no queden «fuera de cupo»). null = 1.
+  const cupo = (Math.max(num(formData.get('cupo')) ?? 0, asignados.length) || null);
 
   const { data, error } = await supabase.from('tareas').insert({
     titulo: txt(formData.get('titulo')),
@@ -52,9 +63,9 @@ export async function crearTarea(formData: FormData) {
     categoria: (txt(formData.get('categoria')) || 'general'),
     prioridad: (txt(formData.get('prioridad')) || 'media') as Prioridad,
     estado: (asignadoA ? 'asignada' : 'pendiente') as EstadoTarea,
-    grupo_id: opt(formData.get('grupo_id')),
+    grupo_id: grupoElegido,
     asignado_a: asignadoA,
-    cupo: num(formData.get('cupo')), // null = sin límite (se trata como 1)
+    cupo,
     creado_por: user.id,
     vence_en: opt(formData.get('vence_en')),
     ubicacion: opt(formData.get('ubicacion')),
@@ -63,8 +74,12 @@ export async function crearTarea(formData: FormData) {
   }).select('id').single();
 
   if (error) throw new Error('No se pudo crear la tarea: ' + error.message);
-  // El asignado inicial cuenta como participante (para el cupo).
-  if (asignadoA) await supabase.from('tarea_personas').insert({ tarea_id: data!.id, perfil_id: asignadoA });
+  // Todas las personas asignadas cuentan como participantes (para el cupo) y reciben aviso.
+  if (asignados.length) {
+    const { error: eTP } = await supabase.from('tarea_personas')
+      .insert(asignados.map((p) => ({ tarea_id: data!.id, perfil_id: p })));
+    if (eTP) throw new Error('La tarea se creó, pero no se pudo asignar a todos: ' + eTP.message);
+  }
   revalidatePath('/tareas');
   redirigirOk('/tareas/' + data!.id, 'Tarea creada');
 }
