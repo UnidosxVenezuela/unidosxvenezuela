@@ -126,7 +126,7 @@ export async function crearEnvio(formData: FormData) {
   const fleteRaw = String(formData.get('flete') ?? '').trim();
   const { error } = await supabase.from('envios').insert({
     solicitud_id: solicitudId,
-    voluntario_id: String(formData.get('voluntario_id') ?? '').trim() || null,
+    transportista_id: String(formData.get('transportista_id') ?? '').trim() || null,
     tipo_vehiculo: String(formData.get('tipo_vehiculo') ?? '').trim() || null,
     flete: fleteRaw ? Number(fleteRaw) : null,
     origen: String(formData.get('origen') ?? '').trim() || null,
@@ -168,4 +168,65 @@ export async function eliminarDonacion(formData: FormData) {
   if (error) throw new Error('No se pudo eliminar: ' + error.message);
   revalidatePath('/insumos/oportunidades');
   redirigirOk('/insumos/oportunidades', 'Donación eliminada');
+}
+
+// ── Transportistas de Logística (0159) ──
+// Registro propio de conductores/transportistas que ofrecen el servicio. Alimenta el
+// selector de «Conductor» al registrar un envío. Lo gestiona Logística (RLS puede_logistica).
+export async function crearTransportista(formData: FormData) {
+  const { supabase, userId } = await usuario();
+  const nombre = String(formData.get('nombre') ?? '').trim();
+  if (!nombre) throw new Error('El nombre es obligatorio.');
+  const { error } = await supabase.from('transportistas_logistica').insert({
+    nombre,
+    contacto: String(formData.get('contacto') ?? '').trim() || null,
+    vehiculo: String(formData.get('vehiculo') ?? '').trim() || null,
+    notas: String(formData.get('notas') ?? '').trim() || null,
+    creado_por: userId,
+  });
+  if (error) throw new Error('No se pudo registrar el transportista: ' + error.message);
+  revalidatePath('/insumos/transportistas');
+  redirigirOk('/insumos/transportistas', 'Transportista registrado');
+}
+
+export async function alternarTransportista(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const activo = String(formData.get('activo')) === 'true';
+  const { error } = await supabase.from('transportistas_logistica').update({ activo }).eq('id', id);
+  if (error) throw new Error('No se pudo actualizar: ' + error.message);
+  revalidatePath('/insumos/transportistas');
+  redirigirOk('/insumos/transportistas', activo ? 'Transportista activado' : 'Transportista desactivado');
+}
+
+export async function eliminarTransportista(formData: FormData) {
+  const { supabase } = await usuario();
+  const { error } = await supabase.from('transportistas_logistica').delete().eq('id', String(formData.get('id')));
+  if (error) throw new Error('No se pudo eliminar el transportista: ' + error.message);
+  revalidatePath('/insumos/transportistas');
+  redirigirOk('/insumos/transportistas', 'Transportista eliminado');
+}
+
+// Registrar un transportista tomando los datos de un Donación-Ofrecimiento de transporte
+// (organización → nombre, contacto y descripción). El índice único evita duplicarlo.
+export async function registrarTransportistaDesdeOferta(formData: FormData) {
+  const { supabase, userId } = await usuario();
+  const oportunidadId = String(formData.get('oportunidad_id'));
+  const { data: o } = await supabase.from('oportunidades_donacion')
+    .select('organizacion, contacto, descripcion').eq('id', oportunidadId).maybeSingle();
+  if (!o) throw new Error('Ofrecimiento no encontrado.');
+  const { error } = await supabase.from('transportistas_logistica').insert({
+    nombre: (o as any).organizacion || 'Transportista',
+    contacto: (o as any).contacto || null,
+    notas: (o as any).descripcion || null,
+    oportunidad_id: oportunidadId,
+    creado_por: userId,
+  });
+  if (error) {
+    if ((error as any).code === '23505') throw new Error('Este ofrecimiento ya está registrado como transportista.');
+    throw new Error('No se pudo registrar: ' + error.message);
+  }
+  revalidatePath('/insumos/oportunidades/' + oportunidadId);
+  revalidatePath('/insumos/transportistas');
+  redirigirOk('/insumos/oportunidades/' + oportunidadId, 'Registrado como transportista de Logística');
 }

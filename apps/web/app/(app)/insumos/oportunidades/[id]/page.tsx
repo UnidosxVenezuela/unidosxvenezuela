@@ -21,6 +21,7 @@ import {
   cambiarEstadoOportunidad, asignarOportunidad, registrarContactoOportunidad,
   eliminarContactoOportunidad, conectarConSolicitud, eliminarOportunidad, verificarOportunidad,
 } from '../actions';
+import { registrarTransportistaDesdeOferta } from '../../actions';
 
 const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
 
@@ -86,6 +87,14 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
       .filter((s) => !conectadas.has(s.titulo))
       .sort((a, b) => (RANGO_URGENCIA[a.urgencia] ?? 9) - (RANGO_URGENCIA[b.urgencia] ?? 9));
     gestores = (gs ?? []) as any[];
+  }
+
+  // ¿Este ofrecimiento (de transporte) ya está en el registro de transportistas? (0159)
+  let yaTransportista = false;
+  if (gestor && oo.tipo_oferta === 'transporte') {
+    const { count } = await supabase.from('transportistas_logistica')
+      .select('*', { count: 'exact', head: true }).eq('oportunidad_id', id);
+    yaTransportista = (count ?? 0) > 0;
   }
 
   const otrosEstados = [...ESTADOS_OFERTA.filter((e) => e !== oo.estado), 'descartada'];
@@ -372,6 +381,24 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
                 </form>
                 {oo.asignado?.nombre_completo && <p className="muted" style={{ margin: '8px 0 0', fontSize: '.82rem' }}>Ahora: <strong>{nombreMostrado(oo.asignado.nombre_completo, esAdmin)}</strong></p>}
               </div>
+
+              {/* Registrar como transportista (ofrecimientos de transporte, 0159) */}
+              {oo.tipo_oferta === 'transporte' && (
+                <div className="tarjeta">
+                  <h3 className="aside-titulo"><Icono nombre="camion" size={16} /> Transportista</h3>
+                  {yaTransportista ? (
+                    <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>✓ Ya está en el <Link href="/insumos/transportistas">registro de transportistas</Link>; se puede elegir como conductor al hacer un envío.</p>
+                  ) : (
+                    <>
+                      <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Ofrece transporte. Regístralo para poder elegirlo como <strong>conductor</strong> al hacer un envío.</p>
+                      <form action={registrarTransportistaDesdeOferta}>
+                        <input type="hidden" name="oportunidad_id" value={id} />
+                        <BotonEnviar className="btn btn-primario" style={{ width: '100%' }}><Icono nombre="mas" size={15} /> Registrar como transportista</BotonEnviar>
+                      </form>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Eliminar */}
               <div className="tarjeta">

@@ -402,6 +402,20 @@ export interface PuntoAcopio {
   actualizado_en: string;
 }
 
+// Transportista/conductor registrado de Logística (0159). Alimenta el selector de
+// «Conductor» al registrar un envío; puede venir de un Donación-Ofrecimiento de transporte.
+export interface TransportistaLogistica {
+  id: string;
+  nombre: string;
+  contacto: string | null;
+  vehiculo: string | null;
+  notas: string | null;
+  oportunidad_id: string | null;
+  activo: boolean;
+  creado_por: string | null;
+  creado_en: string;
+}
+
 export interface Notificacion {
   id: string;
   destinatario_id: string;
