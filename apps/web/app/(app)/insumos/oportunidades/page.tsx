@@ -184,7 +184,7 @@ export default async function OportunidadesPage() {
               {ops.map((o) => (
                 <tr key={o.id}>
                   <td><Link href={'/insumos/oportunidades/' + o.id}><strong>{o.organizacion}</strong></Link>
-                    <div className="muted" style={{ fontSize: '.8rem' }}>{o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) + ' · ' : ''}{fechaCorta(o.creado_en)}</div></td>
+                    <div className="muted" style={{ fontSize: '.8rem' }}>{o.numero != null ? 'OF-' + String(o.numero).padStart(5, '0') + ' · ' : ''}{o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) + ' · ' : ''}{fechaCorta(o.creado_en)}</div></td>
                   <td className="muted">{o.clase ? (ETIQUETA_CLASE_OFERTA[o.clase] ?? o.clase) : (ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta)}</td>
                   <td>
                     <Pill tono={tonoDeClase(claseEstadoOferta(o.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}</Pill>
@@ -249,6 +249,7 @@ export default async function OportunidadesPage() {
 function TarjetaOferta({ o }: { o: any }) {
   return (
     <Link data-fila href={'/insumos/oportunidades/' + o.id} className="tarjeta insumo-card">
+      {o.numero != null && <div className="muted" style={{ fontSize: '.72rem', marginBottom: 2 }}>OF-{String(o.numero).padStart(5, '0')}</div>}
       <div className="fila" style={{ justifyContent: 'space-between', gap: 6 }}>
         <span className="insignia">{o.clase ? (ETIQUETA_CLASE_OFERTA[o.clase] ?? o.clase) : (ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta)}</span>
         {o.tipo_oferta === 'dinero' && o.monto_estimado != null && <span className="muted" style={{ fontSize: '.8rem' }}>≈ {o.monto_estimado}</span>}
