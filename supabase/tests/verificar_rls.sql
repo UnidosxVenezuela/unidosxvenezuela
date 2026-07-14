@@ -1041,25 +1041,58 @@ begin;
   insert into public.oportunidades_donacion (organizacion, creado_por) values ('_TEST_reco_crea', '00000000-0000-0000-0000-00000000de07');
 rollback;
 
-\echo '== Test 49: solo Logística cambia el estado de una oferta (0141) =='
+\echo '== Test 49: el pipeline (estado/asignación) es de Logística; el creador y Verificación editan datos pero no el estado ni el veredicto (0141 + 0160) =='
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-00000000de11', 'reco2@test.local'),
-    ('00000000-0000-0000-0000-00000000de12', 'logi2@test.local') on conflict do nothing;
+    ('00000000-0000-0000-0000-00000000de12', 'logi2@test.local'),
+    ('00000000-0000-0000-0000-00000000de13', 'verif2@test.local') on conflict do nothing;
   update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de11';
   update public.perfiles set rol = 'logistica',    roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de12';
+  update public.perfiles set rol = 'verificador',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de13';
   insert into public.oportunidades_donacion (id, organizacion, creado_por)
     values ('00000000-0000-0000-0000-00000000de1f', '_TEST_gestion', '00000000-0000-0000-0000-00000000de11');
-  -- Recopilación (creadora) NO gestiona: el UPDATE no ve la fila (0 filas).
+
+  -- El creador de Recopilación SÍ edita datos (0160), pero NO el estado (pipeline) ni el veredicto.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de11')::text, true);
   do $$ declare n int; begin
-    update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+    update public.oportunidades_donacion set descripcion = 'Corrección del creador' where id = '00000000-0000-0000-0000-00000000de1f';
     get diagnostics n = row_count;
-    if n <> 0 then raise exception 'FALLO: Recopilación cambió el estado de una oferta (n=%)', n; end if;
+    if n <> 1 then raise exception 'FALLO: el creador de Recopilación no pudo editar su ofrecimiento (n=%)', n; end if;
+  end $$;
+  do $$ begin
+    begin
+      update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+      raise exception 'FALLO: Recopilación cambió el estado (pipeline de Logística) de una oferta';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  do $$ begin
+    begin
+      update public.oportunidades_donacion set estado_verificacion = 'verificada' where id = '00000000-0000-0000-0000-00000000de1f';
+      raise exception 'FALLO: Recopilación se auto-verificó una oferta (saltó a Verificación)';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
   end $$;
   reset role;
-  -- Logística SÍ.
+
+  -- Verificación SÍ devuelve a Recopilación (info_requerida + observada), pero NO mueve el pipeline.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de13')::text, true);
+  do $$ declare n int; begin
+    update public.oportunidades_donacion set info_requerida = 'Falta el contacto directo', estado_verificacion = 'observada'
+      where id = '00000000-0000-0000-0000-00000000de1f';
+    get diagnostics n = row_count;
+    if n <> 1 then raise exception 'FALLO: Verificación no pudo devolver el ofrecimiento a Recopilación (n=%)', n; end if;
+  end $$;
+  do $$ begin
+    begin
+      update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+      raise exception 'FALLO: Verificación movió el pipeline de Logística';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  reset role;
+
+  -- Logística SÍ mueve el pipeline (avanza el estado).
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de12')::text, true);
   do $$ declare e text; begin
