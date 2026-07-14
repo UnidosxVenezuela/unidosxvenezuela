@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeVerOportunidades, puedeVerificar, esAdministrador, esAdminVerificacion, esCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeVerOportunidades, puedeVerificar, puedeRegistrarOportunidad, esAdministrador, esAdminVerificacion, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { urlFirmada } from '@/lib/storage';
 import {
   ETIQUETA_TIPO_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
   ETIQUETA_TIPO_INSUMO, ETIQUETA_CANAL, CANALES, ETIQUETA_RESULTADO, claseResultadoOferta,
@@ -20,7 +21,9 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import {
   cambiarEstadoOportunidad, asignarOportunidad, registrarContactoOportunidad,
   eliminarContactoOportunidad, conectarConSolicitud, eliminarOportunidad, verificarOportunidad,
+  requerirInfoOportunidad, eliminarAdjuntoOportunidad,
 } from '../actions';
+import FormEditarOfrecimiento from '../FormEditarOfrecimiento';
 
 const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
 
@@ -68,6 +71,18 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   ]);
   const bitacora = (bitac ?? []) as any[];
   const conexiones = (cnx ?? []) as any[];
+
+  // Adjuntos (imágenes/archivos) del ofrecimiento, con URL firmada (0160). Si la migración
+  // aún no se aplicó, la consulta vuelve vacía y no se muestra nada (no rompe).
+  const { data: adjRaw } = await supabase.from('oportunidad_adjuntos')
+    .select('id, url, nombre, mime, creado_por').eq('oportunidad_id', id).order('creado_en');
+  const adjuntos = await Promise.all(((adjRaw as any[]) ?? []).map(async (a) => ({
+    ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
+  })));
+  const imagenes = adjuntos.filter((a) => a.href && String(a.mime ?? '').startsWith('image/'));
+  const documentos = adjuntos.filter((a) => a.href && !String(a.mime ?? '').startsWith('image/'));
+  // ¿Quién puede editar el ofrecimiento? Verificación, Logística o el creador (Recopilación).
+  const puedeEditarOferta = gestor || esVerif || (oo.creado_por === user.id && puedeRegistrarOportunidad(perfil));
 
   // Sugerencias de emparejamiento (solo Logística): solicitudes abiertas cuyo tipo
   // encaja con lo que la oferta puede cubrir (o todas, si no se especificó tipo).
@@ -134,6 +149,13 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
 
       <div className="grupo-grid" style={{ marginTop: 16 }}>
         <div className="grupo-main">
+          {oo.info_requerida && (
+            <div className="tarjeta" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
+              <div className="fila" style={{ gap: 6 }}><Icono nombre="avisos" size={16} /> <strong>Requiere información adicional</strong></div>
+              <p style={{ whiteSpace: 'pre-wrap', margin: '6px 0 0' }}>{oo.info_requerida}</p>
+              <p className="muted" style={{ margin: '6px 0 0', fontSize: '.82rem' }}>Devuelto a quien lo registró (Recopilación) para completarlo. Al editarlo y guardar, el aviso se retira.</p>
+            </div>
+          )}
           {/* Datos de la oferta */}
           <div className="tarjeta">
             <div className="grid grid-2">
@@ -155,6 +177,51 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
             {oo.descripcion && <p style={{ whiteSpace: 'pre-wrap', marginTop: 12 }}>{oo.descripcion}</p>}
             {link && <a href={link} target="_blank" rel="noreferrer noopener nofollow" className="fila" style={{ gap: 6, marginTop: 8 }}><Icono nombre="enlace" size={16} /> Abrir enlace</a>}
           </div>
+
+          {/* Imágenes y adjuntos del ofrecimiento (0160) */}
+          {adjuntos.length > 0 && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Imágenes y adjuntos</h3>
+              {imagenes.length > 0 && (
+                <div className="fila" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  {imagenes.map((a) => (
+                    <div key={a.id} style={{ position: 'relative' }}>
+                      <a href={a.href} target="_blank" rel="noopener noreferrer" title={a.nombre}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={a.href} alt={a.nombre} loading="lazy" style={{ width: 104, height: 104, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--borde)' }} />
+                      </a>
+                      {(gestor || esVerif || a.creado_por === user.id) && (
+                        <form action={eliminarAdjuntoOportunidad} style={{ position: 'absolute', top: 2, right: 2 }}>
+                          <input type="hidden" name="adjunto_id" value={a.id} />
+                          <input type="hidden" name="oportunidad_id" value={id} />
+                          <BotonConfirmar mensaje="¿Eliminar este adjunto?" className="btn btn-peligro" style={{ minHeight: 24, padding: '0 6px', fontSize: '.7rem' }}>✕</BotonConfirmar>
+                        </form>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {documentos.length > 0 && (
+                <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: imagenes.length ? 10 : 0 }}>
+                  {documentos.map((a) => (
+                    <span key={a.id} className="fila" style={{ gap: 4, alignItems: 'center' }}>
+                      <a className="adjunto-chip" href={a.href} target="_blank" rel="noopener noreferrer"><Icono nombre="documento" size={15} /> {a.nombre}</a>
+                      {(gestor || esVerif || a.creado_por === user.id) && (
+                        <form action={eliminarAdjuntoOportunidad}>
+                          <input type="hidden" name="adjunto_id" value={a.id} />
+                          <input type="hidden" name="oportunidad_id" value={id} />
+                          <BotonConfirmar mensaje="¿Eliminar este adjunto?" className="btn btn-peligro" style={{ minHeight: 26, padding: '2px 6px' }}><Icono nombre="basura" size={13} /></BotonConfirmar>
+                        </form>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Editar el ofrecimiento / agregar imágenes (Verificación · Logística · creador) */}
+          {puedeEditarOferta && <FormEditarOfrecimiento oo={oo} />}
 
           {/* Emparejamiento (Logística) */}
           {gestor && (
@@ -213,7 +280,7 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
 
           {/* Bitácora de contacto */}
           <h2 className="fila" style={{ gap: 6 }}><Icono nombre="documento" size={20} /> Bitácora de contacto</h2>
-          {gestor && (
+          {(gestor || esVerif) && (
             <div className="tarjeta">
               <form action={registrarContactoOportunidad}>
                 <input type="hidden" name="oportunidad_id" value={id} />
@@ -339,6 +406,17 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
               </form>
             ) : (
               <p className="muted" style={{ margin: '8px 0 0', fontSize: '.82rem' }}>La revisa el equipo de Verificación.</p>
+            )}
+            {/* Devolver a Recopilación si falta información (0160) */}
+            {esVerif && (
+              <form action={requerirInfoOportunidad} style={{ marginTop: 12, borderTop: '1px solid var(--borde)', paddingTop: 10 }}>
+                <input type="hidden" name="id" value={id} />
+                <label className="muted" style={{ fontSize: '.82rem' }}>¿Falta un dato para poder verificar? Devuélvelo a Recopilación indicando qué completar:</label>
+                <textarea name="motivo" className="input" rows={2} maxLength={500} placeholder="Qué información falta (contacto, montos, canales oficiales…)" style={{ marginTop: 4 }} />
+                <BotonConfirmar mensaje="¿Devolver este ofrecimiento a Recopilación como «Requiere información adicional»? Se avisará a quien lo registró." className="btn" style={{ width: '100%', marginTop: 6 }}>
+                  <Icono nombre="avisos" size={15} /> Requiere información adicional
+                </BotonConfirmar>
+              </form>
             )}
           </div>
 

@@ -227,9 +227,22 @@ export interface OportunidadDonacion {
   verificada_por: string | null;
   verificada_en: string | null;
   nota_verificacion: string | null;
+  // Devuelto a Recopilación por Verificación cuando falta información (0160). NULL = no requiere.
+  info_requerida: string | null;
   creado_por: string | null;
   creado_en: string;
   actualizado_en: string;
+}
+
+// Adjunto (imagen/archivo) de un Donación-Ofrecimiento (0160), molde casos_adjuntos.
+export interface OportunidadAdjunto {
+  id: string;
+  oportunidad_id: string;
+  url: string;
+  nombre: string;
+  mime: string | null;
+  creado_por: string | null;
+  creado_en: string;
 }
 
 export interface BitacoraOportunidad {
