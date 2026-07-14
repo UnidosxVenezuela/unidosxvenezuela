@@ -10,6 +10,7 @@ import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import InfoSolicitud from '@/components/InfoSolicitudCaso';
 import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega } from '../actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
@@ -39,6 +40,27 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   if (s.caso_id) {
     const { data: co } = await supabase.rpc('caso_de_solicitud', { p_caso: s.caso_id });
     origen = ((co as any[]) ?? [])[0] ?? null;
+  }
+
+  // Solicitud (caso) COMPLETA para gestionar bien: descripción, observaciones de
+  // verificación, datos de la solicitud de ayuda, contacto y —lo más útil para
+  // Logística— las imágenes y adjuntos. Con la migración 0156, Logística ya lee el caso
+  // y sus adjuntos por RLS; si aún no se aplicó, la consulta vuelve vacía y la tarjeta
+  // simplemente no se muestra (la vista sigue funcionando con los datos curados de arriba).
+  let casoFull: any = null;
+  if (s.caso_id) {
+    const { data: cf } = await supabase.from('casos')
+      .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, notas, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng')
+      .eq('id', s.caso_id).maybeSingle();
+    casoFull = cf ?? null;
+    if (casoFull) {
+      const { data: adjRaw } = await supabase.from('casos_adjuntos')
+        .select('id, nombre, mime, url, creado_en').eq('caso_id', s.caso_id).order('creado_en');
+      casoFull.adjuntos = await Promise.all(((adjRaw as any[]) ?? []).map(async (a) => ({
+        id: a.id, nombre: a.nombre, mime: a.mime,
+        href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
+      })));
+    }
   }
 
   const [{ data: envios }, { data: proveedores }, { data: perfilesLista }] = await Promise.all([
@@ -87,6 +109,17 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               <div>Solicitado por {nombreMostrado(s.perfiles?.nombre_completo, verFull) || '—'} · {fechaHora(s.creado_en)}</div>
             </div>
           </div>
+
+          {casoFull && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo" style={{ marginBottom: 4 }}>
+                <Icono nombre="documento" size={16} /> Información completa de la solicitud
+                {casoFull.numero != null && <span className="muted" style={{ fontWeight: 400 }}> · #{String(casoFull.numero).padStart(5, '0')}</span>}
+              </h3>
+              <p className="muted" style={{ margin: '0 0 4px', fontSize: '.82rem' }}>Todo lo verificado (observaciones, fuente, contacto e imágenes) para coordinar bien la entrega.</p>
+              <InfoSolicitud caso={casoFull} />
+            </div>
+          )}
 
           {gestor && origen && (origen.contacto || (origen.lat != null && origen.lng != null)) && (
             <div className="tarjeta">
