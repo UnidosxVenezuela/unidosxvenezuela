@@ -42,6 +42,19 @@ export async function guardarWhatsappGrupo(formData: FormData) {
   redirigirOk('/grupos/' + grupoId, 'WhatsApp guardado');
 }
 
+// El admin, el líder o un coordinador del grupo actualizan su descripción. Va por RPC
+// acotada (0158) que valida el permiso y solo toca `descripcion` (el coordinador no puede
+// cambiar líder/área ni el resto del grupo).
+export async function guardarDescripcionGrupo(formData: FormData) {
+  const supabase = await createClient();
+  const grupoId = String(formData.get('grupo_id'));
+  const descripcion = String(formData.get('descripcion') ?? '').trim().slice(0, 500);
+  const { error } = await supabase.rpc('editar_descripcion_grupo', { p_grupo: grupoId, p_descripcion: descripcion });
+  if (error) throw new Error('No se pudo guardar la descripción: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Descripción actualizada');
+}
+
 export async function programarReunion(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

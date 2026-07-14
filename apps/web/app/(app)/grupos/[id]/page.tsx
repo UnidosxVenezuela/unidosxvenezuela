@@ -18,7 +18,7 @@ import PresenciaTag from '@/components/PresenciaTag';
 import Bandera from '@/components/Bandera';
 import DisponibilidadHover from '@/components/DisponibilidadHover';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, guardarDescripcionGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -189,6 +189,17 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
         </span>
       </div>
       <p className="muted" style={{ marginTop: 4 }}>{grupo.descripcion || 'Sin descripción'}</p>
+      {(puedeGestionar || esCoordAqui) && (
+        <details style={{ marginTop: 2 }}>
+          <summary className="muted" style={{ cursor: 'pointer', fontSize: '.85rem', width: 'fit-content' }}>✏️ Editar descripción</summary>
+          <form action={guardarDescripcionGrupo} style={{ marginTop: 6, maxWidth: 540 }}>
+            <input type="hidden" name="grupo_id" value={grupoId} />
+            <textarea name="descripcion" className="input" rows={3} maxLength={500}
+              defaultValue={grupo.descripcion ?? ''} placeholder="¿Para qué es este grupo? Actualízalo cuando cambie." />
+            <button className="btn btn-primario" type="submit" style={{ marginTop: 6 }}>Guardar descripción</button>
+          </form>
+        </details>
+      )}
       <div className="fila muted" style={{ gap: 5, marginTop: 4, fontSize: '.9rem' }}>
         <Icono nombre="usuario" size={15} />
         {grupo.lider_id
