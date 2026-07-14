@@ -23,13 +23,14 @@ export default async function EnvioRedaccionPage() {
   if (!puede) redirect('/dashboard');
   const supabase = await createClient();
 
-  // Redacción difunde SOLO lo que Logística no pudo cubrir con donaciones
-  // (requiere_difusion, 0149): cuando Logística marca «No se pudo cubrir», el caso
-  // queda para difusión pública y recién ahí llega aquí.
-  const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, actualizado_en';
+  // Por RAPIDEZ ante la emergencia, TODA solicitud confirmada se difunde en paralelo
+  // (a la vez que Logística la trabaja): Redacción recibe todas las confirmadas. Las
+  // que Logística marcó «no se pudo cubrir» (requiere_difusion, 0149) se resaltan como
+  // prioridad de difusión, pero no son las únicas.
+  const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, actualizado_en, requiere_difusion';
   const [{ data: confirmados }, { data: enviados }] = await Promise.all([
     supabase.from('casos').select(COLS)
-      .eq('estado', 'confirmado').eq('requiere_difusion', true).order('actualizado_en', { ascending: true }),
+      .eq('estado', 'confirmado').order('actualizado_en', { ascending: true }),
     supabase.from('casos').select(COLS)
       .eq('estado', 'enviado_redaccion').order('actualizado_en', { ascending: false }),
   ]);
@@ -40,14 +41,14 @@ export default async function EnvioRedaccionPage() {
       <div className="pagina-cab">
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="cohete" size={24} /> Envío a Redacción</h1>
-          <p className="muted sub">Solicitudes que <strong>Logística no pudo cubrir</strong> con donaciones: se difunden públicamente para ampliar el alcance. Al enviarlas, pasan a Redacción.</p>
+          <p className="muted sub">Todas las solicitudes <strong>confirmadas</strong> se difunden en redes, <strong>en paralelo</strong> a la gestión de Logística (por rapidez ante la emergencia). Las de <strong>prioridad</strong> son las que Logística no pudo cubrir.</p>
         </div>
         <BotonActualizar />
       </div>
 
       <h2>Por difundir <span className="insignia aviso">{(confirmados ?? []).length}</span></h2>
       {(confirmados ?? []).length === 0 ? (
-        <EstadoVacio icono="ok" titulo="Nada pendiente por difundir" texto="Cuando Logística marque una solicitud como «no se pudo cubrir», aparecerá aquí para difundirla públicamente." />
+        <EstadoVacio icono="ok" titulo="Nada pendiente por difundir" texto="Cuando Verificación confirme una solicitud, aparecerá aquí para difundirla en redes." />
       ) : (
         (confirmados as any[]).map((c) => (
           <div key={c.id} className="tarjeta">
@@ -55,7 +56,10 @@ export default async function EnvioRedaccionPage() {
               <div>
                 <div className="muted" style={{ fontSize: '.8rem' }}>#{String(c.numero).padStart(5, '0')} · {fechaHora(c.actualizado_en)}</div>
                 <strong>{c.titulo}</strong>
-                <div style={{ marginTop: 4 }}>{c.categoria && <BadgeCategoria>{c.categoria}</BadgeCategoria>}</div>
+                <div className="fila" style={{ marginTop: 4, gap: 6, flexWrap: 'wrap' }}>
+                  {c.categoria && <BadgeCategoria>{c.categoria}</BadgeCategoria>}
+                  {c.requiere_difusion && <Pill tono="alta" punto={false}>⚠ Prioriza · Logística no pudo cubrir</Pill>}
+                </div>
               </div>
               <form action={enviarCasoRedaccion}>
                 <input type="hidden" name="caso_id" value={c.id} />

@@ -197,13 +197,13 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 <form action={cambiarEstadoSolicitud} style={{ marginTop: 8 }}>
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value="no_disponible" />
-                  <BotonConfirmar mensaje="¿Marcar que Logística no pudo cubrir esta solicitud? Pasará a Redacción para difundirla públicamente." className="btn" style={{ width: '100%' }}>No se pudo cubrir → Redacción</BotonConfirmar>
+                  <BotonConfirmar mensaje="¿Marcar que no se pudo cubrir? Redacción ya la está difundiendo en paralelo; ahí se resaltará como prioridad." className="btn" style={{ width: '100%' }}>No se pudo cubrir (prioriza difusión)</BotonConfirmar>
                 </form>
               )}
 
               {s.estado === 'no_disponible' && (
                 <div style={{ marginTop: 8 }}>
-                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Marcada como <strong style={{ color: 'var(--texto)' }}>no cubierta</strong>: pasó a Redacción para difusión pública.</p>
+                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Marcada como <strong style={{ color: 'var(--texto)' }}>no cubierta</strong>: en Redacción se resalta como <strong style={{ color: 'var(--texto)' }}>prioridad de difusión</strong>.</p>
                   <form action={cambiarEstadoSolicitud}>
                     <input type="hidden" name="id" value={id} />
                     <input type="hidden" name="estado" value="solicitado" />
