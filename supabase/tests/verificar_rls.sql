@@ -553,7 +553,7 @@ begin;
   end $$;
 rollback;
 
-\echo '== Test 29: solicitudes_ayuda_mapa() muestra el requerimiento confirmado a logística (que NO lee casos) y oculta el no confirmado (0112) =='
+\echo '== Test 29: la RPC del mapa muestra el requerimiento confirmado y oculta el no confirmado; y Logística lee el caso CONFIRMADO directamente (0156) pero NO el pendiente (0112/0156) =='
 begin;
   insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, req_tipo, req_urgencia)
     values ('00000000-0000-0000-0000-00000000ee01', '_TEST_req_ok', 'Otras informaciones', 'confirmado', true, 10.5, -66.9, 'agua', 'alta');
@@ -563,14 +563,18 @@ begin;
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
   do $$
-  declare n_ok int; n_pend int; n_directo int;
+  declare n_ok int; n_pend int; n_directo int; n_directo_pend int;
   begin
     select count(*) into n_ok from public.solicitudes_ayuda_mapa() where id = '00000000-0000-0000-0000-00000000ee01';
     if n_ok <> 1 then raise exception 'FALLO: logística no ve el requerimiento confirmado por la RPC (n=%)', n_ok; end if;
     select count(*) into n_pend from public.solicitudes_ayuda_mapa() where id = '00000000-0000-0000-0000-00000000ee02';
     if n_pend <> 0 then raise exception 'FALLO: la RPC devolvió un requerimiento NO confirmado'; end if;
+    -- 0156: Logística ahora lee la solicitud CONFIRMADA (no «Desaparecidos») directamente, para gestionarla completa.
     select count(*) into n_directo from public.casos where id = '00000000-0000-0000-0000-00000000ee01';
-    if n_directo <> 0 then raise exception 'FALLO: logística leyó casos directamente saltando la RLS'; end if;
+    if n_directo <> 1 then raise exception 'FALLO: logística ya debería leer el caso confirmado directamente (0156) (n=%)', n_directo; end if;
+    -- Pero NO una solicitud aún NO confirmada (pendiente): su rama exige confirmado/enviado/resuelto.
+    select count(*) into n_directo_pend from public.casos where id = '00000000-0000-0000-0000-00000000ee02';
+    if n_directo_pend <> 0 then raise exception 'FALLO: logística leyó un caso NO confirmado directamente (n=%)', n_directo_pend; end if;
   end $$;
 rollback;
 
