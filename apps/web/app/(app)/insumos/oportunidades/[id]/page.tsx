@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerificar, esAdministrador, esCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeVerOportunidades, puedeVerificar, esAdministrador, esAdminVerificacion, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   ETIQUETA_TIPO_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
@@ -37,9 +37,10 @@ const EXPLICA_OFERTA: Record<string, string> = {
 export default async function OportunidadDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
   const esCapt = esCaptacion(perfil);  // Captación: consulta para alianzas (solo lectura)
-  if (!puedeRegistrarOportunidad(perfil) && !esCapt) redirect('/dashboard');
+  if (!puedeVerOportunidades(perfil)) redirect('/dashboard');
   const gestor = puedeLogistica(perfil);
   const esVerif = puedeVerificar(perfil);
+  const supervisaVerif = esAdminVerificacion(perfil);  // admin de Verificaciones: supervisa (lectura)
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
 
@@ -48,8 +49,8 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
     .eq('id', params.id).maybeSingle();
   if (!o) notFound();
   const oo = o as any;
-  // Recopilación ve las que registró; Logística, Verificación y Captación ven todas.
-  if (!gestor && !esVerif && !esCapt && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
+  // Recopilación ve las que registró; Logística, Verificación (y su admin) y Captación ven todas.
+  if (!gestor && !esVerif && !esCapt && !supervisaVerif && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
 
   const cubre = (oo.cubre_tipos ?? []) as string[];
   const link = hrefSeguro(oo.enlace);

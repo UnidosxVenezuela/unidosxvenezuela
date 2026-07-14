@@ -210,16 +210,20 @@ export function puedeLogistica(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']);
 }
 
-// ¿Puede REGISTRAR un «Donación-Ofrecimiento» (oferta)? Logística (que lo gestiona),
-// Recopilación (que capta ofertas, no solo solicitudes) y el equipo de Verificación
-// —incluida la Administración de Verificaciones (admin_verificacion)—, que también
-// verifica ofertas y necesitaba poder registrarlas. Gatea el alta y la ruta
-// /insumos/oportunidades. Nota: `puedeRecopilar` ya incluye a admin y al rol
-// `verificador`; aquí se suma el admin de área de Verificaciones, que veía el enlace en
-// el menú pero quedaba fuera del alta (redirigido a /dashboard). La RLS es la fuente de
-// verdad: cualquier verificado puede crear la SUYA (0141, oportdon_insert).
+// ¿Puede REGISTRAR (crear) un «Donación-Ofrecimiento»? SOLO quienes captan/gestionan
+// ofertas: Logística (que las gestiona) y Recopilación (que capta ofertas, no solo
+// solicitudes); el admin general entra por puedeLogistica. VERIFICACIÓN NO crea
+// ofrecimientos: solo los VERIFICA (y el admin de Verificaciones los supervisa). Gatea el
+// FORMULARIO de alta y la Server Action. La 0153 refuerza esto en la RLS.
 export function puedeRegistrarOportunidad(e?: EntradaRoles) {
-  return puedeLogistica(e) || puedeRecopilar(e) || esAdminVerificacion(e);
+  return puedeLogistica(e) || tieneAlguno(e, ['recopilacion']);
+}
+
+// ¿Puede ENTRAR a la sección «Donación-Ofrecimiento»? Los que crean (arriba), más el
+// equipo de Verificación (verifica), la Administración de Verificaciones (supervisa) y
+// Captación (consulta). Cada rol ve/hace lo que le toca; solo los de arriba dan de alta.
+export function puedeVerOportunidades(e?: EntradaRoles) {
+  return puedeRegistrarOportunidad(e) || puedeVerificar(e) || esAdminVerificacion(e) || esCaptacion(e);
 }
 
 // Área confidencial de Apoyo Psicosocial. Por privacidad, el acceso NO se rige

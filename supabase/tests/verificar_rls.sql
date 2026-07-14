@@ -1002,6 +1002,33 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 48b: Verificación NO ingresa ofrecimientos; Logística sí (0153) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000de05', 'verif-of@test.local'),
+    ('00000000-0000-0000-0000-00000000de06', 'logi-of@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true, nombre_completo = 'Verif' where id = '00000000-0000-0000-0000-00000000de05';
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true, nombre_completo = 'Logi'  where id = '00000000-0000-0000-0000-00000000de06';
+  -- Verificación: la RLS le NIEGA crear un ofrecimiento (solo verifica, no ingresa).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de05')::text, true);
+  do $$ begin
+    begin
+      insert into public.oportunidades_donacion (organizacion, creado_por)
+        values ('_TEST_verif_no_crea', '00000000-0000-0000-0000-00000000de05');
+      raise exception 'FALLO: Verificación pudo crear un ofrecimiento';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;
+    end;
+  end $$;
+  reset role;
+  -- Logística: SÍ crea el suyo.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de06')::text, true);
+  insert into public.oportunidades_donacion (organizacion, creado_por)
+    values ('_TEST_logi_crea', '00000000-0000-0000-0000-00000000de06');
+rollback;
+
 \echo '== Test 49: solo Logística cambia el estado de una oferta (0141) =='
 begin;
   insert into auth.users (id, email) values
