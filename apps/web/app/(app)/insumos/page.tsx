@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { requireUsuario, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { fechaHora } from '@/lib/fechas';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ESTADOS_INSUMO, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -20,7 +21,7 @@ export default async function InsumosPage() {
   const supabase = await createClient();
   const [{ data }, { count: oportCount }] = await Promise.all([
     supabase.from('solicitudes_insumo')
-      .select('id, titulo, tipo, cantidad, urgencia, estado, creado_en, caso_id, puntos_acopio(nombre), proveedores(nombre)')
+      .select('id, titulo, tipo, cantidad, urgencia, estado, creado_en, actualizado_en, caso_id, casos(numero), puntos_acopio(nombre), proveedores(nombre)')
       .order('creado_en', { ascending: false }),
     supabase.from('oportunidades_donacion').select('*', { count: 'exact', head: true }).neq('estado', 'descartada'),
   ]);
@@ -77,6 +78,13 @@ export default async function InsumosPage() {
                       {ETIQUETA_PRIORIDAD[s.urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? s.urgencia}
                     </Pill>
                   </div>
+                  {(s.casos?.numero != null || s.actualizado_en) && (
+                    <div className="muted" style={{ fontSize: '.75rem', marginTop: 5 }}>
+                      {s.casos?.numero != null && <strong style={{ color: 'var(--texto)' }}>#{String(s.casos.numero).padStart(5, '0')}</strong>}
+                      {s.casos?.numero != null && s.actualizado_en ? ' · ' : ''}
+                      {s.actualizado_en && <>Act. {fechaHora(s.actualizado_en)}</>}
+                    </div>
+                  )}
                   <strong style={{ display: 'block', margin: '6px 0 2px' }}>{s.titulo}</strong>
                   {s.cantidad && <div className="muted" style={{ fontSize: '.85rem' }}>{s.cantidad}</div>}
                   {s.caso_id && <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4, color: '#0f766e' }}><Icono nombre="ubicacion" size={13} /> Solicitud de ayuda (caso derivado)</div>}
