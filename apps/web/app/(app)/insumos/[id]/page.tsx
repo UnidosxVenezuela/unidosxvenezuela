@@ -63,10 +63,10 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     }
   }
 
-  const [{ data: envios }, { data: proveedores }, { data: perfilesLista }] = await Promise.all([
-    supabase.from('envios').select('id, tipo_vehiculo, flete, origen, destino, notas, perfiles!envios_voluntario_id_fkey(nombre_completo)').eq('solicitud_id', id).order('creado_en'),
+  const [{ data: envios }, { data: proveedores }, { data: transportistas }] = await Promise.all([
+    supabase.from('envios').select('id, tipo_vehiculo, flete, origen, destino, notas, transportistas_logistica(nombre), perfiles!envios_voluntario_id_fkey(nombre_completo)').eq('solicitud_id', id).order('creado_en'),
     supabase.from('proveedores').select('id, nombre').order('nombre'),
-    supabase.from('perfiles').select('id, nombre_completo').order('nombre_completo'),
+    supabase.from('transportistas_logistica').select('id, nombre, vehiculo').eq('activo', true).order('nombre'),
   ]);
   const sig = siguienteEstadoInsumo(s.estado);
   const evidenciaUrl = s.entrega_evidencia_path ? await urlFirmada(supabase, 'entregas', s.entrega_evidencia_path, 3600) : null;
@@ -150,7 +150,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <strong>{e.tipo_vehiculo || 'Vehículo'}</strong>
                   <div className="muted" style={{ fontSize: '.85rem' }}>
                     {[
-                      e.perfiles?.nombre_completo && ('Conductor: ' + nombreMostrado(e.perfiles.nombre_completo, verFull)),
+                      (e.transportistas_logistica?.nombre || e.perfiles?.nombre_completo) && ('Conductor: ' + (e.transportistas_logistica?.nombre || nombreMostrado(e.perfiles?.nombre_completo, verFull))),
                       (e.origen || e.destino) && ((e.origen || '?') + ' → ' + (e.destino || '?')),
                       e.flete != null && ('Flete: ' + e.flete),
                     ].filter(Boolean).join(' · ') || '—'}
@@ -174,11 +174,12 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               <form action={crearEnvio}>
                 <input type="hidden" name="solicitud_id" value={id} />
                 <div className="grid grid-2">
-                  <div className="campo"><label>Conductor / voluntario</label>
-                    <select name="voluntario_id" className="input" defaultValue="">
+                  <div className="campo"><label>Conductor / transportista</label>
+                    <select name="transportista_id" className="input" defaultValue="">
                       <option value="">— Sin asignar —</option>
-                      {(perfilesLista ?? []).map((p: any) => <option key={p.id} value={p.id}>{nombreMostrado(p.nombre_completo, verFull) || p.id}</option>)}
+                      {(transportistas ?? []).map((t: any) => <option key={t.id} value={t.id}>{t.nombre}{t.vehiculo ? ' · ' + t.vehiculo : ''}</option>)}
                     </select>
+                    <p className="muted" style={{ fontSize: '.78rem', margin: '4px 0 0' }}>Solo aparecen los <Link href="/insumos/transportistas">transportistas registrados</Link>. Regístralos ahí o desde un Donación-Ofrecimiento de transporte.</p>
                   </div>
                   <div className="campo"><label>Tipo de vehículo</label>
                     <select name="tipo_vehiculo" className="input" defaultValue="">
