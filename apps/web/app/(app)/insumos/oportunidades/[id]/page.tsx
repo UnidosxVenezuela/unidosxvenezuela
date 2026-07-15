@@ -53,8 +53,8 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
     .eq('id', params.id).maybeSingle();
   if (!o) notFound();
   const oo = o as any;
-  // Recopilación ve las que registró; Logística, Verificación (y su admin) y Captación ven todas.
-  if (!gestor && !esVerif && !esCapt && !supervisaVerif && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
+  // Todo el equipo de Recopilación, Logística, Verificación (y su admin) y Captación ven todas (0161).
+  if (!gestor && !esVerif && !esCapt && !supervisaVerif && !puedeRegistrarOportunidad(perfil) && oo.creado_por !== user.id) redirect('/insumos/oportunidades');
 
   const cubre = (oo.cubre_tipos ?? []) as string[];
   const link = hrefSeguro(oo.enlace);
@@ -82,8 +82,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   })));
   const imagenes = adjuntos.filter((a) => a.href && String(a.mime ?? '').startsWith('image/'));
   const documentos = adjuntos.filter((a) => a.href && !String(a.mime ?? '').startsWith('image/'));
-  // ¿Quién puede editar el ofrecimiento? Verificación, Logística o el creador (Recopilación).
-  const puedeEditarOferta = gestor || esVerif || (oo.creado_por === user.id && puedeRegistrarOportunidad(perfil));
+  // ¿Quién puede editar el ofrecimiento? Verificación, Logística o TODO el equipo de
+  // Recopilación (0161): el candado de columnas impide tocar estado/verificación.
+  const puedeEditarOferta = gestor || esVerif || puedeRegistrarOportunidad(perfil);
 
   // Sugerencias de emparejamiento (solo Logística): solicitudes abiertas cuyo tipo
   // encaja con lo que la oferta puede cubrir (o todas, si no se especificó tipo).
@@ -113,6 +114,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   }
 
   const otrosEstados = [...ESTADOS_OFERTA.filter((e) => e !== oo.estado), 'descartada'];
+  // Candado de flujo (0161): sin «Verificada» el pipeline solo permite descartar o volver a «nueva».
+  const ofertaVerificada = oo.estado_verificacion === 'verificada';
+  const destinosEstado = otrosEstados.filter((e) => ofertaVerificada || e === 'descartada' || e === 'nueva');
   // Guía de verificación según el tipo de ofrecimiento (0152): qué confirmar.
   const checklistVerif = VERIF_CHECKLIST_OFERTA[oo.clase as string] ?? VERIF_CHECKLIST_OFERTA.donacion ?? [];
   const claseLabel = oo.clase ? (ETIQUETA_CLASE_OFERTA[oo.clase] ?? oo.clase) : 'Donación';
@@ -240,7 +244,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
                 Solicitudes abiertas que encajan con lo que esta oferta puede cubrir. Al conectar se crea una donación
                 comprometida ligada a la solicitud y la oportunidad avanza a «Comprometida».
               </p>
-              {sugeridas.length === 0 ? (
+              {!ofertaVerificada ? (
+                <div className="tarjeta vacio"><p className="muted" style={{ margin: 0 }}>🔒 Se podrá emparejar cuando Verificación marque este ofrecimiento como «Verificada».</p></div>
+              ) : sugeridas.length === 0 ? (
                 <div className="tarjeta vacio"><p className="muted" style={{ margin: 0 }}>No hay solicitudes abiertas que encajen ahora mismo.</p></div>
               ) : (
                 <div className="tarjeta"><div className="tabla-scroll"><table>
@@ -434,8 +440,13 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
               {/* Estado del pipeline */}
               <div className="tarjeta">
                 <h3 className="aside-titulo"><Icono nombre="flecha" size={16} /> Estado</h3>
+                {!ofertaVerificada && (
+                  <p className="muted" style={{ fontSize: '.8rem', margin: '0 0 10px' }}>
+                    🔒 Para <strong>avanzar</strong> este ofrecimiento, Verificación debe marcarlo antes como <strong>«Verificada»</strong>. Mientras tanto solo se puede descartar.
+                  </p>
+                )}
                 <div className="fila" style={{ flexDirection: 'column', gap: 8, alignItems: 'stretch' }}>
-                  {otrosEstados.map((e) => (
+                  {destinosEstado.map((e) => (
                     <form key={e} action={cambiarEstadoOportunidad}>
                       <input type="hidden" name="id" value={id} />
                       <input type="hidden" name="estado" value={e} />
@@ -495,9 +506,9 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
             </div>
           ) : (
             <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="corazon" size={16} /> Tu oferta registrada</h3>
+              <h3 className="aside-titulo"><Icono nombre="corazon" size={16} /> {oo.creado_por === user.id ? 'Tu oferta registrada' : 'Registro de Recopilación'}</h3>
               <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-                El equipo de Logística la contactará y la emparejará con las solicitudes que encajen. Aquí verás el avance.
+                Recopilación puede <strong>completar o corregir los datos</strong> (Editar). El <strong>estado</strong> lo avanza Logística y la <strong>verificación</strong> la hace el equipo de Verificación. Aquí verás el avance.
               </p>
             </div>
           )}

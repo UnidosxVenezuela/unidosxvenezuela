@@ -1041,26 +1041,29 @@ begin;
   insert into public.oportunidades_donacion (organizacion, creado_por) values ('_TEST_reco_crea', '00000000-0000-0000-0000-00000000de07');
 rollback;
 
-\echo '== Test 49: el pipeline (estado/asignación) es de Logística; el creador y Verificación editan datos pero no el estado ni el veredicto (0141 + 0160) =='
+\echo '== Test 49: pipeline de Logística con candado de verificación; Recopilación (equipo) y Verificación editan datos pero no estado/veredicto (0141 + 0160 + 0161) =='
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-00000000de11', 'reco2@test.local'),
     ('00000000-0000-0000-0000-00000000de12', 'logi2@test.local'),
-    ('00000000-0000-0000-0000-00000000de13', 'verif2@test.local') on conflict do nothing;
+    ('00000000-0000-0000-0000-00000000de13', 'verif2@test.local'),
+    ('00000000-0000-0000-0000-00000000de14', 'reco3@test.local') on conflict do nothing;
   update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de11';
   update public.perfiles set rol = 'logistica',    roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de12';
   update public.perfiles set rol = 'verificador',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de13';
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de14';
   insert into public.oportunidades_donacion (id, organizacion, creado_por)
     values ('00000000-0000-0000-0000-00000000de1f', '_TEST_gestion', '00000000-0000-0000-0000-00000000de11');
 
-  -- El creador de Recopilación SÍ edita datos (0160), pero NO el estado (pipeline) ni el veredicto.
+  -- OTRO recopilador (no el creador) SÍ edita datos (equipo completo, 0161)…
   set local role authenticated;
-  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de11')::text, true);
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de14')::text, true);
   do $$ declare n int; begin
-    update public.oportunidades_donacion set descripcion = 'Corrección del creador' where id = '00000000-0000-0000-0000-00000000de1f';
+    update public.oportunidades_donacion set descripcion = 'Corrección del equipo de Recopilación' where id = '00000000-0000-0000-0000-00000000de1f';
     get diagnostics n = row_count;
-    if n <> 1 then raise exception 'FALLO: el creador de Recopilación no pudo editar su ofrecimiento (n=%)', n; end if;
+    if n <> 1 then raise exception 'FALLO: un recopilador del equipo no pudo editar un ofrecimiento ajeno (n=%)', n; end if;
   end $$;
+  -- …pero NO el estado (pipeline de Logística) ni el veredicto (auto-verificarse).
   do $$ begin
     begin
       update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
@@ -1092,13 +1095,39 @@ begin;
   end $$;
   reset role;
 
-  -- Logística SÍ mueve el pipeline (avanza el estado).
+  -- Candado 0161: Logística NO avanza una oferta SIN verificar (está «observada»)…
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de12')::text, true);
+  do $$ begin
+    begin
+      update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
+      raise exception 'FALLO: Logística avanzó una oferta sin verificación previa (candado 0161)';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  -- …pero SÍ puede descartarla (depurar no exige verificación) y regresarla a «nueva».
+  do $$ declare n int; begin
+    update public.oportunidades_donacion set estado = 'descartada' where id = '00000000-0000-0000-0000-00000000de1f';
+    update public.oportunidades_donacion set estado = 'nueva'      where id = '00000000-0000-0000-0000-00000000de1f';
+    get diagnostics n = row_count;
+    if n <> 1 then raise exception 'FALLO: Logística no pudo descartar/reabrir una oferta sin verificar (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- Verificación la marca «verificada»…
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de13')::text, true);
+  do $$ begin
+    update public.oportunidades_donacion set estado_verificacion = 'verificada' where id = '00000000-0000-0000-0000-00000000de1f';
+  end $$;
+  reset role;
+
+  -- …y AHORA Logística SÍ avanza el pipeline.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000de12')::text, true);
   do $$ declare e text; begin
     update public.oportunidades_donacion set estado = 'contactada' where id = '00000000-0000-0000-0000-00000000de1f';
     select estado into e from public.oportunidades_donacion where id = '00000000-0000-0000-0000-00000000de1f';
-    if e is distinct from 'contactada' then raise exception 'FALLO: Logística no pudo avanzar el estado (%)', e; end if;
+    if e is distinct from 'contactada' then raise exception 'FALLO: Logística no pudo avanzar una oferta ya verificada (%)', e; end if;
   end $$;
 rollback;
 
@@ -1152,8 +1181,9 @@ rollback;
 begin;
   insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000de41', 'logi5@test.local') on conflict do nothing;
   update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000de41';
-  insert into public.oportunidades_donacion (id, organizacion, creado_por)
-    values ('00000000-0000-0000-0000-00000000de4f', '_TEST_conecta', '00000000-0000-0000-0000-00000000de41');
+  -- Verificada de entrada: el candado 0161 exige verificación para avanzar a «comprometida».
+  insert into public.oportunidades_donacion (id, organizacion, creado_por, estado_verificacion)
+    values ('00000000-0000-0000-0000-00000000de4f', '_TEST_conecta', '00000000-0000-0000-0000-00000000de41', 'verificada');
   insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado)
     values ('00000000-0000-0000-0000-00000000de4e', '_TEST_sol_conecta', 'agua', 'media', 'solicitado');
   set local role authenticated;
