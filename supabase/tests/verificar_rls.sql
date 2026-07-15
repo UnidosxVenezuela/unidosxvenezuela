@@ -1378,4 +1378,24 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 61: Logística lee SOLO las oportunidades de Captación ya enviadas, sin poder escribirlas (0162) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000ca01', 'logi-cap@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000ca01';
+  insert into public.oportunidades (id, categoria, estado, titulo) values
+    ('00000000-0000-0000-0000-00000000ca0e', 'empresa',   'enviado',       '_TEST_cap_enviada'),
+    ('00000000-0000-0000-0000-00000000ca0f', 'fundacion', 'investigacion', '_TEST_cap_interna');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000ca01')::text, true);
+  do $$ declare n_env int; n_int int; n_upd int; begin
+    select count(*) into n_env from public.oportunidades where id = '00000000-0000-0000-0000-00000000ca0e';
+    if n_env <> 1 then raise exception 'FALLO: Logística no pudo leer una oportunidad ENVIADA por Captación (n=%)', n_env; end if;
+    select count(*) into n_int from public.oportunidades where id = '00000000-0000-0000-0000-00000000ca0f';
+    if n_int <> 0 then raise exception 'FALLO: Logística leyó trabajo INTERNO de Captación (investigación) (n=%)', n_int; end if;
+    update public.oportunidades set titulo = '_TEST_hackeado' where id = '00000000-0000-0000-0000-00000000ca0e';
+    get diagnostics n_upd = row_count;
+    if n_upd <> 0 then raise exception 'FALLO: Logística pudo ESCRIBIR una oportunidad de Captación (n=%)', n_upd; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

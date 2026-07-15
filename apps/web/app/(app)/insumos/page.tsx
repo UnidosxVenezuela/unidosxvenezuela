@@ -41,7 +41,7 @@ export default async function InsumosPage() {
         <div className="fila">
           <BotonActualizar />
           <Link className="btn" href="/insumos/oportunidades"><Icono nombre="corazon" size={16} /> Donación-Ofrecimiento</Link>
-          <Link className="btn" href="/insumos/proveedores"><Icono nombre="usuario" size={16} /> Proveedores</Link>
+          <Link className="btn" href="/insumos/captacion"><Icono nombre="enlace" size={16} /> Captación</Link>
           <Link className="btn" href="/insumos/transportistas"><Icono nombre="camion" size={16} /> Transportistas</Link>
           <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
         </div>
