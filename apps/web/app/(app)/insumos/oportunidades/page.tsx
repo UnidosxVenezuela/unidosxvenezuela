@@ -25,12 +25,14 @@ import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 type SP = { q?: string; verif?: string; clase?: string };
 
 // Quién actúa en cada etapa del pipeline: renglón bajo el encabezado de cada columna (0161).
-const RESPONSABLES_ETAPA: Record<string, { equipo: string; hace: string }[]> = {
-  nueva: [{ equipo: 'Recopilación', hace: 'registra' }, { equipo: 'Verificación', hace: 'verifica' }],
-  contactada: [{ equipo: 'Logística', hace: 'contacta' }],
-  en_conversacion: [{ equipo: 'Logística', hace: 'negocia' }],
-  comprometida: [{ equipo: 'Logística', hace: 'concreta' }],
-  cumplida: [{ equipo: 'Logística', hace: 'cierra' }],
+// Variante C (elegida por coordinación): chip con el color de cada equipo —
+// Recopilación azul (info) · Verificación ámbar (aviso) · Logística verde (ok).
+const RESPONSABLES_ETAPA: Record<string, { equipo: string; hace: string; tono: 'info' | 'aviso' | 'ok' }[]> = {
+  nueva: [{ equipo: 'Recopilación', hace: 'registra', tono: 'info' }, { equipo: 'Verificación', hace: 'verifica', tono: 'aviso' }],
+  contactada: [{ equipo: 'Logística', hace: 'contacta', tono: 'ok' }],
+  en_conversacion: [{ equipo: 'Logística', hace: 'negocia', tono: 'ok' }],
+  comprometida: [{ equipo: 'Logística', hace: 'concreta', tono: 'ok' }],
+  cumplida: [{ equipo: 'Logística', hace: 'cierra', tono: 'ok' }],
 };
 
 export default async function OportunidadesPage({ searchParams }: { searchParams: SP }) {
@@ -215,12 +217,10 @@ export default async function OportunidadesPage({ searchParams }: { searchParams
                     <span>{ETIQUETA_ESTADO_OFERTA[e] ?? e}</span>
                     <span className="insignia">{porEstado(e).length}</span>
                   </h3>
-                  {/* Renglón de responsables: quién actúa en esta etapa (0161) */}
+                  {/* Renglón de responsables: quién actúa en esta etapa, con el color de su equipo (0161) */}
                   <div className="fila" style={{ gap: 4, flexWrap: 'wrap', margin: '0 0 8px' }}>
                     {(RESPONSABLES_ETAPA[e] ?? []).map((r) => (
-                      <span key={r.equipo} className="insignia" style={{ fontSize: '.68rem' }}>
-                        <strong>{r.equipo}</strong>&nbsp;{r.hace}
-                      </span>
+                      <Pill key={r.equipo} tono={r.tono}>{r.equipo} {r.hace}</Pill>
                     ))}
                   </div>
                   {porEstado(e).length === 0 && <p className="muted" style={{ fontSize: '.85rem', margin: '0 4px' }}>—</p>}
