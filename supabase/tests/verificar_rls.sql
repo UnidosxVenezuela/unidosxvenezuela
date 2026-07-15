@@ -1471,6 +1471,34 @@ begin;
         values ('00000000-0000-0000-0000-00000000cb0e', '00000000-0000-0000-0000-00000000cb02', 'no debería');
       raise exception 'FALLO: un voluntario sin rol dejó una nota en la bitácora';
     exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+\echo '== Test 63: las horas solo se cuentan automáticas — sin alta/edición/borrado manual (0164) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000dd01', 'horas@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000dd01';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000dd01')::text, true);
+  -- Alta manual: negada por RLS.
+  do $$ begin
+    begin
+      insert into public.registro_horas (perfil_id, horas, descripcion)
+        values ('00000000-0000-0000-0000-00000000dd01', 3, 'manual');
+      raise exception 'FALLO: se registraron horas manuales';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  -- El conteo AUTOMÁTICO (RPC security definer) sigue funcionando…
+  select public.sumar_horas_sesion(30);
+  do $$ declare h numeric; begin
+    select sum(horas) into h from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    if coalesce(h, 0) <> 0.5 then raise exception 'FALLO: el conteo automático no sumó (h=%)', h; end if;
+  end $$;
+  -- …y esa fila no se puede editar ni borrar a mano.
+  do $$ declare n int; begin
+    update public.registro_horas set horas = 20 where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: se editaron horas a mano (n=%)', n; end if;
+    delete from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: se borraron horas a mano (n=%)', n; end if;
   end $$;
 rollback;
 
