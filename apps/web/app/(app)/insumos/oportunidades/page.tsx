@@ -1,19 +1,20 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerOportunidades, puedeVerificar, esAdminVerificacion, esCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeRegistrarOportunidad, puedeVerOportunidades, puedeVerificar, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
-  ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
+  ETIQUETA_TIPO_OFERTA, TIPOS_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA,
   ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_ESTADO_DONACION, ESTADOS_DONACION,
-  ETIQUETA_ESTADO_VERIF, claseEstadoVerif,
+  ETIQUETA_ESTADO_VERIF, ESTADOS_VERIF, claseEstadoVerif,
   ETIQUETA_CLASE_OFERTA, CLASES_OFERTA, EXPLICA_CLASE_OFERTA, ETIQUETA_ORIGEN_OFERTA, ORIGENES_OFERTA,
 } from '@/lib/constantes';
-import { fechaCorta } from '@/lib/fechas';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
+import BarraBusqueda from '@/components/BarraBusqueda';
+import FiltroSelect from '@/components/FiltroSelect';
 import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -21,8 +22,19 @@ import ResaltarNuevos from '@/components/ResaltarNuevos';
 import { crearOportunidad } from './actions';
 import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 
-export default async function OportunidadesPage() {
-  const { user, perfil } = await requireUsuario();
+type SP = { q?: string; verif?: string; clase?: string };
+
+// Quién actúa en cada etapa del pipeline: renglón bajo el encabezado de cada columna (0161).
+const RESPONSABLES_ETAPA: Record<string, { equipo: string; hace: string }[]> = {
+  nueva: [{ equipo: 'Recopilación', hace: 'registra' }, { equipo: 'Verificación', hace: 'verifica' }],
+  contactada: [{ equipo: 'Logística', hace: 'contacta' }],
+  en_conversacion: [{ equipo: 'Logística', hace: 'negocia' }],
+  comprometida: [{ equipo: 'Logística', hace: 'concreta' }],
+  cumplida: [{ equipo: 'Logística', hace: 'cierra' }],
+};
+
+export default async function OportunidadesPage({ searchParams }: { searchParams: SP }) {
+  const { perfil } = await requireUsuario();
   // Entrar a la sección: crean, verifican, supervisan o consultan. Quién DA DE ALTA es
   // más acotado (puedeRegistrar): Verificación entra a verificar, no a crear.
   if (!puedeVerOportunidades(perfil)) redirect('/dashboard');
@@ -30,16 +42,30 @@ export default async function OportunidadesPage() {
   const esCapt = esCaptacion(perfil);                        // Captación: consulta para alianzas (solo lectura)
   const gestor = puedeLogistica(perfil);
   const esVerif = puedeVerificar(perfil);
-  const verTablero = gestor || esVerif || esCapt || esAdminVerificacion(perfil);  // Logística, Verificación (y su admin) y Captación ven todo el tablero
   const supabase = await createClient();
 
-  // Logística, Verificación y Captación ven todas; Recopilación ve solo las que registró.
-  // `*` para no romper si la migración 0152 (clase/origen) aún no está aplicada: los
-  // campos faltantes simplemente vienen undefined y la tarjeta los omite.
+  // Búsqueda y filtros: texto libre (quién ofrece, contacto, descripción, ubicación o el
+  // número OF-xxxxx), estado de verificación y clase. Se aplican en la query.
+  const qTexto = (searchParams.q ?? '').trim().slice(0, 120);
+  const nBuscado = qTexto.match(/^(?:of[-\s]?)?#?0*(\d{1,10})$/i)?.[1];
+  const fVerif = ESTADOS_VERIF.includes(searchParams.verif ?? '') ? searchParams.verif! : '';
+  const fClase = CLASES_OFERTA.includes(searchParams.clase ?? '') ? searchParams.clase! : '';
+  const hayFiltros = Boolean(qTexto || fVerif || fClase);
+
+  // TODO el equipo ve el tablero completo — Recopilación incluida (0161): ve y edita,
+  // pero el estado lo avanza Logística y el veredicto lo pone Verificación (candado de
+  // columnas). `*` para no romper si la migración 0152 (clase/origen) aún no está aplicada.
   let query = supabase.from('oportunidades_donacion')
     .select('*')
     .order('creado_en', { ascending: false });
-  if (!verTablero) query = query.eq('creado_por', user.id);
+  if (fVerif) query = query.eq('estado_verificacion', fVerif);
+  if (fClase) query = query.eq('clase', fClase);
+  if (qTexto) {
+    const s = qTexto.replace(/[%,()]/g, ' ');
+    const partes = [`organizacion.ilike.%${s}%`, `contacto.ilike.%${s}%`, `descripcion.ilike.%${s}%`, `ubicacion.ilike.%${s}%`];
+    if (nBuscado) partes.push('numero.eq.' + Number(nBuscado));
+    query = query.or(partes.join(','));
+  }
   const { data } = await query;
   const ops = (data ?? []) as any[];
   const activas = ops.filter((o) => o.estado !== 'descartada');
@@ -74,6 +100,13 @@ export default async function OportunidadesPage() {
       {esCapt && !gestor && !esVerif && (
         <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
           <Icono nombre="enlace" size={15} /> Vista de solo lectura para explorar posibles <strong>alianzas, convenios o futuras donaciones</strong>. La gestión y el emparejamiento los lleva Logística.
+        </p>
+      )}
+
+      {/* Recopilación (0161): ve todo el tablero y edita datos; no mueve el pipeline ni verifica */}
+      {puedeRegistrar && !gestor && !esVerif && (
+        <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
+          <Icono nombre="ojo" size={15} /> Ves <strong>todo el tablero</strong> y puedes abrir cada ofrecimiento para <strong>completar o corregir sus datos</strong>. El <strong>estado</strong> lo avanza Logística y la <strong>verificación</strong> la hace el equipo de Verificación.
         </p>
       )}
 
@@ -139,15 +172,40 @@ export default async function OportunidadesPage() {
       </details>
       )}
 
+      {/* Búsqueda y filtros del tablero (0161) */}
+      {(ops.length > 0 || hayFiltros) && (
+        <form method="get" className="fila" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 14, marginBottom: 0 }}>
+          <BarraBusqueda name="q" placeholder="Buscar por nombre, contacto, ubicación o número OF-…" defaultValue={qTexto} className="crece" />
+          <div className="campo-filtro">
+            <label htmlFor="f-verif">Verificación</label>
+            <FiltroSelect id="f-verif" name="verif" className="input" defaultValue={fVerif} style={{ width: 'auto' }}>
+              <option value="">Todas</option>
+              {ESTADOS_VERIF.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_VERIF[e] ?? e}</option>)}
+            </FiltroSelect>
+          </div>
+          <div className="campo-filtro">
+            <label htmlFor="f-clase">Qué ofrece</label>
+            <FiltroSelect id="f-clase" name="clase" className="input" defaultValue={fClase} style={{ width: 'auto' }}>
+              <option value="">Todas</option>
+              {CLASES_OFERTA.map((c) => <option key={c} value={c}>{ETIQUETA_CLASE_OFERTA[c] ?? c}</option>)}
+            </FiltroSelect>
+          </div>
+          <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
+          {hayFiltros && <Link className="btn" href="/insumos/oportunidades">Limpiar</Link>}
+        </form>
+      )}
+
       {ops.length === 0 ? (
         <EstadoVacio
           icono="corazon"
-          titulo="Aún no hay oportunidades"
-          texto={puedeRegistrar
-            ? 'Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes.'
-            : 'Cuando se registren ofrecimientos aparecerán aquí para explorar posibles alianzas.'}
+          titulo={hayFiltros ? 'Sin resultados' : 'Aún no hay oportunidades'}
+          texto={hayFiltros
+            ? 'Ningún ofrecimiento coincide con la búsqueda o los filtros aplicados.'
+            : puedeRegistrar
+              ? 'Registra la primera oferta de ayuda para empezar a conectar donaciones con las solicitudes.'
+              : 'Cuando se registren ofrecimientos aparecerán aquí para explorar posibles alianzas.'}
         />
-      ) : verTablero ? (
+      ) : (
         <>
           <ResaltarNuevos>
             <div className="tablero-insumos" style={{ marginTop: 16 }}>
@@ -157,6 +215,14 @@ export default async function OportunidadesPage() {
                     <span>{ETIQUETA_ESTADO_OFERTA[e] ?? e}</span>
                     <span className="insignia">{porEstado(e).length}</span>
                   </h3>
+                  {/* Renglón de responsables: quién actúa en esta etapa (0161) */}
+                  <div className="fila" style={{ gap: 4, flexWrap: 'wrap', margin: '0 0 8px' }}>
+                    {(RESPONSABLES_ETAPA[e] ?? []).map((r) => (
+                      <span key={r.equipo} className="insignia" style={{ fontSize: '.68rem' }}>
+                        <strong>{r.equipo}</strong>&nbsp;{r.hace}
+                      </span>
+                    ))}
+                  </div>
                   {porEstado(e).length === 0 && <p className="muted" style={{ fontSize: '.85rem', margin: '0 4px' }}>—</p>}
                   {porEstado(e).map((o) => <TarjetaOferta key={o.id} o={o} />)}
                 </div>
@@ -174,30 +240,6 @@ export default async function OportunidadesPage() {
             </details>
           )}
         </>
-      ) : (
-        // Recopilación: lista de las que registró (lectura).
-        <div className="tarjeta" style={{ marginTop: 16 }}>
-          <h3 style={{ marginTop: 0, fontSize: '1rem' }}>Las que registraste</h3>
-          <div className="tabla-scroll"><table>
-            <thead><tr><th>Quién ofrece</th><th>Tipo</th><th>Estado</th></tr></thead>
-            <tbody>
-              {ops.map((o) => (
-                <tr key={o.id}>
-                  <td><Link href={'/insumos/oportunidades/' + o.id}><strong>{o.organizacion}</strong></Link>
-                    <div className="muted" style={{ fontSize: '.8rem' }}>{o.numero != null ? 'OF-' + String(o.numero).padStart(5, '0') + ' · ' : ''}{o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) + ' · ' : ''}{fechaCorta(o.creado_en)}</div></td>
-                  <td className="muted">{o.clase ? (ETIQUETA_CLASE_OFERTA[o.clase] ?? o.clase) : (ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta)}</td>
-                  <td>
-                    <Pill tono={tonoDeClase(claseEstadoOferta(o.estado))} punto={false}>{ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}</Pill>
-                    <div style={{ marginTop: 4 }}><Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill></div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-          <p className="muted" style={{ fontSize: '.82rem', marginTop: 10, marginBottom: 0 }}>
-            El equipo de Logística contacta y empareja cada oferta; el de Verificación la verifica.
-          </p>
-        </div>
       )}
 
       {/* Donaciones concretadas (Logística): se crean al «Conectar» una oferta con una

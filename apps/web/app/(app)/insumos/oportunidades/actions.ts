@@ -15,6 +15,8 @@ import { TIPOS_OFERTA, TIPOS_INSUMO, ESTADOS_OFERTA, CANALES, CLASES_OFERTA, ORI
 import type { Rol } from '@unidos/types';
 
 const ESTADOS_TODOS = [...ESTADOS_OFERTA, 'descartada'];
+// Estados que AVANZAN el pipeline: exigen verificación previa (candado 0161).
+const ESTADOS_AVANZAN = ['contactada', 'en_conversacion', 'comprometida', 'cumplida'];
 const RESULTADOS = ['positivo', 'pendiente', 'sin_respuesta', 'negativo'];
 
 function txt(v: FormDataEntryValue | null | undefined) { return String(v ?? '').trim(); }
@@ -129,6 +131,15 @@ export async function cambiarEstadoOportunidad(formData: FormData) {
   const estado = txt(formData.get('estado'));
   const volver = txt(formData.get('volver')) || '/insumos/oportunidades';
   if (!id || !ESTADOS_TODOS.includes(estado)) throw new Error('Datos no válidos.');
+  // Candado de flujo (0161): sin verificación previa no se avanza (el trigger de la BD
+  // también lo impone); aquí se corta antes para dar un mensaje amable.
+  if (ESTADOS_AVANZAN.includes(estado)) {
+    const { data: o } = await supabase.from('oportunidades_donacion')
+      .select('estado_verificacion').eq('id', id).maybeSingle();
+    if ((o as any)?.estado_verificacion !== 'verificada') {
+      return redirigirError(volver, 'Verificación debe marcar este ofrecimiento como «Verificada» antes de poder avanzarlo.');
+    }
+  }
   const { error } = await supabase.from('oportunidades_donacion')
     .update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
@@ -190,9 +201,13 @@ export async function conectarConSolicitud(formData: FormData) {
   const solicitud_id = txt(formData.get('solicitud_id'));
   if (!oportunidad_id || !solicitud_id) throw new Error('Elige la solicitud con la que conectar.');
   const { data: o, error: eo } = await supabase.from('oportunidades_donacion')
-    .select('organizacion, tipo_oferta, monto_estimado, descripcion').eq('id', oportunidad_id).maybeSingle();
+    .select('organizacion, tipo_oferta, monto_estimado, descripcion, estado_verificacion').eq('id', oportunidad_id).maybeSingle();
   if (eo || !o) throw new Error('No se encontró la oportunidad.');
   const oo = o as any;
+  // Candado de flujo (0161): conectar avanza a «comprometida» → exige verificación previa.
+  if (oo.estado_verificacion !== 'verificada') {
+    throw new Error('Verificación debe marcar este ofrecimiento como «Verificada» antes de conectarlo con una solicitud.');
+  }
   const esDinero = oo.tipo_oferta === 'dinero';
   const { error: ed } = await supabase.from('donaciones').insert({
     donante: oo.organizacion,
@@ -249,9 +264,9 @@ export async function editarOportunidad(formData: FormData) {
   const id = txt(formData.get('id'));
   if (!id) throw new Error('Falta la oportunidad.');
   const volver = '/insumos/oportunidades/' + id;
-  const { data: o } = await supabase.from('oportunidades_donacion').select('creado_por').eq('id', id).maybeSingle();
-  const esCreador = (o as any)?.creado_por === user.id;
-  if (!(puedeLogistica(perfil) || puedeVerificar(perfil) || (esCreador && puedeRegistrarOportunidad(perfil)))) {
+  // Editan: Logística, Verificación y TODO el equipo de Recopilación (0161). El blindaje
+  // de columnas de la BD impide que Recopilación toque estado/verificación aunque edite.
+  if (!(puedeLogistica(perfil) || puedeVerificar(perfil) || puedeRegistrarOportunidad(perfil))) {
     throw new Error('No tienes permiso para editar este ofrecimiento.');
   }
   const organizacion = txt(formData.get('organizacion')).slice(0, 160);
