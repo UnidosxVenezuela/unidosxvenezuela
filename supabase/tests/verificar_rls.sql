@@ -1437,9 +1437,9 @@ begin;
     ('00000000-0000-0000-0000-00000000b602', 'redes-pub@test.local'),
     ('00000000-0000-0000-0000-00000000b603', 'verif-pub@test.local') on conflict do nothing;
   update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b601';
-  -- Verificador: puede editar un caso confirmado (la RLS de casos deja al creador solo
-  -- si está «en_proceso»); se usa para el guard, así la fila SÍ se toca y el candado dispara.
-  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b603';
+  -- Admin: rama es_admin() de casos_update (siempre puede editar el caso); se usa para el
+  -- guard, así la fila SÍ se toca y el candado se ejerce de verdad.
+  update public.perfiles set rol = 'admin', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b603';
   -- Community Manager (redes_sociales): publica la pieza desde la etapa «redes»
   -- (la RLS de piezas exige es_coordinacion()=es_admin() o el rol de la etapa
   -- actual; por eso la pieza se crea en «redes» y él la pasa a «publicado»).
@@ -1465,14 +1465,22 @@ begin;
       where destinatario_id = '00000000-0000-0000-0000-00000000b601' and tipo = 'caso_publicado';
     if n < 1 then raise exception 'FALLO: no se avisó al autor de la publicación (n=%)', n; end if;
   end $$;
-  -- El guard: ni siquiera quien SÍ puede editar el caso (un verificador) logra fijar
+  -- El guard: ni siquiera un administrador (que SÍ puede editar el caso) logra fijar
   -- publicado_* por un update directo; debe pasar por la acción (SECURITY DEFINER).
+  -- Robusto: el valor NO cambia, sea porque el guard lanza 42501 o porque la RLS no
+  -- deja tocar la fila.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b603')::text, true);
-  do $$ begin
-    update public.casos set publicado_en = now() where id = '00000000-0000-0000-0000-00000000b60c';
-    raise exception 'FALLO: se falsificó publicado_en por la API directa';
-  exception when sqlstate '42501' then null;  -- esperado: el guard lo bloquea
+  do $$ declare v_antes timestamptz;
+  begin
+    select publicado_en into v_antes from public.casos where id = '00000000-0000-0000-0000-00000000b60c';
+    begin
+      update public.casos set publicado_en = now() + interval '1 day' where id = '00000000-0000-0000-0000-00000000b60c';
+    exception when sqlstate '42501' then null;  -- el guard lo bloquea (camino esperado)
+    end;
+    if (select publicado_en from public.casos where id = '00000000-0000-0000-0000-00000000b60c') is distinct from v_antes then
+      raise exception 'FALLO: se logró falsificar publicado_en por la API directa';
+    end if;
   end $$;
 rollback;
 
