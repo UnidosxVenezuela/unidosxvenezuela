@@ -1438,8 +1438,8 @@ begin;
   update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b601';
   update public.perfiles set rol = 'redes_sociales', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
   -- Solicitud confirmada del autor.
-  insert into public.casos (id, numero, titulo, categoria, estado, creado_por)
-    values ('00000000-0000-0000-0000-00000000b60c', 990001, '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000b60c', '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
   -- Pieza de contenido enlazada; al pasarla a «publicado» se marca la solicitud (camino automático).
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b602')::text, true);
