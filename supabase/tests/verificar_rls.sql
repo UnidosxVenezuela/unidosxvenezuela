@@ -1428,6 +1428,77 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 62: Captación consulta las solicitudes y deja notas en la bitácora; no gestiona (0163) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000cb01', 'capta-b@test.local'),
+    ('00000000-0000-0000-0000-00000000cb02', 'volun-b@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'captacion',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000cb01';
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000cb02';
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado)
+    values ('00000000-0000-0000-0000-00000000cb0e', '_TEST_capta_nota', 'agua', 'media', 'solicitado');
+
+  -- Captación: LEE la solicitud, deja su nota (propia), pero NO avanza el estado.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000cb01')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.solicitudes_insumo where id = '00000000-0000-0000-0000-00000000cb0e';
+    if n <> 1 then raise exception 'FALLO: Captación no pudo leer la solicitud (n=%)', n; end if;
+    insert into public.bitacora_solicitud (solicitud_id, autor_id, contenido)
+      values ('00000000-0000-0000-0000-00000000cb0e', '00000000-0000-0000-0000-00000000cb01', 'La empresa X puede cubrir esto');
+    update public.solicitudes_insumo set estado = 'en_ruta' where id = '00000000-0000-0000-0000-00000000cb0e';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: Captación avanzó una solicitud de Logística (n=%)', n; end if;
+  end $$;
+  -- Nota a nombre de otro: negada.
+  do $$ begin
+    begin
+      insert into public.bitacora_solicitud (solicitud_id, autor_id, contenido)
+        values ('00000000-0000-0000-0000-00000000cb0e', '00000000-0000-0000-0000-0000000000aa', 'x');
+      raise exception 'FALLO: Captación registró una nota a nombre de otro';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  reset role;
+
+  -- Un voluntario verificado sin rol de gestión NO deja notas (pero sí las lee).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000cb02')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.bitacora_solicitud where solicitud_id = '00000000-0000-0000-0000-00000000cb0e';
+    if n <> 1 then raise exception 'FALLO: un verificado no pudo leer la bitácora (n=%)', n; end if;
+    begin
+      insert into public.bitacora_solicitud (solicitud_id, autor_id, contenido)
+        values ('00000000-0000-0000-0000-00000000cb0e', '00000000-0000-0000-0000-00000000cb02', 'no debería');
+      raise exception 'FALLO: un voluntario sin rol dejó una nota en la bitácora';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+\echo '== Test 63: las horas solo se cuentan automáticas — sin alta/edición/borrado manual (0164) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000dd01', 'horas@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000dd01';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000dd01')::text, true);
+  -- Alta manual: negada por RLS.
+  do $$ begin
+    begin
+      insert into public.registro_horas (perfil_id, horas, descripcion)
+        values ('00000000-0000-0000-0000-00000000dd01', 3, 'manual');
+      raise exception 'FALLO: se registraron horas manuales';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  -- El conteo AUTOMÁTICO (RPC security definer) sigue funcionando…
+  select public.sumar_horas_sesion(30);
+  do $$ declare h numeric; begin
+    select sum(horas) into h from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    if coalesce(h, 0) <> 0.5 then raise exception 'FALLO: el conteo automático no sumó (h=%)', h; end if;
+  end $$;
+  -- …y esa fila no se puede editar ni borrar a mano.
+  do $$ declare n int; begin
+    update public.registro_horas set horas = 20 where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: se editaron horas a mano (n=%)', n; end if;
+    delete from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: se borraron horas a mano (n=%)', n; end if;
 -- ══ Insignias (0165) ══
 
 \echo '== Test 64: insignias: se otorgan solas, avisan, y el cliente no puede otorgárselas ni borrarlas (0165) =='
