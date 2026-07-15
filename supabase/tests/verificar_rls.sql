@@ -1499,6 +1499,50 @@ begin;
     delete from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
     get diagnostics n = row_count;
     if n <> 0 then raise exception 'FALLO: se borraron horas a mano (n=%)', n; end if;
+-- ══ Insignias (0165) ══
+
+\echo '== Test 64: insignias: se otorgan solas, avisan, y el cliente no puede otorgárselas ni borrarlas (0165) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000b901', 'insig@test.local') on conflict do nothing;
+  -- Al quedar verificado gana «Voluntario/a» y le llega el aviso.
+  update public.perfiles set verificado = true where id = '00000000-0000-0000-0000-00000000b901';
+  do $$ declare n int; begin
+    select count(*) into n from public.perfil_insignias
+      where perfil_id = '00000000-0000-0000-0000-00000000b901' and insignia_id = 'voluntario';
+    if n <> 1 then raise exception 'FALLO: no se otorgó la insignia voluntario al verificar (n=%)', n; end if;
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000b901' and tipo = 'insignia';
+    if n < 1 then raise exception 'FALLO: no llegó el aviso de la insignia (n=%)', n; end if;
+  end $$;
+  -- Su primera solicitud → «Primera solicitud» y el contador queda en 1.
+  insert into public.casos (titulo, categoria, creado_por)
+    values ('_TEST_insignia_caso', 'Otras informaciones', '00000000-0000-0000-0000-00000000b901');
+  do $$ declare n int; begin
+    select count(*) into n from public.perfil_insignias
+      where perfil_id = '00000000-0000-0000-0000-00000000b901' and insignia_id = 'solicitud_1';
+    if n <> 1 then raise exception 'FALLO: no se otorgó solicitud_1 (n=%)', n; end if;
+    select valor into n from public.perfil_contadores
+      where perfil_id = '00000000-0000-0000-0000-00000000b901' and clave = 'solicitudes';
+    if n <> 1 then raise exception 'FALLO: contador de solicitudes incorrecto (%)', n; end if;
+  end $$;
+  -- El cliente ve el catálogo y sus insignias, pero NO puede otorgarse ni borrar ninguna.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b901')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.insignias;
+    if n < 50 then raise exception 'FALLO: el cliente no ve el catálogo de insignias (n=%)', n; end if;
+    select count(*) into n from public.perfil_insignias
+      where perfil_id = '00000000-0000-0000-0000-00000000b901';
+    if n < 2 then raise exception 'FALLO: el cliente no ve sus propias insignias (n=%)', n; end if;
+    begin
+      insert into public.perfil_insignias (perfil_id, insignia_id)
+        values ('00000000-0000-0000-0000-00000000b901', 'horas_250');
+      raise exception 'FALLO: el cliente pudo OTORGARSE una insignia';
+    exception when insufficient_privilege then null; end;
+    delete from public.perfil_insignias where perfil_id = '00000000-0000-0000-0000-00000000b901';
+    get diagnostics n = row_count;
+    if n <> 0 then raise exception 'FALLO: el cliente pudo BORRAR sus insignias (n=%)', n; end if;
   end $$;
 rollback;
 

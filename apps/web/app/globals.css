@@ -727,3 +727,9 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16
 .globo-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .globo-canvas { width: 100%; max-width: 420px; aspect-ratio: 1 / 1; display: block; margin: 0 auto; contain: layout paint size; opacity: 0; transition: opacity .6s ease; }
 .globo-canvas.listo { opacity: 1; }
+
+/* ── Insignias junto al saludo del panel (0165) ── */
+.insignias-saludo { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; padding: 6px 10px; border-radius: 14px; text-decoration: none; max-width: 340px; }
+.insignias-saludo:hover, .insignias-saludo:focus-visible { background: var(--fondo); }
+.insignias-saludo svg { display: block; }
+.insignias-saludo .pill { margin-left: 6px; }
