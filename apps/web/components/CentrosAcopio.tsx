@@ -108,6 +108,14 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
   function abrir(c: PuntoAcopio | 'nuevo') { setError(null); setEditando(c); }
   function cerrar() { setEditando(null); setSel(null); }
 
+  // El panel lateral se cierra con Escape (mismo gesto que DrawerModal).
+  useEffect(() => {
+    if (editando === null) return;
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') { setEditando(null); setSel(null); } };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, [editando]);
+
   async function guardar(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
@@ -194,21 +202,22 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
         )}
       </div>
 
-      {/* Formulario crear/editar */}
+      {/* Crear/editar en PANEL LATERAL derecho (drawer), no arriba de la lista */}
       {editando !== null && (
-        <form onSubmit={guardar} className="tarjeta">
-          <div className="fila" style={{ justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0 }}>{editando === 'nuevo' ? 'Nuevo centro' : 'Editar centro'}</h2>
-            <button type="button" className="btn" onClick={cerrar} style={{ minHeight: 34, padding: '4px 12px' }}>Cancelar</button>
-          </div>
-          <div className="mapa-grid" style={{ marginTop: 12 }}>
-            <div>
-              <div ref={cont} style={{ height: 360, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--borde)' }} />
-              <p className="muted" style={{ fontSize: '.85rem' }}>
-                <Icono nombre="ubicacion" size={14} /> {sel ? `Ubicación: ${sel.lat}, ${sel.lng}` : 'Toca el mapa para marcar la ubicación exacta.'}
-              </p>
-            </div>
-            <div>
+        <>
+          <button type="button" className="drawer-backdrop" aria-label="Cerrar edición" onClick={cerrar} />
+          <aside className="drawer-lateral" role="dialog" aria-modal="true" aria-label={editando === 'nuevo' ? 'Nuevo centro' : 'Editar centro'}>
+            <form onSubmit={guardar}>
+              <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h2 style={{ margin: '2px 0' }}>{editando === 'nuevo' ? 'Nuevo centro' : 'Editar centro'}</h2>
+                <button type="button" className="btn" onClick={cerrar} style={{ minHeight: 34, padding: '4px 10px' }} aria-label="Cerrar">✕</button>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <div ref={cont} style={{ height: 280, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--borde)' }} />
+                <p className="muted" style={{ fontSize: '.85rem' }}>
+                  <Icono nombre="ubicacion" size={14} /> {sel ? `Ubicación: ${sel.lat}, ${sel.lng}` : 'Toca el mapa para marcar la ubicación exacta.'}
+                </p>
+              </div>
               <div className="campo"><label>Nombre del centro</label><input name="nombre" className="input" required defaultValue={ed?.nombre ?? ''} /></div>
               <div className="campo"><label>Tipo de lugar</label>
                 <select name="tipo" className="input" defaultValue={ed?.tipo ?? 'acopio'}>
@@ -233,11 +242,11 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
                 <div className="campo"><label>Teléfono (WhatsApp)</label><EntradaTelefono name="telefono" defaultValue={ed?.telefono ?? ''} /></div>
               </div>
               <div className="campo"><label>Horario</label><input name="horario" className="input" placeholder="8:00–18:00" defaultValue={ed?.horario ?? ''} /></div>
-            </div>
-          </div>
-          <button className="btn btn-primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar centro'}</button>
-          {error && <p className="error" style={{ marginTop: 10 }}>{error}</p>}
-        </form>
+              <button className="btn btn-primario" disabled={guardando} style={{ width: '100%' }}>{guardando ? 'Guardando…' : 'Guardar centro'}</button>
+              {error && <p className="error" style={{ marginTop: 10 }}>{error}</p>}
+            </form>
+          </aside>
+        </>
       )}
 
       {/* Filtro por tipo */}
