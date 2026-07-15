@@ -1440,10 +1440,10 @@ begin;
   -- Verificador: puede editar un caso confirmado (la RLS de casos deja al creador solo
   -- si está «en_proceso»); se usa para el guard, así la fila SÍ se toca y el candado dispara.
   update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b603';
-  -- Coordinación del pipeline: puede editar cualquier etapa de la pieza (la RLS de
-  -- piezas exige es_coordinacion() o el rol de la etapa actual; redes_sociales no
-  -- puede tocar una pieza que está en «redaccion»).
-  update public.perfiles set rol = 'coordinador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
+  -- Community Manager (redes_sociales): publica la pieza desde la etapa «redes»
+  -- (la RLS de piezas exige es_coordinacion()=es_admin() o el rol de la etapa
+  -- actual; por eso la pieza se crea en «redes» y él la pasa a «publicado»).
+  update public.perfiles set rol = 'redes_sociales', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
   -- Solicitud confirmada del autor.
   insert into public.casos (id, titulo, categoria, estado, creado_por)
     values ('00000000-0000-0000-0000-00000000b60c', '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
@@ -1451,7 +1451,7 @@ begin;
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b602')::text, true);
   insert into public.piezas_contenido (id, caso_id, titulo, etapa, enlace_pieza, creado_por)
-    values ('00000000-0000-0000-0000-00000000b6f1', '00000000-0000-0000-0000-00000000b60c', '_TEST_pieza', 'redaccion', 'https://ejemplo/publi', '00000000-0000-0000-0000-00000000b602');
+    values ('00000000-0000-0000-0000-00000000b6f1', '00000000-0000-0000-0000-00000000b60c', '_TEST_pieza', 'redes', 'https://ejemplo/publi', '00000000-0000-0000-0000-00000000b602');
   update public.piezas_contenido set etapa = 'publicado' where id = '00000000-0000-0000-0000-00000000b6f1';
   reset role;
   do $$ declare r public.casos; begin
