@@ -32,11 +32,16 @@ export default function NavLateral({ flags }: { flags: NavFlags }) {
     enlaces.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     enlaces.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
   }
+  // Captación consulta Logística (0163): ve las solicitudes y deja referencias de
+  // aliados en su bitácora. Entra por «Logística» y desde ahí alcanza también los
+  // ofrecimientos (evita resaltar dos ítems por el prefijo /insumos).
+  if (!flags.acopio && flags.captacion) {
+    enlaces.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
+  }
   // Oportunidades de donación (ofertas): Recopilación las capta y Verificación las
-  // verifica; Captación las consulta (solo lectura) para explorar alianzas y convenios.
-  // Todo sin ver la sección de Logística. Quien ya tiene «Donaciones e Insumos» las
-  // alcanza desde ahí (evita resaltar dos ítems por el prefijo /insumos).
-  if (!flags.acopio && (flags.gestionCasos || flags.verificacion || flags.captacion)) {
+  // verifica, sin ver la sección de Logística. Quien ya tiene Logística (incluida
+  // Captación) las alcanza desde ahí.
+  if (!flags.acopio && !flags.captacion && (flags.gestionCasos || flags.verificacion)) {
     enlaces.push({ href: '/insumos/oportunidades', etiqueta: 'Donación-Ofrecimiento', icono: 'corazon' });
   }
   if (flags.aliados) enlaces.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
