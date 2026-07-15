@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, TextInput, ScrollView, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { formatoHoras } from '../lib/etiquetas';
@@ -9,11 +9,8 @@ type Registro = { id: string; horas: number; descripcion: string | null; fecha: 
 export default function Horas() {
   const [items, setItems] = useState<Registro[]>([]);
   const [totalComunidad, setTotalComunidad] = useState(0);
-  const [horas, setHoras] = useState('');
-  const [desc, setDesc] = useState('');
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
-  const [enviando, setEnviando] = useState(false);
 
   const cargar = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -30,19 +27,6 @@ export default function Horas() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  async function registrar() {
-    const n = Number(horas.replace(',', '.'));
-    if (!Number.isFinite(n) || n <= 0 || n > 24) { Alert.alert('Horas inválidas', 'Indica un número entre 0 y 24.'); return; }
-    setEnviando(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('registro_horas')
-      .insert({ perfil_id: user!.id, horas: n, descripcion: desc.trim() || null });
-    setEnviando(false);
-    if (error) { Alert.alert('No se pudo registrar', error.message); return; }
-    setHoras(''); setDesc('');
-    cargar();
-  }
-
   if (cargando) return <View style={s.centro}><ActivityIndicator size="large" color="#0033A0" /></View>;
   const misHoras = items.reduce((acc, r) => acc + Number(r.horas), 0);
 
@@ -57,16 +41,12 @@ export default function Horas() {
         </View>
 
         <View style={s.tarjeta}>
-          <Text style={s.h2}>Registrar horas</Text>
-          <TextInput style={s.input} placeholder="Horas (ej. 2.5)" keyboardType="numeric" value={horas} onChangeText={setHoras} />
-          <TextInput style={s.input} placeholder="¿En qué colaboraste?" value={desc} onChangeText={setDesc} />
-          <Pressable style={[s.btn, enviando && { opacity: 0.6 }]} onPress={registrar} disabled={enviando}>
-            <Text style={s.btnTxt}>{enviando ? 'Guardando…' : 'Registrar'}</Text>
-          </Pressable>
+          <Text style={s.h2}>Conteo automático</Text>
+          <Text style={s.meta}>Tu tiempo se cuenta solo mientras usas la plataforma; ya no se registran horas a mano.</Text>
         </View>
 
         <Text style={s.h2}>Historial</Text>
-        {items.length === 0 && <Text style={s.vacio}>Aún no registraste horas.</Text>}
+        {items.length === 0 && <Text style={s.vacio}>Aún no hay horas contadas; se sumarán solas al usar la plataforma.</Text>}
         {items.map((r) => (
           <View key={r.id} style={s.tarjeta}>
             <Text style={s.regHoras}>{formatoHoras(Number(r.horas))}</Text>

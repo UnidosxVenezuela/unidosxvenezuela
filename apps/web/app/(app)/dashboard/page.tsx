@@ -76,7 +76,7 @@ export default async function Dashboard() {
   if (flags.psicosocial) acciones.push({ href: '/psicosocial', titulo: 'Apoyo Psicosocial', descripcion: flags.admin ? 'Supervisa el área' : 'Acompaña tus casos', icono: 'corazon', color: '#b91c1c', tinte: '#fee2e2' });
   if (flags.acopio) acciones.push({ href: '/insumos', titulo: 'Logística', descripcion: 'Solicitudes y ofertas de donación', icono: 'camion', color: '#a16207', tinte: '#fef9c3' });
   acciones.push({ href: '/grupos', titulo: 'Mis grupos', descripcion: 'Tu equipo, tareas y anuncios', icono: 'grupos', color: '#16a34a', tinte: '#dcfce7' });
-  acciones.push({ href: '/horas', titulo: 'Registrar mis horas', descripcion: 'Suma tu tiempo de voluntariado', icono: 'reloj', color: '#9d2463', tinte: '#fce7f3' });
+  acciones.push({ href: '/horas', titulo: 'Ver mis horas', descripcion: 'Tu tiempo se cuenta solo al usar la plataforma', icono: 'reloj', color: '#9d2463', tinte: '#fce7f3' });
 
   // Nombre para el saludo: si no hay nombre, saludo sin nombre (nunca el correo crudo).
   const primerNombre = (perfil?.nombre_completo || '').trim().split(' ')[0];
