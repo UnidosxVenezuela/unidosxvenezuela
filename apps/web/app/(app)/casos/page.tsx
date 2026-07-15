@@ -107,8 +107,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   else if (estadoFiltro.length > 1) q = q.in('estado', estadoFiltro);
   if (searchParams.categoria) q = q.eq('categoria', searchParams.categoria);
   if (searchParams.q) {
-    const s = searchParams.q.replace(/[%,()]/g, ' ');
-    q = q.or(`titulo.ilike.%${s}%,descripcion.ilike.%${s}%,fuente.ilike.%${s}%`);
+    const s = searchParams.q.replace(/[%,()]/g, ' ').trim();
+    // Si lo buscado parece un número de solicitud (#00012, 12 o SOL-00012),
+    // también se compara contra el correlativo `numero`.
+    const n = s.match(/^(?:sol[-\s]?)?#?0*(\d{1,10})$/i)?.[1];
+    const partes = [`titulo.ilike.%${s}%`, `descripcion.ilike.%${s}%`, `fuente.ilike.%${s}%`];
+    if (n) partes.push('numero.eq.' + Number(n));
+    q = q.or(partes.join(','));
   }
   const { data: casos } = await q;
 
@@ -208,7 +213,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
       <div className="toolbar" style={{ marginTop: 14 }}>
         <form method="get" className="fila crece" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 0 }}>
-          <BarraBusqueda name="q" placeholder="Buscar por título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
+          <BarraBusqueda name="q" placeholder="Buscar por número (#00012), título, descripción o fuente…" defaultValue={searchParams.q ?? ''} className="crece" />
           <div className="campo-filtro">
             <label htmlFor="filtro-estado">Estado</label>
             <FiltroSelect id="filtro-estado" name="estado" className="input" defaultValue={searchParams.estado ?? ''} style={{ width: 'auto' }}>
