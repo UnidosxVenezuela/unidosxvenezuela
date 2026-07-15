@@ -274,6 +274,33 @@ export async function enviarCasoRedaccion(formData: FormData) {
   redirigirOk('/envio-redaccion', 'Solicitud enviada a Redacción');
 }
 
+// Redacción/Redes marca una solicitud como PUBLICADA (con enlace opcional). El
+// permiso y la validación de estado los hace el RPC (0166); esto solo lo invoca.
+export async function marcarCasoPublicado(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const url = opt(formData.get('publicacion_url'));
+  const { error } = await supabase.rpc('marcar_caso_publicado', { p_caso: id, p_url: url });
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  if (error) return redirigirError(volver, 'No se pudo marcar como publicada: ' + error.message);
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'Solicitud marcada como publicada');
+}
+
+export async function quitarCasoPublicado(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const { error } = await supabase.rpc('quitar_caso_publicado', { p_caso: id });
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  if (error) return redirigirError(volver, 'No se pudo deshacer: ' + error.message);
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'Publicación deshecha');
+}
+
 export async function eliminarCaso(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

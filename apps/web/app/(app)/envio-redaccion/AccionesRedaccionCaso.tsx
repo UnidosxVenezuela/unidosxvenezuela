@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import Icono from '@/components/Icono';
-import { registrarEventoCaso } from '../casos/actions';
+import { hrefSeguro } from '@/lib/constantes';
+import { registrarEventoCaso, marcarCasoPublicado, quitarCasoPublicado } from '../casos/actions';
 
 function textoCaso(c: any): string {
   const L: string[] = [];
@@ -31,10 +32,11 @@ function textoCaso(c: any): string {
 
 /** Para Redacción: ver, copiar y descargar la información de un caso confirmado,
  *  dejando registro de la actividad (monitoreo) vía registrar_evento_caso. */
-export default function AccionesRedaccionCaso({ caso }: { caso: any }) {
+export default function AccionesRedaccionCaso({ caso, puedeMarcar = false, esAdmin = false }: { caso: any; puedeMarcar?: boolean; esAdmin?: boolean }) {
   const [abierto, setAbierto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const texto = textoCaso(caso);
+  const hrefPub = hrefSeguro(caso.publicacion_url);
 
   async function copiar() {
     try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000); } catch { /* sin portapapeles */ }
@@ -65,6 +67,28 @@ export default function AccionesRedaccionCaso({ caso }: { caso: any }) {
       {abierto && (
         <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--fondo-2, #f8fafc)', border: '1px solid var(--borde)', borderRadius: 10, padding: 12, marginTop: 8, fontSize: '.86rem', fontFamily: 'inherit' }}>{texto}</pre>
       )}
+
+      {/* Marca «Publicada» (0166): visible a todos; el botón manual solo a Redacción. */}
+      {caso.publicado_en ? (
+        <div className="fila" style={{ gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+          <span className="pill pill-ok" style={{ fontWeight: 600 }}>📣 Publicada</span>
+          {hrefPub && <a href={hrefPub} target="_blank" rel="noopener noreferrer" style={{ fontSize: '.85rem' }}>ver publicación ↗</a>}
+          {esAdmin && (
+            <form action={quitarCasoPublicado}>
+              <input type="hidden" name="caso_id" value={caso.id} />
+              <input type="hidden" name="volver" value="/envio-redaccion" />
+              <button className="btn" style={{ minHeight: 30, padding: '2px 8px', fontSize: '.82rem' }}>Deshacer</button>
+            </form>
+          )}
+        </div>
+      ) : puedeMarcar ? (
+        <form action={marcarCasoPublicado} className="fila" style={{ gap: 6, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <input type="hidden" name="volver" value="/envio-redaccion" />
+          <input name="publicacion_url" className="input" placeholder="Enlace de la publicación (opcional)" inputMode="url" style={{ minHeight: 32, maxWidth: 260, flex: '1 1 200px' }} />
+          <button className="btn btn-primario" style={{ minHeight: 32, padding: '2px 10px' }}>📣 Marcar publicada</button>
+        </form>
+      ) : null}
     </div>
   );
 }

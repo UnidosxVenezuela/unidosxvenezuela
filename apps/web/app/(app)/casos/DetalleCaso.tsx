@@ -108,6 +108,14 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div className="muted" style={{ fontSize: '.8rem' }}>Solicitud #{String(caso.numero).padStart(5, '0')}</div>
           <h2 style={{ margin: '2px 0' }}>{caso.titulo}</h2>
           <EstadoCaso estado={caso.estado} />
+          {caso.publicado_en && (
+            <div className="fila" style={{ gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+              <Pill tono="ok" punto={false}>📣 Publicada · {fechaCorta(caso.publicado_en)}</Pill>
+              {hrefSeguro(caso.publicacion_url) && (
+                <a href={hrefSeguro(caso.publicacion_url)!} target="_blank" rel="noopener noreferrer" style={{ fontSize: '.85rem' }}>ver publicación ↗</a>
+              )}
+            </div>
+          )}
         </div>
         <Link href={cerrarHref} className="btn" style={{ minHeight: 34, padding: '4px 10px' }} aria-label="Cerrar">✕</Link>
       </div>

@@ -288,6 +288,12 @@ export interface Caso {
   // Difusión (0149): cuando Logística marca una solicitud derivada como «No se pudo
   // cubrir», el caso queda para difusión y recién ahí lo recibe Redacción.
   requiere_difusion: boolean;
+  // Publicación (0166): hecho ortogonal al estado. Cuando Redacción/Redes publica la
+  // pieza (auto al pasar la pieza a «publicado», o manual), queda marcado aquí para que
+  // Recopilación, Verificación y Logística lo vean en la solicitud.
+  publicado_en: string | null;
+  publicacion_url: string | null;
+  publicado_por: string | null;
 }
 
 /** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */

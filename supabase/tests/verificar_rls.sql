@@ -1428,4 +1428,44 @@ begin;
   end $$;
 rollback;
 
+-- ══ Solicitud publicada por Redacción (0166) ══
+
+\echo '== Test 62: publicar una pieza marca su solicitud como publicada; el guard impide falsificarlo (0166) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000b601', 'autor-pub@test.local'),
+    ('00000000-0000-0000-0000-00000000b602', 'redes-pub@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b601';
+  update public.perfiles set rol = 'redes_sociales', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
+  -- Solicitud confirmada del autor.
+  insert into public.casos (id, numero, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000b60c', 990001, '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
+  -- Pieza de contenido enlazada; al pasarla a «publicado» se marca la solicitud (camino automático).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b602')::text, true);
+  insert into public.piezas_contenido (id, caso_id, titulo, etapa, enlace_pieza, creado_por)
+    values ('00000000-0000-0000-0000-00000000b6f1', '00000000-0000-0000-0000-00000000b60c', '_TEST_pieza', 'redaccion', 'https://ejemplo/publi', '00000000-0000-0000-0000-00000000b602');
+  update public.piezas_contenido set etapa = 'publicado' where id = '00000000-0000-0000-0000-00000000b6f1';
+  reset role;
+  do $$ declare r public.casos; begin
+    select * into r from public.casos where id = '00000000-0000-0000-0000-00000000b60c';
+    if r.publicado_en is null then raise exception 'FALLO: la solicitud no quedó marcada como publicada'; end if;
+    if r.publicacion_url <> 'https://ejemplo/publi' then raise exception 'FALLO: no copió el enlace de la pieza (%)', r.publicacion_url; end if;
+  end $$;
+  -- Se avisó a quien la reportó.
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000b601' and tipo = 'caso_publicado';
+    if n < 1 then raise exception 'FALLO: no se avisó al autor de la publicación (n=%)', n; end if;
+  end $$;
+  -- El guard: el autor NO puede falsificar publicado_* con un update directo.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b601')::text, true);
+  do $$ begin
+    update public.casos set publicado_en = now() where id = '00000000-0000-0000-0000-00000000b60c';
+    raise exception 'FALLO: el cliente falsificó publicado_en por la API directa';
+  exception when sqlstate '42501' then null;  -- esperado: el guard lo bloquea
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

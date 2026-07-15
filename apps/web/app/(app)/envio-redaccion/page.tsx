@@ -23,6 +23,9 @@ export default async function EnvioRedaccionPage() {
   // El Admin de Redes supervisa (solo lectura; la RLS bloquea la escritura).
   const puede = esAdministrador(perfil) || esAdminRedes(perfil) || rolesDe(perfil).includes('redaccion');
   if (!puede) redirect('/dashboard');
+  // Marcar «Publicada» a mano: Redacción o admin (el Admin de Redes solo supervisa).
+  const esAdmin = esAdministrador(perfil);
+  const puedeMarcar = esAdmin || rolesDe(perfil).includes('redaccion');
   const supabase = await createClient();
 
   // Por RAPIDEZ ante la emergencia, TODA solicitud confirmada se difunde en paralelo
@@ -31,7 +34,7 @@ export default async function EnvioRedaccionPage() {
   // prioridad de difusión, pero no son las únicas. Se traen TODOS los datos que necesita
   // Redacción para difundir con la información completa (descripción, observaciones,
   // contacto y datos de la solicitud de ayuda). Los adjuntos/imágenes se cargan aparte.
-  const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, notas, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng';
+  const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, notas, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, publicado_en, publicacion_url';
   const [{ data: confirmados }, { data: enviados }] = await Promise.all([
     supabase.from('casos').select(COLS)
       .eq('estado', 'confirmado').order('actualizado_en', { ascending: true }),
@@ -94,7 +97,7 @@ export default async function EnvioRedaccionPage() {
               </form>
             </div>
             <InfoSolicitud caso={c} />
-            <AccionesRedaccionCaso caso={c} />
+            <AccionesRedaccionCaso caso={c} puedeMarcar={puedeMarcar} esAdmin={esAdmin} />
             <FormEditarCaso caso={c} volver="/envio-redaccion" />
           </div>
         ))
@@ -114,7 +117,7 @@ export default async function EnvioRedaccionPage() {
               <Pill tono="ok">Enviado a Redacción</Pill>
             </div>
             <InfoSolicitud caso={c} />
-            <AccionesRedaccionCaso caso={c} />
+            <AccionesRedaccionCaso caso={c} puedeMarcar={puedeMarcar} esAdmin={esAdmin} />
             <FormEditarCaso caso={c} volver="/envio-redaccion" />
           </div>
         ))
