@@ -26,7 +26,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
 
   const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
   const { data: caso } = await supabase.from('casos')
-    .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, asignado_a, estado, notas, info_requerida, creado_por, creado_en, actualizado_en, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, punto_tipo, punto_temporal, punto_acopio_id')
+    .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, asignado_a, estado, notas, info_requerida, creado_por, creado_en, actualizado_en, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, punto_tipo, punto_temporal, punto_acopio_id, publicado_en, publicacion_url, publicado_por')
     .eq('id', id).single() as any;
   if (!caso) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/casos">Volver</Link></div>;
 

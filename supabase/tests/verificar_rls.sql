@@ -1471,6 +1471,9 @@ begin;
         values ('00000000-0000-0000-0000-00000000cb0e', '00000000-0000-0000-0000-00000000cb02', 'no debería');
       raise exception 'FALLO: un voluntario sin rol dejó una nota en la bitácora';
     exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+rollback;
+
 \echo '== Test 63: las horas solo se cuentan automáticas — sin alta/edición/borrado manual (0164) =='
 begin;
   insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000dd01', 'horas@test.local') on conflict do nothing;
@@ -1499,6 +1502,9 @@ begin;
     delete from public.registro_horas where perfil_id = '00000000-0000-0000-0000-00000000dd01';
     get diagnostics n = row_count;
     if n <> 0 then raise exception 'FALLO: se borraron horas a mano (n=%)', n; end if;
+  end $$;
+rollback;
+
 -- ══ Insignias (0165) ══
 
 \echo '== Test 64: insignias: se otorgan solas, avisan, y el cliente no puede otorgárselas ni borrarlas (0165) =='
@@ -1543,6 +1549,62 @@ begin;
     delete from public.perfil_insignias where perfil_id = '00000000-0000-0000-0000-00000000b901';
     get diagnostics n = row_count;
     if n <> 0 then raise exception 'FALLO: el cliente pudo BORRAR sus insignias (n=%)', n; end if;
+  end $$;
+rollback;
+
+-- ══ Solicitud publicada por Redacción (0166) ══
+
+\echo '== Test 65: publicar una pieza marca su solicitud como publicada; el guard impide falsificarlo (0166) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-00000000b601', 'autor-pub@test.local'),
+    ('00000000-0000-0000-0000-00000000b602', 'redes-pub@test.local'),
+    ('00000000-0000-0000-0000-00000000b603', 'verif-pub@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b601';
+  -- Admin: rama es_admin() de casos_update (siempre puede editar el caso); se usa para el
+  -- guard, así la fila SÍ se toca y el candado se ejerce de verdad.
+  update public.perfiles set rol = 'admin', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b603';
+  -- Community Manager (redes_sociales): publica la pieza desde la etapa «redes»
+  -- (la RLS de piezas exige es_coordinacion()=es_admin() o el rol de la etapa
+  -- actual; por eso la pieza se crea en «redes» y él la pasa a «publicado»).
+  update public.perfiles set rol = 'redes_sociales', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
+  -- Solicitud confirmada del autor.
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000b60c', '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
+  -- Pieza de contenido enlazada; al pasarla a «publicado» se marca la solicitud (camino automático).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b602')::text, true);
+  insert into public.piezas_contenido (id, caso_id, titulo, etapa, enlace_pieza, creado_por)
+    values ('00000000-0000-0000-0000-00000000b6f1', '00000000-0000-0000-0000-00000000b60c', '_TEST_pieza', 'redes', 'https://ejemplo/publi', '00000000-0000-0000-0000-00000000b602');
+  update public.piezas_contenido set etapa = 'publicado' where id = '00000000-0000-0000-0000-00000000b6f1';
+  reset role;
+  do $$ declare r public.casos; begin
+    select * into r from public.casos where id = '00000000-0000-0000-0000-00000000b60c';
+    if r.publicado_en is null then raise exception 'FALLO: la solicitud no quedó marcada como publicada'; end if;
+    if r.publicacion_url <> 'https://ejemplo/publi' then raise exception 'FALLO: no copió el enlace de la pieza (%)', r.publicacion_url; end if;
+  end $$;
+  -- Se avisó a quien la reportó.
+  do $$ declare n int; begin
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-00000000b601' and tipo = 'caso_publicado';
+    if n < 1 then raise exception 'FALLO: no se avisó al autor de la publicación (n=%)', n; end if;
+  end $$;
+  -- El guard: ni siquiera un administrador (que SÍ puede editar el caso) logra fijar
+  -- publicado_* por un update directo; debe pasar por la acción (SECURITY DEFINER).
+  -- Robusto: el valor NO cambia, sea porque el guard lanza 42501 o porque la RLS no
+  -- deja tocar la fila.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b603')::text, true);
+  do $$ declare v_antes timestamptz;
+  begin
+    select publicado_en into v_antes from public.casos where id = '00000000-0000-0000-0000-00000000b60c';
+    begin
+      update public.casos set publicado_en = now() + interval '1 day' where id = '00000000-0000-0000-0000-00000000b60c';
+    exception when sqlstate '42501' then null;  -- el guard lo bloquea (camino esperado)
+    end;
+    if (select publicado_en from public.casos where id = '00000000-0000-0000-0000-00000000b60c') is distinct from v_antes then
+      raise exception 'FALLO: se logró falsificar publicado_en por la API directa';
+    end if;
   end $$;
 rollback;
 
