@@ -1434,9 +1434,16 @@ rollback;
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-00000000b601', 'autor-pub@test.local'),
-    ('00000000-0000-0000-0000-00000000b602', 'redes-pub@test.local') on conflict do nothing;
+    ('00000000-0000-0000-0000-00000000b602', 'redes-pub@test.local'),
+    ('00000000-0000-0000-0000-00000000b603', 'verif-pub@test.local') on conflict do nothing;
   update public.perfiles set rol = 'recopilacion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b601';
-  update public.perfiles set rol = 'redes_sociales', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
+  -- Verificador: puede editar un caso confirmado (la RLS de casos deja al creador solo
+  -- si está «en_proceso»); se usa para el guard, así la fila SÍ se toca y el candado dispara.
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b603';
+  -- Coordinación del pipeline: puede editar cualquier etapa de la pieza (la RLS de
+  -- piezas exige es_coordinacion() o el rol de la etapa actual; redes_sociales no
+  -- puede tocar una pieza que está en «redaccion»).
+  update public.perfiles set rol = 'coordinador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000b602';
   -- Solicitud confirmada del autor.
   insert into public.casos (id, titulo, categoria, estado, creado_por)
     values ('00000000-0000-0000-0000-00000000b60c', '_TEST_pub', 'Otras informaciones', 'confirmado', '00000000-0000-0000-0000-00000000b601');
@@ -1458,12 +1465,13 @@ begin;
       where destinatario_id = '00000000-0000-0000-0000-00000000b601' and tipo = 'caso_publicado';
     if n < 1 then raise exception 'FALLO: no se avisó al autor de la publicación (n=%)', n; end if;
   end $$;
-  -- El guard: el autor NO puede falsificar publicado_* con un update directo.
+  -- El guard: ni siquiera quien SÍ puede editar el caso (un verificador) logra fijar
+  -- publicado_* por un update directo; debe pasar por la acción (SECURITY DEFINER).
   set local role authenticated;
-  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b601')::text, true);
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000b603')::text, true);
   do $$ begin
     update public.casos set publicado_en = now() where id = '00000000-0000-0000-0000-00000000b60c';
-    raise exception 'FALLO: el cliente falsificó publicado_en por la API directa';
+    raise exception 'FALLO: se falsificó publicado_en por la API directa';
   exception when sqlstate '42501' then null;  -- esperado: el guard lo bloquea
   end $$;
 rollback;
