@@ -10,6 +10,7 @@ import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
 import GloboColaboradores from '@/components/GloboColaboradores';
+import InsigniasSaludo from '@/components/InsigniasSaludo';
 import LimiteError from '@/components/LimiteError';
 import { contarFlujo, pasosFlujo } from '@/lib/flujo';
 import { kpisDeRol } from '@/lib/kpis-panel';
@@ -101,6 +102,8 @@ export default async function Dashboard() {
             {rolEtq ? <>Tu rol: <strong>{rolEtq}</strong>. </> : null}Esto es lo que puedes hacer hoy.
           </p>
         </div>
+        {/* Insignias ganadas (0165): junto al saludo, con enlace a la vitrina. */}
+        <InsigniasSaludo userId={user!.id} />
       </div>
 
       {mostrarAviso2a && (
