@@ -32,7 +32,7 @@ export default async function AyudaPage() {
       <S icono="panel" titulo="Lo básico (para todos)">
         <li><strong>Panel:</strong> tu inicio, con accesos a tus funciones y tu resumen.</li>
         <li><strong>Grupos:</strong> tu equipo. Ahí están las <strong>tareas</strong>, los <strong>anuncios fijados</strong>, las reuniones y la pizarra de tu grupo. A los grupos te agrega la administración o el líder.</li>
-        <li><strong>Mis horas:</strong> registra tu tiempo de voluntariado; suma al total de la comunidad.</li>
+        <li><strong>Mis horas:</strong> tu tiempo se cuenta <strong>automáticamente</strong> mientras usas la plataforma y suma al total de la comunidad (ya no se registran horas a mano).</li>
         <li><strong>Avisos:</strong> la campana te avisa de asignaciones y novedades.</li>
         <li><strong>Mi perfil:</strong> tu foto, WhatsApp y habilidades (menú de arriba a la derecha).</li>
       </S>

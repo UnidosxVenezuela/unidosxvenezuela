@@ -16,7 +16,11 @@ import ResaltarNuevos from '@/components/ResaltarNuevos';
 export default async function InsumosPage() {
   const { perfil } = await requireUsuario();
   const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  if (!rolesG.includes('admin') && !rolesG.includes('logistica') && !rolesG.includes('admin_logistica')) redirect('/dashboard');
+  const esLog = rolesG.includes('admin') || rolesG.includes('logistica') || rolesG.includes('admin_logistica');
+  // Captación entra en modo CONSULTA (0163): revisa las solicitudes y deja en su
+  // bitácora referencias de aliados; no gestiona ni avanza nada (eso es de Logística).
+  const esCapt = !esLog && rolesG.includes('captacion');
+  if (!esLog && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
   const [{ data }, { count: oportCount }] = await Promise.all([
@@ -41,11 +45,21 @@ export default async function InsumosPage() {
         <div className="fila">
           <BotonActualizar />
           <Link className="btn" href="/insumos/oportunidades"><Icono nombre="corazon" size={16} /> Donación-Ofrecimiento</Link>
-          <Link className="btn" href="/insumos/captacion"><Icono nombre="enlace" size={16} /> Captación</Link>
-          <Link className="btn" href="/insumos/transportistas"><Icono nombre="camion" size={16} /> Transportistas</Link>
-          <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
+          {esLog && (
+            <>
+              <Link className="btn" href="/insumos/captacion"><Icono nombre="enlace" size={16} /> Captación</Link>
+              <Link className="btn" href="/insumos/transportistas"><Icono nombre="camion" size={16} /> Transportistas</Link>
+              <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
+            </>
+          )}
         </div>
       </div>
+
+      {esCapt && (
+        <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
+          <Icono nombre="ojo" size={15} /> Vista de <strong>consulta para Captación</strong>: abre una solicitud y deja en su <strong>bitácora</strong> las empresas o alianzas que puedan ayudar a completarla. La gestión y el avance son de Logística.
+        </p>
+      )}
 
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Solicitudes activas" valor={activas.length} sub="Pedidos en curso" color="var(--azul)" icono="camion" tinte="#eef2ff" />
@@ -59,7 +73,7 @@ export default async function InsumosPage() {
           icono="camion"
           titulo="Aún no hay solicitudes"
           texto="Crea la primera solicitud de insumos para empezar a organizar la ayuda."
-          accion={{ href: '/insumos/nueva', etiqueta: 'Nueva solicitud' }}
+          accion={esLog ? { href: '/insumos/nueva', etiqueta: 'Nueva solicitud' } : undefined}
         />
       ) : (
         <ResaltarNuevos>

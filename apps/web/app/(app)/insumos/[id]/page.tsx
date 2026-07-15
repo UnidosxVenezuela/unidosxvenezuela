@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeCaptacion, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
@@ -9,9 +9,10 @@ import { urlFirmada } from '@/lib/storage';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud } from '../actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
 function waLink(contacto: string | null): string | null {
@@ -20,10 +21,12 @@ function waLink(contacto: string | null): string | null {
 }
 
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
-  const { perfil } = await requireUsuario();
-  // Módulo de logística: solo admin/logística (igual que la página principal).
-  if (!puedeLogistica(perfil)) redirect('/dashboard');
+  const { user, perfil } = await requireUsuario();
+  // Logística gestiona. Captación entra en modo CONSULTA (0163): ve la solicitud y deja
+  // en la bitácora las empresas/alianzas que puedan ayudar, sin editar ni avanzar nada.
   const gestor = puedeLogistica(perfil);
+  const esCapt = !gestor && puedeCaptacion(perfil);
+  if (!gestor && !esCapt) redirect('/dashboard');
   const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
@@ -33,6 +36,13 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     .eq('id', id).single();
   const s: any = sData;
   if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Logística</Link></div>;
+
+  // Bitácora de la solicitud (0163): notas de Logística + referencias de Captación.
+  // Si la migración aún no se aplicó, vuelve vacía y la tarjeta muestra «sin notas».
+  const { data: bitacRaw } = await supabase.from('bitacora_solicitud')
+    .select('id, contenido, creado_en, autor_id, autor:perfiles!bitacora_solicitud_autor_id_fkey(nombre_completo, rol)')
+    .eq('solicitud_id', id).order('creado_en', { ascending: false });
+  const bitacora = (bitacRaw ?? []) as any[];
 
   // Caso de ayuda de origen, si la solicitud fue derivada de un caso (Fase 2). Se
   // obtiene por RPC curada (Logística no lee casos por RLS).
@@ -209,6 +219,46 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               </form>
             </div>
           )}
+
+          {/* Bitácora y referencias (0163): notas de Logística + aliados sugeridos por Captación */}
+          <div className="tarjeta">
+            <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Bitácora y referencias</h3>
+            {esCapt && (
+              <p className="muted" style={{ fontSize: '.82rem', margin: '0 0 8px' }}>
+                Deja aquí las <strong>empresas, organizaciones o alianzas de Captación</strong> que puedan ayudar a completar esta solicitud; Logística las verá como referencia.
+              </p>
+            )}
+            {(gestor || esCapt) && (
+              <form action={registrarNotaSolicitud} style={{ marginBottom: 10 }}>
+                <input type="hidden" name="solicitud_id" value={id} />
+                <div className="campo">
+                  <textarea name="contenido" className="input" rows={2} required maxLength={2000}
+                    placeholder={esCapt ? 'Ej.: «Alimentos del Centro» (enviada por Captación) puede donar agua · contacto: …' : 'Nota de gestión…'} />
+                </div>
+                <BotonEnviar className="btn btn-primario"><Icono nombre="mas" size={15} /> Agregar nota</BotonEnviar>
+              </form>
+            )}
+            {bitacora.length === 0 ? (
+              <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Sin notas todavía.</p>
+            ) : bitacora.map((b) => (
+              <div key={b.id} style={{ borderTop: '1px solid var(--borde)', padding: '8px 0' }}>
+                <div className="fila" style={{ justifyContent: 'space-between', gap: 8 }}>
+                  <span className="muted" style={{ fontSize: '.78rem' }}>
+                    <strong style={{ color: 'var(--texto)' }}>{nombreMostrado(b.autor?.nombre_completo, verFull) || '—'}</strong>
+                    {b.autor?.rol === 'captacion' ? ' · Captación' : ''} · {fechaHora(b.creado_en)}
+                  </span>
+                  {(gestor || b.autor_id === user!.id) && (
+                    <form action={eliminarNotaSolicitud}>
+                      <input type="hidden" name="id" value={b.id} />
+                      <input type="hidden" name="solicitud_id" value={id} />
+                      <BotonConfirmar mensaje="¿Eliminar esta nota?" className="btn btn-peligro" style={{ minHeight: 26, padding: '0 8px', fontSize: '.75rem' }}>✕</BotonConfirmar>
+                    </form>
+                  )}
+                </div>
+                <p style={{ whiteSpace: 'pre-wrap', margin: '4px 0 0' }}>{b.contenido}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {gestor && (
@@ -306,6 +356,17 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 <input type="hidden" name="id" value={id} />
                 <BotonConfirmar mensaje={'¿Eliminar la solicitud "' + s.titulo + '"? No se puede deshacer.'} className="btn btn-peligro" style={{ width: '100%' }}>Eliminar solicitud</BotonConfirmar>
               </form>
+            </div>
+          </aside>
+        )}
+
+        {esCapt && (
+          <aside className="grupo-aside">
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="ojo" size={16} /> Vista de consulta</h3>
+              <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+                El estado, los envíos y la gestión son de <strong>Logística</strong>. Tu aporte desde Captación es la <strong>bitácora</strong>: referencias de aliados que puedan cubrir esta solicitud.
+              </p>
             </div>
           </aside>
         )}
