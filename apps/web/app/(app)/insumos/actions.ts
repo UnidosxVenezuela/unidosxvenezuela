@@ -230,3 +230,32 @@ export async function registrarTransportistaDesdeOferta(formData: FormData) {
   revalidatePath('/insumos/transportistas');
   redirigirOk('/insumos/oportunidades/' + oportunidadId, 'Registrado como transportista de Logística');
 }
+
+// ── Bitácora de la solicitud (0163): Logística y Captación dejan notas con registro ──
+export async function registrarNotaSolicitud(formData: FormData) {
+  const { supabase, userId } = await usuario();
+  const solicitud_id = String(formData.get('solicitud_id') ?? '').trim();
+  const contenido = String(formData.get('contenido') ?? '').trim().slice(0, 2000);
+  if (!solicitud_id || !contenido) throw new Error('Escribe la nota.');
+  // La RLS (bitsol_insert) exige autor propio + rol Logística o Captación.
+  const { error } = await supabase.from('bitacora_solicitud')
+    .insert({ solicitud_id, autor_id: userId, contenido });
+  if (error) throw new Error('No se pudo guardar la nota: ' + error.message);
+  // «Con registro»: la nota queda además en el Registro de actividad a nombre del autor.
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'nota_solicitud', p_entidad: 'solicitud_insumo', p_entidad_id: solicitud_id, p_metadata: {},
+  });
+  revalidatePath('/insumos/' + solicitud_id);
+  redirigirOk('/insumos/' + solicitud_id, 'Nota registrada.');
+}
+
+export async function eliminarNotaSolicitud(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id') ?? '').trim();
+  const solicitud_id = String(formData.get('solicitud_id') ?? '').trim();
+  if (!id) throw new Error('Falta la nota.');
+  const { error } = await supabase.from('bitacora_solicitud').delete().eq('id', id);
+  if (error) throw new Error('No se pudo eliminar la nota: ' + error.message);
+  revalidatePath('/insumos/' + solicitud_id);
+  redirigirOk('/insumos/' + solicitud_id, 'Nota eliminada.');
+}
