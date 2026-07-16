@@ -1,0 +1,191 @@
+{
+  "$schema": "https://raw.githubusercontent.com/design-tokens/community-group/main/previews/data/2022/tokens.schema.json",
+  "$description": "Sistema de diseño «Apoyo por Venezuela» — tokens exportados desde apps/web/app/globals.css (:root) y de los patrones recurrentes en la app. Formato DTCG ($value/$type), compatible con Tokens Studio para Figma. Fuente de verdad: globals.css. La app es, por ahora, solo tema claro (color-scheme: light).",
+  "color": {
+    "$description": "Paleta. La marca es el tricolor de Venezuela. El estado del dominio se expresa con los tokens 'pill' (fondo suave + texto).",
+    "marca": {
+      "azul":         { "$value": "#0033A0", "$type": "color", "$description": "Azul de la bandera. Color primario y themeColor de la PWA." },
+      "azul-osc":     { "$value": "#002270", "$type": "color", "$description": "Azul oscuro. Hover del primario, texto sobre amarillo." },
+      "amarillo":     { "$value": "#FFCE00", "$type": "color", "$description": "Amarillo de la bandera. Acento y anillo de foco." },
+      "amarillo-osc": { "$value": "#E6B800", "$type": "color", "$description": "Amarillo oscuro. Hover del acento." },
+      "rojo":         { "$value": "#CF142B", "$type": "color", "$description": "Rojo de la bandera. Peligro de marca, franja tricolor." }
+    },
+    "semantico": {
+      "primario":     { "$value": "{color.marca.azul}", "$type": "color" },
+      "primario-osc": { "$value": "{color.marca.azul-osc}", "$type": "color" },
+      "acento":       { "$value": "{color.marca.amarillo}", "$type": "color" },
+      "texto":        { "$value": "#0f172a", "$type": "color", "$description": "Texto principal (slate-900)." },
+      "texto-suave":  { "$value": "#556074", "$type": "color", "$description": "Texto secundario / etiquetas." }
+    },
+    "superficie": {
+      "fondo":   { "$value": "#f6f8fb", "$type": "color", "$description": "Fondo de la app (lienzo)." },
+      "tarjeta": { "$value": "#ffffff", "$type": "color", "$description": "Superficie de tarjetas y controles." },
+      "borde":   { "$value": "#e6e9f0", "$type": "color", "$description": "Borde por defecto." }
+    },
+    "neutral": {
+      "hover":         { "$value": "#f1f5f9", "$type": "color", "$description": "Hover de botones secundarios, menús, code." },
+      "hover-suave":   { "$value": "#f8fafc", "$type": "color", "$description": "Hover de filas de tabla y chips." },
+      "superficie":    { "$value": "#eef2f7", "$type": "color", "$description": "Superficie neutra (columnas kanban, icono-btn hover)." },
+      "azul-tenue":    { "$value": "#eef2ff", "$type": "color", "$description": "Tinte azul suave (KPI por defecto, flujo-chip)." },
+      "scroll-thumb":  { "$value": "#d4dbe6", "$type": "color", "$description": "Pulgar de scrollbars custom." }
+    },
+    "estado-solido": {
+      "$description": "Colores sólidos para texto/énfasis de prioridad y estado. Mapeados por los helpers clase*/tono* de constantes.ts.",
+      "critica": { "$value": "#b91c1c", "$type": "color", "$description": "Crítica / peligro / error." },
+      "alta":    { "$value": "#c2410c", "$type": "color", "$description": "Prioridad alta / urgente." },
+      "media":   { "$value": "#a16207", "$type": "color", "$description": "Prioridad media." },
+      "baja":    { "$value": "#374151", "$type": "color", "$description": "Prioridad baja." },
+      "ok":      { "$value": "#047857", "$type": "color", "$description": "Éxito / completado." }
+    },
+    "pill": {
+      "$description": "Sistema CANÓNICO de estado (componente Pill). Cada tono = fondo suave (bg) + texto (fg).",
+      "ok-bg":      { "$value": "#d1fae5", "$type": "color" },
+      "ok-fg":      { "$value": "#065f46", "$type": "color" },
+      "aviso-bg":   { "$value": "#fef9c3", "$type": "color" },
+      "aviso-fg":   { "$value": "#854d0e", "$type": "color" },
+      "alta-bg":    { "$value": "#ffedd5", "$type": "color" },
+      "alta-fg":    { "$value": "#c2410c", "$type": "color" },
+      "info-bg":    { "$value": "#dbeafe", "$type": "color" },
+      "info-fg":    { "$value": "#1e40af", "$type": "color" },
+      "critica-bg": { "$value": "#fee2e2", "$type": "color" },
+      "critica-fg": { "$value": "#b91c1c", "$type": "color" },
+      "neutra-bg":  { "$value": "#eef2f7", "$type": "color" },
+      "neutra-fg":  { "$value": "#334155", "$type": "color" }
+    },
+    "tarea": {
+      "$description": "Acento de estado de tarea (borde izquierdo de tarjeta/fila + fondo tenue).",
+      "ok":         { "$value": "#16a34a", "$type": "color" },
+      "ok-bg":      { "$value": "#f0fdf4", "$type": "color" },
+      "aviso":      { "$value": "#d97706", "$type": "color" },
+      "aviso-bg":   { "$value": "#fffbeb", "$type": "color" },
+      "critica":    { "$value": "#dc2626", "$type": "color", "$description": "También el fondo sólido de la campana de avisos." },
+      "critica-bg": { "$value": "#fef2f2", "$type": "color" },
+      "neutra":     { "$value": "#cbd5e1", "$type": "color" }
+    },
+    "presencia": {
+      "$description": "Estado de presencia en tiempo real (con halo rgba a .18).",
+      "conectado":    { "$value": "#0A7D2C", "$type": "color" },
+      "ocupado":      { "$value": "#E6A100", "$type": "color" },
+      "desconectado": { "$value": "#94a3b8", "$type": "color" }
+    }
+  },
+  "fuente": {
+    "familia": {
+      "base": { "$value": ["system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"], "$type": "fontFamily", "$description": "Stack del sistema. No se carga ninguna fuente web." },
+      "mono": { "$value": ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"], "$type": "fontFamily", "$description": "Para datos/valores. La app la usa solo en <code> (fondo neutral.hover)." }
+    },
+    "peso": {
+      "medio":     { "$value": 500, "$type": "fontWeight" },
+      "semibold":  { "$value": 600, "$type": "fontWeight", "$description": "Etiquetas, nav, botones." },
+      "bold":      { "$value": 700, "$type": "fontWeight", "$description": "Nombres, pills, th, badges." },
+      "extrabold": { "$value": 800, "$type": "fontWeight", "$description": "Marca, KPI, avatar." }
+    },
+    "tamano": {
+      "$description": "Escala en rem (base 16px). Nombres por rol de uso.",
+      "kpi":        { "$value": "1.9rem",  "$type": "dimension", "$description": "Número grande de KPI." },
+      "h1":         { "$value": "1.55rem", "$type": "dimension", "$description": "1.32rem en ≤600px." },
+      "flujo-num":  { "$value": "1.35rem", "$type": "dimension" },
+      "marca":      { "$value": "1.25rem", "$type": "dimension" },
+      "h2":         { "$value": "1.15rem", "$type": "dimension" },
+      "h3":         { "$value": "1.05rem", "$type": "dimension" },
+      "cuerpo":     { "$value": "1rem",    "$type": "dimension", "$description": "Body, inputs, botones." },
+      "sm":         { "$value": "0.9rem",  "$type": "dimension" },
+      "etiqueta":   { "$value": "0.88rem", "$type": "dimension", "$description": "Etiqueta de KPI." },
+      "xs":         { "$value": "0.82rem", "$type": "dimension" },
+      "insignia":   { "$value": "0.8rem",  "$type": "dimension" },
+      "micro":      { "$value": "0.72rem", "$type": "dimension", "$description": "thead, uc-rol, labels en mayúsculas." },
+      "nano":       { "$value": "0.62rem", "$type": "dimension", "$description": "Badge de conteo de la campana." }
+    },
+    "interlineado": {
+      "base":   { "$value": 1.5,  "$type": "number" },
+      "ajustado": { "$value": 1.25, "$type": "number" },
+      "apretado": { "$value": 1.15, "$type": "number" }
+    },
+    "tracking": {
+      "marca":     { "$value": "0.2px",  "$type": "dimension" },
+      "mayusculas": { "$value": "0.04em", "$type": "dimension", "$description": "thead y labels en mayúsculas." }
+    }
+  },
+  "radio": {
+    "tarjeta": { "$value": "16px",  "$type": "dimension", "$description": "--r-tarjeta. Tarjetas y modales." },
+    "tile":    { "$value": "12px",  "$type": "dimension", "$description": "--r-tile. Ícono de KPI." },
+    "input":   { "$value": "10px",  "$type": "dimension", "$description": "--r-input. Inputs, botones, nav." },
+    "medio":   { "$value": "14px",  "$type": "dimension", "$description": "flujo-paso, consejo, columnas." },
+    "chico":   { "$value": "8px",   "$type": "dimension" },
+    "pill":    { "$value": "999px", "$type": "dimension", "$description": "--r-pill. Pills, chips, badges." },
+    "circulo": { "$value": "50%",   "$type": "dimension", "$description": "Avatar, punto de marca, punto de presencia." }
+  },
+  "espacio": {
+    "$description": "Ritmo de 2/4px. Gaps y paddings recurrentes.",
+    "1": { "$value": "4px",  "$type": "dimension" },
+    "2": { "$value": "6px",  "$type": "dimension" },
+    "3": { "$value": "8px",  "$type": "dimension" },
+    "4": { "$value": "10px", "$type": "dimension" },
+    "5": { "$value": "12px", "$type": "dimension" },
+    "6": { "$value": "14px", "$type": "dimension", "$description": "Gap de grids, margen inferior de tarjeta." },
+    "7": { "$value": "18px", "$type": "dimension", "$description": "Padding de tarjeta." },
+    "8": { "$value": "24px", "$type": "dimension", "$description": "Padding del contenedor." },
+    "padding-boton":     { "$value": "11px 18px", "$type": "dimension" },
+    "padding-input":     { "$value": "10px 12px", "$type": "dimension" },
+    "padding-pill":      { "$value": "4px 10px",  "$type": "dimension" },
+    "padding-contenedor": { "$value": "24px 24px 48px", "$type": "dimension" }
+  },
+  "sombra": {
+    "base":  { "$value": "0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.08)", "$type": "shadow", "$description": "--sombra. Reposo de tarjetas." },
+    "flotante": { "$value": "0 12px 34px rgba(16,24,40,.14)", "$type": "shadow", "$description": "--sombra-flot." },
+    "hover-tarjeta": { "$value": "0 8px 22px rgba(16,24,40,.10)", "$type": "shadow", "$description": "Tarjeta-enlace en hover (+translateY -2px)." },
+    "toast": { "$value": "0 14px 36px rgba(16,24,40,.18)", "$type": "shadow" },
+    "menu":  { "$value": "0 14px 40px rgba(16,24,40,.18)", "$type": "shadow" },
+    "modal": { "$value": "0 20px 60px rgba(16,24,40,.30)", "$type": "shadow" },
+    "drawer": { "$value": "-16px 0 50px rgba(16,24,40,.22)", "$type": "shadow" },
+    "consejo": { "$value": "0 12px 32px rgba(30,58,95,.20), 0 3px 10px rgba(30,58,95,.12)", "$type": "shadow" },
+    "foco-input": { "$value": "0 0 0 3px rgba(0,51,160,.15)", "$type": "shadow", "$description": "Anillo de foco de inputs." }
+  },
+  "movimiento": {
+    "duracion": {
+      "$description": "Con prefers-reduced-motion: reduce, todas caen a ~0.001ms.",
+      "tap":     { "$value": "20ms",  "$type": "duration", "$description": ".02s — hundido de botón." },
+      "rapida":  { "$value": "120ms", "$type": "duration", "$description": ".12s — fondo de botón / fila." },
+      "tarjeta": { "$value": "150ms", "$type": "duration", "$description": ".15s — hover de tarjeta-enlace." },
+      "toast":   { "$value": "180ms", "$type": "duration", "$description": "Salida de toast (140ms con reduce). Filosofía: salida < entrada." },
+      "barra":   { "$value": "220ms", "$type": "duration", "$description": ".22s — sidebar, toastIn." },
+      "drawer":  { "$value": "240ms", "$type": "duration", "$description": ".24s — deslizado del drawer." },
+      "consejo": { "$value": "300ms", "$type": "duration" },
+      "pop":     { "$value": "460ms", "$type": "duration", "$description": "Pop de EstadoCaso al cambiar (scale 0.8→1.12→1)." }
+    },
+    "curva": {
+      "estandar":  { "$value": [0.22, 0.61, 0.36, 1], "$type": "cubicBezier", "$description": "toastIn, drawerSlide." },
+      "consejo":   { "$value": [0.2, 0.8, 0.2, 1],   "$type": "cubicBezier" },
+      "salida":    { "$value": "ease", "$type": "cubicBezier", "$description": "Transiciones simples (background, transform, box-shadow)." }
+    }
+  },
+  "medida": {
+    "$description": "Anchos, altos y umbrales de layout.",
+    "sidebar":        { "$value": "256px",  "$type": "dimension" },
+    "contenedor-max": { "$value": "1200px", "$type": "dimension" },
+    "drawer":         { "$value": "600px",  "$type": "dimension" },
+    "modal":          { "$value": "480px",  "$type": "dimension" },
+    "confirm":        { "$value": "380px",  "$type": "dimension" },
+    "menu-min":       { "$value": "220px",  "$type": "dimension" },
+    "auth-caja":      { "$value": "420px",  "$type": "dimension" },
+    "legal-doc":      { "$value": "780px",  "$type": "dimension" },
+    "topbar-alto":    { "$value": "60px",   "$type": "dimension" },
+    "control-alto":   { "$value": "46px",   "$type": "dimension", "$description": "Alto de botón/input en escritorio." },
+    "control-compacto": { "$value": "34px", "$type": "dimension" },
+    "toque-min":      { "$value": "44px",   "$type": "dimension", "$description": "Objetivo táctil mínimo (@media pointer: coarse). WCAG." }
+  },
+  "breakpoint": {
+    "$description": "Se usan como max-width (mobile-last). El corte estructural mayor es 820px (sidebar → cajón off-canvas).",
+    "xl":  { "$value": "980px", "$type": "dimension" },
+    "lg":  { "$value": "920px", "$type": "dimension" },
+    "md":  { "$value": "820px", "$type": "dimension", "$description": "Sidebar pasa a cajón; aparece topbar-marca." },
+    "sm":  { "$value": "680px", "$type": "dimension" },
+    "xs":  { "$value": "600px", "$type": "dimension", "$description": "User-chip se reduce al avatar." },
+    "xxs": { "$value": "560px", "$type": "dimension", "$description": "Toast y drawer a ancho completo." }
+  },
+  "foco": {
+    "$description": "Dos anillos según el fondo. Regla: azul sobre claro, amarillo sobre azul o para énfasis.",
+    "anillo-azul":     { "$value": "3px solid #0033A0", "$type": "border", "$description": "outline-offset 2px. Sobre superficies claras." },
+    "anillo-amarillo": { "$value": "3px solid #FFCE00", "$type": "border", "$description": "Botones, nav, íconos; sobre azul." }
+  }
+}

@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apoyo por Venezuela — Sistema de diseño</title>
+<style>
+  /* ===== Guía: chrome (adapta al tema del visor) ===== */
+  :root{
+    --bg:#eef1f7; --panel:#ffffff; --panel-2:#f7f9fc; --ink:#0f172a; --muted:#5b6478;
+    --line:#e3e7f0; --accent:#0033A0; --accent-ink:#ffffff;
+    --brand-y:#FFCE00; --brand-r:#CF142B;
+    --code-bg:#eef2f7; --code-ink:#0f172a; --chip:#f1f5f9;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+    --ring:0 0 0 3px rgba(0,51,160,.28);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0a0f1e; --panel:#121a30; --panel-2:#0e1526; --ink:#e9eef8; --muted:#98a4bd;
+      --line:#25314c; --accent:#7aa2ff; --accent-ink:#0a0f1e;
+      --brand-y:#FFCE00; --brand-r:#ff6274;
+      --code-bg:#1a2440; --code-ink:#dce5ff; --chip:#1a2440;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.38);
+      --ring:0 0 0 3px rgba(122,162,255,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1f7; --panel:#ffffff; --panel-2:#f7f9fc; --ink:#0f172a; --muted:#5b6478;
+    --line:#e3e7f0; --accent:#0033A0; --accent-ink:#ffffff; --brand-r:#CF142B;
+    --code-bg:#eef2f7; --code-ink:#0f172a; --chip:#f1f5f9;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+    --ring:0 0 0 3px rgba(0,51,160,.28);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0f1e; --panel:#121a30; --panel-2:#0e1526; --ink:#e9eef8; --muted:#98a4bd;
+    --line:#25314c; --accent:#7aa2ff; --accent-ink:#0a0f1e; --brand-r:#ff6274;
+    --code-bg:#1a2440; --code-ink:#dce5ff; --chip:#1a2440;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.38);
+    --ring:0 0 0 3px rgba(122,162,255,.4);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  code,.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; }
+  a{ color:var(--accent); }
+
+  /* Layout */
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 20px; }
+  .layout{ display:grid; grid-template-columns:230px minmax(0,1fr); gap:34px; align-items:start; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } .toc{ display:none; } }
+
+  /* Header */
+  header.top{ position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter:saturate(1.4) blur(9px); border-bottom:1px solid var(--line); }
+  .tricolor{ height:4px; background:linear-gradient(90deg,var(--brand-y) 0 33.33%, #0033A0 33.33% 66.66%, var(--brand-r) 66.66% 100%); }
+  .top .bar{ display:flex; align-items:center; justify-content:space-between; gap:16px; padding:13px 0; }
+  .marca{ display:flex; align-items:center; gap:11px; font-weight:800; letter-spacing:.2px; font-size:1.06rem; }
+  .punto{ width:14px; height:14px; border-radius:50%; flex:0 0 auto;
+    background:linear-gradient(135deg,#FFCE00 0 50%, #CF142B 50% 100%); box-shadow:0 0 0 2px color-mix(in srgb, var(--ink) 14%, transparent); }
+  .marca small{ display:block; font-weight:600; font-size:.72rem; letter-spacing:.02em; color:var(--muted); }
+  .theme-btn{ font:inherit; font-weight:600; font-size:.82rem; color:var(--ink); background:var(--panel); border:1px solid var(--line);
+    border-radius:999px; padding:7px 13px; cursor:pointer; display:inline-flex; gap:7px; align-items:center; }
+  .theme-btn:hover{ background:var(--chip); }
+  .theme-btn:focus-visible{ outline:none; box-shadow:var(--ring); }
+
+  /* Hero */
+  .hero{ padding:40px 0 8px; }
+  .hero .eyebrow{ text-transform:uppercase; letter-spacing:.14em; font-size:.72rem; font-weight:700; color:var(--accent); }
+  .hero h1{ font-size:clamp(1.7rem,4.4vw,2.5rem); line-height:1.1; margin:.35rem 0 .5rem; letter-spacing:-.01em; text-wrap:balance; }
+  .hero p{ max-width:64ch; color:var(--muted); font-size:1.02rem; margin:.4rem 0; }
+  .meta-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; }
+  .tag{ font-size:.76rem; font-weight:600; padding:5px 11px; border-radius:999px; background:var(--panel); border:1px solid var(--line); color:var(--muted); }
+  .tag b{ color:var(--ink); }
+
+  /* TOC */
+  .toc{ position:sticky; top:78px; font-size:.86rem; }
+  .toc ol{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+  .toc a{ display:block; padding:6px 10px; border-radius:8px; color:var(--muted); text-decoration:none; border-left:2px solid transparent; }
+  .toc a:hover{ background:var(--panel); color:var(--ink); }
+  .toc a.on{ color:var(--ink); font-weight:600; border-left-color:var(--brand-y); background:var(--panel); }
+  .toc .num{ font-family:ui-monospace,monospace; color:var(--accent); margin-right:7px; font-size:.78rem; }
+
+  /* Sections */
+  main{ padding-bottom:70px; }
+  section{ scroll-margin-top:80px; padding:26px 0; border-top:1px solid var(--line); }
+  section:first-child{ border-top:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }
+  .sec-head .n{ font-family:ui-monospace,monospace; font-size:.82rem; color:var(--accent); font-weight:700; }
+  h2{ font-size:1.32rem; margin:0; letter-spacing:-.01em; }
+  .lead{ color:var(--muted); margin:.35rem 0 18px; max-width:70ch; }
+  h3.sub{ font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:22px 0 10px; font-weight:700; }
+
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); }
+  .pad{ padding:18px; }
+
+  /* Swatches */
+  .swgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:12px; }
+  .sw{ border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); }
+  .sw .chip{ height:62px; }
+  .sw .body{ padding:8px 10px 10px; }
+  .sw .name{ font-weight:700; font-size:.82rem; }
+  .sw .val{ font-family:ui-monospace,monospace; font-size:.74rem; color:var(--muted); text-transform:uppercase; }
+  .sw .use{ font-size:.72rem; color:var(--muted); margin-top:3px; line-height:1.3; }
+  .pairsw{ display:flex; }
+  .pairsw span{ flex:1; height:62px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.82rem; }
+
+  /* type scale */
+  .typerow{ display:flex; align-items:baseline; gap:16px; padding:11px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .typerow:last-child{ border-bottom:none; }
+  .typerow .spec{ flex:0 0 130px; font-family:ui-monospace,monospace; font-size:.74rem; color:var(--muted); }
+  .typerow .sample{ color:var(--ink); line-height:1.2; }
+
+  /* radii + spacing */
+  .radii{ display:flex; flex-wrap:wrap; gap:16px; }
+  .radii .r{ text-align:center; font-size:.74rem; color:var(--muted); font-family:ui-monospace,monospace; }
+  .radii .r i{ display:block; width:74px; height:56px; background:color-mix(in srgb,var(--accent) 14%, var(--panel)); border:1.5px solid var(--accent); margin-bottom:6px; }
+  .spacescale{ display:flex; flex-direction:column; gap:8px; }
+  .spacescale .s{ display:flex; align-items:center; gap:12px; font-family:ui-monospace,monospace; font-size:.76rem; color:var(--muted); }
+  .spacescale .s i{ display:block; height:14px; background:var(--brand-y); border-radius:3px; }
+
+  /* shadows */
+  .shadowgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:18px; }
+  .shadowgrid .sh{ background:var(--panel); border:1px solid var(--line); border-radius:14px; height:78px; display:flex; align-items:flex-end; padding:8px 10px; font-family:ui-monospace,monospace; font-size:.72rem; color:var(--muted); }
+
+  /* motion table */
+  table.spec{ width:100%; border-collapse:collapse; font-size:.86rem; }
+  table.spec th,table.spec td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.spec th{ font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  table.spec td.mono{ font-size:.78rem; color:var(--muted); white-space:nowrap; }
+
+  /* icon chips */
+  .iconchips{ display:flex; flex-wrap:wrap; gap:7px; }
+  .iconchips .ic{ font-family:ui-monospace,monospace; font-size:.76rem; padding:5px 9px; border-radius:8px; background:var(--chip); border:1px solid var(--line); color:var(--ink); }
+
+  /* metals */
+  .metals{ display:flex; gap:20px; flex-wrap:wrap; }
+  .metals .m{ text-align:center; font-size:.78rem; font-weight:700; }
+  .metals .m i{ display:block; width:76px; height:76px; border-radius:50%; margin:0 auto 8px; box-shadow:inset 0 2px 6px rgba(255,255,255,.6), 0 4px 12px rgba(16,24,40,.22); border:2px solid rgba(255,255,255,.55); }
+  .metals .m small{ display:block; font-weight:500; color:var(--muted); font-size:.72rem; }
+  .m.bronce i{ background:radial-gradient(circle at 34% 30%, #ffd9a8, #c87b3a 55%, #7a441c); }
+  .m.plata i{ background:radial-gradient(circle at 34% 30%, #ffffff, #c8d0da 55%, #8a94a3); }
+  .m.oro i{ background:radial-gradient(circle at 34% 30%, #fff2ba, #f2b31c 55%, #a9741a); }
+
+  .note{ font-size:.82rem; color:var(--muted); background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--brand-y); border-radius:0 10px 10px 0; padding:10px 13px; margin:14px 0; }
+  .cols2{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:640px){ .cols2{ grid-template-columns:1fr; } }
+  .kv{ font-size:.86rem; }
+  .kv b{ font-family:ui-monospace,monospace; font-weight:700; color:var(--ink); }
+
+  /* ============================================================
+     LIENZO: previews fieles a la app (SIEMPRE tema claro real).
+     Se re-declaran las variables reales de la app y las clases de
+     globals.css, todo scopeado bajo .lienzo para no filtrarse.
+     ============================================================ */
+  .lienzo-wrap{ margin-top:6px; }
+  .lienzo-lbl{ display:flex; align-items:center; gap:8px; font-size:.74rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+  .lienzo-lbl::before{ content:""; width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,#FFCE00 0 50%, #CF142B 50% 100%); }
+  .lienzo{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --primario:var(--azul); --primario-osc:var(--azul-osc); --acento:var(--amarillo);
+    --texto:#0f172a; --texto-suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --tarjeta:#ffffff;
+    --critica:#b91c1c; --alta:#c2410c; --media:#a16207; --baja:#374151; --ok:#047857;
+    --sombra:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.08);
+    --r-tarjeta:16px; --r-pill:999px; --r-input:10px; --r-tile:12px;
+    background:#f6f8fb; color:#0f172a; border:1px solid #e6e9f0; border-radius:16px;
+    padding:20px; overflow-x:auto;
+  }
+  .lienzo, .lienzo *{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  .lienzo .fila{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .lienzo .col{ display:flex; flex-direction:column; gap:12px; }
+  .lienzo .muted{ color:var(--texto-suave); }
+
+  .lienzo .btn{ display:inline-flex; align-items:center; gap:8px; min-height:46px; padding:11px 18px; border-radius:10px;
+    border:1px solid var(--borde); background:#fff; color:var(--texto); font:inherit; font-weight:600; font-size:1rem; cursor:pointer;
+    transition:background .12s, transform .02s; }
+  .lienzo .btn:hover{ background:#f1f5f9; }
+  .lienzo .btn:active{ transform:translateY(1px); }
+  .lienzo .btn:focus-visible{ outline:3px solid var(--amarillo); outline-offset:2px; }
+  .lienzo .btn-primario{ background:var(--primario); border-color:var(--primario); color:#fff; }
+  .lienzo .btn-primario:hover{ background:var(--primario-osc); border-color:var(--primario-osc); }
+  .lienzo .btn-acento{ background:var(--amarillo); border-color:var(--amarillo); color:var(--azul-osc); }
+  .lienzo .btn-acento:hover{ background:var(--amarillo-osc); }
+  .lienzo .btn-peligro{ background:var(--critica); border-color:var(--critica); color:#fff; }
+  .lienzo .btn-peligro:hover{ background:#991b1b; }
+  .lienzo .btn.sm{ min-height:34px; padding:6px 12px; font-size:.9rem; }
+  .lienzo .icono-btn{ width:40px; height:40px; min-height:0; padding:0; justify-content:center; color:var(--texto-suave); border-color:transparent; background:none; }
+  .lienzo .icono-btn:hover{ background:#eef2f7; color:var(--texto); }
+  .lienzo .btn-consejos{ min-height:0; padding:8px 12px; border-radius:999px; background:var(--fondo); border-color:var(--borde); font-size:.82rem; font-weight:600; }
+
+  .lienzo .tarjeta{ background:var(--tarjeta); border:1px solid var(--borde); border-radius:var(--r-tarjeta); padding:18px; box-shadow:var(--sombra); }
+  .lienzo a.tarjeta{ display:block; text-decoration:none; color:inherit; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  .lienzo a.tarjeta:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(16,24,40,.10); border-color:#cdd5e3; }
+
+  .lienzo .pill{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:.78rem; font-weight:700; background:#eef2f7; color:#334155; }
+  .lienzo .pill .punto-est{ width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .lienzo .pill-ok{ background:#d1fae5; color:#065f46; }
+  .lienzo .pill-aviso{ background:#fef9c3; color:#854d0e; }
+  .lienzo .pill-alta{ background:#ffedd5; color:#c2410c; }
+  .lienzo .pill-info{ background:#dbeafe; color:#1e40af; }
+  .lienzo .pill-critica{ background:#fee2e2; color:#b91c1c; }
+  .lienzo .pill-neutra{ background:#eef2f7; color:#334155; }
+
+  .lienzo .insignia{ display:inline-block; padding:2px 10px; border-radius:999px; font-size:.8rem; font-weight:700; background:#e5e7eb; color:#111827; }
+  .lienzo .insignia.ok{ background:#d1fae5; color:var(--ok); }
+  .lienzo .insignia.aviso{ background:#fef9c3; color:#854d0e; }
+  .lienzo .insignia.alta{ background:#ffedd5; color:var(--alta); }
+  .lienzo .insignia.critica{ background:#fee2e2; color:var(--critica); }
+
+  .lienzo .badge-cat{ display:inline-block; padding:3px 10px; border-radius:999px; font-size:.76rem; font-weight:700; }
+
+  .lienzo .kpi{ display:flex; gap:12px; align-items:center; background:#fff; border:1px solid var(--borde); border-radius:16px; padding:16px; box-shadow:var(--sombra); min-width:210px; }
+  .lienzo .kpi-ico{ width:44px; height:44px; border-radius:var(--r-tile); display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .lienzo .kpi .et{ font-size:.88rem; font-weight:600; color:var(--texto-suave); }
+  .lienzo .kpi .num{ font-size:1.9rem; font-weight:800; line-height:1; margin-top:2px; }
+  .lienzo .kpi .sub{ font-size:.78rem; color:var(--texto-suave); }
+
+  .lienzo .campo{ display:grid; gap:6px; }
+  .lienzo .campo label{ font-weight:600; color:var(--texto-suave); font-size:.9rem; }
+  .lienzo .input{ width:100%; min-height:46px; padding:10px 12px; border:1px solid var(--borde); border-radius:10px; font:inherit; font-size:1rem; background:#fff; color:var(--texto); }
+  .lienzo .input:focus{ outline:none; border-color:var(--azul); box-shadow:0 0 0 3px rgba(0,51,160,.15); }
+
+  .lienzo table.demo{ width:100%; border-collapse:collapse; background:#fff; }
+  .lienzo table.demo th,.lienzo table.demo td{ text-align:left; padding:12px 10px; border-bottom:1px solid var(--borde); }
+  .lienzo table.demo thead th{ text-transform:uppercase; font-size:.72rem; letter-spacing:.04em; color:var(--texto-suave); font-weight:700; }
+  .lienzo table.demo tbody tr:hover{ background:#f8fafc; }
+
+  .lienzo .vacio{ text-align:center; padding:34px 20px; }
+  .lienzo .vacio .ico{ width:46px; height:46px; border-radius:50%; margin:0 auto 10px; background:#eef2ff; color:var(--azul); display:flex; align-items:center; justify-content:center; font-size:1.3rem; opacity:.9; }
+  .lienzo .vacio h4{ margin:0 0 4px; font-size:1.02rem; }
+  .lienzo .vacio p{ margin:0 auto 12px; max-width:360px; color:var(--texto-suave); font-size:.92rem; }
+
+  .lienzo .flujo{ display:flex; gap:10px; flex-wrap:wrap; }
+  .lienzo .flujo-paso{ display:flex; align-items:center; gap:10px; min-width:150px; background:#fff; border:1px solid var(--borde); border-radius:14px; padding:12px 14px; box-shadow:var(--sombra); }
+  .lienzo .flujo-ico{ width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-weight:800; background:#eef2ff; color:var(--azul); }
+  .lienzo .flujo-num{ font-size:1.35rem; font-weight:800; line-height:1; }
+  .lienzo .flujo-et{ font-size:.8rem; color:var(--texto-suave); }
+
+  /* nav sample */
+  .navsample{ width:230px; max-width:100%; background:#0033A0; border-radius:14px; padding:10px; color:#fff; }
+  .navsample .m{ display:flex; align-items:center; gap:9px; font-weight:800; padding:8px 8px 12px; font-size:1.05rem; }
+  .navsample .np{ width:12px; height:12px; border-radius:50%; background:linear-gradient(135deg,#FFCE00 0 50%,#CF142B 50% 100%); box-shadow:0 0 0 2px rgba(255,255,255,.35); }
+  .navsample a{ position:relative; display:flex; align-items:center; gap:10px; color:#dbe4ff; text-decoration:none; font-weight:600; padding:10px 12px; border-radius:10px; border-left:3px solid transparent; }
+  .navsample a:hover{ background:rgba(255,255,255,.10); color:#fff; }
+  .navsample a.activo{ background:rgba(255,255,255,.14); color:#fff; }
+  .navsample a.activo::before{ content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:#FFCE00; }
+  .navsample .dot{ width:18px; height:18px; border-radius:5px; background:rgba(255,255,255,.22); flex:0 0 auto; }
+
+  /* focus demos */
+  .focusrow{ display:flex; gap:22px; flex-wrap:wrap; }
+  .fdemo{ text-align:center; font-size:.78rem; color:var(--muted); }
+  .fdemo .btnb{ display:inline-flex; min-height:44px; align-items:center; padding:10px 16px; border-radius:10px; font-weight:600; margin-bottom:7px; }
+  .fdemo .azul{ background:#0033A0; color:#fff; outline:3px solid #FFCE00; outline-offset:2px; }
+  .fdemo .claro{ background:#fff; color:#0f172a; border:1px solid #e6e9f0; outline:3px solid #0033A0; outline-offset:2px; }
+
+  footer{ border-top:1px solid var(--line); padding:26px 0 60px; color:var(--muted); font-size:.88rem; }
+  footer code{ background:var(--code-bg); color:var(--code-ink); padding:2px 6px; border-radius:6px; font-size:.82rem; }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="tricolor"></div>
+  <div class="wrap bar">
+    <div class="marca"><span class="punto"></span><div>Apoyo por Venezuela<small>Sistema de diseño · apps/web</small></div></div>
+    <button class="theme-btn" id="tbtn" aria-label="Cambiar tema">◐ Tema</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Guía de referencia</div>
+    <h1>El sistema de diseño de la plataforma, en vivo</h1>
+    <p>Tokens, tipografía y componentes tal como existen hoy en el código (<code class="mono">apps/web/app/globals.css</code>). Esta guía es el punto de partida para trabajar el diseño en Claude Design / Figma: importa <b>design-tokens.json</b> como estilos y reconstruye los componentes a partir de estos valores.</p>
+    <div class="meta-row">
+      <span class="tag">Marca: <b>tricolor de Venezuela</b></span>
+      <span class="tag">Fuente: <b>system-ui</b></span>
+      <span class="tag"><b>41</b> íconos</span>
+      <span class="tag">Estado canónico: <b>Pill</b></span>
+      <span class="tag">Tema: <b>solo claro</b> (hoy)</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Contenido">
+      <ol id="toc">
+        <li><a href="#marca"><span class="num">01</span>Marca</a></li>
+        <li><a href="#color"><span class="num">02</span>Color</a></li>
+        <li><a href="#tipografia"><span class="num">03</span>Tipografía</a></li>
+        <li><a href="#espacio"><span class="num">04</span>Espacio y radios</a></li>
+        <li><a href="#sombras"><span class="num">05</span>Sombras</a></li>
+        <li><a href="#motion"><span class="num">06</span>Movimiento</a></li>
+        <li><a href="#componentes"><span class="num">07</span>Componentes</a></li>
+        <li><a href="#a11y"><span class="num">08</span>Accesibilidad</a></li>
+        <li><a href="#iconos"><span class="num">09</span>Iconografía</a></li>
+        <li><a href="#voz"><span class="num">10</span>Voz</a></li>
+      </ol>
+    </nav>
+
+    <main>
+      <!-- 01 MARCA -->
+      <section id="marca">
+        <div class="sec-head"><span class="n">01</span><h2>Marca</h2></div>
+        <p class="lead">El nombre público es <b>Apoyo por Venezuela</b> (<code class="mono">UnidosxVenezuela</code> es solo el identificador técnico). La identidad es el tricolor de la bandera, siempre con calidez.</p>
+        <div class="panel pad">
+          <div class="cols2">
+            <div>
+              <h3 class="sub">Logotipo · .punto</h3>
+              <div class="fila" style="display:flex;align-items:center;gap:12px;">
+                <span class="punto" style="width:34px;height:34px;box-shadow:0 0 0 3px color-mix(in srgb,var(--ink) 14%,transparent);"></span>
+                <div><b>Apoyo por Venezuela</b><div class="mono" style="font-size:.74rem;color:var(--muted);">gradiente 135° · amarillo→rojo</div></div>
+              </div>
+              <div class="note">Sobre azul, el halo es <code class="mono">rgba(255,255,255,.35)</code>; sobre claro (auth), <code class="mono">rgba(0,51,160,.18)</code>.</div>
+            </div>
+            <div>
+              <h3 class="sub">Franja tricolor · .tricolor</h3>
+              <div style="height:10px;border-radius:5px;background:linear-gradient(90deg,#FFCE00 0 33.33%,#0033A0 33.33% 66.66%,#CF142B 66.66% 100%);"></div>
+              <div class="kv" style="margin-top:12px;">Barra de 4px en el tope del sidebar y el borde superior del login. Cierre emocional recurrente: <b>💛💙❤️</b>.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 COLOR -->
+      <section id="color">
+        <div class="sec-head"><span class="n">02</span><h2>Color</h2></div>
+        <p class="lead">El acento de marca es el <b>azul</b>; el amarillo puntúa. El <b>estado</b> (ok/aviso/crítica/info) es un sistema aparte con relleno suave. Todos los valores son los reales de <code class="mono">:root</code>.</p>
+
+        <h3 class="sub">Marca / tricolor</h3>
+        <div class="swgrid" id="c-marca"></div>
+        <h3 class="sub">Semánticos y superficies</h3>
+        <div class="swgrid" id="c-sem"></div>
+        <h3 class="sub">Estado sólido (texto / énfasis)</h3>
+        <div class="swgrid" id="c-estado"></div>
+        <h3 class="sub">Estado con relleno suave — sistema canónico «Pill» (fondo + texto)</h3>
+        <div class="swgrid" id="c-pill"></div>
+        <h3 class="sub">Acento de tarea · Presencia · Neutros</h3>
+        <div class="swgrid" id="c-otros"></div>
+        <div class="note">Las <b>categorías</b> usan color determinístico por hash del texto entre 8 pares suaves — identidad por categoría, no token semántico.</div>
+      </section>
+
+      <!-- 03 TIPOGRAFIA -->
+      <section id="tipografia">
+        <div class="sec-head"><span class="n">03</span><h2>Tipografía</h2></div>
+        <p class="lead">Una sola familia del sistema — <code class="mono">system-ui, -apple-system, Segoe UI, Roboto, sans-serif</code> — sin fuentes web. Base 16px / 1.5. La escala se nombra por rol de uso.</p>
+        <div class="panel pad" id="typescale"></div>
+        <div class="note">Pesos en uso: <b>600</b> etiquetas/nav/botones · <b>700</b> nombres, pills, <code class="mono">th</code> · <b>800</b> marca, KPI, avatar.</div>
+      </section>
+
+      <!-- 04 ESPACIO -->
+      <section id="espacio">
+        <div class="sec-head"><span class="n">04</span><h2>Espacio y radios</h2></div>
+        <p class="lead">Ritmo de 2/4px. Radios con tokens <code class="mono">--r-*</code> más algunos literales frecuentes.</p>
+        <div class="cols2">
+          <div class="panel pad">
+            <h3 class="sub" style="margin-top:0;">Radios</h3>
+            <div class="radii" id="radii"></div>
+          </div>
+          <div class="panel pad">
+            <h3 class="sub" style="margin-top:0;">Escala de espacio</h3>
+            <div class="spacescale" id="spacescale"></div>
+          </div>
+        </div>
+        <div class="note">Anchos clave: sidebar <b>256px</b> · contenedor máx <b>1200px</b> · drawer <b>600px</b> · modal <b>480px</b>. Corte estructural mayor: <b>820px</b> (sidebar → cajón off-canvas).</div>
+      </section>
+
+      <!-- 05 SOMBRAS -->
+      <section id="sombras">
+        <div class="sec-head"><span class="n">05</span><h2>Sombras y elevación</h2></div>
+        <p class="lead">Reposo <code class="mono">--sombra</code> → hover <code class="mono">translateY(-2px)</code> + sombra .10 → overlays más elevados según su capa (z-index).</p>
+        <div class="shadowgrid" id="shadows"></div>
+      </section>
+
+      <!-- 06 MOTION -->
+      <section id="motion">
+        <div class="sec-head"><span class="n">06</span><h2>Movimiento</h2></div>
+        <p class="lead">Discreto y con propósito: «la salida dura menos que la entrada». Todo respeta <code class="mono">prefers-reduced-motion</code>. Animación JS con anime.js v4 bajo el guard <code class="mono">sinMovimiento()</code>.</p>
+        <div class="panel pad">
+          <table class="spec">
+            <thead><tr><th>Momento</th><th>Duración</th><th>Curva</th></tr></thead>
+            <tbody id="motionrows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 07 COMPONENTES -->
+      <section id="componentes">
+        <div class="sec-head"><span class="n">07</span><h2>Componentes</h2></div>
+        <p class="lead">Renderizados con las clases reales de <code class="mono">globals.css</code>. El «lienzo» usa las superficies claras de la app, así que se ven <b>exactamente</b> como en producción.</p>
+
+        <h3 class="sub">Botones</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo"><div class="col">
+            <div class="fila">
+              <button class="btn btn-primario">Guardar</button>
+              <button class="btn btn-acento">Destacar</button>
+              <button class="btn">Cancelar</button>
+              <button class="btn btn-peligro">Eliminar</button>
+              <button class="btn sm">Compacto</button>
+              <button class="icono-btn" aria-label="Menú">⋯</button>
+              <button class="btn-consejos">💡 Consejos</button>
+            </div>
+            <div class="muted" style="font-size:.82rem;">Alto 46px (escritorio) · foco con anillo amarillo · <code style="font-family:ui-monospace,monospace;">:active</code> se hunde 1px.</div>
+          </div></div>
+        </div>
+
+        <h3 class="sub">Estado — Pill (canónico) e insignia (legado)</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo"><div class="col">
+            <div class="fila">
+              <span class="pill pill-ok"><span class="punto-est"></span>Confirmado</span>
+              <span class="pill pill-aviso"><span class="punto-est"></span>En proceso</span>
+              <span class="pill pill-alta">Urgente</span>
+              <span class="pill pill-info">Enviado a Redacción</span>
+              <span class="pill pill-critica">Falso</span>
+              <span class="pill pill-neutra">Pendiente</span>
+            </div>
+            <div class="fila">
+              <span class="badge-cat" style="background:#dbeafe;color:#1e40af;">Salud</span>
+              <span class="badge-cat" style="background:#dcfce7;color:#166534;">Alimentos</span>
+              <span class="badge-cat" style="background:#fce7f3;color:#9d2463;">Refugio</span>
+              <span class="badge-cat" style="background:#cffafe;color:#155e75;">Agua</span>
+              <span class="insignia ok">4</span>
+              <span class="insignia aviso">Aviso</span>
+            </div>
+          </div></div>
+        </div>
+
+        <h3 class="sub">Tarjeta · KPI</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo"><div class="col">
+            <div class="fila" style="align-items:stretch;">
+              <div class="kpi"><div class="kpi-ico" style="background:#eef2ff;color:#0033A0;">▤</div><div><div class="et">Por difundir</div><div class="num">12</div><div class="sub">confirmadas</div></div></div>
+              <div class="kpi"><div class="kpi-ico" style="background:#dcfce7;color:#16a34a;">✓</div><div><div class="et">Resueltas</div><div class="num">38</div><div class="sub">este mes</div></div></div>
+              <div class="kpi"><div class="kpi-ico" style="background:#fef9c3;color:#a16207;">◷</div><div><div class="et">Tus horas</div><div class="num">26 h</div><div class="sub">de voluntariado</div></div></div>
+            </div>
+            <a class="tarjeta" href="#componentes" style="max-width:420px;">
+              <div class="muted" style="font-size:.8rem;">#00042 · hace 2 h</div>
+              <strong>Familia necesita medicinas en Petare</strong>
+              <div class="fila" style="margin-top:8px;"><span class="badge-cat" style="background:#dbeafe;color:#1e40af;">Salud</span><span class="pill pill-alta">Urgente</span></div>
+            </a>
+          </div></div>
+        </div>
+
+        <h3 class="sub">Formulario · Estado vacío</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo"><div class="cols2" style="gap:18px;">
+            <div class="col" style="gap:12px;">
+              <div class="campo"><label>Título de la solicitud</label><input class="input" value="Medicinas para diálisis"></div>
+              <div class="campo"><label>Categoría</label><input class="input" placeholder="Selecciona…"></div>
+              <div><button class="btn btn-primario">Enviar a verificación</button></div>
+            </div>
+            <div class="tarjeta vacio" style="margin:0;">
+              <div class="ico">✓</div>
+              <h4>Nada pendiente por difundir</h4>
+              <p>Cuando Verificación confirme una solicitud, aparecerá aquí para difundirla en redes.</p>
+              <button class="btn btn-primario">Ir a Verificación</button>
+            </div>
+          </div></div>
+        </div>
+
+        <h3 class="sub">Flujo de trabajo · Navegación</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo"><div class="col">
+            <div class="flujo">
+              <div class="flujo-paso"><div class="flujo-ico">▤</div><div><div class="flujo-num">7</div><div class="flujo-et">Verificación</div></div></div>
+              <div class="flujo-paso"><div class="flujo-ico" style="background:#dcfce7;color:#16a34a;">✓</div><div><div class="flujo-num">12</div><div class="flujo-et">Confirmados</div></div></div>
+              <div class="flujo-paso"><div class="flujo-ico" style="background:#fce7f3;color:#9d2463;">🚀</div><div><div class="flujo-num">38</div><div class="flujo-et">Enviados a Redacción</div></div></div>
+            </div>
+            <div class="navsample">
+              <div class="m"><span class="np"></span>Apoyo por Venezuela</div>
+              <a href="#componentes" class="activo"><span class="dot"></span>Panel</a>
+              <a href="#componentes"><span class="dot"></span>Solicitudes</a>
+              <a href="#componentes"><span class="dot"></span>Logística</a>
+              <a href="#componentes"><span class="dot"></span>Grupos</a>
+            </div>
+          </div></div>
+        </div>
+
+        <h3 class="sub">Tabla</h3>
+        <div class="lienzo-wrap"><div class="lienzo-lbl">Vista de la app</div>
+          <div class="lienzo" style="padding:0;">
+            <table class="demo">
+              <thead><tr><th>Solicitud</th><th>Categoría</th><th>Estado</th></tr></thead>
+              <tbody>
+                <tr><td>#00042 · Medicinas en Petare</td><td><span class="badge-cat" style="background:#dbeafe;color:#1e40af;">Salud</span></td><td><span class="pill pill-alta">Urgente</span></td></tr>
+                <tr><td>#00043 · Agua en El Valle</td><td><span class="badge-cat" style="background:#cffafe;color:#155e75;">Agua</span></td><td><span class="pill pill-ok"><span class="punto-est"></span>Confirmado</span></td></tr>
+                <tr><td>#00044 · Colchones albergue</td><td><span class="badge-cat" style="background:#fce7f3;color:#9d2463;">Refugio</span></td><td><span class="pill pill-neutra">Pendiente</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <h3 class="sub">Medallas — niveles bronce / plata / oro</h3>
+        <div class="panel pad">
+          <div class="metals">
+            <div class="m bronce"><i></i>Bronce<small>escudo + 1 estrella</small></div>
+            <div class="m plata"><i></i>Plata<small>doble marco + 3 estrellas + cinta</small></div>
+            <div class="m oro"><i></i>Oro<small>rayos + laurel + corona + 5 estrellas</small></div>
+          </div>
+          <div class="note">Referencia de metal. En la app son SVG (<code class="mono">MedallaInsignia</code>) que se distinguen por <b>silueta</b>, no solo por color — legibles incluso en escala de grises.</div>
+        </div>
+      </section>
+
+      <!-- 08 A11Y -->
+      <section id="a11y">
+        <div class="sec-head"><span class="n">08</span><h2>Accesibilidad</h2></div>
+        <p class="lead">Foco visible en dos colores según el fondo, objetivos táctiles de 44px y ARIA en todos los patrones interactivos.</p>
+        <div class="panel pad">
+          <div class="focusrow">
+            <div class="fdemo"><span class="btnb azul">Botón</span><div>Anillo <b>amarillo</b> sobre azul / énfasis</div></div>
+            <div class="fdemo"><span class="btnb claro">Enlace</span><div>Anillo <b>azul</b> sobre superficies claras</div></div>
+          </div>
+          <div class="note" style="margin-bottom:0;">En pantallas táctiles (<code class="mono">pointer: coarse</code>) botones, íconos, chips, menús y filtros suben a <b>44px</b> mínimo. <code class="mono">color-scheme: light</code> forzado (aún sin tema oscuro).</div>
+        </div>
+      </section>
+
+      <!-- 09 ICONOS -->
+      <section id="iconos">
+        <div class="sec-head"><span class="n">09</span><h2>Iconografía</h2></div>
+        <p class="lead">SVG inline estilo Lucide: <code class="mono">viewBox 0 0 24 24</code>, <code class="mono">stroke currentColor</code>, <code class="mono">stroke-width 2</code>, esquinas redondeadas. Un solo componente <code class="mono">Icono</code> con 41 nombres.</p>
+        <div class="panel pad"><div class="iconchips" id="icons"></div></div>
+      </section>
+
+      <!-- 10 VOZ -->
+      <section id="voz">
+        <div class="sec-head"><span class="n">10</span><h2>Voz y microcopy</h2></div>
+        <p class="lead">Bilingüe (dominio y UI en español; identificadores en inglés), cálida y siempre orientada a la siguiente acción.</p>
+        <div class="cols2">
+          <div class="panel pad kv">
+            <h3 class="sub" style="margin-top:0;">Sí</h3>
+            «Cuenta pendiente de aprobación… Te avisaremos por correo. Gracias por sumarte 💛💙❤️»<br><br>
+            Urgencias en positivo: <b>alta → «Urgente»</b>, media → «Necesita», baja → «Cubierto».<br><br>
+            Un control dice qué hace; el toast lo confirma.
+          </div>
+          <div class="panel pad kv">
+            <h3 class="sub" style="margin-top:0;">Evitar</h3>
+            Jerga técnica hacia el usuario (habla de <i>avisos</i>, no de <i>webhooks</i>).<br><br>
+            «No hay nada» a secas → usar <b>EstadoVacio</b> que dice qué hacer.<br><br>
+            Disculpas vagas en errores → explicar qué pasó y cómo seguir.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <b style="color:var(--ink);">Para trabajar en Claude Design / Figma:</b> importa <code>design-tokens.json</code> (raíz del repo) como estilos/variables, y reconstruye los componentes de la sección 07 a partir de esos tokens, respetando estados y foco. Spec escrita completa en <code>docs/DESIGN-SYSTEM.md</code>.
+    <div style="margin-top:10px;">Generado desde el código real de <code>apps/web</code> · mantener sincronizado con <code>globals.css</code> y <code>constantes.ts</code>. 💛💙❤️</div>
+  </div>
+</footer>
+
+<script>
+  // Tema: alterna data-theme (compatible con el toggle del visor)
+  (function(){
+    var btn = document.getElementById('tbtn');
+    btn.addEventListener('click', function(){
+      var cur = document.documentElement.getAttribute('data-theme');
+      if(!cur){ cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+      document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  })();
+
+  // --- Datos (reflejan design-tokens.json / globals.css) ---
+  var C_MARCA = [
+    ['--azul','#0033A0','Primario · sidebar · themeColor'],
+    ['--azul-osc','#002270','Hover del primario'],
+    ['--amarillo','#FFCE00','Acento · foco · indicador nav'],
+    ['--amarillo-osc','#E6B800','Hover del acento'],
+    ['--rojo','#CF142B','Peligro de marca · tricolor']
+  ];
+  var C_SEM = [
+    ['--texto','#0f172a','Texto principal'],
+    ['--texto-suave','#556074','Texto secundario · etiquetas'],
+    ['--fondo','#f6f8fb','Lienzo de la app'],
+    ['--tarjeta','#ffffff','Superficie de tarjetas'],
+    ['--borde','#e6e9f0','Borde por defecto']
+  ];
+  var C_ESTADO = [
+    ['--critica','#b91c1c','Crítica · error'],
+    ['--alta','#c2410c','Prioridad alta'],
+    ['--media','#a16207','Prioridad media'],
+    ['--baja','#374151','Prioridad baja'],
+    ['--ok','#047857','Éxito · completado']
+  ];
+  var C_PILL = [
+    ['ok','#d1fae5','#065f46'],
+    ['aviso','#fef9c3','#854d0e'],
+    ['alta','#ffedd5','#c2410c'],
+    ['info','#dbeafe','#1e40af'],
+    ['critica','#fee2e2','#b91c1c'],
+    ['neutra','#eef2f7','#334155']
+  ];
+  var C_OTROS = [
+    ['tarea.ok','#16a34a','Borde de tarea ok'],
+    ['tarea.aviso','#d97706','Borde de tarea aviso'],
+    ['tarea.critica','#dc2626','Borde · campana'],
+    ['conectado','#0A7D2C','Presencia'],
+    ['ocupado','#E6A100','Presencia'],
+    ['desconectado','#94a3b8','Presencia'],
+    ['neutral.hover','#f1f5f9','Hover de botón/menú'],
+    ['azul-tenue','#eef2ff','Tinte de KPI/chip']
+  ];
+
+  function light(hex){ // decide texto sobre swatch
+    var c = hex.replace('#',''); if(c.length===3){c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];}
+    var r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);
+    return (0.299*r+0.587*g+0.114*b) > 150;
+  }
+  function swatch(name,hex,use){
+    var ink = light(hex) ? '#0f172a' : '#ffffff';
+    return '<div class="sw"><div class="chip" style="background:'+hex+';"></div><div class="body">'+
+      '<div class="name mono">'+name+'</div><div class="val">'+hex+'</div>'+
+      (use?'<div class="use">'+use+'</div>':'')+'</div></div>';
+  }
+  function pairSwatch(name,bg,fg){
+    return '<div class="sw"><div class="pairsw"><span style="background:'+bg+';color:'+fg+';">Abc</span></div>'+
+      '<div class="body"><div class="name mono">pill · '+name+'</div><div class="val">'+bg+' / '+fg+'</div></div></div>';
+  }
+  function fill(id, arr, fn){ document.getElementById(id).innerHTML = arr.map(function(a){return fn.apply(null,a);}).join(''); }
+  fill('c-marca', C_MARCA, swatch);
+  fill('c-sem', C_SEM, swatch);
+  fill('c-estado', C_ESTADO, swatch);
+  fill('c-pill', C_PILL, pairSwatch);
+  fill('c-otros', C_OTROS, swatch);
+
+  // Tipografía
+  var TYPE = [
+    ['1.9rem · 800','KPI · número','font-size:1.9rem;font-weight:800;','1.234'],
+    ['1.55rem · 700','h1 · título de página','font-size:1.55rem;font-weight:700;','Coordinar la respuesta'],
+    ['1.35rem · 800','flujo · número','font-size:1.35rem;font-weight:800;','12'],
+    ['1.25rem · 800','marca (sidebar)','font-size:1.25rem;font-weight:800;letter-spacing:.2px;','Apoyo por Venezuela'],
+    ['1.15rem · 700','h2 · sección','font-size:1.15rem;font-weight:700;','Acciones rápidas'],
+    ['1rem · 600','cuerpo · inputs · botones','font-size:1rem;font-weight:600;','Enviar a Redacción'],
+    ['.88rem · 600','etiqueta de KPI','font-size:.88rem;font-weight:600;color:var(--muted);','Por difundir'],
+    ['.82rem · 400','sub · chips','font-size:.82rem;color:var(--muted);','hace 2 horas · #00042'],
+    ['.8rem · 700','insignia · pie','font-size:.8rem;font-weight:700;','Confirmado'],
+    ['.72rem · 700','thead · labels MAYÚS.','font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);','Categoría'],
+    ['.62rem · 700','badge de conteo','font-size:.62rem;font-weight:700;','9']
+  ];
+  document.getElementById('typescale').innerHTML = TYPE.map(function(t){
+    return '<div class="typerow"><div class="spec">'+t[0]+'<br>'+t[1]+'</div><div class="sample" style="'+t[2]+'">'+t[3]+'</div></div>';
+  }).join('');
+
+  // Radios
+  var RADII = [['--r-input · botón','10px'],['--r-tile · KPI','12px'],['medio','14px'],['--r-tarjeta','16px'],['--r-pill','999px']];
+  document.getElementById('radii').innerHTML = RADII.map(function(r){
+    var rad = r[1]==='999px' ? '999px' : r[1];
+    return '<div class="r"><i style="border-radius:'+rad+';"></i>'+r[1]+'<br><span style="text-transform:none;">'+r[0]+'</span></div>';
+  }).join('');
+
+  // Espacio
+  var SPACE = [['4px',4],['6px',6],['8px',8],['10px',10],['12px',12],['14px · grid gap',14],['18px · pad tarjeta',18],['24px · pad contenedor',24]];
+  document.getElementById('spacescale').innerHTML = SPACE.map(function(s){
+    return '<div class="s"><i style="width:'+s[1]*4+'px;"></i>'+s[0]+'</div>';
+  }).join('');
+
+  // Sombras
+  var SH = [
+    ['--sombra','0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.08)'],
+    ['hover tarjeta','0 8px 22px rgba(16,24,40,.10)'],
+    ['--sombra-flot','0 12px 34px rgba(16,24,40,.14)'],
+    ['toast','0 14px 36px rgba(16,24,40,.18)'],
+    ['menú','0 14px 40px rgba(16,24,40,.18)'],
+    ['modal','0 20px 60px rgba(16,24,40,.30)']
+  ];
+  document.getElementById('shadows').innerHTML = SH.map(function(s){
+    return '<div class="sh" style="box-shadow:'+s[1]+';">'+s[0]+'</div>';
+  }).join('');
+
+  // Motion
+  var MOT = [
+    ['Hundido de botón (:active)','.02s','—'],
+    ['Fondo de botón / fila','.12s','ease'],
+    ['Hover de tarjeta-enlace','.15s','ease'],
+    ['Sidebar · toastIn','.22s','cubic-bezier(.22,.61,.36,1)'],
+    ['Drawer (drawerSlide)','.24s','cubic-bezier(.22,.61,.36,1)'],
+    ['Consejo (consejo-in)','.3s','cubic-bezier(.2,.8,.2,1)'],
+    ['Pop de estado (EstadoCaso)','.46s','scale 0.8→1.12→1'],
+    ['Salida de toast','.18s (.14s reduce)','inQuad']
+  ];
+  document.getElementById('motionrows').innerHTML = MOT.map(function(m){
+    return '<tr><td>'+m[0]+'</td><td class="mono">'+m[1]+'</td><td class="mono">'+m[2]+'</td></tr>';
+  }).join('');
+
+  // Iconos
+  var ICONS = 'panel tareas grupos tablon avisos admin mapa imagen documento enlace basura whatsapp video acopio ubicacion mas salir salida usuario filtro reloj ok ojo refrescar pizarra historial ojo_off puntos menu chevron buscar cerrar flecha sonido sonido_off cohete ayuda llave camion caja corazon'.split(' ');
+  document.getElementById('icons').innerHTML = ICONS.map(function(n){ return '<span class="ic">'+n+'</span>'; }).join('');
+
+  // TOC scrollspy
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var map = {}; links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+  var obs = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ links.forEach(function(l){l.classList.remove('on');}); var m=map[e.target.id]; if(m)m.classList.add('on'); } });
+  }, { rootMargin:'-45% 0px -50% 0px' });
+  document.querySelectorAll('main section').forEach(function(s){ obs.observe(s); });
+</script>
+
+</body>
+</html>
