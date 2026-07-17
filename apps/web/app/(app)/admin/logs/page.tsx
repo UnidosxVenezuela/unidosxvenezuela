@@ -31,6 +31,7 @@ const SEMANTICAS: Record<string, string> = {
   reset_contrasena: 'restableció una contraseña', cambio_roles_extra: 'cambió los roles adicionales',
   eliminar_usuario: 'eliminó un usuario', verificacion_aprobada: 'aprobó una verificación de identidad',
   verificacion_rechazada: 'rechazó una verificación de identidad', alta_delegada: 'creó una cuenta (alta delegada)',
+  verificacion_campo: 'marcó la verificación de un campo',
 };
 // Columna → nombre corto legible, para describir QUÉ campos cambiaron (metadata.cambios,
 // disponible en toda tabla auditada desde 0134). Cubre perfiles y campos comunes de otras

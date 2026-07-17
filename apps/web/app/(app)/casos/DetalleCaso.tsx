@@ -11,6 +11,7 @@ import FlujoProgreso from '@/components/FlujoProgreso';
 import { pasoDeCaso } from '@/lib/flujo';
 import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento } from './actions';
 import FormEditarCaso from './FormEditarCaso';
+import VerificacionPorCampo from './VerificacionPorCampo';
 import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -170,6 +171,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
       </div>
+
+      {/* Verificación por campo (0172): semáforo por dato. La marca el equipo de
+          Verificación; el resto la ve (transparencia) una vez iniciada. */}
+      {(() => {
+        const estados = (caso.verif_campos ?? {}) as Record<string, any>;
+        const mostrar = puedeEditar || Object.keys(estados).length > 0;
+        return mostrar
+          ? <VerificacionPorCampo casoId={caso.id} esRequerimiento={caso.es_requerimiento} estados={estados} volver={volver} nombres={nombres} puedeVerificar={puedeEditar} />
+          : null;
+      })()}
 
       {/* Observaciones de verificación: lo que anota el equipo de Verificación.
           Visibles para TODOS los que abren la solicitud (transparencia). Se agregan
