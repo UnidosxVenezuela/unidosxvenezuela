@@ -20,6 +20,7 @@ import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import ResaltarNuevos from '@/components/ResaltarNuevos';
+import BotonExportar from '@/components/BotonExportar';
 import { crearOportunidad } from './actions';
 import { cambiarEstadoDonacion, eliminarDonacion } from '../actions';
 
@@ -54,6 +55,12 @@ export default async function OportunidadesPage({ searchParams }: { searchParams
   const fVerif = ESTADOS_VERIF.includes(searchParams.verif ?? '') ? searchParams.verif! : '';
   const fClase = CLASES_OFERTA.includes(searchParams.clase ?? '') ? searchParams.clase! : '';
   const hayFiltros = Boolean(qTexto || fVerif || fClase);
+  // Cola de filtros para las descargas (mismo filtro que el tablero).
+  const expQs = new URLSearchParams();
+  if (qTexto) expQs.set('q', qTexto);
+  if (fVerif) expQs.set('verif', fVerif);
+  if (fClase) expQs.set('clase', fClase);
+  const expCola = expQs.toString() ? '?' + expQs.toString() : '';
 
   // TODO el equipo ve el tablero completo — Recopilación incluida (0161): ve y edita,
   // pero el estado lo avanza Logística y el veredicto lo pone Verificación (candado de
@@ -97,7 +104,10 @@ export default async function OportunidadesPage({ searchParams }: { searchParams
             empáréjalos con las solicitudes que encajan y lleva el contacto hasta concretarlo.
           </p>
         </div>
-        <div className="fila"><BotonActualizar /></div>
+        <div className="fila">
+          <BotonActualizar />
+          <BotonExportar csvHref={'/insumos/oportunidades/export' + expCola} imprimirHref={'/insumos/oportunidades/imprimir' + expCola} />
+        </div>
       </div>
 
       {esCapt && !gestor && !esVerif && (

@@ -8,6 +8,7 @@ import AnimarEntrada from '@/components/AnimarEntrada';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import BotonExportar from '@/components/BotonExportar';
 import EstadoVacio from '@/components/EstadoVacio';
 import Pill from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -71,7 +72,10 @@ export default async function EnvioRedaccionPage() {
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="cohete" size={24} /> Envío a Redacción</h1>
           <p className="muted sub">Todas las solicitudes <strong>confirmadas</strong> se difunden en redes, <strong>en paralelo</strong> a la gestión de Logística (por rapidez ante la emergencia). Las de <strong>prioridad</strong> son las que Logística no pudo cubrir.</p>
         </div>
-        <BotonActualizar />
+        <div className="fila" style={{ gap: 8 }}>
+          <BotonExportar csvHref="/envio-redaccion/export" imprimirHref="/envio-redaccion/imprimir" />
+          <BotonActualizar />
+        </div>
       </div>
 
       <h2>Por difundir <span className="insignia aviso">{(confirmados ?? []).length}</span></h2>

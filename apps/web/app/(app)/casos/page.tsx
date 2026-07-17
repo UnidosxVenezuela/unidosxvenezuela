@@ -21,6 +21,7 @@ import { contarFlujo, pasosFlujo, pasoDeCaso } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
 import Consejo from '@/components/Consejos';
 import FiltroSelect from '@/components/FiltroSelect';
+import BotonExportar from '@/components/BotonExportar';
 import { nombreMostrado } from '@/lib/nombre';
 
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
@@ -234,6 +235,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         </form>
         <div className="toolbar-acciones">
           <BotonActualizar />
+          <BotonExportar
+            csvHref={'/casos/export' + (filtros.toString() ? '?' + filtros.toString() : '')}
+            imprimirHref={'/casos/imprimir' + (filtros.toString() ? '?' + filtros.toString() : '')}
+          />
           {puedeCrear && <Link className="btn btn-primario" href="/casos/nuevo"><Icono nombre="mas" /> Nueva solicitud</Link>}
         </div>
       </div>
