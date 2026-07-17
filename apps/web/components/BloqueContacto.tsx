@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from 'react';
  */
 export default function BloqueContacto(
   { defaults, exigir = true }:
-  { defaults?: { referente?: string | null; whatsapp?: string | null; instagram?: string | null }; exigir?: boolean },
+  { defaults?: { referente?: string | null; rol?: string | null; whatsapp?: string | null; instagram?: string | null }; exigir?: boolean },
 ) {
   const waRef = useRef<HTMLInputElement>(null);
   const igRef = useRef<HTMLInputElement>(null);
@@ -48,10 +48,17 @@ export default function BloqueContacto(
       {/* Marca que este formulario trae el contacto estructurado (0171): editarCaso
           solo actualiza estos campos cuando está presente. */}
       <input type="hidden" name="_contacto_estructurado" value="1" />
-      <div className="campo">
-        <label htmlFor="referente">Referente — nombre de la persona o institución{exigir ? ' *' : ''}</label>
-        <input id="referente" name="referente" className="input" required={exigir} maxLength={160}
-          defaultValue={defaults?.referente ?? ''} placeholder="¿De quién es la solicitud o la información?" />
+      <div className="grid grid-2">
+        <div className="campo">
+          <label htmlFor="referente">Referente — persona o institución{exigir ? ' *' : ''}</label>
+          <input id="referente" name="referente" className="input" required={exigir} maxLength={160}
+            defaultValue={defaults?.referente ?? ''} placeholder="¿De quién es la solicitud?" />
+        </div>
+        <div className="campo">
+          <label htmlFor="referente_rol">Rol del referente</label>
+          <input id="referente_rol" name="referente_rol" className="input" maxLength={80}
+            defaultValue={defaults?.rol ?? ''} placeholder="Familiar, vecino, médico…" />
+        </div>
       </div>
       <div className="grid grid-2">
         <div className="campo">

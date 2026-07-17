@@ -1,7 +1,9 @@
 import Icono from '@/components/Icono';
 import AvisoEnlace from '@/components/AvisoEnlace';
 import BloqueContacto from '@/components/BloqueContacto';
+import BloqueUbicacion from '@/components/BloqueUbicacion';
 import BloqueRequerimiento from './BloqueRequerimiento';
+import { OPCIONES_VIGENCIA, TIPOS_FUENTE } from '@/lib/constantes';
 import { editarCaso } from './actions';
 
 /** Formulario colapsable para corregir/completar los datos de un caso. Reutilizado
@@ -20,10 +22,23 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
         <input type="hidden" name="categoria" value={caso.categoria ?? 'Otras informaciones'} />
         <div className="grid grid-2">
           <div className="campo"><label>Fecha de publicación</label><input name="fecha_publicacion" type="date" className="input" defaultValue={caso.fecha_publicacion ?? ''} /></div>
+          <div className="campo"><label>¿Sigue vigente?</label>
+            <select name="sigue_vigente" className="input" defaultValue={caso.sigue_vigente ?? ''}>
+              <option value="">Sin especificar</option>
+              {OPCIONES_VIGENCIA.map((v) => <option key={v.valor} value={v.valor}>{v.etiqueta}</option>)}
+            </select>
+          </div>
+          <div className="campo"><label>Tipo de fuente</label>
+            <select name="fuente_tipo" className="input" defaultValue={caso.fuente_tipo ?? ''}>
+              <option value="">Sin especificar</option>
+              {TIPOS_FUENTE.map((t) => <option key={t.valor} value={t.valor}>{t.etiqueta}</option>)}
+            </select>
+          </div>
           <div className="campo"><label>Fuente</label><input name="fuente" className="input" defaultValue={caso.fuente ?? ''} /></div>
           <div className="campo" style={{ gridColumn: '1 / -1' }}><label>Enlace de la fuente</label><AvisoEnlace name="fuente_url" defaultValue={caso.fuente_url ?? ''} /></div>
         </div>
-        <BloqueContacto exigir={false} defaults={{ referente: caso.referente, whatsapp: caso.contacto_whatsapp, instagram: caso.contacto_instagram }} />
+        <BloqueContacto exigir={false} defaults={{ referente: caso.referente, rol: caso.referente_rol, whatsapp: caso.contacto_whatsapp, instagram: caso.contacto_instagram }} />
+        <BloqueUbicacion defaults={{ estado: caso.ubicacion_estado, municipio: caso.ubicacion_municipio, parroquia: caso.ubicacion_parroquia, sector: caso.ubicacion_sector, direccion: caso.ubicacion_direccion }} />
         {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
         {caso.categoria !== 'Desaparecidos' && (
           <BloqueRequerimiento defaults={{

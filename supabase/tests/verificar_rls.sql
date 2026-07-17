@@ -12,6 +12,16 @@
 select id as admin from public.perfiles where rol = 'admin' and verificado
   order by creado_en limit 1 \gset
 
+-- Helper de pruebas (candado 0173): marca TODOS los campos del semáforo de una
+-- solicitud en verde para poder CONFIRMARLA. Corre como superusuario (bypassa la RLS
+-- de casos_verificacion_campo). Cubre base + requerimiento; los campos de más se ignoran.
+create or replace function pg_temp.marcar_caso_validado(p_caso uuid) returns void
+language sql as $$
+  insert into public.casos_verificacion_campo (caso_id, campo, estado)
+  select p_caso, unnest(array['referente','descripcion','fuente','vigencia','evidencia','ubicacion','cantidad']), 'verificado'
+  on conflict (caso_id, campo) do update set estado = 'verificado';
+$$;
+
 \echo '== Test 1: un no-coordinador NO puede subir su propio rol =='
 begin;
   update public.perfiles set rol = 'voluntario' where id = :'admin';
@@ -791,6 +801,7 @@ begin;
   update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000ac12';
   insert into public.casos (id, titulo, categoria, estado, creado_por)
     values ('00000000-0000-0000-0000-00000000ac13', '_TEST_veredicto', 'Otras informaciones', 'en_proceso', '00000000-0000-0000-0000-00000000ac11');
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-00000000ac13');  -- candado 0173: confirmable
   -- El verificador confirma (actor distinto del reportante) → el reportante recibe aviso.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000ac12')::text, true);
@@ -802,6 +813,27 @@ begin;
     select count(*) into n from public.notificaciones
       where destinatario_id = '00000000-0000-0000-0000-00000000ac11' and tipo = 'caso_verificado';
     if n < 1 then raise exception 'FALLO: el reportante no recibió aviso del veredicto (n=%)', n; end if;
+  end $$;
+rollback;
+
+\echo '== Test 40b: el candado impide confirmar sin todos los campos en verde (0173) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-00000000ac20', '_TEST_candado', 'Otras informaciones', 'en_proceso', null);
+  do $$ begin
+    begin
+      update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000ac20';
+      raise exception 'FALLO: se confirmó una solicitud sin verificar sus campos';
+    exception when others then
+      if sqlerrm like 'FALLO:%' then raise; end if;  -- el candado (trigger 0173) = esperado
+    end;
+  end $$;
+  -- Con TODOS los campos del semáforo en verde, ya se puede confirmar.
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-00000000ac20');
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000ac20';
+  do $$ declare e text; begin
+    select estado::text into e from public.casos where id = '00000000-0000-0000-0000-00000000ac20';
+    if e <> 'confirmado' then raise exception 'FALLO: no se confirmó pese a tener todo en verde (estado=%)', e; end if;
   end $$;
 rollback;
 
@@ -1356,6 +1388,7 @@ begin;
     if n <> 0 then raise exception 'FALLO: se creó el centro antes de confirmar (n=%)', n; end if;
   end $$;
   -- Confirmar la solicitud → el trigger crea el centro.
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-00000000fd0c');  -- candado 0173: confirmable
   update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000fd0c';
   do $$ declare r public.puntos_acopio; begin
     select * into r from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd0c';
@@ -1391,6 +1424,7 @@ begin;
   -- Sin punto_tipo → confirmar NO crea centro.
   insert into public.casos (id, titulo, categoria, estado, es_requerimiento, lat, lng, creado_por)
     values ('00000000-0000-0000-0000-00000000fd21', '_TEST_solo_solicitud', 'Otras informaciones', 'pendiente', true, 10.0, -66.0, null);
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-00000000fd21');  -- candado 0173: confirmable
   update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-00000000fd21';
   do $$ declare n int; begin
     select count(*) into n from public.puntos_acopio where caso_id = '00000000-0000-0000-0000-00000000fd21';

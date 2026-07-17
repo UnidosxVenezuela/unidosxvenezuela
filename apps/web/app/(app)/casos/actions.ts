@@ -29,6 +29,9 @@ function numOpt(v: FormDataEntryValue | null): number | null {
 const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refugio', 'otro'];
 const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
 const TIPOS_LUGAR_VAL = ['hospital', 'albergue', 'acopio', 'otro'];
+// Valores válidos de los campos estructurados nuevos (0173).
+const TIPOS_FUENTE_VAL = ['contacto_directo', 'whatsapp', 'instagram', 'facebook', 'x', 'pagina_oficial', 'organizacion', 'publicacion', 'otra'];
+const VIGENCIA_VAL = ['si', 'no', 'pendiente'];
 
 // Detecta el error de «columna inexistente» de las columnas de PUNTO del mapa (0145).
 // Si esa migración aún no se aplicó en la base, permite reintentar el insert/update
@@ -37,17 +40,21 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
 }
 
-// Quita las columnas «nuevas» (0145 punto del mapa, 0171 contacto estructurado) para
-// reintentar si esas migraciones aún no se aplicaron. El `contacto` compuesto se
-// conserva (columna vieja), así el contacto NUNCA se pierde.
+// Quita las columnas «nuevas» (0145 punto del mapa, 0171 contacto estructurado, 0173
+// campos estructurados) para reintentar si esas migraciones aún no se aplicaron. El
+// `contacto` compuesto se conserva (columna vieja), así el contacto NUNCA se pierde.
 function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknown> {
   const f = { ...fila };
   delete f.punto_tipo; delete f.punto_temporal;
   delete f.referente; delete f.contacto_whatsapp; delete f.contacto_instagram;
+  delete f.referente_rol; delete f.fuente_tipo;
+  delete f.ubicacion_estado; delete f.ubicacion_municipio; delete f.ubicacion_parroquia;
+  delete f.ubicacion_sector; delete f.ubicacion_direccion;
+  delete f.sigue_vigente; delete f.ultima_confirmacion;
   return f;
 }
 
@@ -67,6 +74,7 @@ function normalizarInstagram(v: string | null): string | null {
 // Devuelve también `contactoCompuesto` para quien lee el campo `contacto` (retrocompat).
 function datosContacto(formData: FormData, exigir: boolean) {
   const referente = opt(formData.get('referente'));
+  const referente_rol = opt(formData.get('referente_rol'));
   const wa = normalizarWhatsapp(opt(formData.get('contacto_whatsapp')));
   const ig = normalizarInstagram(opt(formData.get('contacto_instagram')));
   if (exigir) {
@@ -75,7 +83,25 @@ function datosContacto(formData: FormData, exigir: boolean) {
   }
   const compuesto = [wa ? 'WhatsApp/tel: ' + wa : null, ig ? 'Instagram: @' + ig : null]
     .filter(Boolean).join(' · ') || null;
-  return { referente, contacto_whatsapp: wa, contacto_instagram: ig, contactoCompuesto: compuesto, hayContacto: !!(wa || ig) };
+  return { referente, referente_rol, contacto_whatsapp: wa, contacto_instagram: ig, contactoCompuesto: compuesto, hayContacto: !!(wa || ig) };
+}
+
+// Campos estructurados nuevos (0173, Pasos 4/5): ubicación administrativa separada,
+// vigencia (¿sigue vigente? + última confirmación) y tipo de fuente. Todos opcionales
+// en la capa de datos; Verificación los confirma con su semáforo por campo.
+function datosEstructurados(formData: FormData) {
+  const ft = opt(formData.get('fuente_tipo'));
+  const vig = opt(formData.get('sigue_vigente'));
+  return {
+    fuente_tipo: ft && TIPOS_FUENTE_VAL.includes(ft) ? ft : null,
+    ubicacion_estado: opt(formData.get('ubicacion_estado')),
+    ubicacion_municipio: opt(formData.get('ubicacion_municipio')),
+    ubicacion_parroquia: opt(formData.get('ubicacion_parroquia')),
+    ubicacion_sector: opt(formData.get('ubicacion_sector')),
+    ubicacion_direccion: opt(formData.get('ubicacion_direccion')),
+    sigue_vigente: vig && VIGENCIA_VAL.includes(vig) ? vig : null,
+    ultima_confirmacion: opt(formData.get('ultima_confirmacion')),
+  };
 }
 
 // Campos de «solicitud de ayuda con ubicación» (Propuesta Fase 1). Si el bloque no
@@ -192,6 +218,7 @@ export async function crearCaso(formData: FormData) {
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
     contacto: contacto.contactoCompuesto,
     referente: contacto.referente,
+    referente_rol: contacto.referente_rol,
     contacto_whatsapp: contacto.contacto_whatsapp,
     contacto_instagram: contacto.contacto_instagram,
     estado: 'pendiente',
@@ -199,6 +226,8 @@ export async function crearCaso(formData: FormData) {
     es_nna: false,
     // Toda información es una solicitud con ubicación (el formulario fija es_requerimiento).
     ...datosRequerimiento(formData, categoria),
+    // Ubicación administrativa, vigencia y tipo de fuente (Pasos 4/5).
+    ...datosEstructurados(formData),
   };
   let { data, error } = await supabase.from('casos').insert(fila).select('id').single();
   // Resiliencia: si la migración 0145 («punto del mapa») aún no está aplicada en la
@@ -502,9 +531,18 @@ export async function editarCaso(formData: FormData) {
   const contactoEd = datosContacto(formData, false);
   if (txt(formData.get('_contacto_estructurado')) === '1') {
     if (contactoEd.referente) cambios.referente = contactoEd.referente;
+    if (contactoEd.referente_rol) cambios.referente_rol = contactoEd.referente_rol;
     if (contactoEd.contacto_whatsapp) cambios.contacto_whatsapp = contactoEd.contacto_whatsapp;
     if (contactoEd.contacto_instagram) cambios.contacto_instagram = contactoEd.contacto_instagram;
     if (contactoEd.hayContacto) cambios.contacto = contactoEd.contactoCompuesto;
+  }
+  // Datos estructurados nuevos (0173): solo se actualizan si el formulario los trae
+  // (marca `_datos_estructurados`). Merge SUAVE: solo se escriben los campos con valor,
+  // para no borrar lo ya cargado al editar desde vistas reducidas.
+  if (txt(formData.get('_datos_estructurados')) === '1') {
+    for (const [k, v] of Object.entries(datosEstructurados(formData))) {
+      if (v !== null && v !== undefined) (cambios as Record<string, unknown>)[k] = v;
+    }
   }
   let { error } = await supabase.from('casos').update(cambios).eq('id', id);
   // Resiliencia ante 0145 no aplicada (mismas columnas de «punto del mapa»).

@@ -25,9 +25,10 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   const id = params.id;
 
   const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
-  const { data: caso } = await supabase.from('casos')
-    .select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, referente, contacto_whatsapp, contacto_instagram, asignado_a, estado, notas, info_requerida, creado_por, creado_en, actualizado_en, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, punto_tipo, punto_temporal, punto_acopio_id, publicado_en, publicacion_url, publicado_por')
-    .eq('id', id).single() as any;
+  // `*` incluye los campos estructurados nuevos (0173: referente_rol, fuente_tipo,
+  // ubicación administrativa, vigencia) sin romper si la migración aún no se aplicó
+  // (las columnas ausentes simplemente no vienen). La RLS acota qué filas se ven.
+  const { data: caso } = await supabase.from('casos').select('*').eq('id', id).single() as any;
   if (!caso) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/casos">Volver</Link></div>;
 
   // Adjuntos de respaldo con URL firmada (misma vista que el panel lateral).

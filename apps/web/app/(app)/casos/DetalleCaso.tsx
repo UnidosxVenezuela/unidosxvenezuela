@@ -1,6 +1,6 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, ETIQUETA_VIGENCIA, ETIQUETA_TIPO_FUENTE, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
@@ -39,12 +39,22 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
   const waFuente = hrefSeguro(caso.fuente_url);
   const etiquetaEstado = (e?: string) => (e ? (ETIQUETA_ESTADO_CASO[e as keyof typeof ETIQUETA_ESTADO_CASO] ?? e) : '');
 
+  // Candado de verificación (0173): un caso (no «Desaparecidos») solo se confirma si
+  // TODOS sus campos del semáforo están en verde. Refleja caso_esta_validado() de la BD,
+  // para avisar en la UI antes de que la base rechace la confirmación.
+  const vcamposEstado = (caso.verif_campos ?? {}) as Record<string, { estado?: string }>;
+  const camposCandado = [...CAMPOS_VERIFICACION_BASE, ...(caso.es_requerimiento ? CAMPOS_VERIFICACION_REQ : [])];
+  const casoValidado = camposCandado.every((c) => vcamposEstado[c.key]?.estado === 'verificado');
+  const faltanCandado = camposCandado.filter((c) => vcamposEstado[c.key]?.estado !== 'verificado');
+  const candadoAplica = caso.categoria !== 'Desaparecidos';
+
   // Checklist de «datos mínimos» del procedimiento de Verificación: ✓ presente / ⚠ falta.
   // Para las solicitudes de ayuda se suman ubicación y tipo de necesidad.
   const chkItems: [string, boolean][] = [
     ['Descripción clara', !!caso.descripcion],
     ['Fuente identificable', !!(caso.fuente || caso.fuente_url)],
     ['Fecha de la información', !!caso.fecha_publicacion],
+    ['Vigencia (¿sigue vigente?)', !!caso.sigue_vigente],
     ['Contacto / referente', !!caso.contacto],
     ...(caso.es_requerimiento
       ? ([['Ubicación en el mapa', caso.lat != null && caso.lng != null], ['Tipo de necesidad', !!caso.req_tipo]] as [string, boolean][])
@@ -142,14 +152,18 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         <div className="grid grid-2">
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
-          <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
+          <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {caso.fuente_tipo ? (ETIQUETA_TIPO_FUENTE[caso.fuente_tipo] ?? caso.fuente_tipo) + ' · ' : ''}{waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
+          {caso.sigue_vigente && <div><strong>¿Vigente?:</strong> {ETIQUETA_VIGENCIA[caso.sigue_vigente] ?? caso.sigue_vigente}</div>}
+          {(caso.ubicacion_direccion || caso.ubicacion_sector || caso.ubicacion_parroquia || caso.ubicacion_municipio || caso.ubicacion_estado) && (
+            <div style={{ gridColumn: '1 / -1' }}><strong>Ubicación:</strong> {[caso.ubicacion_direccion, caso.ubicacion_sector, caso.ubicacion_parroquia, caso.ubicacion_municipio, caso.ubicacion_estado].filter(Boolean).join(' · ')}</div>
+          )}
           {(() => {
             const ref = caso.referente; const wa = caso.contacto_whatsapp; const ig = caso.contacto_instagram;
             const waD = wa ? String(wa).replace(/[^\d]/g, '') : '';
             const igH = ig ? String(ig).replace(/^@/, '') : '';
             if (ref || wa || ig) return (
               <div style={{ gridColumn: '1 / -1' }}>
-                <strong>Contacto / referente:</strong> {ref || '—'}
+                <strong>Contacto / referente:</strong> {ref || '—'}{caso.referente_rol ? ' · ' + caso.referente_rol : ''}
                 {(wa || igH) && (
                   <span className="fila" style={{ gap: 12, flexWrap: 'wrap', marginTop: 2 }}>
                     {wa && <span>WhatsApp:{' '}{waD.length >= 8 ? <a href={'https://wa.me/' + waD} target="_blank" rel="noopener noreferrer">{wa}</a> : wa}</span>}
@@ -373,14 +387,23 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
               )
             )}
             {caso.estado !== 'confirmado' && (
-              <form action={cambiarEstadoCaso}>
-                <input type="hidden" name="caso_id" value={caso.id} />
-                <input type="hidden" name="volver" value={volver} />
-                <input type="hidden" name="estado" value="confirmado" />
-                <button className="btn btn-acento" type="submit" style={{ width: '100%' }}>
-                  <Icono nombre="ok" size={16} /> Confirmar solicitud
-                </button>
-              </form>
+              candadoAplica && !casoValidado ? (
+                <div className="fila" style={{ gap: 8, alignItems: 'flex-start', padding: '8px 10px', background: 'var(--pill-aviso-bg)', border: '1px solid var(--ambar-solido)', borderRadius: 8 }}>
+                  <Icono nombre="avisos" size={16} />
+                  <span style={{ fontSize: '.85rem' }}>
+                    Para <strong>confirmar</strong>, primero marca en verde 🟢 <strong>todos</strong> los campos de la <em>Verificación por campo</em> (arriba). Faltan por verificar: {faltanCandado.map((c) => c.etiqueta).join(', ')}.
+                  </span>
+                </div>
+              ) : (
+                <form action={cambiarEstadoCaso}>
+                  <input type="hidden" name="caso_id" value={caso.id} />
+                  <input type="hidden" name="volver" value={volver} />
+                  <input type="hidden" name="estado" value="confirmado" />
+                  <button className="btn btn-acento" type="submit" style={{ width: '100%' }}>
+                    <Icono nombre="ok" size={16} /> Confirmar solicitud
+                  </button>
+                </form>
+              )
             )}
             {/* Requiere información adicional: devuelve el caso a Recopilación con el
                 motivo (no lo descarta). Avisa a quien lo reportó (trigger 0142). */}
