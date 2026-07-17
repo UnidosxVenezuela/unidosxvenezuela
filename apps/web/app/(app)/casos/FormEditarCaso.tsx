@@ -1,5 +1,6 @@
 import Icono from '@/components/Icono';
 import AvisoEnlace from '@/components/AvisoEnlace';
+import BloqueContacto from '@/components/BloqueContacto';
 import BloqueRequerimiento from './BloqueRequerimiento';
 import { editarCaso } from './actions';
 
@@ -20,9 +21,9 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
         <div className="grid grid-2">
           <div className="campo"><label>Fecha de publicación</label><input name="fecha_publicacion" type="date" className="input" defaultValue={caso.fecha_publicacion ?? ''} /></div>
           <div className="campo"><label>Fuente</label><input name="fuente" className="input" defaultValue={caso.fuente ?? ''} /></div>
-          <div className="campo"><label>Enlace de la fuente</label><AvisoEnlace name="fuente_url" defaultValue={caso.fuente_url ?? ''} /></div>
-          <div className="campo"><label>Responsable / referente</label><input name="contacto" className="input" defaultValue={caso.contacto ?? ''} placeholder="Teléfono, WhatsApp, organización" /></div>
+          <div className="campo" style={{ gridColumn: '1 / -1' }}><label>Enlace de la fuente</label><AvisoEnlace name="fuente_url" defaultValue={caso.fuente_url ?? ''} /></div>
         </div>
+        <BloqueContacto exigir={false} defaults={{ referente: caso.referente, whatsapp: caso.contacto_whatsapp, instagram: caso.contacto_instagram }} />
         {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
         {caso.categoria !== 'Desaparecidos' && (
           <BloqueRequerimiento defaults={{

@@ -26,8 +26,45 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
+}
+
+// Quita las columnas «nuevas» (0145 punto del mapa, 0171 contacto estructurado) para
+// reintentar si esas migraciones aún no se aplicaron. El `contacto` compuesto se
+// conserva (columna vieja), así el contacto NUNCA se pierde.
+function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknown> {
+  const f = { ...fila };
+  delete f.punto_tipo; delete f.punto_temporal;
+  delete f.referente; delete f.contacto_whatsapp; delete f.contacto_instagram;
+  return f;
+}
+
+// Normaliza WhatsApp/teléfono (deja + y dígitos; si no parece número, guarda el texto).
+function normalizarWhatsapp(v: string | null): string | null {
+  if (!v) return null;
+  const s = v.replace(/[^\d+]/g, '');
+  return s.replace(/[^\d]/g, '').length >= 6 ? s : (v.trim() || null);
+}
+// Normaliza el usuario de Instagram (quita la URL y el @).
+function normalizarInstagram(v: string | null): string | null {
+  if (!v) return null;
+  const s = v.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/[/?#].*$/, '').replace(/^@/, '');
+  return s || null;
+}
+// Contacto estructurado (0171). `exigir` (al crear): referente + al menos un canal.
+// Devuelve también `contactoCompuesto` para quien lee el campo `contacto` (retrocompat).
+function datosContacto(formData: FormData, exigir: boolean) {
+  const referente = opt(formData.get('referente'));
+  const wa = normalizarWhatsapp(opt(formData.get('contacto_whatsapp')));
+  const ig = normalizarInstagram(opt(formData.get('contacto_instagram')));
+  if (exigir) {
+    if (!referente) throw new Error('Falta el nombre del referente (persona o institución).');
+    if (!wa && !ig) throw new Error('Indica al menos un contacto: WhatsApp/teléfono o Instagram.');
+  }
+  const compuesto = [wa ? 'WhatsApp/tel: ' + wa : null, ig ? 'Instagram: @' + ig : null]
+    .filter(Boolean).join(' · ') || null;
+  return { referente, contacto_whatsapp: wa, contacto_instagram: ig, contactoCompuesto: compuesto, hayContacto: !!(wa || ig) };
 }
 
 // Campos de «solicitud de ayuda con ubicación» (Propuesta Fase 1). Si el bloque no
@@ -133,6 +170,8 @@ export async function crearCaso(formData: FormData) {
   // Ya no se clasifica el tipo de caso: toda información entra como «solicitud con
   // ubicación» del lado de Verificación (nunca 'Desaparecidos', la frontera con Búsqueda).
   const categoria = 'Otras informaciones';
+  // Datos prioritarios (Paso 3): referente + al menos un contacto (WhatsApp/tel o IG).
+  const contacto = datosContacto(formData, true);
   const fila: Record<string, unknown> = {
     titulo,
     descripcion: opt(formData.get('descripcion')),
@@ -140,7 +179,10 @@ export async function crearCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
-    contacto: opt(formData.get('contacto')),
+    contacto: contacto.contactoCompuesto,
+    referente: contacto.referente,
+    contacto_whatsapp: contacto.contacto_whatsapp,
+    contacto_instagram: contacto.contacto_instagram,
     estado: 'pendiente',
     creado_por: user.id,
     es_nna: false,
@@ -151,8 +193,7 @@ export async function crearCaso(formData: FormData) {
   // Resiliencia: si la migración 0145 («punto del mapa») aún no está aplicada en la
   // base, se reintenta sin esos campos para que reportar una solicitud no se bloquee.
   if (error && faltanColumnasPunto(error)) {
-    const sinPunto = { ...fila }; delete sinPunto.punto_tipo; delete sinPunto.punto_temporal;
-    ({ data, error } = await supabase.from('casos').insert(sinPunto).select('id').single());
+    ({ data, error } = await supabase.from('casos').insert(sinColumnasNuevas(fila)).select('id').single());
   }
   if (error) {
     // La RLS exige admin o recopilación con 2ª verificación aprobada. Mensaje claro.
@@ -379,18 +420,25 @@ export async function editarCaso(formData: FormData) {
     fuente: opt(formData.get('fuente')),
     fuente_url: an.url ?? fuenteUrl,
     fecha_publicacion: opt(formData.get('fecha_publicacion')),
-    contacto: opt(formData.get('contacto')),
     // Al corregir/completar los datos se limpia el aviso «Requiere información adicional».
     info_requerida: null,
     actualizado_en: new Date().toISOString(),
     // Solicitud de ayuda con ubicación (Fase 1): se limpia si se desmarca el bloque.
     ...datosRequerimiento(formData, categoria),
   };
+  // Contacto estructurado (0171): solo se actualiza lo que el editor completó, para no
+  // borrar lo ya cargado si el formulario no lo trae (p. ej. al editar desde Redacción).
+  const contactoEd = datosContacto(formData, false);
+  if (txt(formData.get('_contacto_estructurado')) === '1') {
+    if (contactoEd.referente) cambios.referente = contactoEd.referente;
+    if (contactoEd.contacto_whatsapp) cambios.contacto_whatsapp = contactoEd.contacto_whatsapp;
+    if (contactoEd.contacto_instagram) cambios.contacto_instagram = contactoEd.contacto_instagram;
+    if (contactoEd.hayContacto) cambios.contacto = contactoEd.contactoCompuesto;
+  }
   let { error } = await supabase.from('casos').update(cambios).eq('id', id);
   // Resiliencia ante 0145 no aplicada (mismas columnas de «punto del mapa»).
   if (error && faltanColumnasPunto(error)) {
-    const sinPunto = { ...cambios }; delete sinPunto.punto_tipo; delete sinPunto.punto_temporal;
-    ({ error } = await supabase.from('casos').update(sinPunto).eq('id', id));
+    ({ error } = await supabase.from('casos').update(sinColumnasNuevas(cambios)).eq('id', id));
   }
   if (error) throw new Error('No se pudo editar la solicitud: ' + error.message);
 

@@ -142,6 +142,23 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
+          {(() => {
+            const ref = caso.referente; const wa = caso.contacto_whatsapp; const ig = caso.contacto_instagram;
+            const waD = wa ? String(wa).replace(/[^\d]/g, '') : '';
+            const igH = ig ? String(ig).replace(/^@/, '') : '';
+            if (ref || wa || ig) return (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <strong>Contacto / referente:</strong> {ref || '—'}
+                {(wa || igH) && (
+                  <span className="fila" style={{ gap: 12, flexWrap: 'wrap', marginTop: 2 }}>
+                    {wa && <span>WhatsApp:{' '}{waD.length >= 8 ? <a href={'https://wa.me/' + waD} target="_blank" rel="noopener noreferrer">{wa}</a> : wa}</span>}
+                    {igH && <span>Instagram:{' '}<a href={'https://instagram.com/' + igH} target="_blank" rel="noopener noreferrer">@{igH}</a></span>}
+                  </span>
+                )}
+              </div>
+            );
+            return caso.contacto ? <div style={{ gridColumn: '1 / -1' }}><strong>Contacto / referente:</strong> {caso.contacto}</div> : null;
+          })()}
           <div style={{ gridColumn: '1 / -1' }}><strong>Creado por:</strong> {caso.creado_por ? (nombres.get(caso.creado_por) ?? '—') : '—'}{caso.creado_en ? ' · ' + fechaHora(caso.creado_en) : ''}</div>
           {caso.asignado_a && (
             <div style={{ gridColumn: '1 / -1' }}>
