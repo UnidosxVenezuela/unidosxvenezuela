@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION } from '@/lib/constantes';
+import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -40,7 +40,7 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion|revision_alcance/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
 }
 
@@ -56,6 +56,7 @@ function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknow
   delete f.ubicacion_sector; delete f.ubicacion_direccion;
   delete f.sigue_vigente; delete f.ultima_confirmacion;
   delete f.contacto_difusion; delete f.autoriza_difusion;
+  delete f.revision_alcance;
   return f;
 }
 
@@ -193,10 +194,23 @@ async function exigirCasos(soloVerificar: boolean) {
   return { supabase, user };
 }
 
+// Filtro de alcance (Paso 2): marca 🟡 (revisión) si el texto libre menciona temas fuera
+// de misión. NO bloquea (hay falsos positivos, p. ej. «no tengo dinero para el remedio»);
+// solo la señala para que un responsable confirme si corresponde a la misión.
+function marcaRevisionAlcance(texto: string): boolean {
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const t = norm(texto);
+  return TERMINOS_FUERA_ALCANCE.some((term) => t.includes(norm(term)));
+}
+
 export async function crearCaso(formData: FormData) {
   const { supabase, user } = await exigirCasos(false);
   const titulo = txt(formData.get('titulo'));
   if (!titulo) throw new Error('El título es obligatorio.');
+  // Filtro institucional de alcance (Paso 2): exige la confirmación del reportante.
+  if (txt(formData.get('confirmo_alcance')) !== 'on') {
+    throw new Error('Debes confirmar que la solicitud está dentro del alcance de la organización (no dinero, vivienda, legal, diagnóstico/tratamiento ni política).');
+  }
   // Validar el enlace de la fuente (formato + seguridad heurística).
   const fuenteUrl = opt(formData.get('fuente_url'));
   const an = analizarUrl(fuenteUrl);
@@ -228,6 +242,8 @@ export async function crearCaso(formData: FormData) {
     estado: 'pendiente',
     creado_por: user.id,
     es_nna: false,
+    // Filtro de alcance (Paso 2): 🟡 si el texto menciona temas fuera de misión.
+    revision_alcance: marcaRevisionAlcance(titulo + ' ' + (opt(formData.get('descripcion')) ?? '')),
     // Toda información es una solicitud con ubicación (el formulario fija es_requerimiento).
     ...datosRequerimiento(formData, categoria),
     // Ubicación administrativa, vigencia y tipo de fuente (Pasos 4/5).

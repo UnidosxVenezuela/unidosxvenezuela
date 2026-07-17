@@ -1,5 +1,6 @@
 'use client';
 import AvisoEnlace from '@/components/AvisoEnlace';
+import BloqueAlcance from '@/components/BloqueAlcance';
 import BloqueContacto from '@/components/BloqueContacto';
 import BloqueUbicacion from '@/components/BloqueUbicacion';
 import BloqueRequerimiento from '../BloqueRequerimiento';
@@ -17,6 +18,9 @@ export default function CamposCaso() {
     <>
       {/* Sin clasificación: toda información entra como solicitud del lado de Verificación. */}
       <input type="hidden" name="categoria" value="Otras informaciones" />
+
+      {/* Filtro institucional de alcance (Paso 2) */}
+      <BloqueAlcance />
 
       {/* Contacto y referente (datos prioritarios, Paso 3) */}
       <BloqueContacto exigir />

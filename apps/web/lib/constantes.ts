@@ -774,3 +774,38 @@ export const TIPOS_FUENTE: { valor: string; etiqueta: string }[] = [
 ];
 export const ETIQUETA_TIPO_FUENTE: Record<string, string> =
   Object.fromEntries(TIPOS_FUENTE.map((t) => [t.valor, t.etiqueta]));
+
+// ── Alcance institucional (0175, Paso 2): qué entra y qué NO ──
+// Referencia que se muestra al reportar para orientar antes de cargar.
+export const ALCANCE_SI: string[] = [
+  'Medicamentos e insumos médicos',
+  'Alimentos y agua',
+  'Ropa, abrigo e higiene',
+  'Herramientas, equipos y materiales',
+  'Atención veterinaria',
+  'Consultas médicas para canalizar',
+  'Servicios profesionales voluntarios',
+  'Centros de acopio y donaciones en especie',
+  'Alianzas y organizaciones',
+];
+export const ALCANCE_NO: string[] = [
+  'Dinero, recaudaciones o transferencias (GoFundMe, etc.)',
+  'Compra o administración de fondos de terceros',
+  'Solicitudes de vivienda',
+  'Procesos judiciales o asesoría legal',
+  'Diagnósticos, tratamientos médicos o atención psicológica profesional',
+  'Casos políticos o partidistas',
+];
+// Términos que, si aparecen en el texto libre, marcan la solicitud para REVISIÓN de
+// alcance (🟡). No bloquean (hay falsos positivos: «no tengo dinero para el remedio»);
+// solo la señalan para que un responsable confirme si corresponde a la misión.
+export const TERMINOS_FUERA_ALCANCE: string[] = [
+  'gofundme', 'recaudacion', 'transferencia', 'zelle', 'paypal', 'binance',
+  'vivienda', 'alquiler', 'arriendo', 'inquilino',
+  'abogado', 'juridico', 'judicial', 'demanda', 'tribunal',
+  'diagnostico', 'tratamiento', 'psicolog', 'psiquiatr', 'terapia',
+  'partido', 'partidista', 'campaña electoral', 'candidato',
+];
+// Mensaje de recepción al enviar una solicitud (Paso 2).
+export const MENSAJE_RECEPCION_CASO =
+  'La recepción de esta solicitud no implica su aprobación ni garantiza su resolución. El caso pasará a verificación.';
