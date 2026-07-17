@@ -12,7 +12,8 @@ function textoCaso(c: any): string {
   L.push(c.titulo || '');
   if (c.descripcion) { L.push(''); L.push(c.descripcion); }
   L.push('');
-  if (c.contacto) L.push('Contacto / referente: ' + c.contacto);
+  // Paso 10: solo el contacto AUTORIZADO para difusión (nunca el interno).
+  if (c.autoriza_difusion && c.contacto_difusion) L.push('Contacto de difusión: ' + c.contacto_difusion);
   if (c.es_requerimiento) {
     const req = [c.req_tipo, c.req_urgencia, c.req_cantidad].filter(Boolean).join(' · ');
     L.push('Solicitud de ayuda' + (req ? ': ' + req : ''));

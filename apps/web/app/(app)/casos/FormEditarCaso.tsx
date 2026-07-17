@@ -39,6 +39,21 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
         </div>
         <BloqueContacto exigir={false} defaults={{ referente: caso.referente, rol: caso.referente_rol, whatsapp: caso.contacto_whatsapp, instagram: caso.contacto_instagram }} />
         <BloqueUbicacion defaults={{ estado: caso.ubicacion_estado, municipio: caso.ubicacion_municipio, parroquia: caso.ubicacion_parroquia, sector: caso.ubicacion_sector, direccion: caso.ubicacion_direccion }} />
+        {/* Contacto autorizado para difusión (Paso 10): lo ÚNICO que ve Redes/Redacción. */}
+        <div className="tarjeta" style={{ marginBottom: 12 }}>
+          <strong className="fila" style={{ gap: 6 }}><Icono nombre="cohete" size={15} /> Contacto autorizado para difusión</strong>
+          <p className="muted" style={{ fontSize: '.82rem', margin: '2px 0 8px' }}>
+            Lo único que verá Redes/Redacción. El contacto interno nunca se les muestra. Déjalo vacío si no hay un contacto autorizado a publicar.
+          </p>
+          <div className="campo">
+            <input name="contacto_difusion" className="input" maxLength={200}
+              defaultValue={caso.contacto_difusion ?? ''} placeholder="Ej.: WhatsApp público, @cuenta oficial…" />
+          </div>
+          <label className="fila" style={{ gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" name="autoriza_difusion" defaultChecked={!!caso.autoriza_difusion} />
+            <span>Autorizo compartir este contacto para difusión</span>
+          </label>
+        </div>
         {/* Solicitud de ayuda con ubicación (no aplica a Desaparecidos). */}
         {caso.categoria !== 'Desaparecidos' && (
           <BloqueRequerimiento defaults={{

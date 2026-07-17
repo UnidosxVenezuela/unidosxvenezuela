@@ -9,7 +9,8 @@ const TOPE = 10000;
 
 /** Todo lo que Redacción trabaja: confirmadas (por difundir) + ya enviadas. */
 export async function consultarRedaccion(supabase: any): Promise<any[]> {
-  const COLS = 'id, numero, titulo, descripcion, categoria, estado, fuente, fuente_url, fecha_publicacion, contacto, notas, req_tipo, req_cantidad, req_urgencia, requiere_difusion, publicado_en, publicacion_url, actualizado_en';
+  // Paso 10: Redacción exporta el contacto AUTORIZADO para difusión, nunca el interno.
+  const COLS = 'id, numero, titulo, descripcion, categoria, estado, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, req_tipo, req_cantidad, req_urgencia, requiere_difusion, publicado_en, publicacion_url, actualizado_en';
   const { data } = await supabase.from('casos').select(COLS)
     .in('estado', ['confirmado', 'enviado_redaccion'])
     .order('actualizado_en', { ascending: false }).limit(TOPE);
@@ -23,7 +24,7 @@ export const COLUMNAS_REDACCION: Columna<any>[] = [
   { encabezado: 'Estado', valor: (c) => ETIQUETA_ESTADO_CASO[c.estado as keyof typeof ETIQUETA_ESTADO_CASO] ?? c.estado ?? '' },
   { encabezado: 'Prioridad difusión', valor: (c) => (c.requiere_difusion ? 'Sí (Logística no pudo cubrir)' : '') },
   { encabezado: 'Urgencia', valor: (c) => c.req_urgencia ?? '' },
-  { encabezado: 'Contacto', valor: (c) => c.contacto ?? '' },
+  { encabezado: 'Contacto de difusión', valor: (c) => (c.autoriza_difusion ? (c.contacto_difusion ?? '') : '') },
   { encabezado: 'Fuente', valor: (c) => c.fuente ?? '' },
   { encabezado: 'Enlace fuente', valor: (c) => c.fuente_url ?? '' },
   { encabezado: 'Fecha de publicación', valor: (c) => (c.fecha_publicacion ? fechaCorta(c.fecha_publicacion) : '') },

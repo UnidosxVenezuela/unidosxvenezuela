@@ -300,6 +300,9 @@ export interface Caso {
   ubicacion_direccion?: string | null;
   sigue_vigente?: string | null;
   ultima_confirmacion?: string | null;
+  // Paso 10: contacto autorizado para difusión (lo único que ve Redes/Redacción).
+  contacto_difusion?: string | null;
+  autoriza_difusion?: boolean;
   // Difusión (0149): cuando Logística marca una solicitud derivada como «No se pudo
   // cubrir», el caso queda para difusión y recién ahí lo recibe Redacción.
   requiere_difusion: boolean;
