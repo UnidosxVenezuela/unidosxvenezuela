@@ -6,7 +6,18 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
+import { CANALES_DIFUSION } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
+
+// Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
+// PostgREST devuelve PGRST202 al no hallar la función con esa firma; Postgres, 42883.
+// Sirve para degradar con elegancia (reintentar sin canales / avisar del redactor).
+function rpcNoExiste(error: { message?: string; code?: string } | null | undefined): boolean {
+  if (!error) return false;
+  if (error.code === 'PGRST202' || error.code === '42883') return true;
+  const m = (error.message || '').toLowerCase();
+  return /could not find the function|schema cache|does not exist|no existe la funci/.test(m);
+}
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
@@ -305,11 +316,53 @@ export async function marcarCasoPublicado(formData: FormData) {
   if (!user) redirect('/login');
   const id = txt(formData.get('caso_id'));
   const url = opt(formData.get('publicacion_url'));
-  const { error } = await supabase.rpc('marcar_caso_publicado', { p_caso: id, p_url: url });
+  // Canales de difusión (0169): en qué redes se publicó. Se validan contra la lista.
+  const canales = formData.getAll('canales').map(String).filter((c) => CANALES_DIFUSION.includes(c));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  let { error } = await supabase.rpc('marcar_caso_publicado', { p_caso: id, p_url: url, p_canales: canales });
+  // Si 0169 aún no está aplicada, la RPC no acepta p_canales: se reintenta sin ellos
+  // para que marcar «Publicada» NUNCA se bloquee por una migración pendiente.
+  if (error && rpcNoExiste(error)) {
+    ({ error } = await supabase.rpc('marcar_caso_publicado', { p_caso: id, p_url: url }));
+  }
   if (error) return redirigirError(volver, 'No se pudo marcar como publicada: ' + error.message);
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
   redirigirOk(volver, 'Solicitud marcada como publicada');
+}
+
+// Tomar / soltar una solicitud para redactar su difusión (0169). Auto-asignación
+// (redactor_id = uno mismo), espejo de `tomarCaso` de Verificación pero en su propia
+// columna para no pisar `asignado_a`. El permiso y el estado los valida la RPC.
+export async function tomarCasoRedaccion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/envio-redaccion?caso=' + id);
+  const { error } = await supabase.rpc('tomar_caso_redaccion', { p_caso: id });
+  if (error) {
+    return redirigirError(volver, rpcNoExiste(error)
+      ? 'Falta aplicar la migración 0169 para asignar redactores.'
+      : 'No se pudo tomar la solicitud: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'La tomaste para redactar su difusión.');
+}
+
+export async function soltarCasoRedaccion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/envio-redaccion?caso=' + id);
+  const { error } = await supabase.rpc('soltar_caso_redaccion', { p_caso: id });
+  if (error) {
+    return redirigirError(volver, rpcNoExiste(error)
+      ? 'Falta aplicar la migración 0169 para asignar redactores.'
+      : 'No se pudo soltar la solicitud: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'La soltaste.');
 }
 
 export async function quitarCasoPublicado(formData: FormData) {
