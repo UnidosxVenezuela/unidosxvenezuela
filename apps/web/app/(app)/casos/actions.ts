@@ -303,6 +303,24 @@ export async function tomarCaso(formData: FormData) {
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Solicitud tomada');
 }
 
+// Verificación por campo (0172): marca un dato de la solicitud con su semáforo
+// (sin_revisar / verificado / requiere_info / falso). La RPC reaplica la frontera
+// por categoría (Verificación↔Otras, Búsqueda↔Desaparecidos) y audita el cambio.
+export async function marcarCampoVerificacion(formData: FormData) {
+  const { supabase } = await exigirCasos(true);
+  const caso = txt(formData.get('caso_id'));
+  const campo = txt(formData.get('campo'));
+  const estado = txt(formData.get('estado'));
+  const nota = opt(formData.get('nota'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const { error } = await supabase.rpc('marcar_campo_verificacion', {
+    p_caso: caso, p_campo: campo, p_estado: estado, p_nota: nota,
+  });
+  if (error) return redirigirError(volver, 'No se pudo marcar el campo: ' + error.message);
+  revalidatePath('/casos');
+  redirigirOk(volver, 'Verificación del campo actualizada');
+}
+
 // El grupo "Envío a Redacción" pasa un caso confirmado al estado final del flujo.
 export async function enviarCasoRedaccion(formData: FormData) {
   const supabase = await createClient();

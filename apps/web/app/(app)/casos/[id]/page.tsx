@@ -36,6 +36,13 @@ export default async function CasoDetallePage({ params }: { params: { id: string
     ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
   })));
 
+  // Verificación por campo (0172) best-effort: si la tabla aún no existe, se omite.
+  const { data: vcampos } = await supabase.from('casos_verificacion_campo')
+    .select('campo, estado, nota, verificado_por, verificado_en').eq('caso_id', id);
+  const mapaVC: Record<string, any> = {};
+  for (const r of ((vcampos ?? []) as any[])) mapaVC[r.campo] = r;
+  caso.verif_campos = mapaVC;
+
   const [{ data: perfiles }, { data: historial }, { data: sol }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
