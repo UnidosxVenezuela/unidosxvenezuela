@@ -7,6 +7,8 @@ import Avatar from '@/components/Avatar';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
+import FlujoProgreso from '@/components/FlujoProgreso';
+import { pasoDeCaso } from '@/lib/flujo';
 import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
@@ -108,6 +110,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div className="muted" style={{ fontSize: '.8rem' }}>Solicitud #{String(caso.numero).padStart(5, '0')}</div>
           <h2 style={{ margin: '2px 0' }}>{caso.titulo}</h2>
           <EstadoCaso estado={caso.estado} />
+          {(() => { const p = pasoDeCaso(caso.estado); return <div style={{ maxWidth: 240, marginTop: 8 }}><FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} /></div>; })()}
           {caso.publicado_en && (
             <div className="fila" style={{ gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               <Pill tono="ok" punto={false}>📣 Publicada · {fechaCorta(caso.publicado_en)}</Pill>
@@ -121,7 +124,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       </div>
 
       {caso.info_requerida && (
-        <div className="tarjeta" style={{ marginTop: 12, background: '#fffbeb', borderColor: '#fde68a' }}>
+        <div className="tarjeta" style={{ marginTop: 12, background: 'var(--pill-aviso-bg)', borderColor: 'var(--ambar-solido)' }}>
           <div className="fila" style={{ gap: 8, alignItems: 'flex-start' }}>
             <Icono nombre="avisos" size={18} />
             <div>
@@ -147,7 +150,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           )}
         </div>
         {caso.es_requerimiento && (
-          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10, padding: '8px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8 }}>
+          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10, padding: '8px 10px', background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)', borderRadius: 8 }}>
             <Icono nombre="ubicacion" size={16} />
             <strong>Solicitud de ayuda</strong>
             {caso.punto_tipo && <Pill tono={TONO_TIPO_LUGAR[caso.punto_tipo] ?? 'info'} punto={false}>Punto: {ETIQUETA_TIPO_LUGAR[caso.punto_tipo] ?? caso.punto_tipo}{caso.punto_temporal ? ' · temporal' : ''}</Pill>}
@@ -179,7 +182,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       )}
 
       {caso.es_requerimiento && (
-        <div className="tarjeta" style={{ borderColor: '#99f6e4' }}>
+        <div className="tarjeta" style={{ borderColor: 'var(--t-teal-fg)' }}>
           <h3 className="aside-titulo"><Icono nombre="camion" size={16} /> Respuesta · Logística</h3>
           {solicitud ? (
             <p className="muted" style={{ margin: 0 }}>
@@ -292,11 +295,11 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
             <h3 className="aside-titulo"><Icono nombre="ok" size={16} /> ¿Qué haces con esta solicitud?</h3>
             {caso.punto_tipo && (
               caso.punto_acopio_id ? (
-                <p className="fila" style={{ gap: 6, margin: '0 0 8px', fontSize: '.85rem', color: '#047857' }}>
+                <p className="fila" style={{ gap: 6, margin: '0 0 8px', fontSize: '.85rem', color: 'var(--ok-solido)' }}>
                   <Icono nombre="ok" size={14} /> Punto creado en el mapa para Logística.{esAdmin && <> <Link href="/mapa">Verlo ↗</Link></>}
                 </p>
               ) : (
-                <div className="fila" style={{ gap: 6, alignItems: 'flex-start', margin: '0 0 8px', padding: '6px 8px', background: '#eef2ff', border: '1px solid #c7d2fe', borderRadius: 8 }}>
+                <div className="fila" style={{ gap: 6, alignItems: 'flex-start', margin: '0 0 8px', padding: '6px 8px', background: 'var(--tinte-prim)', border: '1px solid var(--borde-f)', borderRadius: 8 }}>
                   <Icono nombre="mapa" size={15} />
                   <span style={{ fontSize: '.85rem' }}>Esta solicitud es un punto (<b>{ETIQUETA_TIPO_LUGAR[caso.punto_tipo] ?? caso.punto_tipo}</b>). Al <b>confirmarla</b>, se creará automáticamente en el mapa para que Logística lo gestione.</span>
                 </div>
@@ -399,7 +402,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       </div>
 
       {esAdmin && (
-        <form action={eliminarCaso} className="tarjeta" style={{ borderColor: '#fecaca' }}>
+        <form action={eliminarCaso} className="tarjeta" style={{ borderColor: 'var(--critica)' }}>
           <h3 className="aside-titulo" style={{ color: 'var(--critica)' }}><Icono nombre="basura" size={16} /> Eliminar solicitud</h3>
           <input type="hidden" name="caso_id" value={caso.id} />
           <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Solo un administrador puede borrar una solicitud. Esta acción no se puede deshacer.</p>

@@ -27,7 +27,7 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
   const [activo, setActivo] = useState(!!defaults.es_requerimiento);
   const mostrar = fijo || activo;
   return (
-    <div className="tarjeta" style={{ background: '#f0fdfa', borderColor: '#99f6e4', marginBottom: 12 }}>
+    <div className="tarjeta" style={{ background: 'var(--t-teal-bg)', borderColor: 'var(--t-teal-fg)', marginBottom: 12 }}>
       {fijo ? (
         <>
           <input type="hidden" name="es_requerimiento" value="on" />

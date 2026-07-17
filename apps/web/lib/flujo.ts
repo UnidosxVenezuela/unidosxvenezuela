@@ -1,4 +1,5 @@
 import type { PasoFlujo } from '@/components/FlujoTrabajo';
+import type { EstadoCaso } from '@unidos/types';
 
 /**
  * Flujo de casos (acortado): Verificación → Confirmados → Enviado a Redacción.
@@ -19,4 +20,18 @@ export function pasosFlujo(f: ConteoFlujo): PasoFlujo[] {
     { etiqueta: 'Confirmados', valor: f.confirmado, icono: 'ok', color: '#16a34a', tinte: '#dcfce7', href: '/casos?estado=confirmado' },
     { etiqueta: 'Envío a Redacción', valor: f.enviado, icono: 'documento', color: 'var(--azul)', tinte: '#eef2ff', href: '/envio-redaccion' },
   ];
+}
+
+/**
+ * Camino feliz de una solicitud en 5 pasos, para la barra de progreso «Paso N de 5».
+ * `falso` sale del flujo (no es un paso). Devuelve el paso, el total y una etiqueta.
+ */
+export const PASOS_CASO: EstadoCaso[] = ['pendiente', 'en_proceso', 'confirmado', 'enviado_redaccion', 'resuelto'];
+
+export function pasoDeCaso(estado: EstadoCaso): { paso: number; total: number; fuera: boolean; etiqueta: string } {
+  const total = PASOS_CASO.length;
+  if (estado === 'falso') return { paso: 0, total, fuera: true, etiqueta: 'Salió del flujo' };
+  const i = PASOS_CASO.indexOf(estado);
+  const paso = i >= 0 ? i + 1 : 1;
+  return { paso, total, fuera: false, etiqueta: `Paso ${paso} de ${total}` };
 }

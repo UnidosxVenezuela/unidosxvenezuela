@@ -65,7 +65,7 @@ export default function AccionesRedaccionCaso({ caso, puedeMarcar = false, esAdm
         </button>
       </div>
       {abierto && (
-        <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--fondo-2, #f8fafc)', border: '1px solid var(--borde)', borderRadius: 10, padding: 12, marginTop: 8, fontSize: '.86rem', fontFamily: 'inherit' }}>{texto}</pre>
+        <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--sup2)', border: '1px solid var(--borde)', borderRadius: 10, padding: 12, marginTop: 8, fontSize: '.86rem', fontFamily: 'inherit' }}>{texto}</pre>
       )}
 
       {/* Marca «Publicada» (0166): visible a todos; el botón manual solo a Redacción. */}

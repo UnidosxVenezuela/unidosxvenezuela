@@ -13,7 +13,10 @@ export const TINTES_TOKEN: Record<string, { bg: string; fg: string }> = {
   '#cffafe': { bg: 'var(--t-teal-bg)', fg: 'var(--t-teal-fg)' },
   '#d9f3ef': { bg: 'var(--t-teal-bg)', fg: 'var(--t-teal-fg)' },
   '#fee2e2': { bg: 'var(--t-rojo-bg)', fg: 'var(--t-rojo-fg)' },
+  '#d1fae5': { bg: 'var(--t-verde-bg)', fg: 'var(--t-verde-fg)' },
+  '#f0fdfa': { bg: 'var(--t-teal-bg)', fg: 'var(--t-teal-fg)' },
   '#eef2f7': { bg: 'var(--pill-neutra-bg)', fg: 'var(--pill-neutra-fg)' },
+  '#f1f5f9': { bg: 'var(--pill-neutra-bg)', fg: 'var(--pill-neutra-fg)' },
 };
 
 /** Estilo del «tile» de ícono (KPI / acción rápida / paso del flujo). */

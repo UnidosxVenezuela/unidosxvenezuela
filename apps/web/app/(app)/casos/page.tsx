@@ -16,7 +16,8 @@ import BadgeCategoria from '@/components/BadgeCategoria';
 import BarraBusqueda from '@/components/BarraBusqueda';
 import Carrusel from '@/components/Carrusel';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
-import { contarFlujo, pasosFlujo } from '@/lib/flujo';
+import FlujoProgreso from '@/components/FlujoProgreso';
+import { contarFlujo, pasosFlujo, pasoDeCaso } from '@/lib/flujo';
 import DetalleCaso from './DetalleCaso';
 import Consejo from '@/components/Consejos';
 import FiltroSelect from '@/components/FiltroSelect';
@@ -293,6 +294,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   <td>
                     <EstadoCaso estado={c.estado} />
                     {c.info_requerida && <div style={{ marginTop: 4 }}><Pill tono="aviso" punto={false}>Requiere info</Pill></div>}
+                    {(() => { const p = pasoDeCaso(c.estado); return <FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} compacto />; })()}
                   </td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                 </tr>
@@ -316,7 +318,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
       {puedeVerif && <>
       <h2 className="fila" style={{ gap: 8 }}>
-        <span className="kpi-ico" style={{ width: 32, height: 32, background: '#d1fae5', color: '#16a34a' }}><Icono nombre="ok" size={18} /></span>
+        <span className="kpi-ico" style={{ width: 32, height: 32, background: 'var(--t-verde-bg)', color: 'var(--t-verde-fg)' }}><Icono nombre="ok" size={18} /></span>
         Listos para redacción <Pill tono="ok" punto={false}>{confirmados.count ?? 0}</Pill>
       </h2>
       <p className="muted" style={{ marginTop: -6 }}>Solicitudes confirmadas y activas, listas para pasar a la siguiente etapa.</p>

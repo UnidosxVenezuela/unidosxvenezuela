@@ -7,6 +7,7 @@ import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ESTADOS_INSUMO, clasePrio
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Kpi from '@/components/Kpi';
+import FlujoProgreso from '@/components/FlujoProgreso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
@@ -33,6 +34,9 @@ export default async function InsumosPage() {
   const activas = solicitudes.filter((s) => s.estado !== 'cancelado');
   const entregadas = solicitudes.filter((s) => s.estado === 'entregado').length;
   const porEstado = (e: string) => activas.filter((s) => s.estado === e);
+  // Cobertura de hoy: cuántas solicitudes ya salieron de «solicitado» (en gestión, en ruta o entregadas).
+  const enCurso = activas.filter((s) => s.estado !== 'solicitado').length;
+  const pctCobertura = activas.length ? Math.round((enCurso / activas.length) * 100) : 0;
 
   return (
     <AnimarEntrada>
@@ -68,6 +72,16 @@ export default async function InsumosPage() {
         <Kpi etiqueta="Donación-Ofrecimiento" valor={oportCount ?? 0} sub="Ofrecimientos activos" color="#0f766e" icono="corazon" tinte="#f0fdfa" href="/insumos/oportunidades" />
       </div>
 
+      {activas.length > 0 && (
+        <div className="cobertura">
+          <span className="cobertura-et">Cobertura de hoy</span>
+          <div className="cobertura-barra" role="progressbar" aria-valuenow={pctCobertura} aria-valuemin={0} aria-valuemax={100} aria-label="Cobertura de solicitudes de hoy">
+            <div className="cobertura-fill" style={{ width: pctCobertura + '%' }} />
+          </div>
+          <span className="muted" style={{ fontSize: '.82rem', whiteSpace: 'nowrap' }}>{enCurso} de {activas.length} en curso o cubiertas</span>
+        </div>
+      )}
+
       {activas.length === 0 ? (
         <EstadoVacio
           icono="camion"
@@ -102,9 +116,19 @@ export default async function InsumosPage() {
                   )}
                   <strong style={{ display: 'block', margin: '6px 0 2px' }}>{s.titulo}</strong>
                   {s.cantidad && <div className="muted" style={{ fontSize: '.85rem' }}>{s.cantidad}</div>}
-                  {s.caso_id && <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4, color: '#0f766e' }}><Icono nombre="ubicacion" size={13} /> Solicitud de ayuda (caso derivado)</div>}
+                  {s.caso_id && <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4, color: 'var(--t-teal-fg)' }}><Icono nombre="ubicacion" size={13} /> Solicitud de ayuda (caso derivado)</div>}
                   {s.puntos_acopio?.nombre && <div className="muted fila" style={{ gap: 4, fontSize: '.8rem', marginTop: 4 }}><Icono nombre="ubicacion" size={13} /> {s.puntos_acopio.nombre}</div>}
                   {s.proveedores?.nombre && <div className="muted fila" style={{ gap: 4, fontSize: '.8rem' }}><Icono nombre="usuario" size={13} /> {s.proveedores.nombre}</div>}
+                  {(() => {
+                    const paso = ESTADOS_INSUMO.indexOf(s.estado) + 1;
+                    const completo = s.estado === 'entregado';
+                    return (
+                      <div style={{ borderTop: '1px solid var(--borde)', marginTop: 10, paddingTop: 8 }}>
+                        <FlujoProgreso paso={paso} total={ESTADOS_INSUMO.length} completo={completo}
+                          etiqueta={completo ? 'Flujo completo · Entregado ✓' : `Paso ${paso} de ${ESTADOS_INSUMO.length} · ${ETIQUETA_ESTADO_INSUMO[s.estado] ?? s.estado}`} />
+                      </div>
+                    );
+                  })()}
                 </Link>
               ))}
             </div>

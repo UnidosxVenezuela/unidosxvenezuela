@@ -31,7 +31,7 @@ export default function InfoSolicitudCaso({ caso }: { caso: any }) {
       </div>
 
       {caso.es_requerimiento && (
-        <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 8, padding: '8px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8 }}>
+        <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 8, padding: '8px 10px', background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)', borderRadius: 8 }}>
           <Icono nombre="ubicacion" size={16} />
           <strong style={{ fontSize: '.9rem' }}>Solicitud de ayuda</strong>
           {caso.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[caso.req_tipo] ?? caso.req_tipo}</Pill>}
@@ -42,7 +42,7 @@ export default function InfoSolicitudCaso({ caso }: { caso: any }) {
       )}
 
       {caso.notas && (
-        <div style={{ marginTop: 8, padding: '8px 10px', background: 'var(--fondo-2, #f8fafc)', border: '1px solid var(--borde)', borderRadius: 8 }}>
+        <div style={{ marginTop: 8, padding: '8px 10px', background: 'var(--sup2)', border: '1px solid var(--borde)', borderRadius: 8 }}>
           <div className="fila" style={{ gap: 6 }}><Icono nombre="documento" size={15} /> <strong style={{ fontSize: '.88rem' }}>Observaciones de verificación</strong></div>
           <p style={{ whiteSpace: 'pre-wrap', margin: '4px 0 0', fontSize: '.88rem' }}>{caso.notas}</p>
         </div>
