@@ -1,0 +1,21 @@
+-- ============================================================
+-- 0175 — Filtro institucional de alcance (Paso 2)
+-- ------------------------------------------------------------
+-- El requerimiento (Paso 2) pide filtrar en el INGRESO lo que no corresponde a la
+-- misión de la organización (dinero, recaudaciones, vivienda, procesos legales,
+-- diagnósticos/tratamientos, atención psicológica profesional, política…): esos casos
+-- se orientan a un canal oficial, no se cargan como caso interno.
+--
+-- Implementación en dos capas (la lógica vive en la app, esto solo agrega el soporte):
+--   • Al crear, la app EXIGE una confirmación de alcance y ORIENTA si el reportante
+--     declara un tema fuera de misión (no se crea el caso).
+--   • Como red de seguridad, si el texto libre menciona términos fuera de alcance, la
+--     app marca `revision_alcance = true`: la solicitud entra igual pero queda señalada
+--     en 🟡 para que Verificación/Coordinación revise si corresponde (camino amarillo).
+--
+-- Esta migración solo agrega la bandera `revision_alcance` (aditiva, con default). El
+-- mensaje de recepción («La recepción no implica aprobación…») se muestra en la app.
+-- Idempotente. Ejecutar tras 0174.
+-- ============================================================
+
+alter table public.casos add column if not exists revision_alcance boolean not null default false;

@@ -303,6 +303,8 @@ export interface Caso {
   // Paso 10: contacto autorizado para difusión (lo único que ve Redes/Redacción).
   contacto_difusion?: string | null;
   autoriza_difusion?: boolean;
+  // Paso 2: marcada para revisión de alcance (el texto menciona temas fuera de misión).
+  revision_alcance?: boolean;
   // Difusión (0149): cuando Logística marca una solicitud derivada como «No se pudo
   // cubrir», el caso queda para difusión y recién ahí lo recibe Redacción.
   requiere_difusion: boolean;

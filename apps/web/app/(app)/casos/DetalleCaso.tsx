@@ -147,6 +147,18 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         </div>
       )}
 
+      {caso.revision_alcance && ['pendiente', 'en_proceso'].includes(caso.estado) && (
+        <div className="tarjeta" style={{ marginTop: 12, background: 'var(--pill-aviso-bg)', borderColor: 'var(--ambar-solido)' }}>
+          <div className="fila" style={{ gap: 8, alignItems: 'flex-start' }}>
+            <Icono nombre="filtro" size={18} />
+            <div>
+              <strong>Revisar alcance (Paso 2)</strong>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: '.82rem' }}>El texto menciona términos que podrían estar <strong>fuera de la misión</strong> (dinero, vivienda, legal, diagnóstico/tratamiento, política). Confirma que corresponde antes de continuar; si no, descártala indicando «fuera de alcance».</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <p style={{ marginTop: 0 }}>{caso.descripcion || <span className="muted">Sin descripción</span>}</p>
         <div className="grid grid-2">

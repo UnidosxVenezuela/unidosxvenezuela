@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
+import { MENSAJE_RECEPCION_CASO } from '@/lib/constantes';
 import { createClient } from '@/lib/supabase/server';
 import { crearCaso } from '../actions';
 import TituloConDuplicados from './TituloConDuplicados';
@@ -62,6 +63,7 @@ export default async function NuevoCasoPage() {
                  accept="image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" />
           <p className="muted" style={{ fontSize: '.8rem', margin: '4px 0 0' }}>Capturas, fotos o documentos que respalden la solicitud (hasta 10 MB cada uno).</p>
         </div>
+        <p className="muted" style={{ fontSize: '.8rem', margin: '0 0 8px' }}>{MENSAJE_RECEPCION_CASO}</p>
         <BotonEnviar cargando="Creando…">Crear solicitud</BotonEnviar>
       </form>
     </div>
