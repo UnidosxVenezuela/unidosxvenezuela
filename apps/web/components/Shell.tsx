@@ -10,6 +10,7 @@ import { ToggleConsejos } from './Consejos';
 import BotonTelegram from './BotonTelegram';
 import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
+import TemaToggle from './TemaToggle';
 
 import type { NavFlags } from '@/lib/nav-flags';
 
@@ -71,8 +72,10 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
       <SonidoBotones />
       <aside ref={asideRef} id="menu-lateral" className="sidebar" {...(oculto ? ({ inert: '' } as any) : {})}>
         <div className="tricolor" />
-        <div className="marca"><span className="punto" /> Apoyo por Venezuela</div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- logo estático local, sin optimizador */}
+        <div className="marca"><img className="marca-logo" src="/logo.png" alt="" width={34} height={31} /> Apoyo por Venezuela</div>
         <NavLateral flags={nav} />
+        <div className="sidebar-firma">Hecho con 💛💙❤️ por la comunidad</div>
       </aside>
 
       {cajon && <button className="backdrop" aria-label="Cerrar menú" onClick={cerrarCajon} />}
@@ -84,12 +87,14 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
               aria-controls="menu-lateral" aria-expanded={esMovil ? cajon : !colapsada} onClick={alternar}>
               <Icono nombre="menu" size={22} />
             </button>
-            <span className="topbar-marca"><span className="punto" /> Apoyo por Venezuela</span>
+            {/* eslint-disable-next-line @next/next/no-img-element -- logo estático local, sin optimizador */}
+            <span className="topbar-marca"><img src="/logo.png" alt="" width={26} height={24} /> Apoyo por Venezuela</span>
           </div>
           <div className="topbar-der">
             <ToggleConsejos />
             <BotonTelegram vinculado={usuario.telegramVinculado} />
             <Presencia estadoInicial={usuario.estadoPresencia} />
+            <TemaToggle />
             <CampanaNotificaciones />
             <UserChip nombre={usuario.nombre} rol={usuario.rol} email={usuario.email} avatarUrl={usuario.avatarUrl} />
           </div>
