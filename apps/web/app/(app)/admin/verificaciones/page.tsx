@@ -7,6 +7,7 @@ import Pill from '@/components/Pill';
 import Avatar from '@/components/Avatar';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import ComparadorIdentidad from '@/components/ComparadorIdentidad';
 import { aprobarVerificacion, rechazarVerificacion } from './actions';
 
 const TONO: Record<string, 'ok' | 'aviso' | 'critica'> = { aprobada: 'ok', pendiente: 'aviso', rechazada: 'critica' };
@@ -75,6 +76,7 @@ export default async function AdminVerificacionesPage() {
           </div>
           <Fotos f={f} />
           <div className="fila" style={{ gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <ComparadorIdentidad selfieUrl={f.selfieUrl} docUrl={f.docUrl} nombre={f.persona?.nombre_completo || 'esta persona'} />
             <form action={aprobarVerificacion}>
               <input type="hidden" name="id" value={f.id} />
               <BotonConfirmar mensaje={'¿Aprobar la verificación de ' + (f.persona?.nombre_completo || 'esta persona') + '?'} className="btn btn-primario">
