@@ -25,8 +25,10 @@ do $$ begin
     add constraint oportdon_servicio_estado_chk check (servicio_estado in ('activo','baja'));
 exception when duplicate_object then null; end $$;
 
--- Blindaje de columnas (base: 0160): se suma la disponibilidad del servicio a lo que
--- SOLO Logística/admin puede cambiar (como el estado y la asignación del pipeline).
+-- Blindaje de columnas (base: 0161, que ya incluye el CANDADO DE FLUJO): se suma la
+-- disponibilidad del servicio a lo que SOLO Logística/admin puede cambiar (como el
+-- estado y la asignación del pipeline). Se recrea la función COMPLETA a partir de la
+-- versión de 0161 —conservando el candado— y se añade la sección del servicio.
 create or replace function public.proteger_campos_oportunidad()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
@@ -40,7 +42,16 @@ begin
       using errcode = '42501';
   end if;
 
-  -- Directorio de servicios: dar de baja o reactivar un servicio es de Logística.
+  -- Candado de flujo (0161): sin verificación previa no se AVANZA por el pipeline.
+  -- Descartar y regresar a «nueva» quedan fuera del candado a propósito.
+  if new.estado is distinct from old.estado
+     and new.estado in ('contactada','en_conversacion','comprometida','cumplida')
+     and coalesce(new.estado_verificacion, 'pendiente') <> 'verificada' then
+    raise exception 'Verificación debe marcar este ofrecimiento como «Verificada» antes de poder avanzarlo.'
+      using errcode = '23514';
+  end if;
+
+  -- Directorio de servicios (0168): dar de baja o reactivar un servicio es de Logística.
   if (new.servicio_estado      is distinct from old.servicio_estado
       or new.servicio_baja_motivo is distinct from old.servicio_baja_motivo
       or new.servicio_baja_en     is distinct from old.servicio_baja_en
