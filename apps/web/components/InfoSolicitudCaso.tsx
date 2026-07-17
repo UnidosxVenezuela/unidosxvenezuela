@@ -37,6 +37,9 @@ export default function InfoSolicitudCaso({ caso }: { caso: any }) {
           }
           return caso.contacto ? <div style={{ gridColumn: '1 / -1' }}><strong>Contacto / referente:</strong> {caso.contacto}</div> : null;
         })()}
+        {caso.autoriza_difusion && caso.contacto_difusion && (
+          <div style={{ gridColumn: '1 / -1' }}><strong>Contacto de difusión:</strong> {caso.contacto_difusion}</div>
+        )}
         {caso.fecha_publicacion && <div><strong>Publicación:</strong> {fechaCorta(caso.fecha_publicacion + 'T00:00:00')}</div>}
         {(caso.fuente || caso.fuente_url) && (
           <div style={{ gridColumn: '1 / -1' }}>

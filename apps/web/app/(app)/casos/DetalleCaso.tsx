@@ -157,6 +157,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           {(caso.ubicacion_direccion || caso.ubicacion_sector || caso.ubicacion_parroquia || caso.ubicacion_municipio || caso.ubicacion_estado) && (
             <div style={{ gridColumn: '1 / -1' }}><strong>Ubicación:</strong> {[caso.ubicacion_direccion, caso.ubicacion_sector, caso.ubicacion_parroquia, caso.ubicacion_municipio, caso.ubicacion_estado].filter(Boolean).join(' · ')}</div>
           )}
+          {caso.contacto_difusion && (
+            <div style={{ gridColumn: '1 / -1' }}><strong>Contacto de difusión:</strong> {caso.contacto_difusion}{caso.autoriza_difusion ? '' : ' — sin autorizar (Redes no lo ve)'}</div>
+          )}
           {(() => {
             const ref = caso.referente; const wa = caso.contacto_whatsapp; const ig = caso.contacto_instagram;
             const waD = wa ? String(wa).replace(/[^\d]/g, '') : '';

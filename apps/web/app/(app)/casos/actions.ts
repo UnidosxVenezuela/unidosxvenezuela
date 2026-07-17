@@ -40,7 +40,7 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
 }
 
@@ -55,6 +55,7 @@ function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknow
   delete f.ubicacion_estado; delete f.ubicacion_municipio; delete f.ubicacion_parroquia;
   delete f.ubicacion_sector; delete f.ubicacion_direccion;
   delete f.sigue_vigente; delete f.ultima_confirmacion;
+  delete f.contacto_difusion; delete f.autoriza_difusion;
   return f;
 }
 
@@ -101,6 +102,9 @@ function datosEstructurados(formData: FormData) {
     ubicacion_direccion: opt(formData.get('ubicacion_direccion')),
     sigue_vigente: vig && VIGENCIA_VAL.includes(vig) ? vig : null,
     ultima_confirmacion: opt(formData.get('ultima_confirmacion')),
+    // Paso 10: contacto autorizado para difusión (lo único que verá Redes/Redacción).
+    contacto_difusion: opt(formData.get('contacto_difusion')),
+    autoriza_difusion: txt(formData.get('autoriza_difusion')) === 'on',
   };
 }
 

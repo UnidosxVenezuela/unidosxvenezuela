@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador, esAdminRedes, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { urlFirmada } from '@/lib/storage';
 import { fechaHora } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
 import {
@@ -34,7 +33,10 @@ type SP = { q?: string; categoria?: string; etapa?: string; canal?: string; prio
 
 // Columnas seguras (0166 ya desplegado). redactor_id/canales (0169) se traen aparte,
 // best-effort, para no romper la vista si esa migración aún no está aplicada.
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, notas, creado_por, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, estado, publicado_en, publicacion_url';
+// Paso 10 (privacidad): Redacción/Redes NO ven el contacto interno ni las evidencias.
+// Por eso este COLS NO trae `contacto`/`referente`/`contacto_whatsapp`/`contacto_instagram`
+// y solo expone el `contacto_difusion` autorizado. Las evidencias tampoco se bajan aquí.
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, creado_por, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, estado, publicado_en, publicacion_url';
 
 export default async function EnvioRedaccionPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -132,8 +134,8 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
     if (dCaso) {
       const { data: dext } = await supabase.from('casos').select('id, redactor_id, canales_publicacion').eq('id', dCaso.id).maybeSingle();
       if (dext) { dCaso.redactor_id = (dext as any).redactor_id; dCaso.canales_publicacion = (dext as any).canales_publicacion ?? []; }
-      const { data: dAdj } = await supabase.from('casos_adjuntos').select('id, url, nombre, mime').eq('caso_id', dCaso.id).order('creado_en');
-      dCaso.adjuntos = await Promise.all(((dAdj as any[]) ?? []).map(async (a) => ({ ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600) })));
+      // Evidencias: uso interno (Paso 10). No se bajan para la difusión.
+      dCaso.adjuntos = [];
       if (dCaso.redactor_id && !nombreRed.has(dCaso.redactor_id)) {
         const { data: rp } = await supabase.from('perfiles').select('nombre_completo').eq('id', dCaso.redactor_id).maybeSingle();
         if (rp) nombreRed.set(dCaso.redactor_id, nombreMostrado((rp as any).nombre_completo, esAdmin));

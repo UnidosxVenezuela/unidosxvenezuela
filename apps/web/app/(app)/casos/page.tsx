@@ -176,7 +176,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       // Campos de «punto del mapa» (0145) best-effort: si faltan las columnas, el
       // detalle igual abre (sin la info de punto) en vez de romper el render.
       const { data: dpunto } = await supabase.from('casos')
-        .select('punto_tipo, punto_temporal, punto_acopio_id, referente, contacto_whatsapp, contacto_instagram, referente_rol, fuente_tipo, ubicacion_estado, ubicacion_municipio, ubicacion_parroquia, ubicacion_sector, ubicacion_direccion, sigue_vigente, ultima_confirmacion').eq('id', searchParams.caso).maybeSingle();
+        .select('punto_tipo, punto_temporal, punto_acopio_id, referente, contacto_whatsapp, contacto_instagram, referente_rol, fuente_tipo, ubicacion_estado, ubicacion_municipio, ubicacion_parroquia, ubicacion_sector, ubicacion_direccion, sigue_vigente, ultima_confirmacion, contacto_difusion, autoriza_difusion').eq('id', searchParams.caso).maybeSingle();
       if (dpunto) Object.assign(drawerCaso, dpunto);
       // Verificación por campo (0172) best-effort: si la tabla aún no existe, se omite.
       const { data: vcampos } = await supabase.from('casos_verificacion_campo')
