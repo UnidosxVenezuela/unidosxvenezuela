@@ -860,6 +860,25 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 }
 @media (prefers-reduced-motion: reduce) { .confeti-pieza { display: none; } }
 
+/* Comparador de identidad (modal rostro vs documento, con zoom). */
+.comparador-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(6, 10, 20, .72);
+  display: grid; place-items: center; padding: 16px; }
+.comparador-caja { background: var(--sup1); border: 1px solid var(--borde); border-radius: 16px;
+  box-shadow: var(--sombra2); width: min(1000px, 96vw); max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; }
+.comparador-barra { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--borde); }
+.comparador-ctrl { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px;
+  padding: 0 10px; border-radius: 10px; border: 1px solid var(--borde-f); background: var(--sup1); color: var(--texto);
+  font-size: 1rem; font-weight: 600; cursor: pointer; }
+.comparador-ctrl:hover { background: var(--sup2); }
+.comparador-fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px; overflow: auto; }
+.comparador-foto { margin: 0; min-width: 0; }
+.comparador-foto figcaption { color: var(--texto2); font-size: .78rem; font-weight: 600; margin-bottom: 6px; }
+.comparador-lienzo { background: var(--sup2); border: 1px solid var(--borde); border-radius: 12px;
+  overflow: auto; max-height: 62vh; display: grid; place-items: center; }
+.comparador-lienzo img { width: 100%; display: block; transform-origin: top center; transition: transform .12s ease; }
+@media (max-width: 640px) { .comparador-fotos { grid-template-columns: 1fr; } }
+
 .kpi-num { font-size: 2rem; font-weight: 700; line-height: 1.15; font-family: var(--font-sora, Sora), sans-serif; }
 .kpi-tend { display: flex; align-items: center; gap: 8px; font-size: .76rem; font-weight: 600; }
 .kpi-tend.ok { color: var(--ok-solido); }
