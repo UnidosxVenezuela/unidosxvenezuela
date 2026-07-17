@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireUsuario, necesitaSegundaVerificacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { flagsDeNavegacion } from '@/lib/nav-flags';
@@ -6,6 +7,7 @@ import type { Rol } from '@unidos/types';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import AvisoSegundaVerificacion from '@/components/AvisoSegundaVerificacion';
 import Consejo from '@/components/Consejos';
+import Icono from '@/components/Icono';
 import Kpi from '@/components/Kpi';
 import AccionRapida from '@/components/AccionRapida';
 import FlujoTrabajo from '@/components/FlujoTrabajo';
@@ -26,8 +28,10 @@ function saludoPorHora(): string {
 }
 
 /**
- * Panel por función: cada quien ve SOLO las acciones y datos de su ámbito
- * (su grupo). La tira del flujo la ven quienes participan del flujo de casos.
+ * Panel por función (rediseño «Claridad con calidez»): héroe con saludo e
+ * insignias, «siguiente mejor acción», primeros pasos para quien empieza,
+ * acciones rápidas, KPIs con micro-tendencia real y el bloque de comunidad.
+ * Cada quien ve SOLO las acciones y datos de su ámbito.
  */
 export default async function Dashboard() {
   const { user, perfil } = await requireUsuario();
@@ -41,24 +45,34 @@ export default async function Dashboard() {
   const misGrupoIds = [...new Set((misGrupoRows ?? []).map((r: any) => r.grupo_id).filter(Boolean))];
   const misGruposCount = misGrupoIds.length;
 
-  const [pendientes, noLeidas, misHorasRows, totalCom, paisesRes, totalColabRes, kpisRol] = await Promise.all([
+  const hace24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const [pendientes, noLeidas, misHorasRows, totalCom, paisesRes, totalColabRes, kpisRol, avisosHoy, insigniasCount] = await Promise.all([
     misGrupoIds.length
       ? supabase.from('tareas').select('*', { count: 'exact', head: true }).in('estado', ['pendiente', 'asignada']).in('grupo_id', misGrupoIds)
       : Promise.resolve({ count: 0 } as { count: number }),
     supabase.from('notificaciones').select('*', { count: 'exact', head: true }).eq('leida', false),
-    supabase.from('registro_horas').select('horas').eq('perfil_id', user!.id),
+    supabase.from('registro_horas').select('horas, fecha').eq('perfil_id', user!.id),
     supabase.rpc('total_horas_comunidad'),
     supabase.rpc('paises_colaboradores'),
     supabase.rpc('total_colaboradores'),
     kpisDeRol(supabase, user!.id, flags),
+    supabase.from('notificaciones').select('*', { count: 'exact', head: true }).gte('creado_en', hace24h),
+    supabase.from('perfil_insignias').select('*', { count: 'exact', head: true }).eq('perfil_id', user!.id),
   ]);
   // Países desde donde se colabora (agregado no sensible) para el globo del panel.
   const paisesColab = ((paisesRes.data ?? []) as { pais: string; n: number }[]).filter((p) => p.pais);
   // «Somos N»: total real de la plataforma (RPC 0121). Si la migración aún no se aplicó,
   // cae a la suma por país para no mostrar 0.
   const totalColab = Number(totalColabRes.data ?? 0) || paisesColab.reduce((s, p) => s + (Number(p.n) || 0), 0);
-  const misHoras = (misHorasRows.data ?? []).reduce((s: number, r: any) => s + Number(r.horas), 0);
+  const filasHoras = (misHorasRows.data ?? []) as { horas: number; fecha: string | null }[];
+  const misHoras = filasHoras.reduce((s, r) => s + Number(r.horas), 0);
+  // Micro-tendencias REALES (sin series inventadas): horas de los últimos 7 días
+  // y avisos que llegaron en las últimas 24 h.
+  const hace7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const horasSemana = filasHoras.filter((r) => (r.fecha ?? '') >= hace7d).reduce((s, r) => s + Number(r.horas), 0);
+  const nAvisosHoy = avisosHoy.count ?? 0;
   const totalComunidad = Number(totalCom.data ?? 0);
+  const nInsignias = insigniasCount.count ?? 0;
 
   // La tira del flujo (Verificación → Confirmados → Envío a Redacción) es una
   // vista de conjunto: solo la ve el admin. Cada rol hace su función sin
@@ -83,6 +97,27 @@ export default async function Dashboard() {
   const primerNombre = (perfil?.nombre_completo || '').trim().split(' ')[0];
   const rolEtq = rol ? ETIQUETA_ROL[rol] : '';
 
+  // «Siguiente mejor acción»: el pendiente más prioritario del rol (mismo dato
+  // que sus KPIs); para el admin, la primera etapa del flujo con trabajo.
+  const kpiUrgente = kpisRol.find((k) => k.valor > 0);
+  const pasoUrgente = mostrarFlujo ? pasos.find((p) => Number(p.valor ?? 0) > 0 && p.href) : undefined;
+  const mejorAccion = kpiUrgente
+    ? { href: kpiUrgente.href, texto: <>{kpiUrgente.etiqueta}: <strong>{kpiUrgente.valor}</strong> ({kpiUrgente.sub}) — empieza por ahí.</> }
+    : pasoUrgente
+      ? { href: pasoUrgente.href!, texto: <>hay <strong>{pasoUrgente.valor}</strong> en <strong>{pasoUrgente.etiqueta}</strong> — empieza por ahí.</> }
+      : null;
+
+  // «Primeros pasos»: checklist real de arranque; desaparece al completarla.
+  const pasosInicio: { etiqueta: string; hecho: boolean }[] = [
+    { etiqueta: 'Activa tu cuenta', hecho: true }, // si llegó aquí, su cuenta ya está verificada
+    { etiqueta: 'Únete a un grupo', hecho: misGruposCount > 0 },
+    { etiqueta: 'Completa tu perfil', hecho: Boolean(perfil?.whatsapp && perfil?.pais) },
+    { etiqueta: 'Suma tu primera hora', hecho: misHoras > 0 },
+    { etiqueta: 'Gana una insignia', hecho: nInsignias > 0 },
+  ];
+  const hechos = pasosInicio.filter((p) => p.hecho).length;
+  const mostrarPrimerosPasos = hechos < pasosInicio.length;
+
   // Aviso proactivo de 2ª verificación: solo a quien su rol la exige y aún no la aprobó.
   let mostrarAviso2a = false;
   if (necesitaSegundaVerificacion(perfil)) {
@@ -95,11 +130,14 @@ export default async function Dashboard() {
       <Consejo id="dashboard" titulo="Este es tu panel">
         Aquí ves un resumen de tu actividad y accesos rápidos. Muévete entre secciones con el menú de la izquierda. ¿No quieres estos consejos? Apágalos con el botón <strong>💡 Consejos</strong> de arriba.
       </Consejo>
-      <div className="pagina-cab">
+
+      {/* Héroe: saludo + rol + insignias, sobre un tinte suave de marca. */}
+      <div className="panel-hero">
         <div>
-          <h1 style={{ marginBottom: 4 }}>¡{saludoPorHora()}{primerNombre ? ', ' + primerNombre : ''}! <span aria-hidden>👋</span></h1>
-          <p className="muted sub" style={{ margin: 0 }}>
-            {rolEtq ? <>Tu rol: <strong>{rolEtq}</strong>. </> : null}Esto es lo que puedes hacer hoy.
+          <h1>¡{saludoPorHora()}{primerNombre ? ', ' + primerNombre : ''}! <span aria-hidden>👋</span></h1>
+          <p className="sub">
+            Esto es lo que puedes hacer hoy.
+            {rolEtq ? <span className="rol-pill">{rolEtq}</span> : null}
           </p>
         </div>
         {/* Insignias ganadas (0165): junto al saludo, con enlace a la vitrina. */}
@@ -108,6 +146,31 @@ export default async function Dashboard() {
 
       {mostrarAviso2a && (
         <div style={{ marginBottom: 18 }}><AvisoSegundaVerificacion /></div>
+      )}
+
+      {/* Siguiente mejor acción: el pendiente más prioritario, en una línea. */}
+      {mejorAccion && (
+        <Link href={mejorAccion.href as any} className="mejor-accion">
+          <span aria-hidden style={{ fontSize: '1.15rem' }}>⚡</span>
+          <span className="ma-txt"><strong>Siguiente mejor acción:</strong> <span>{mejorAccion.texto}</span></span>
+          <Icono nombre="flecha" size={17} style={{ color: 'var(--texto-suave)', flexShrink: 0 }} />
+        </Link>
+      )}
+
+      {/* Primeros pasos: guía de arranque con progreso; se va sola al completarla. */}
+      {mostrarPrimerosPasos && (
+        <div className="pasos-card">
+          <div className="pasos-cab">
+            <strong>Primeros pasos</strong>
+            <div className="pasos-barra"><div className="pasos-fill" style={{ width: `${(hechos / pasosInicio.length) * 100}%` }} /></div>
+            <span className="muted" style={{ fontSize: '.8rem', fontWeight: 600 }}>{hechos} de {pasosInicio.length}</span>
+          </div>
+          <div className="pasos-chips">
+            {pasosInicio.map((p) => (
+              <span key={p.etiqueta} className={'pill ' + (p.hecho ? 'pill-ok' : 'pill-neutra')}>{p.hecho ? '✓' : '○'} {p.etiqueta}</span>
+            ))}
+          </div>
+        </div>
       )}
 
       <h2>Acciones rápidas</h2>
@@ -137,32 +200,36 @@ export default async function Dashboard() {
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' }}>
         <Kpi etiqueta="Tareas de tus grupos" valor={pendientes.count ?? 0} sub="pendientes y asignadas" icono="tareas" tinte="#eef2ff" color="var(--azul)" href="/grupos" />
         <Kpi etiqueta="Mis grupos" valor={misGruposCount} sub="donde participas" icono="grupos" tinte="#dcfce7" color="#16a34a" href="/grupos" />
-        <Kpi etiqueta="Avisos sin leer" valor={noLeidas.count ?? 0} sub="por revisar" icono="avisos" tinte="#fef9c3" color="#a16207" href="/notificaciones" />
-        <Kpi etiqueta="Tus horas" valor={formatoHoras(misHoras)} sub="de voluntariado" icono="reloj" tinte="#fce7f3" color="#9d2463" href="/horas" />
+        <Kpi etiqueta="Avisos sin leer" valor={noLeidas.count ?? 0} sub="por revisar" icono="avisos" tinte="#fef9c3" color="#a16207" href="/notificaciones"
+          tendencia={nAvisosHoy > 0 ? `${nAvisosHoy} hoy` : undefined} tonoTendencia="aviso" />
+        <Kpi etiqueta="Tus horas" valor={formatoHoras(misHoras)} sub="de voluntariado" icono="reloj" tinte="#fce7f3" color="#9d2463" href="/horas"
+          tendencia={horasSemana > 0 ? `${formatoHoras(horasSemana)} esta semana` : undefined} />
       </div>
 
-      <div className="tarjeta" style={{ textAlign: 'center', borderColor: 'var(--azul)', marginTop: 16 }}>
-        <div className="muted">Entre todos llevamos</div>
-        <div style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--azul)' }}>{formatoHoras(totalComunidad)}</div>
-        <div className="muted" style={{ fontSize: '.9rem' }}>de voluntariado por Venezuela <span aria-hidden>💛💙❤️</span></div>
-      </div>
+      <div className="panel-2col" style={{ marginTop: 16 }}>
+        <div className="comunidad-card">
+          <div className="muted" style={{ fontWeight: 600, fontSize: '.9rem' }}>Entre todos llevamos</div>
+          <div className="comunidad-num">{formatoHoras(totalComunidad)}</div>
+          <div className="muted" style={{ fontSize: '.9rem' }}>de voluntariado por Venezuela <span aria-hidden>💛💙❤️</span></div>
+        </div>
 
-      {/* Globo: puntos en los países desde donde se colabora (0120). */}
-      <div className="tarjeta" style={{ textAlign: 'center', marginTop: 16 }}>
-        <h2 style={{ margin: '0 0 2px' }}>Colaboramos desde el mundo <span aria-hidden>🌎</span></h2>
-        <p className="muted" style={{ marginTop: 0, fontSize: '.95rem' }}>
-          {paisesColab.length > 0 ? (
-            <>
-              Somos <strong style={{ color: 'var(--azul)' }}>{totalColab.toLocaleString('es')}</strong>{' '}
-              {totalColab === 1 ? 'persona voluntaria' : 'personas voluntarias'} desde{' '}
-              <strong style={{ color: 'var(--azul)' }}>{paisesColab.length}</strong>{' '}
-              {paisesColab.length === 1 ? 'país' : 'países'}, sumando por Venezuela 💛💙❤️
-            </>
-          ) : (
-            'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'
-          )}
-        </p>
-        <LimiteError><GloboColaboradores paises={paisesColab} /></LimiteError>
+        {/* Globo: puntos en los países desde donde se colabora (0120). */}
+        <div className="tarjeta" style={{ textAlign: 'center', margin: 0 }}>
+          <h2 style={{ margin: '0 0 2px' }}>Colaboramos desde el mundo <span aria-hidden>🌎</span></h2>
+          <p className="muted" style={{ marginTop: 0, fontSize: '.88rem' }}>
+            {paisesColab.length > 0 ? (
+              <>
+                Somos <strong style={{ color: 'var(--link)' }}>{totalColab.toLocaleString('es')}</strong>{' '}
+                {totalColab === 1 ? 'persona voluntaria' : 'personas voluntarias'} desde{' '}
+                <strong style={{ color: 'var(--link)' }}>{paisesColab.length}</strong>{' '}
+                {paisesColab.length === 1 ? 'país' : 'países'}, sumando por Venezuela 💛💙❤️
+              </>
+            ) : (
+              'Los países desde donde colaboramos aparecerán aquí a medida que se sumen voluntarios.'
+            )}
+          </p>
+          <LimiteError><GloboColaboradores paises={paisesColab} /></LimiteError>
+        </div>
       </div>
     </AnimarEntrada>
   );

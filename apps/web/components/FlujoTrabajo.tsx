@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import Link from 'next/link';
 import Icono from './Icono';
+import { tinteTile } from '@/lib/tintes';
 
 export type PasoFlujo = {
   etiqueta: string;
@@ -24,11 +25,11 @@ export default function FlujoTrabajo({ pasos }: { pasos: PasoFlujo[] }) {
         return (
           <Fragment key={p.etiqueta}>
             <Cont {...(p.href ? { href: p.href } : {})} className="flujo-paso">
-              <span className="flujo-ico" style={{ background: p.tinte ?? '#eef2f7', color: p.color ?? 'var(--texto)' }}>
+              <span className="flujo-ico" style={tinteTile(p.tinte ?? '#eef2f7', p.color)}>
                 <Icono nombre={p.icono} size={18} />
               </span>
               <span className="flujo-txt">
-                <span className="flujo-num" style={{ color: p.color ?? 'var(--texto)' }}>{p.valor ?? ''}</span>
+                <span className="flujo-num">{p.valor ?? ''}</span>
                 <span className="flujo-et">{p.etiqueta}</span>
               </span>
             </Cont>
