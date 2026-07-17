@@ -10,6 +10,7 @@ import {
 } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
+import FlujoProgreso from '@/components/FlujoProgreso';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
@@ -309,6 +310,17 @@ function TarjetaOferta({ o }: { o: any }) {
         </div>
       )}
       {o.ubicacion && <div className="muted fila" style={{ gap: 4, fontSize: '.8rem', marginTop: 4 }}><Icono nombre="ubicacion" size={13} /> {o.ubicacion}</div>}
+      {(() => {
+        const paso = ESTADOS_OFERTA.indexOf(o.estado) + 1;
+        if (paso <= 0) return null;
+        const completo = o.estado === 'cumplida';
+        return (
+          <div style={{ borderTop: '1px solid var(--borde)', marginTop: 8, paddingTop: 8 }}>
+            <FlujoProgreso paso={paso} total={ESTADOS_OFERTA.length} completo={completo}
+              etiqueta={completo ? 'Flujo completo · Cumplida ✓' : `Paso ${paso} de ${ESTADOS_OFERTA.length} · ${ETIQUETA_ESTADO_OFERTA[o.estado] ?? o.estado}`} />
+          </div>
+        );
+      })()}
     </Link>
   );
 }
