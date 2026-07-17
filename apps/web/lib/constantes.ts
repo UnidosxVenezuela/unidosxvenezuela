@@ -698,6 +698,18 @@ export function claseSensibilidad(s: NivelSensibilidad): string {
   return '';
 }
 
+// ── Canales de difusión (0169): en qué redes publica «Envío a Redacción» ──
+export const ETIQUETA_CANAL_DIFUSION: Record<string, string> = {
+  instagram: 'Instagram',
+  x: 'X (Twitter)',
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  otro: 'Otro',
+};
+export const CANALES_DIFUSION = Object.keys(ETIQUETA_CANAL_DIFUSION);
 // ── Verificación por campo (0172) — semáforo 🟢🟡🔴 por dato de la solicitud ──
 export type EstadoVerifCampo = 'sin_revisar' | 'verificado' | 'requiere_info' | 'falso';
 export const ESTADOS_VERIF_CAMPO: EstadoVerifCampo[] = ['sin_revisar', 'verificado', 'requiere_info', 'falso'];

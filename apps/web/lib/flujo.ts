@@ -35,3 +35,31 @@ export function pasoDeCaso(estado: EstadoCaso): { paso: number; total: number; f
   const paso = i >= 0 ? i + 1 : 1;
   return { paso, total, fuera: false, etiqueta: `Paso ${paso} de ${total}` };
 }
+
+/**
+ * Flujo de DIFUSIÓN visto por «Envío a Redacción», en 3 etapas:
+ *   1) Por difundir (confirmada, sin enviar)  2) En redacción (enviado_redaccion)
+ *   3) Publicada (publicado_en marcado, ortogonal al estado — 0166).
+ * «Publicada» manda: una solicitud publicada cuenta como etapa 3 aunque su estado
+ * siga en «confirmado» o «enviado_redaccion».
+ */
+export type EtapaRedaccion = 'por_difundir' | 'en_redaccion' | 'publicada';
+export const ETAPAS_REDACCION: EtapaRedaccion[] = ['por_difundir', 'en_redaccion', 'publicada'];
+export const ETIQUETA_ETAPA_REDACCION: Record<EtapaRedaccion, string> = {
+  por_difundir: 'Por difundir',
+  en_redaccion: 'En redacción',
+  publicada: 'Publicada',
+};
+
+export function etapaRedaccion(caso: { estado?: string | null; publicado_en?: string | null }): EtapaRedaccion {
+  if (caso.publicado_en) return 'publicada';
+  if (caso.estado === 'enviado_redaccion') return 'en_redaccion';
+  return 'por_difundir';
+}
+
+export function pasoRedaccion(caso: { estado?: string | null; publicado_en?: string | null }): { paso: number; total: number; completo: boolean; etiqueta: string } {
+  const et = etapaRedaccion(caso);
+  const paso = ETAPAS_REDACCION.indexOf(et) + 1;
+  const completo = et === 'publicada';
+  return { paso, total: ETAPAS_REDACCION.length, completo, etiqueta: completo ? 'Publicada ✓' : `Paso ${paso} de ${ETAPAS_REDACCION.length} · ${ETIQUETA_ETAPA_REDACCION[et]}` };
+}
