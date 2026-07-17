@@ -9,7 +9,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
 import FlujoProgreso from '@/components/FlujoProgreso';
 import { pasoDeCaso } from '@/lib/flujo';
-import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso } from './actions';
+import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -199,6 +199,45 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           ) : (
             <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>Cuando la solicitud esté <strong>confirmada</strong>, la Verificación podrá derivarla a Logística para coordinar la entrega.</p>
           )}
+        </div>
+      )}
+
+      {/* Derivar / reubicar: reúne las salidas manuales de la solicitud. La derivación a
+          Logística vive en su tarjeta (arriba). Aquí: enviar a Redacción (Verificación) y
+          reubicar como Donación-Ofrecimiento si en realidad es alguien que OFRECE ayuda. */}
+      {puedeDerivar && caso.estado !== 'falso' && (
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="flecha" size={16} /> Derivar / reubicar la solicitud</h3>
+
+          {(puedeEditar || esAdmin) && caso.categoria !== 'Desaparecidos' && (
+            caso.estado === 'confirmado' ? (
+              <form action={enviarCasoRedaccion} style={{ marginBottom: 12 }}>
+                <input type="hidden" name="caso_id" value={caso.id} />
+                <input type="hidden" name="volver" value={volver} />
+                <p className="muted" style={{ margin: '0 0 6px', fontSize: '.85rem' }}>Pásala explícitamente a <strong>Envío a Redacción</strong> para difundirla en redes.</p>
+                <button className="btn btn-primario" type="submit" style={{ width: '100%' }}><Icono nombre="cohete" size={16} /> Enviar a Redacción</button>
+              </form>
+            ) : caso.estado === 'enviado_redaccion' ? (
+              <p className="fila" style={{ gap: 6, margin: '0 0 12px', fontSize: '.85rem', color: 'var(--ok-solido)' }}><Icono nombre="ok" size={14} /> Ya enviada a Redacción.</p>
+            ) : (
+              <p className="muted" style={{ margin: '0 0 12px', fontSize: '.85rem' }}>Cuando esté <strong>confirmada</strong>, podrás enviarla a Redacción desde aquí.</p>
+            )
+          )}
+
+          <form action={reubicarCasoOfrecimiento}>
+            <input type="hidden" name="caso_id" value={caso.id} />
+            <input type="hidden" name="volver" value={volver} />
+            <label className="muted" style={{ fontSize: '.85rem' }}>¿Esto en realidad es alguien que <strong>ofrece ayuda</strong>? Reubícala como Donación-Ofrecimiento:</label>
+            <select name="clase" className="input" defaultValue="donacion" style={{ marginTop: 4 }} aria-label="Qué se ofrece">
+              <option value="donacion">Donación (bienes / dinero)</option>
+              <option value="servicio">Servicio (acción / atención)</option>
+            </select>
+            <BotonConfirmar
+              mensaje={'¿Reubicar esta solicitud como Donación-Ofrecimiento? La solicitud original quedará descartada, con una nota que enlaza al nuevo ofrecimiento.'}
+              className="btn" style={{ width: '100%', marginTop: 6 }}>
+              <Icono nombre="corazon" size={15} /> Reubicar como Donación-Ofrecimiento
+            </BotonConfirmar>
+          </form>
         </div>
       )}
 

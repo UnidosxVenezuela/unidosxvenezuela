@@ -268,10 +268,33 @@ export async function enviarCasoRedaccion(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver'));
   const { error } = await supabase.rpc('enviar_caso_redaccion', { p_caso: id });
-  if (error) throw new Error('No se pudo enviar a Redacción: ' + error.message);
+  if (error) {
+    // Desde el detalle (Verificación) volvemos a la solicitud con el aviso; sin `volver`
+    // (cola de Redacción) mantenemos el comportamiento previo.
+    if (volver) return redirigirError(volver, 'No se pudo enviar a Redacción: ' + error.message);
+    throw new Error('No se pudo enviar a Redacción: ' + error.message);
+  }
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk('/envio-redaccion', 'Solicitud enviada a Redacción');
+  redirigirOk(volver || '/envio-redaccion', 'Solicitud enviada a Redacción');
+}
+
+// Reubicar una solicitud MAL CLASIFICADA como Donación-Ofrecimiento (Recopilación /
+// Verificación): a veces lo que llega como «solicitud» es en realidad alguien que
+// OFRECE ayuda. El RPC 0167 crea el ofrecimiento y descarta la solicitud original con
+// una nota que enlaza al nuevo «OF-xxxxx»; aterrizamos en el ofrecimiento para afinarlo.
+export async function reubicarCasoOfrecimiento(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const clase = opt(formData.get('clase')) === 'servicio' ? 'servicio' : 'donacion';
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const { data, error } = await supabase.rpc('reubicar_caso_como_ofrecimiento', { p_caso: id, p_clase: clase });
+  if (error) return redirigirError(volver, 'No se pudo reubicar la solicitud: ' + error.message);
+  revalidatePath('/casos'); revalidatePath('/insumos/oportunidades');
+  redirigirOk('/insumos/oportunidades/' + data, 'Solicitud reubicada como Donación-Ofrecimiento. Complétala o afínala aquí.');
 }
 
 // Redacción/Redes marca una solicitud como PUBLICADA (con enlace opcional). El
