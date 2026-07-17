@@ -285,6 +285,21 @@ export interface Caso {
   punto_tipo: TipoLugar | null;
   punto_temporal: boolean;
   punto_acopio_id: string | null;
+  // Contacto estructurado (0171) + campos estructurados de la solicitud (0173, Pasos
+  // 4/5): rol del referente, tipo de fuente, ubicación administrativa separada y
+  // vigencia. Todos opcionales; Verificación los confirma con su semáforo por campo.
+  referente?: string | null;
+  referente_rol?: string | null;
+  contacto_whatsapp?: string | null;
+  contacto_instagram?: string | null;
+  fuente_tipo?: string | null;
+  ubicacion_estado?: string | null;
+  ubicacion_municipio?: string | null;
+  ubicacion_parroquia?: string | null;
+  ubicacion_sector?: string | null;
+  ubicacion_direccion?: string | null;
+  sigue_vigente?: string | null;
+  ultima_confirmacion?: string | null;
   // Difusión (0149): cuando Logística marca una solicitud derivada como «No se pudo
   // cubrir», el caso queda para difusión y recién ahí lo recibe Redacción.
   requiere_difusion: boolean;

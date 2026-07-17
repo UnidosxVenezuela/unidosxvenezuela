@@ -742,3 +742,35 @@ export const CAMPOS_VERIFICACION_REQ: { key: string; etiqueta: string }[] = [
   { key: 'ubicacion', etiqueta: 'Ubicación' },
   { key: 'cantidad', etiqueta: 'Cantidad / datos específicos' },
 ];
+
+// ── Vigencia de la solicitud (0173, Paso 4.4) ──
+// ¿La información sigue vigente? Se guarda como 'si' | 'no' | 'pendiente' (CHECK en BD).
+export const OPCIONES_VIGENCIA: { valor: string; etiqueta: string }[] = [
+  { valor: 'si', etiqueta: 'Sí, sigue vigente' },
+  { valor: 'no', etiqueta: 'No, ya no aplica' },
+  { valor: 'pendiente', etiqueta: 'Pendiente de confirmar' },
+];
+export const ETIQUETA_VIGENCIA: Record<string, string> = {
+  si: 'Sí, vigente', no: 'No vigente', pendiente: 'Pendiente de confirmar',
+};
+export function tonoVigencia(v?: string | null): 'ok' | 'aviso' | 'critica' | 'neutra' {
+  if (v === 'si') return 'ok';
+  if (v === 'pendiente') return 'aviso';
+  if (v === 'no') return 'critica';
+  return 'neutra';
+}
+
+// ── Tipo de fuente (0173, Paso 4.5) ──
+export const TIPOS_FUENTE: { valor: string; etiqueta: string }[] = [
+  { valor: 'contacto_directo', etiqueta: 'Contacto directo' },
+  { valor: 'whatsapp', etiqueta: 'WhatsApp' },
+  { valor: 'instagram', etiqueta: 'Instagram' },
+  { valor: 'facebook', etiqueta: 'Facebook' },
+  { valor: 'x', etiqueta: 'X (Twitter)' },
+  { valor: 'pagina_oficial', etiqueta: 'Página oficial' },
+  { valor: 'organizacion', etiqueta: 'Organización' },
+  { valor: 'publicacion', etiqueta: 'Publicación original' },
+  { valor: 'otra', etiqueta: 'Otra' },
+];
+export const ETIQUETA_TIPO_FUENTE: Record<string, string> =
+  Object.fromEntries(TIPOS_FUENTE.map((t) => [t.valor, t.etiqueta]));
