@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Icono from '@/components/Icono';
-import { hrefSeguro } from '@/lib/constantes';
+import { hrefSeguro, CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION } from '@/lib/constantes';
 import { registrarEventoCaso, marcarCasoPublicado, quitarCasoPublicado } from '../casos/actions';
 
 function textoCaso(c: any): string {
@@ -30,13 +30,18 @@ function textoCaso(c: any): string {
   return L.join('\n').trim() + '\n';
 }
 
-/** Para Redacción: ver, copiar y descargar la información de un caso confirmado,
- *  dejando registro de la actividad (monitoreo) vía registrar_evento_caso. */
-export default function AccionesRedaccionCaso({ caso, puedeMarcar = false, esAdmin = false }: { caso: any; puedeMarcar?: boolean; esAdmin?: boolean }) {
+/** Para Redacción: ver, copiar y descargar la información de un caso confirmado
+ *  (dejando registro de la actividad), y marcar «Publicada» indicando los CANALES
+ *  de difusión (0169). `volver` mantiene abierto el panel lateral tras la acción. */
+export default function AccionesRedaccionCaso(
+  { caso, puedeMarcar = false, esAdmin = false, volver = '/envio-redaccion' }:
+  { caso: any; puedeMarcar?: boolean; esAdmin?: boolean; volver?: string },
+) {
   const [abierto, setAbierto] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const texto = textoCaso(caso);
   const hrefPub = hrefSeguro(caso.publicacion_url);
+  const canales = (caso.canales_publicacion ?? []) as string[];
 
   async function copiar() {
     try { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000); } catch { /* sin portapapeles */ }
@@ -55,7 +60,7 @@ export default function AccionesRedaccionCaso({ caso, puedeMarcar = false, esAdm
     <div style={{ marginTop: 8 }}>
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
         <button type="button" className="btn" style={{ minHeight: 32, padding: '2px 10px' }} onClick={() => setAbierto((v) => !v)}>
-          <Icono nombre="ojo" size={15} /> {abierto ? 'Ocultar' : 'Ver'}
+          <Icono nombre="ojo" size={15} /> {abierto ? 'Ocultar texto' : 'Ver texto'}
         </button>
         <button type="button" className="btn" style={{ minHeight: 32, padding: '2px 10px' }} onClick={copiar}>
           <Icono nombre="documento" size={15} /> {copiado ? 'Copiado ✓' : 'Copiar'}
@@ -68,25 +73,42 @@ export default function AccionesRedaccionCaso({ caso, puedeMarcar = false, esAdm
         <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--sup2)', border: '1px solid var(--borde)', borderRadius: 10, padding: 12, marginTop: 8, fontSize: '.86rem', fontFamily: 'inherit' }}>{texto}</pre>
       )}
 
-      {/* Marca «Publicada» (0166): visible a todos; el botón manual solo a Redacción. */}
+      {/* Marca «Publicada» (0166) + canales de difusión (0169). El botón manual solo a Redacción. */}
       {caso.publicado_en ? (
-        <div className="fila" style={{ gap: 8, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-          <span className="pill pill-ok" style={{ fontWeight: 600 }}>📣 Publicada</span>
-          {hrefPub && <a href={hrefPub} target="_blank" rel="noopener noreferrer" style={{ fontSize: '.85rem' }}>ver publicación ↗</a>}
-          {esAdmin && (
-            <form action={quitarCasoPublicado}>
-              <input type="hidden" name="caso_id" value={caso.id} />
-              <input type="hidden" name="volver" value="/envio-redaccion" />
-              <button className="btn" style={{ minHeight: 30, padding: '2px 8px', fontSize: '.82rem' }}>Deshacer</button>
-            </form>
+        <div style={{ marginTop: 8 }}>
+          <div className="fila" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span className="pill pill-ok" style={{ fontWeight: 600 }}>📣 Publicada</span>
+            {hrefPub && <a href={hrefPub} target="_blank" rel="noopener noreferrer" style={{ fontSize: '.85rem' }}>ver publicación ↗</a>}
+            {esAdmin && (
+              <form action={quitarCasoPublicado}>
+                <input type="hidden" name="caso_id" value={caso.id} />
+                <input type="hidden" name="volver" value={volver} />
+                <button className="btn" style={{ minHeight: 30, padding: '2px 8px', fontSize: '.82rem' }}>Deshacer</button>
+              </form>
+            )}
+          </div>
+          {canales.length > 0 && (
+            <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+              {canales.map((c) => <span key={c} className="insignia" style={{ fontSize: '.72rem' }}>{ETIQUETA_CANAL_DIFUSION[c] ?? c}</span>)}
+            </div>
           )}
         </div>
       ) : puedeMarcar ? (
-        <form action={marcarCasoPublicado} className="fila" style={{ gap: 6, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
+        <form action={marcarCasoPublicado} style={{ marginTop: 8 }}>
           <input type="hidden" name="caso_id" value={caso.id} />
-          <input type="hidden" name="volver" value="/envio-redaccion" />
-          <input name="publicacion_url" className="input" placeholder="Enlace de la publicación (opcional)" inputMode="url" style={{ minHeight: 32, maxWidth: 260, flex: '1 1 200px' }} />
-          <button className="btn btn-primario" style={{ minHeight: 32, padding: '2px 10px' }}>📣 Marcar publicada</button>
+          <input type="hidden" name="volver" value={volver} />
+          <div className="muted" style={{ fontSize: '.78rem', marginBottom: 4 }}>¿En qué canales se difundió? <span style={{ opacity: .7 }}>(opcional)</span></div>
+          <div className="fila" style={{ gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+            {CANALES_DIFUSION.map((c) => (
+              <label key={c} className="fila" style={{ gap: 4, cursor: 'pointer', fontWeight: 400, fontSize: '.82rem' }}>
+                <input type="checkbox" name="canales" value={c} style={{ width: 'auto', minHeight: 0 }} /> {ETIQUETA_CANAL_DIFUSION[c]}
+              </label>
+            ))}
+          </div>
+          <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+            <input name="publicacion_url" className="input" placeholder="Enlace de la publicación (opcional)" inputMode="url" style={{ minHeight: 32, maxWidth: 260, flex: '1 1 200px' }} />
+            <button className="btn btn-primario" style={{ minHeight: 32, padding: '2px 10px' }}>📣 Marcar publicada</button>
+          </div>
         </form>
       ) : null}
     </div>

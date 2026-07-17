@@ -16,7 +16,7 @@ export default async function NotificacionesPage() {
   const supabase = await createClient();
   const [{ data }, gruposRes] = await Promise.all([
     supabase.from('notificaciones')
-      .select('id, tipo, titulo, cuerpo, enlace, leida, creado_en')
+      .select('*')   // '*' para incluir `imagen_url` (0170) sin romper si aún no se aplicó.
       .order('creado_en', { ascending: false }).limit(100),
     esAdmin ? supabase.from('grupos').select('id, nombre').order('nombre') : Promise.resolve({ data: [] as any[] }),
   ]);
@@ -43,7 +43,7 @@ export default async function NotificacionesPage() {
           <summary style={{ cursor: 'pointer', fontWeight: 600 }} className="fila">
             <Icono nombre="avisos" size={16} /> Enviar un aviso
           </summary>
-          <form action={enviarAviso} style={{ marginTop: 12 }}>
+          <form action={enviarAviso} encType="multipart/form-data" style={{ marginTop: 12 }}>
             <div className="campo">
               <label>Título</label>
               <input name="titulo" className="input" required maxLength={120} placeholder="Ej. Reunión general hoy a las 6pm" />
@@ -51,6 +51,11 @@ export default async function NotificacionesPage() {
             <div className="campo">
               <label>Mensaje (opcional)</label>
               <textarea name="cuerpo" className="input" rows={3} maxLength={400} />
+            </div>
+            <div className="campo">
+              <label>Imagen (opcional)</label>
+              <input name="imagen" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="input" />
+              <small className="muted">PNG, JPG, WebP o GIF · hasta 4 MB. Se muestra en la notificación, el push y Telegram.</small>
             </div>
             <div className="campo">
               <label>Enlace (opcional)</label>
@@ -104,6 +109,10 @@ export default async function NotificacionesPage() {
                 <strong>{it.titulo}</strong>
               </div>
               {it.cuerpo && <div className="muted">{it.cuerpo}</div>}
+              {it.imagen_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={it.imagen_url} alt="" style={{ marginTop: 6, maxWidth: 280, width: '100%', height: 'auto', borderRadius: 8, border: '1px solid var(--borde)' }} />
+              )}
               <div className="muted" style={{ fontSize: '.8rem' }}>{fechaHora(it.creado_en)}</div>
             </div>
             <div className="fila">

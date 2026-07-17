@@ -11,6 +11,7 @@ import FlujoProgreso from '@/components/FlujoProgreso';
 import { pasoDeCaso } from '@/lib/flujo';
 import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento } from './actions';
 import FormEditarCaso from './FormEditarCaso';
+import VerificacionPorCampo from './VerificacionPorCampo';
 import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -142,6 +143,23 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div><strong>Categoría:</strong> {caso.categoria ? <BadgeCategoria>{caso.categoria}</BadgeCategoria> : '—'}</div>
           <div><strong>Publicación:</strong> {caso.fecha_publicacion ? fechaCorta(caso.fecha_publicacion + 'T00:00:00') : '—'}</div>
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
+          {(() => {
+            const ref = caso.referente; const wa = caso.contacto_whatsapp; const ig = caso.contacto_instagram;
+            const waD = wa ? String(wa).replace(/[^\d]/g, '') : '';
+            const igH = ig ? String(ig).replace(/^@/, '') : '';
+            if (ref || wa || ig) return (
+              <div style={{ gridColumn: '1 / -1' }}>
+                <strong>Contacto / referente:</strong> {ref || '—'}
+                {(wa || igH) && (
+                  <span className="fila" style={{ gap: 12, flexWrap: 'wrap', marginTop: 2 }}>
+                    {wa && <span>WhatsApp:{' '}{waD.length >= 8 ? <a href={'https://wa.me/' + waD} target="_blank" rel="noopener noreferrer">{wa}</a> : wa}</span>}
+                    {igH && <span>Instagram:{' '}<a href={'https://instagram.com/' + igH} target="_blank" rel="noopener noreferrer">@{igH}</a></span>}
+                  </span>
+                )}
+              </div>
+            );
+            return caso.contacto ? <div style={{ gridColumn: '1 / -1' }}><strong>Contacto / referente:</strong> {caso.contacto}</div> : null;
+          })()}
           <div style={{ gridColumn: '1 / -1' }}><strong>Creado por:</strong> {caso.creado_por ? (nombres.get(caso.creado_por) ?? '—') : '—'}{caso.creado_en ? ' · ' + fechaHora(caso.creado_en) : ''}</div>
           {caso.asignado_a && (
             <div style={{ gridColumn: '1 / -1' }}>
@@ -170,6 +188,16 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
       </div>
+
+      {/* Verificación por campo (0172): semáforo por dato. La marca el equipo de
+          Verificación; el resto la ve (transparencia) una vez iniciada. */}
+      {(() => {
+        const estados = (caso.verif_campos ?? {}) as Record<string, any>;
+        const mostrar = puedeEditar || Object.keys(estados).length > 0;
+        return mostrar
+          ? <VerificacionPorCampo casoId={caso.id} esRequerimiento={caso.es_requerimiento} estados={estados} volver={volver} nombres={nombres} puedeVerificar={puedeEditar} />
+          : null;
+      })()}
 
       {/* Observaciones de verificación: lo que anota el equipo de Verificación.
           Visibles para TODOS los que abren la solicitud (transparencia). Se agregan

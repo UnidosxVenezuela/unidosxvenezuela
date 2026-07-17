@@ -13,6 +13,7 @@ self.addEventListener('push', (event) => {
     body: datos.body || '',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
+    image: datos.image || undefined, // avisos con imagen (algunos SO/navegadores la muestran)
     tag: datos.tag || undefined,
     data: { url: datos.url || '/notificaciones' },
   };

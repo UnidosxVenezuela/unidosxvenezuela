@@ -17,6 +17,7 @@ type FilaNotificacion = {
   cuerpo?: string | null;
   enlace?: string | null;
   tipo?: string | null;
+  imagen_url?: string | null;
 };
 
 export async function POST(req: Request) {
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
       body: registro.cuerpo || '',
       url: registro.enlace || '/notificaciones',
       tag: registro.tipo || 'aviso',
+      image: registro.imagen_url || undefined,   // avisos con imagen (0170)
     });
 
     const caducadas: string[] = [];
@@ -102,7 +104,7 @@ export async function POST(req: Request) {
       const base = process.env.NEXT_PUBLIC_APP_URL ?? '';
       const enlace = registro.enlace || '/notificaciones';
       const url = base ? base.replace(/\/$/, '') + enlace : undefined;
-      await enviarTelegram(chatId, registro.titulo || 'Apoyo por Venezuela', registro.cuerpo ?? '', url);
+      await enviarTelegram(chatId, registro.titulo || 'Apoyo por Venezuela', registro.cuerpo ?? '', url, registro.imagen_url ?? null);
     }
   } catch { /* Telegram nunca debe romper el push ni forzar reintento del webhook */ }
 

@@ -697,3 +697,48 @@ export function claseSensibilidad(s: NivelSensibilidad): string {
   if (s === 'publica') return 'ok';
   return '';
 }
+
+// ── Canales de difusión (0169): en qué redes publica «Envío a Redacción» ──
+export const ETIQUETA_CANAL_DIFUSION: Record<string, string> = {
+  instagram: 'Instagram',
+  x: 'X (Twitter)',
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  facebook: 'Facebook',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  otro: 'Otro',
+};
+export const CANALES_DIFUSION = Object.keys(ETIQUETA_CANAL_DIFUSION);
+// ── Verificación por campo (0172) — semáforo 🟢🟡🔴 por dato de la solicitud ──
+export type EstadoVerifCampo = 'sin_revisar' | 'verificado' | 'requiere_info' | 'falso';
+export const ESTADOS_VERIF_CAMPO: EstadoVerifCampo[] = ['sin_revisar', 'verificado', 'requiere_info', 'falso'];
+export const ETIQUETA_VERIF_CAMPO: Record<EstadoVerifCampo, string> = {
+  sin_revisar: 'Sin revisar',
+  verificado: 'Verificado',
+  requiere_info: 'Requiere info',
+  falso: 'Falso / contradicho',
+};
+// Colores del semáforo (verde/amarillo/rojo + gris para «sin revisar»).
+export const COLOR_VERIF_CAMPO: Record<EstadoVerifCampo, string> = {
+  sin_revisar: '#94a3b8',
+  verificado: '#16a34a',
+  requiere_info: '#d97706',
+  falso: '#dc2626',
+};
+export const PUNTO_VERIF_CAMPO: Record<EstadoVerifCampo, string> = {
+  sin_revisar: '○', verificado: '●', requiere_info: '●', falso: '●',
+};
+// Campos a verificar. La lista puede crecer (el modelo guarda una fila por campo).
+export const CAMPOS_VERIFICACION_BASE: { key: string; etiqueta: string }[] = [
+  { key: 'referente', etiqueta: 'Referente / contacto' },
+  { key: 'descripcion', etiqueta: 'Qué se pide (descripción)' },
+  { key: 'fuente', etiqueta: 'Fuente identificable' },
+  { key: 'vigencia', etiqueta: 'Vigencia (sigue vigente)' },
+  { key: 'evidencia', etiqueta: 'Evidencia' },
+];
+// Campos extra cuando es una solicitud de ayuda con ubicación (requerimiento).
+export const CAMPOS_VERIFICACION_REQ: { key: string; etiqueta: string }[] = [
+  { key: 'ubicacion', etiqueta: 'Ubicación' },
+  { key: 'cantidad', etiqueta: 'Cantidad / datos específicos' },
+];

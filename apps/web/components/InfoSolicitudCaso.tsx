@@ -20,7 +20,23 @@ export default function InfoSolicitudCaso({ caso }: { caso: any }) {
         : <p className="muted" style={{ margin: '0 0 8px' }}>Sin descripción.</p>}
 
       <div className="grid grid-2" style={{ gap: 6, fontSize: '.88rem' }}>
-        {caso.contacto && <div style={{ gridColumn: '1 / -1' }}><strong>Contacto / referente:</strong> {caso.contacto}</div>}
+        {(() => {
+          const ref = caso.referente; const wa = caso.contacto_whatsapp; const ig = caso.contacto_instagram;
+          if (ref || wa || ig) {
+            const waD = wa ? String(wa).replace(/[^\d]/g, '') : '';
+            const igH = ig ? String(ig).replace(/^@/, '') : '';
+            return (
+              <div style={{ gridColumn: '1 / -1' }}>
+                {ref && <div><strong>Referente:</strong> {ref}</div>}
+                <div className="fila" style={{ gap: 12, flexWrap: 'wrap', marginTop: ref ? 2 : 0 }}>
+                  {wa && <span><strong>WhatsApp:</strong>{' '}{waD.length >= 8 ? <a href={'https://wa.me/' + waD} target="_blank" rel="noopener noreferrer">{wa}</a> : wa}</span>}
+                  {igH && <span><strong>Instagram:</strong>{' '}<a href={'https://instagram.com/' + igH} target="_blank" rel="noopener noreferrer">@{igH}</a></span>}
+                </div>
+              </div>
+            );
+          }
+          return caso.contacto ? <div style={{ gridColumn: '1 / -1' }}><strong>Contacto / referente:</strong> {caso.contacto}</div> : null;
+        })()}
         {caso.fecha_publicacion && <div><strong>Publicación:</strong> {fechaCorta(caso.fecha_publicacion + 'T00:00:00')}</div>}
         {(caso.fuente || caso.fuente_url) && (
           <div style={{ gridColumn: '1 / -1' }}>
