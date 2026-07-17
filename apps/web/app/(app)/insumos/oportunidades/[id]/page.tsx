@@ -21,7 +21,7 @@ import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import {
   cambiarEstadoOportunidad, asignarOportunidad, registrarContactoOportunidad,
   eliminarContactoOportunidad, conectarConSolicitud, eliminarOportunidad, verificarOportunidad,
-  requerirInfoOportunidad, eliminarAdjuntoOportunidad,
+  requerirInfoOportunidad, eliminarAdjuntoOportunidad, cambiarDisponibilidadServicio,
 } from '../actions';
 import FormEditarOfrecimiento from '../FormEditarOfrecimiento';
 import { registrarTransportistaDesdeOferta } from '../../actions';
@@ -190,6 +190,53 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
             {oo.descripcion && <p style={{ whiteSpace: 'pre-wrap', marginTop: 12 }}>{oo.descripcion}</p>}
             {link && <a href={link} target="_blank" rel="noreferrer noopener nofollow" className="fila" style={{ gap: 6, marginTop: 8 }}><Icono nombre="enlace" size={16} /> Abrir enlace</a>}
           </div>
+
+          {/* Disponibilidad del servicio (0168): solo para clase='servicio'. Un servicio
+              verificado queda DISPONIBLE de forma permanente; Logística lo da de baja al
+              terminar o cuando ya no se requiere (reactivable). */}
+          {oo.clase === 'servicio' && (() => {
+            const esBaja = (oo.servicio_estado ?? 'activo') === 'baja';
+            return (
+              <div className="tarjeta">
+                <h3 className="aside-titulo fila" style={{ justifyContent: 'space-between', gap: 8 }}>
+                  <span className="fila" style={{ gap: 6 }}><Icono nombre="reloj" size={16} /> Disponibilidad del servicio</span>
+                  <Pill tono={esBaja ? 'neutra' : 'ok'} punto={false}>{esBaja ? 'Dado de baja' : 'Disponible'}</Pill>
+                </h3>
+                {esBaja ? (
+                  <p className="muted" style={{ fontSize: '.86rem', margin: '4px 0 0' }}>
+                    {oo.servicio_baja_motivo ? <>Motivo: <strong>{oo.servicio_baja_motivo}</strong>. </> : null}
+                    {oo.servicio_baja_en ? <>Dado de baja el {fechaHora(oo.servicio_baja_en)}.</> : null}
+                  </p>
+                ) : (
+                  <p className="muted" style={{ fontSize: '.86rem', margin: '4px 0 0' }}>
+                    Este servicio está activo en el <Link href="/insumos/servicios">directorio de servicios</Link>.
+                    {oo.estado_verificacion !== 'verificada' && <> Aparecerá como <strong>disponible</strong> cuando Verificación lo confirme.</>}
+                  </p>
+                )}
+                {gestor && (
+                  <div style={{ marginTop: 10 }}>
+                    {esBaja ? (
+                      <form action={cambiarDisponibilidadServicio}>
+                        <input type="hidden" name="id" value={id} />
+                        <input type="hidden" name="accion" value="reactivar" />
+                        <input type="hidden" name="volver" value={'/insumos/oportunidades/' + id} />
+                        <BotonConfirmar mensaje="¿Reactivar este servicio? Volverá al directorio de disponibles."
+                          className="btn btn-sm" confirmar="Sí, reactivar"><Icono nombre="refrescar" size={14} /> Reactivar servicio</BotonConfirmar>
+                      </form>
+                    ) : (
+                      <form action={cambiarDisponibilidadServicio}>
+                        <input type="hidden" name="id" value={id} />
+                        <input type="hidden" name="accion" value="baja" />
+                        <input type="hidden" name="volver" value={'/insumos/oportunidades/' + id} />
+                        <input name="motivo" className="input" placeholder="Motivo de la baja (terminó, ya no se requiere…)" maxLength={300} style={{ marginBottom: 6 }} />
+                        <BotonEnviar className="btn btn-sm btn-peligro"><Icono nombre="caja" size={14} /> Dar de baja</BotonEnviar>
+                      </form>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Imágenes y adjuntos del ofrecimiento (0160) */}
           {adjuntos.length > 0 && (

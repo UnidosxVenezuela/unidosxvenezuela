@@ -147,6 +147,40 @@ export async function cambiarEstadoOportunidad(formData: FormData) {
   redirigirOk(volver, 'Estado actualizado.');
 }
 
+// ── Directorio de servicios: dar de baja / reactivar (Logística) ──
+// Un SERVICIO (clase='servicio') verificado queda DISPONIBLE de forma permanente
+// (a diferencia de una donación, que se entrega y cierra). Logística lo da de BAJA
+// cuando termina o ya no se requiere, y puede REACTIVARLO. El blindaje de columnas
+// de la BD (0168) impone que solo Logística/admin toque estos campos.
+export async function cambiarDisponibilidadServicio(formData: FormData) {
+  const { supabase, user } = await exigirLogistica();
+  const id = txt(formData.get('id'));
+  const accion = txt(formData.get('accion'));   // 'baja' | 'reactivar'
+  const volver = txt(formData.get('volver')) || '/insumos/servicios';
+  if (!id || (accion !== 'baja' && accion !== 'reactivar')) {
+    return redirigirError(volver, 'Datos no válidos.');
+  }
+  const cambios = accion === 'baja'
+    ? {
+        servicio_estado: 'baja',
+        servicio_baja_motivo: txt(formData.get('motivo')).slice(0, 300) || null,
+        servicio_baja_en: new Date().toISOString(),
+        servicio_baja_por: user.id,
+        actualizado_en: new Date().toISOString(),
+      }
+    : {
+        servicio_estado: 'activo',
+        servicio_baja_motivo: null,
+        servicio_baja_en: null,
+        servicio_baja_por: null,
+        actualizado_en: new Date().toISOString(),
+      };
+  const { error } = await supabase.from('oportunidades_donacion').update(cambios).eq('id', id);
+  if (error) return redirigirError(volver, 'No se pudo actualizar el servicio: ' + error.message);
+  revalidatePath('/insumos/servicios'); revalidatePath('/insumos/oportunidades/' + id);
+  redirigirOk(volver, accion === 'baja' ? 'Servicio dado de baja.' : 'Servicio reactivado. 💛');
+}
+
 // ── Asignar responsable (Logística) ──
 export async function asignarOportunidad(formData: FormData) {
   const { supabase } = await exigirLogistica();
