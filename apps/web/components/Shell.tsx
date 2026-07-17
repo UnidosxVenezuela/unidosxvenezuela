@@ -11,6 +11,7 @@ import BotonTelegram from './BotonTelegram';
 import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
 import TemaToggle from './TemaToggle';
+import PaletaComandos from './PaletaComandos';
 
 import type { NavFlags } from '@/lib/nav-flags';
 
@@ -70,6 +71,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
     <div className={'app-shell' + (colapsada ? ' lateral-colapsada' : '') + (cajon ? ' lateral-movil' : '')}>
       <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
       <SonidoBotones />
+      <PaletaComandos flags={nav} />
       <aside ref={asideRef} id="menu-lateral" className="sidebar" {...(oculto ? ({ inert: '' } as any) : {})}>
         <div className="tricolor" />
         {/* eslint-disable-next-line @next/next/no-img-element -- logo estático local, sin optimizador */}
