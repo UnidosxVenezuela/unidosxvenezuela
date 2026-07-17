@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { requirePanelAdmin, esSuperadmin, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { esEmailInternoWhatsapp } from '@/lib/whatsapp';
 import { ROLES, ROLES_ASIGNABLES, GRUPOS_INACTIVOS, ETIQUETA_ROL, ETIQUETA_AREA_ADMIN, ROLES_POR_AREA_ADMIN, GRUPOS_POR_AREA_ADMIN, ETIQUETA_GRUPO_REGISTRO, AREAS_REGISTRO, etiquetaPais, zonaPais } from '@/lib/constantes';
 import type { Perfil } from '@unidos/types';
 import { cambiarVerificacion, proponerAliado, aprobarAliado, restablecerContrasena, eliminarUsuario } from './actions';
@@ -97,6 +99,25 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   }
   const pendientes = perfiles.filter((p) => !p.verificado);
 
+  // Correo de registro (solo servidor, admin): el correo vive en auth.users, no en
+  // perfiles, así que se lee con la service key (createAdminClient) — nunca llega al
+  // cliente. Solo se muestra el correo REAL de la persona; el correo interno derivado
+  // del WhatsApp (login por número) se oculta. Degrada limpio si la service key no
+  // está configurada (no se muestran correos, pero la página no se rompe).
+  const correoPorId = new Map<string, string>();
+  try {
+    const admin = createAdminClient();
+    for (let page = 1; page <= 20; page++) {
+      const { data: lista, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      const usuarios = lista?.users ?? [];
+      if (error || usuarios.length === 0) break;
+      for (const u of usuarios) {
+        if (u.email && !esEmailInternoWhatsapp(u.email)) correoPorId.set(u.id, u.email);
+      }
+      if (usuarios.length < 1000) break;
+    }
+  } catch { /* sin service key → sin correos; la página sigue funcionando */ }
+
   // Flujo de aliados (doble aprobación) — solo administradores.
   let solicitudes: any[] = [];
   if (esAdmin) {
@@ -192,7 +213,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                 <div>
                 <strong>{p.nombre_completo || '—'}</strong>
                 <div className="muted" style={{ fontSize: '.9rem' }}>
-                  {[p.organizacion, p.telefono].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
+                  {[p.organizacion, p.telefono, correoPorId.get(p.id)].filter(Boolean).join(' · ') || 'Sin datos adicionales'}
                 </div>
                 {(() => {
                   const postula = p.grupo_interes
@@ -366,10 +387,16 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
               </div>
 
               {/* Ficha del voluntario: contacto y datos extra, plegado para no alargar */}
-              {(p.telefono || p.whatsapp || p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia || (p.habilidades ?? []).length > 0) && (
+              {(correoPorId.get(p.id) || p.telefono || p.whatsapp || p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia || (p.habilidades ?? []).length > 0) && (
                 <details className="usuario-ficha">
                   <summary>Ficha del voluntario</summary>
                   <div className="usuario-ficha-cont">
+                    {correoPorId.get(p.id) && (
+                      <div>
+                        <Icono nombre="avisos" size={12} /> Correo:{' '}
+                        <a href={'mailto:' + correoPorId.get(p.id)}>{correoPorId.get(p.id)}</a>
+                      </div>
+                    )}
                     {(p.telefono || p.whatsapp) && (
                       <div>
                         <Icono nombre="avisos" size={12} />
