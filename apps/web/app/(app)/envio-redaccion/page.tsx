@@ -13,6 +13,7 @@ import {
 } from '@/lib/flujo';
 import Icono from '@/components/Icono';
 import Kpi from '@/components/Kpi';
+import BotonExportar from '@/components/BotonExportar';
 import Pill from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import EstadoCaso from '@/components/EstadoCaso';
@@ -156,7 +157,10 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="cohete" size={24} /> Envío a Redacción</h1>
           <p className="muted sub">Difunde en redes las solicitudes confirmadas y lleva el registro de qué se publicó y dónde.</p>
         </div>
-        <BotonActualizar />
+        <div className="fila" style={{ gap: 8 }}>
+          <BotonExportar csvHref="/envio-redaccion/export" imprimirHref="/envio-redaccion/imprimir" />
+          <BotonActualizar />
+        </div>
       </div>
 
       {/* KPIs */}

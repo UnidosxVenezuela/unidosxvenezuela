@@ -13,6 +13,7 @@ import AnimarEntrada from '@/components/AnimarEntrada';
 import EstadoVacio from '@/components/EstadoVacio';
 import BotonActualizar from '@/components/BotonActualizar';
 import BarraBusqueda from '@/components/BarraBusqueda';
+import BotonExportar from '@/components/BotonExportar';
 
 const esImagen = (p?: string | null) => !!p && /\.(jpe?g|png|webp|gif|avif)$/i.test(p);
 
@@ -31,6 +32,11 @@ export default async function CaptacionReferenciaPage({ searchParams }: { search
   const cat = (searchParams.cat ?? '').trim();
   const fCat = CATEGORIAS_OPORTUNIDAD.includes(cat as any) ? cat : null;
   const hayFiltros = Boolean(qTexto || fCat);
+  // Cola de filtros para las descargas (mismo filtro que la vista).
+  const expQs = new URLSearchParams();
+  if (qTexto) expQs.set('q', qTexto);
+  if (fCat) expQs.set('cat', fCat);
+  const expCola = expQs.toString() ? '?' + expQs.toString() : '';
 
   // La RLS (0162) ya acota a Logística a `estado='enviado'`; se filtra igual aquí
   // para que un admin (que ve todo por la policy de Captación) vea lo mismo.
@@ -64,7 +70,10 @@ export default async function CaptacionReferenciaPage({ searchParams }: { search
             trabajó y <strong>envió</strong>. Revisa si alguna te sirve para <strong>completar una solicitud</strong> y usa su contacto.
           </p>
         </div>
-        <div className="fila"><BotonActualizar /></div>
+        <div className="fila">
+          <BotonActualizar />
+          <BotonExportar csvHref={'/insumos/captacion/export' + expCola} imprimirHref={'/insumos/captacion/imprimir' + expCola} />
+        </div>
       </div>
 
       <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
