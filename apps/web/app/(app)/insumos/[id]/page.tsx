@@ -109,7 +109,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               {s.cantidad && <span className="muted">Cantidad: <strong style={{ color: 'var(--texto)' }}>{s.cantidad}</strong></span>}
             </div>
             {origen && (
-              <div className="fila" style={{ gap: 6, marginTop: 10, padding: '6px 10px', background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8, fontSize: '.85rem' }}>
+              <div className="fila" style={{ gap: 6, marginTop: 10, padding: '6px 10px', background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)', borderRadius: 8, fontSize: '.85rem' }}>
                 <Icono nombre="ubicacion" size={14} /> Derivado de la solicitud de ayuda del caso <strong style={{ color: 'var(--texto)' }}>#{String(origen.numero).padStart(5, '0')}</strong> — {origen.titulo}
               </div>
             )}

@@ -24,10 +24,10 @@ import EstadoVacio from '@/components/EstadoVacio';
 import DetalleTarea from './DetalleTarea';
 import { tomarTarea } from './actions';
 
-type SP = { estado?: string; prioridad?: string; grupo?: string; cat?: string; mias?: string; tarea?: string };
+type SP = { estado?: string; prioridad?: string; grupo?: string; cat?: string; mias?: string; tarea?: string; vista?: string };
 
 /** Conserva los filtros actuales (sin `tarea` ni el flash `ok`) al construir enlaces del panel lateral. */
-const CLAVES_FILTRO: (keyof SP)[] = ['estado', 'prioridad', 'grupo', 'cat', 'mias'];
+const CLAVES_FILTRO: (keyof SP)[] = ['estado', 'prioridad', 'grupo', 'cat', 'mias', 'vista'];
 function filtrosTareas(searchParams: SP): URLSearchParams {
   const p = new URLSearchParams();
   for (const k of CLAVES_FILTRO) { const v = searchParams[k]; if (v) p.set(k, String(v)); }
@@ -87,6 +87,37 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle, verFull = false }: {
   );
 }
 
+/** Tablero (kanban) de tareas: una columna por estado presente, con su conteo.
+ *  Reutiliza las clases .tablero del pipeline. Solo muestra columnas con tareas. */
+function TableroTareas({ tareas, hrefDetalle }: { tareas: any[]; hrefDetalle: (id: string) => string }) {
+  const columnas = ESTADOS.filter((e) => tareas.some((t) => t.estado === e));
+  return (
+    <div className="tablero">
+      {columnas.map((e) => {
+        const items = tareas.filter((t) => t.estado === e);
+        return (
+          <div key={e} className="tablero-col">
+            <div className="tablero-col-cab">
+              <strong style={{ fontSize: '.9rem' }}>{ETIQUETA_ESTADO[e]}</strong>
+              <Pill tono={tonoDeClase(claseEstado(e))} punto={false}>{items.length}</Pill>
+            </div>
+            {items.map((t) => (
+              <Link key={t.id} href={hrefDetalle(t.id)} className="tarjeta" style={{ textDecoration: 'none', color: 'inherit', marginBottom: 0 }}>
+                <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <BadgeCategoria>{ETIQUETA_CATEGORIA[t.categoria as keyof typeof ETIQUETA_CATEGORIA] ?? t.categoria}</BadgeCategoria>
+                  <Pill tono={tonoDeClase(clasePrioridad(t.prioridad))} punto={false}>{ETIQUETA_PRIORIDAD[t.prioridad as keyof typeof ETIQUETA_PRIORIDAD]}</Pill>
+                </div>
+                <strong style={{ fontWeight: 600, fontSize: '.92rem' }}>{t.titulo}</strong>
+                {t.vence_en && <div className="muted" style={{ fontSize: '.78rem', marginTop: 6 }}>Vence {fechaCorta(t.vence_en)}</div>}
+              </Link>
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const COLS = 'id, titulo, descripcion, estado, prioridad, categoria, vence_en, grupo_id, asignado_a, cupo, grupos(nombre), asignado:perfiles!tareas_asignado_a_fkey(nombre_completo, avatar_url)';
 
 export default async function TareasPage({ searchParams }: { searchParams: SP }) {
@@ -94,6 +125,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
   const supabase = await createClient();
   const gestor = puedeGestionarTareas(perfil);
   const verFull = esAdministrador(perfil);
+  const vista = searchParams.vista === 'tablero' ? 'tablero' : 'lista';
 
   // Conteo de ocupados + mis participaciones (modelo de cupo).
   const [{ data: conteoData }, { data: misPartData }, { data: entregablesData }] = await Promise.all([
@@ -135,6 +167,7 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
 
   // Panel lateral (drawer) cuando hay ?tarea=ID, conservando los filtros.
   const cerrarHref = '/tareas' + (filtrosTareas(searchParams).toString() ? '?' + filtrosTareas(searchParams).toString() : '');
+  const hrefVista = (v: 'lista' | 'tablero') => { const p = filtrosTareas(searchParams); p.set('vista', v); return '/tareas?' + p.toString(); };
   let drawerTarea: any = null, drawerPersonas: any[] = [], drawerPerfiles: any[] = [];
   let drawerTieneEntregables = false, drawerPuedeEditar = false, drawerEsGestorTarea = false;
   if (searchParams.tarea) {
@@ -233,8 +266,16 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
         </div>
       )}
 
-      {/* Mis tareas */}
-      <h2>Mis tareas</h2>
+      {/* Mis tareas — con alternador Lista / Tablero (kanban por estado) */}
+      <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Mis tareas</h2>
+        {mias.length > 0 && (
+          <div className="seg" aria-label="Cómo ver mis tareas">
+            <Link href={hrefVista('lista')} aria-current={vista === 'lista' ? 'page' : undefined} className={vista === 'lista' ? 'activo' : undefined}>Lista</Link>
+            <Link href={hrefVista('tablero')} aria-current={vista === 'tablero' ? 'page' : undefined} className={vista === 'tablero' ? 'activo' : undefined}>Tablero</Link>
+          </div>
+        )}
+      </div>
       {mias.length === 0 ? (
         <EstadoVacio
           icono="tareas"
@@ -243,7 +284,9 @@ export default async function TareasPage({ searchParams }: { searchParams: SP })
             ? 'Toma una tarea abierta de arriba para empezar a colaborar.'
             : 'Toma una tarea abierta de arriba, o espera a que la coordinación te asigne una.'}
         />
-      ) : <TablaTareas tareas={mias} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} verFull={verFull} />}
+      ) : vista === 'tablero'
+        ? <TableroTareas tareas={mias} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} />
+        : <TablaTareas tareas={mias} conEntregables={conEntregables} hrefDetalle={(tid) => hrefDetalleTarea(searchParams, tid)} verFull={verFull} />}
 
       {/* Gestores: vista completa con filtros */}
       {gestor && <GestorTodas searchParams={searchParams} verFull={verFull} />}

@@ -815,6 +815,35 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 .pasos-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--btn-prim), var(--amarillo)); }
 .pasos-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* Barra de progreso del flujo (FlujoProgreso): N segmentos hecho/actual/pendiente.
+   Usada en la tabla de Solicitudes, el kanban de Logística y los drawers. */
+.flujo-prog-wrap { margin-top: 8px; }
+.flujo-prog-wrap.compacto { max-width: 130px; }
+.flujo-prog { display: flex; gap: 3px; }
+.flujo-prog > span { flex: 1; height: 4px; border-radius: 999px; background: var(--sup3); }
+.flujo-prog > span.hecho { background: var(--btn-prim); }
+.flujo-prog > span.actual { background: var(--acento); }
+.flujo-prog > span.fuera { background: var(--pill-crit-fg); }
+.flujo-prog > span.completo { background: var(--ok-solido); }
+.flujo-prog-et { color: var(--texto2); font-size: .66rem; font-weight: 600; margin-top: 4px; }
+.flujo-prog-et.fuera { color: var(--pill-crit-fg); }
+.flujo-prog-et.completo { color: var(--ok-solido); }
+
+/* Control segmentado (p. ej. alternador Lista / Tablero en Tareas). Son enlaces
+   que navegan (SSR), con la opción activa marcada por aria-current + .activo. */
+.seg { display: inline-flex; gap: 4px; background: var(--sup2); border: 1px solid var(--borde); border-radius: 999px; padding: 4px; }
+.seg a { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 7px 16px; border-radius: 999px;
+  font-size: .86rem; font-weight: 600; color: var(--texto2); text-decoration: none; transition: color .15s ease, background .15s ease; }
+.seg a:hover { color: var(--texto); text-decoration: none; }
+.seg a.activo { background: var(--sup1); color: var(--texto); box-shadow: var(--sombra1); }
+
+/* Barra «Cobertura de hoy» de Logística: proporción de solicitudes ya en curso. */
+.cobertura { display: flex; align-items: center; gap: 14px; background: var(--sup1); border: 1px solid var(--borde);
+  border-radius: 16px; padding: 14px 20px; margin-bottom: 16px; box-shadow: var(--sombra1); flex-wrap: wrap; }
+.cobertura-et { font-size: .88rem; font-weight: 600; white-space: nowrap; }
+.cobertura-barra { flex: 1; height: 8px; border-radius: 999px; background: var(--sup3); overflow: hidden; min-width: 100px; }
+.cobertura-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--btn-prim), var(--amarillo)); }
+
 .kpi-num { font-size: 2rem; font-weight: 700; line-height: 1.15; font-family: var(--font-sora, Sora), sans-serif; }
 .kpi-tend { display: flex; align-items: center; gap: 8px; font-size: .76rem; font-weight: 600; }
 .kpi-tend.ok { color: var(--ok-solido); }
