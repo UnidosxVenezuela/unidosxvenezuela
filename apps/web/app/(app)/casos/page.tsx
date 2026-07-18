@@ -161,7 +161,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
   }
 
-  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = [];
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -189,6 +189,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       // Derivaciones multi-área (0177) best-effort: si la tabla aún no existe, se omite.
       const { data: dder } = await supabase.from('casos_derivaciones').select('*').eq('caso_id', searchParams.caso).order('derivado_en', { ascending: true });
       drawerDeriv = (dder ?? []) as any[];
+      // Historial de correcciones (0178, Paso 12) best-effort.
+      const { data: dcorr } = await supabase.from('casos_historial_cambios').select('*').eq('caso_id', searchParams.caso).order('creado_en', { ascending: false });
+      drawerCorr = (dcorr ?? []) as any[];
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
@@ -327,7 +330,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
-                derivaciones={drawerDeriv} areasOperables={areasOperables} />
+                derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr} />
             </DrawerModal>
           </>
         )}
