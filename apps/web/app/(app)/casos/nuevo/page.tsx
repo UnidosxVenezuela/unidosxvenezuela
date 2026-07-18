@@ -42,7 +42,7 @@ export default async function NuevoCasoPage() {
     <div style={{ maxWidth: 640 }}>
       <Link href="/casos" className="muted">← Solicitudes</Link>
       <Consejo id="caso-nuevo" titulo="Reportar bien una solicitud">
-        Da un <strong>título claro</strong>, marca la <strong>ubicación en el mapa</strong>, e indica la fuente, el responsable y qué se necesita. Adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
+        Da un <strong>título claro</strong> y marca la <strong>ubicación en el mapa</strong>. El formulario va <strong>por bloques</strong>: completa la fuente, el <strong>referente</strong> y el <strong>doble contacto</strong> (WhatsApp e Instagram) y qué se necesita. Adjunta capturas de respaldo. Si aparece un aviso de <strong>posible duplicado</strong>, revísalo antes de crear.
       </Consejo>
       <div className="pagina-cab" style={{ marginTop: 8 }}>
         <div>
