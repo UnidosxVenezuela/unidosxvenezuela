@@ -39,8 +39,11 @@ export default async function AyudaPage() {
 
       {f.gestionCasos && !f.verificacion && (
         <S icono="documento" titulo="Gestión de solicitudes (tu función)">
-          <li>Con <strong>«Reportar una solicitud»</strong> registras la información que llega: título, categoría (<em>Desaparecidos</em> u <em>Otras informaciones</em>), fuente, fecha y <strong>archivos de respaldo</strong>.</li>
-          <li>En <strong>Gestión de solicitudes</strong> ves <strong>solo tus solicitudes</strong> y su estado. El equipo de Verificación decide si se confirman.</li>
+          <li>Con <strong>«Reportar una solicitud»</strong> registras la información que llega. El formulario está <strong>organizado por bloques</strong> (datos generales · contacto · qué se necesita · fuente y fecha) para que no se te escape nada.</li>
+          <li><strong>Contacto obligatorio:</strong> toda solicitud necesita un <strong>referente</strong> y <strong>dos vías de contacto</strong> (<strong>WhatsApp</strong> con código de país e <strong>Instagram</strong>), además de la <strong>ubicación</strong> en el mapa. Escríbelos completos: de eso depende que el área que la atienda pueda actuar.</li>
+          <li>En <strong>Gestión de solicitudes</strong> ves <strong>solo tus solicitudes</strong> y su estado. El equipo de Verificación decide si se confirman; tú <strong>no</strong> las validas ni las mueves.</li>
+          <li><strong>Nada se pierde:</strong> si corriges un dato, queda registrado el <strong>valor original y el corregido</strong> (los contactos, sin mostrar el número, por privacidad). Puedes editar tu solicitud mientras esté <strong>pendiente</strong> o <strong>en proceso</strong>.</li>
+          <li>Cuando Verificación <strong>valida</strong> tu solicitud, esta se <strong>deriva al área</strong> que corresponda (Logística, Redes, Donaciones…). Sigue su recorrido en la sección <strong>«Seguimiento»</strong>.</li>
           <li>Sé prudente con los datos sensibles: escribe solo lo necesario.</li>
         </S>
       )}
@@ -48,19 +51,21 @@ export default async function AyudaPage() {
       {f.verificacion && (
         <S icono="ok" titulo="Verificación (tu función)">
           <li>Tu misión: revisar que la información sea <strong>real, vigente y completa</strong> antes de que avance. La pregunta clave de cada caso es: <strong>¿es real? ¿es vigente? ¿está completa?</strong> Si alguna respuesta es <strong>no</strong>, no continúa.</li>
-          <li><strong>Toma una solicitud a la vez.</strong> Ábrela y usa el <strong>checklist de verificación</strong> del detalle (datos mínimos: descripción, fuente, fecha, contacto y —si es solicitud de ayuda— ubicación y tipo de necesidad).</li>
+          <li><strong>Toma una solicitud a la vez.</strong> Ábrela y revísala con el <strong>checklist</strong> del detalle: descripción, fuente, fecha, <strong>referente y doble contacto</strong> (WhatsApp e Instagram) y —si es solicitud de ayuda— ubicación y tipo de necesidad.</li>
+          <li><strong>Semáforo por campo 🟢🟡🔴:</strong> ya no se valida de un golpe. Marca <strong>cada dato por separado</strong> (🟢 verificado · 🟡 dudoso · 🔴 incorrecto). El <strong>candado</strong> impide validar la solicitud hasta que los datos mínimos estén en <strong>verde</strong>: la app lo exige, no es opcional.</li>
           <li>Tienes <strong>tres resultados</strong>:
             <ul>
-              <li>🟢 <strong>Confirmar</strong> (validada): es verídica, vigente y completa. Pasa al equipo de <strong>Envío a Redacción</strong> (tú no la envías).</li>
-              <li>🟡 <strong>Requiere información adicional</strong>: le falta un dato o hay contradicciones. <strong>No la descartes</strong>: escribe qué falta y se <strong>devuelve a Recopilación</strong> (se avisa a quien la reportó). Cuando completen los datos, el aviso se retira solo.</li>
+              <li>🟢 <strong>Validar</strong>: es verídica, vigente y completa. Al validarla, la <strong>derivas a las áreas</strong> que la atenderán (ver abajo).</li>
+              <li>🟡 <strong>Requiere información adicional</strong>: le falta un dato o hay contradicciones. <strong>No la descartes</strong>: escribe qué falta y se <strong>devuelve a Recopilación</strong>. Cuando completen los datos, el aviso se retira solo.</li>
               <li>🔴 <strong>Descartar</strong> (falso / no verificable / vencida): indica el motivo; queda registrado y sale del flujo.</li>
             </ul>
           </li>
-          <li><strong>Rutina:</strong> lee completa la solicitud, revisa la <strong>fecha</strong>, identifica la <strong>fuente</strong>, revisa el <strong>contacto</strong> y la <strong>ubicación</strong>, confirma que la necesidad <strong>siga vigente</strong> y busca <strong>evidencia</strong> (publicación reciente, confirmación, red oficial).</li>
-          <li><strong>Contacto formal:</strong> si necesitas contactar a una persona u organización, <strong>no lo hagas desde tu perfil personal</strong>: avísale a la coordinación, que define el canal oficial; redacta el texto y compártelo con ella.</li>
-          <li><strong>Ante dudas, no decidas sola:</strong> el circuito es <strong>Verificadora → Coordinadora → líder</strong>. Consulta siempre que haya datos <strong>sensibles</strong>, información <strong>contradictoria</strong>, posible <strong>duplicado</strong>, algo <strong>urgente</strong> o cualquier caso fuera del procedimiento.</li>
-          <li><strong>Qué NO hacer:</strong> no publiques información, no compartas datos ni capturas fuera del equipo, no prometas ayuda, no marques como validada una solicitud incompleta y no cierres casos dudosos sin consultar.</li>
-          <li>Recuerda: verificas <strong>«Otras informaciones»</strong>; los <em>desaparecidos</em> los atiende el Grupo de Búsqueda.</li>
+          <li><strong>Derivar a áreas (al validar):</strong> eliges <strong>una o varias áreas</strong> —Logística, Redes Sociales, Donaciones, Alianzas Estratégicas, Coordinación u Otra— con <strong>responsable, prioridad y observaciones</strong>. Cada derivación lleva su propio estado (<em>sin tomar → tomada → en proceso → cerrada</em>). <strong>Regla de oro:</strong> ningún área recibe una derivación si el caso <strong>no está validado</strong> — el sistema lo impide.</li>
+          <li><strong>Blindaje del contacto:</strong> lo que verificas queda protegido — <strong>Redes/Redacción nunca ven el contacto interno</strong> de la persona; a difusión solo llega el contacto <strong>autorizado</strong>. Marca bien qué es interno y qué es difundible.</li>
+          <li><strong>Nada se borra:</strong> el detalle muestra una <strong>línea de tiempo</strong> (Gestión → Verificación → Derivación → Cierre) y un <strong>historial de correcciones</strong> (valor original → corregido). Consulta el recorrido de cualquier solicitud en <strong>«Seguimiento»</strong>.</li>
+          <li><strong>Contacto formal:</strong> si necesitas contactar a una persona u organización, <strong>no lo hagas desde tu perfil personal</strong>: avísale a la coordinación, que define el canal oficial.</li>
+          <li><strong>Ante dudas, avisa a Coordinación:</strong> el circuito es <strong>Verificadora → Coordinadora → líder</strong>. Consulta ante datos <strong>sensibles</strong>, información <strong>contradictoria</strong>, posible <strong>duplicado</strong> o algo <strong>urgente</strong>. El sistema además lanza <strong>alertas por tiempo</strong> cuando una solicitud lleva mucho sin moverse.</li>
+          <li><strong>Qué NO hacer:</strong> no publiques información, no compartas datos ni capturas fuera del equipo, no prometas ayuda, no valides una solicitud incompleta y no cierres casos dudosos sin consultar.</li>
         </S>
       )}
 
@@ -94,8 +99,11 @@ export default async function AyudaPage() {
 
       {f.envioRedaccion && (
         <S icono="cohete" titulo="Redacción · Envío a Redacción (tu función)">
-          <li>Tu grupo <strong>Redacción</strong> maneja la sección <strong>Envío a Redacción</strong>: ahí ves <strong>todas las solicitudes confirmadas</strong>. Por <strong>rapidez ante la emergencia</strong> se difunden <strong>en paralelo</strong> a la gestión de Logística (no se espera a que Logística termine).</li>
-          <li>Revisa y toca <strong>«Enviar a Redacción»</strong> para difundirla y ampliar el alcance. Las marcadas <strong>«prioriza»</strong> son las que Logística no pudo cubrir: difúndelas primero.</li>
+          <li>Tu grupo <strong>Redacción</strong> maneja <strong>Envío a Redacción</strong>: ves <strong>todas las solicitudes confirmadas</strong>. Por <strong>rapidez ante la emergencia</strong> se difunden <strong>en paralelo</strong> a Logística (no se espera a que Logística termine).</li>
+          <li><strong>Privacidad garantizada:</strong> <strong>nunca ves el contacto interno</strong> de la persona (ni «por detrás»). Trabajas con una <strong>fuente curada</strong> que solo muestra lo <strong>difundible</strong>: el contacto <strong>autorizado</strong> y los datos de estado/publicación.</li>
+          <li>La bandeja se <strong>actualiza sola</strong> cuando entran o cambian solicitudes (sin exponer nada sensible); igual tienes el botón <strong>«Actualizar»</strong>.</li>
+          <li><strong>Tómala</strong> para redactarla (queda a tu nombre), <strong>publícala</strong> y <strong>márcala publicada</strong> indicando en qué <strong>canales</strong> se difundió.</li>
+          <li>Las marcadas <strong>«prioriza»</strong> son las que Logística no pudo cubrir: difúndelas primero. Verificación también puede <strong>derivarte</strong> una solicitud al área de <strong>Redes</strong>.</li>
         </S>
       )}
 
@@ -109,11 +117,23 @@ export default async function AyudaPage() {
 
       {f.acopio && (
         <S icono="camion" titulo="Logística (tu función)">
-          <li><strong>Recepción y categorización:</strong> las solicitudes verificadas entran solas al panel. Clasifica el <strong>tipo de material</strong> (salud y medicinas, materiales/EPP, alimentos y agua, maquinaria/rescate) y su prioridad.</li>
-          <li><strong>Ubicación del insumo:</strong> búscalo en centros de acopio, aliados y donaciones. Usa el <strong>contacto y las coordenadas del solicitante</strong> que aparecen en el detalle de la solicitud.</li>
-          <li><strong>Difusión en paralelo:</strong> toda solicitud confirmada ya está en <strong>Redacción</strong> difundiéndose (por rapidez). Si <strong>NO puedes cubrirla</strong>, márcala <strong>«No se pudo cubrir»</strong>: en Redacción se resalta como <strong>prioridad de difusión</strong>.</li>
-          <li><strong>Entrega:</strong> avanza los estados (Solicitado → En gestión → En ruta → Entregado) y, al entregar, adjunta la <strong>evidencia (foto/nota)</strong>. El caso se cierra como <em>resuelto</em>.</li>
-          <li><strong>Centros de acopio y donaciones:</strong> mantén al día los puntos y empareja los <strong>ofrecimientos (Donación-Ofrecimiento)</strong> con las solicitudes; ubícalos en el <strong>Mapa</strong>.</li>
+          <li><strong>Recibes derivaciones por área:</strong> cuando Verificación valida una solicitud, te la <strong>deriva</strong> con responsable, acción y prioridad. Trabájala con sus estados: <strong>sin tomar → tómala → en proceso → ciérrala</strong>.</li>
+          <li><strong>Ves la información completa:</strong> a diferencia de Redacción, Logística <strong>sí</strong> ve el <strong>contacto y las coordenadas del solicitante</strong> y los <strong>archivos adjuntos</strong> —los necesitas para gestionar y entregar—. Cuídalos: son datos sensibles.</li>
+          <li><strong>Recepción y categorización:</strong> clasifica el <strong>tipo de material</strong> (salud y medicinas, materiales/EPP, alimentos y agua, maquinaria/rescate) y su prioridad.</li>
+          <li><strong>Difusión en paralelo:</strong> toda solicitud confirmada ya está en <strong>Redacción</strong> difundiéndose. Si <strong>NO puedes cubrirla</strong>, márcala <strong>«No se pudo cubrir»</strong>: en Redacción se resalta como <strong>prioridad de difusión</strong>.</li>
+          <li><strong>Entrega:</strong> avanza los estados (Solicitado → En gestión → En ruta → Entregado) y adjunta la <strong>evidencia (foto/nota)</strong>. El caso se cierra como <em>resuelto</em>.</li>
+          <li><strong>Centros y puntos del mapa:</strong> cuando se valida una solicitud marcada como <strong>albergue, hospital o centro de acopio</strong>, aparece un <strong>punto en el mapa</strong> (fijo o temporal) para que lo gestiones. Mantén al día los centros y empareja los <strong>ofrecimientos (Donación-Ofrecimiento)</strong> con las solicitudes en el <strong>Mapa</strong>.</li>
+          <li>Consulta el recorrido de cualquier solicitud —y coordínate con otras áreas— en la sección <strong>«Seguimiento»</strong>.</li>
+        </S>
+      )}
+
+      {f.captacion && (
+        <S icono="enlace" titulo="Captación de Oportunidades (tu función)">
+          <li>Buscas y registras <strong>aliados</strong> —fundaciones, organizaciones, empresas, proyectos y alianzas— como <strong>tarjetas</strong> con contacto, enlace, ubicación, descripción y archivo. Cada tarjeta avanza por <strong>Investigación → Verificado → Enviado</strong>.</li>
+          <li>Cuando una tarjeta queda <strong>«Enviada»</strong>, <strong>Logística</strong> la ve como <strong>referencia</strong> (solo lectura) y puede dejar <strong>notas en su bitácora</strong>.</li>
+          <li><strong>Donación-Ofrecimiento:</strong> también captas <strong>ofertas</strong> de donación (insumos, dinero, servicios, transporte). Tú las registras; <strong>Verificación</strong> las valida; <strong>Logística</strong> contacta, empareja con una solicitud y concreta. No avanzan sin verificación.</li>
+          <li>Verificación puede <strong>derivarte</strong> solicitudes validadas al área de <strong>Alianzas Estratégicas</strong> o <strong>Donaciones</strong> (con responsable y prioridad). Sigue el recorrido en <strong>«Seguimiento»</strong>.</li>
+          <li>Cuida el <strong>contacto de los aliados</strong>; los datos sensibles de las personas afectadas no son de este equipo.</li>
         </S>
       )}
 
@@ -122,6 +142,14 @@ export default async function AyudaPage() {
           <li><strong>Administración → Usuarios:</strong> aprueba cuentas y, con <strong>«Gestionar rol»</strong>, abres una ventana para el rol principal, el grupo a cargo, los roles adicionales y agregar a un grupo. Al asignar <strong>líder o coordinador</strong> se te pide el grupo (un grupo tiene <strong>un líder</strong> y puede tener <strong>varios coordinadores</strong>).</li>
           <li>Los <strong>líderes y coordinadores</strong> pueden <strong>dar de alta usuarios</strong> del rol de su grupo desde la página del grupo: el líder los crea directo; si lo hace un <strong>coordinador, lo confirma el líder</strong>. Si el rol requiere <strong>segunda verificación</strong>, la persona deberá completarla antes de operar.</li>
           <li>Supervisas todas las secciones; en Apoyo Psicosocial ves solo indicadores (los casos son confidenciales).</li>
+        </S>
+      )}
+
+      {f.seguimiento && (
+        <S icono="buscar" titulo="Seguimiento (recorrido cross-área)">
+          <li>En <strong>«Seguimiento»</strong> consultas el <strong>recorrido de cualquier solicitud</strong> —en qué etapa va y a qué áreas se derivó— para que <strong>ninguna área trabaje a ciegas</strong>.</li>
+          <li>Muestra la <strong>línea de tiempo</strong> (Gestión → Verificación → Derivación → Cierre) con datos <strong>no sensibles</strong>: <strong>no</strong> expone el contacto interno.</li>
+          <li>Puedes buscar por <strong>número</strong> (#00012) o título. Es de solo consulta: cada área opera desde su propia sección.</li>
         </S>
       )}
 

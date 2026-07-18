@@ -8,6 +8,7 @@ import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import Pill from '@/components/Pill';
+import Consejo from '@/components/Consejos';
 
 const TONO_DERIV: Record<string, string> = { sin_tomar: 'neutra', tomada: 'info', en_proceso: 'aviso', cerrada: 'ok' };
 
@@ -45,6 +46,9 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
 
   return (
     <AnimarEntrada>
+      <Consejo id="seguimiento" titulo="El recorrido de cada solicitud">
+        Aquí ves en qué <strong>etapa</strong> va cualquier solicitud y a qué <strong>áreas</strong> se derivó, sea o no de tu área — para que <strong>nadie trabaje a ciegas</strong>. Muestra datos <strong>no sensibles</strong> (nunca el contacto). Busca por <strong>número</strong> (#00012) o título.
+      </Consejo>
       <div className="pagina-cab">
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="flecha" size={22} /> Seguimiento de solicitudes</h1>

@@ -1,0 +1,489 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --ok:#047857; --aviso:#a16207; --crit:#b91c1c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.5; font-size:11.5pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:16pt; color:var(--azul); margin:0 0 .35rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:12.5pt; color:var(--azul-osc); margin:1rem 0 .3rem; }
+  p{ margin:.4rem 0; }
+  a{ color:var(--azul); text-decoration:none; }
+  small{ color:var(--suave); }
+  .pagina{ padding:2mm 0; }
+  section{ break-inside:avoid; margin-bottom:14px; }
+  .lead{ color:var(--suave); font-size:11pt; }
+  /* Portada */
+  .cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .tri{ height:14px; display:flex; }
+  .cover .tri i{ flex:1; } .tri .a{ background:var(--azul);} .tri .y{ background:var(--amarillo);} .tri .r{ background:var(--rojo);}
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 24mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:30pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .punto{ width:12px; height:12px; border-radius:50%; background:
+     conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  /* Tarjetas y callouts */
+  .grid{ display:grid; gap:10px; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
+  .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
+  .card h4{ margin:.1rem 0 .2rem; font-size:11.5pt; color:var(--azul-osc); }
+  .card p{ margin:.15rem 0; font-size:10pt; }
+  .card .campo{ display:inline-block; margin-top:5px; font-size:8.5pt; font-weight:700; color:var(--azul);
+    background:#eef3ff; border:1px solid #d6e0fb; border-radius:999px; padding:2px 8px; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:9px 13px; margin:10px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:10pt; margin:6px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:6px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9.5pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .pill{ display:inline-block; font-size:8.5pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .p-gray{ background:#eef1f6; color:#475569; } .p-amber{ background:#fef3c7; color:#92400e; }
+  .p-green{ background:#dcfce7; color:#166534; } .p-blue{ background:#dbeafe; color:#1e40af; }
+  .p-red{ background:#fee2e2; color:#991b1b; }
+  figure{ margin:12px 0; text-align:center; break-inside:avoid; }
+  figcaption{ font-size:9pt; color:var(--suave); margin-top:4px; }
+  .steps{ display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; margin:8px 0; }
+  .step{ flex:1; min-width:120px; border:1px solid var(--borde); border-radius:10px; padding:8px 10px; background:#fff; position:relative; }
+  .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
+  .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+  .mini{ font-size:9.5pt; color:var(--suave); }
+  code{ background:#eef1f6; border:1px solid #dbe0ea; border-radius:5px; padding:1px 5px; font-size:9pt; color:var(--azul-osc); }
+</style>
+
+<!-- ══════════════ PORTADA ══════════════ -->
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
+    <h1>Guía para<br>Administradores</h1>
+    <div class="sub">Cómo <b>coordinar toda la plataforma</b>: usuarios y roles, segunda verificación de identidad,
+      supervisión por área, blindaje de datos sensibles, seguimiento del circuito y avisos.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
+    <div class="pie">Versión imprimible · Actualizada julio 2026 · Administración general y por área</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- ══════════════ 1. QUÉ HACE UN ADMINISTRADOR ══════════════ -->
+<section class="pagina">
+  <h2>1 · Qué hace un administrador (general vs. de área)</h2>
+  <p class="lead">El administrador <b>coordina la plataforma</b>: da de alta usuarios y roles, aprueba la segunda
+  verificación de identidad, supervisa el circuito y envía avisos. Hay <b>dos escalas</b> de administración, y a
+  propósito no son lo mismo.</p>
+  <div class="grid g2">
+    <div class="card"><span class="n" style="background:#0033A0">G</span><h4>Administrador general</h4>
+      <p>Ve y gestiona <b>casi todo</b>: usuarios, roles, grupos, áreas, verificaciones de identidad, seguimiento y avisos.
+      El <b>dueño</b> es además <b>superadministrador</b>.</p>
+      <span class="campo">rol «admin» · superadmin</span></div>
+    <div class="card"><span class="n" style="background:#E6B800">A</span><h4>Administrador de área</h4>
+      <p>Poderes <b>acotados a su área</b>: <b>supervisa</b> (lectura) y <b>opera</b> lo suyo. No hereda los poderes de
+      base de datos del admin general: su alcance se limita en la app.</p>
+      <span class="campo">Verificaciones · Redes Sociales · Logística</span></div>
+  </div>
+  <figure>
+    <svg width="620" height="150" viewBox="0 0 660 160" role="img" aria-label="Alcance del admin general frente al admin de área">
+      <defs><marker id="a1" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <!-- general -->
+      <rect x="16" y="20" width="180" height="120" rx="12" fill="#eef3ff" stroke="#0033A0" stroke-width="1.6"/>
+      <text x="106" y="44" text-anchor="middle" font-size="12" font-weight="800" fill="#0033A0">ADMIN GENERAL</text>
+      <text x="106" y="62" text-anchor="middle" font-size="9" fill="#334155">ve y gestiona casi todo</text>
+      <g font-size="8.5" fill="#475569" text-anchor="middle">
+        <text x="106" y="86">Usuarios · Roles · Grupos</text>
+        <text x="106" y="102">Áreas · Verificaciones</text>
+        <text x="106" y="118">Seguimiento · Avisos</text>
+      </g>
+      <!-- flechas -->
+      <g stroke="#94a3b8" stroke-width="1.6" fill="none">
+        <line x1="196" y1="52" x2="250" y2="42" marker-end="url(#a1)"/>
+        <line x1="196" y1="80" x2="250" y2="80" marker-end="url(#a1)"/>
+        <line x1="196" y1="108" x2="250" y2="118" marker-end="url(#a1)"/>
+      </g>
+      <!-- áreas -->
+      <g font-family="system-ui" text-anchor="middle" font-size="9.5" font-weight="700">
+        <rect x="252" y="26" width="200" height="30" rx="8" fill="#fff" stroke="#c9d8fb"/><text x="352" y="45" fill="#1e40af">Área · Verificaciones</text>
+        <rect x="252" y="65" width="200" height="30" rx="8" fill="#fff" stroke="#c9d8fb"/><text x="352" y="84" fill="#1e40af">Área · Redes Sociales</text>
+        <rect x="252" y="104" width="200" height="30" rx="8" fill="#fff" stroke="#c9d8fb"/><text x="352" y="123" fill="#1e40af">Área · Logística y Acopio</text>
+      </g>
+      <!-- limite psicosocial -->
+      <rect x="472" y="55" width="172" height="50" rx="10" fill="#fef2f2" stroke="#CF142B" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <text x="558" y="76" text-anchor="middle" font-size="9" font-weight="800" fill="#991b1b">Apoyo Psicosocial</text>
+      <text x="558" y="92" text-anchor="middle" font-size="8" fill="#b91c1c">confidencial · fuera de alcance</text>
+    </svg>
+    <figcaption>El admin general supervisa todo <b>salvo</b> los casos confidenciales de Apoyo Psicosocial (ver 5).</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th style="width:30%">Administrador de área</th><th>Qué grupos abarca</th></tr></thead>
+    <tbody>
+      <tr><td><b>Verificaciones</b></td><td>Gestión de casos, verificación, búsqueda, búsqueda NNA, enlace de contacto y digitalización.</td></tr>
+      <tr><td><b>Redes Sociales</b></td><td>Redacción/envío, diseño gráfico, edición de video, community manager e influencers.</td></tr>
+      <tr><td><b>Logística y Acopio</b></td><td>Logística, centros de acopio, donaciones y traspasos.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>Doble candado (importante):</b> un <b>admin de área NO es admin general</b> —no obtiene
+  poderes de base de datos por serlo—. Y solo un <b>admin general</b> (o el superadmin) puede <b>conceder o quitar</b>
+  un rol de administrador de área; un admin de área no puede acuñar otros admins. Los <b>poderes operativos fuertes</b>
+  (cargar solicitudes, búsqueda, digitalización…) exigen además la <b>2ª verificación de identidad</b> aprobada.</div>
+</section>
+
+<!-- ══════════════ 2. EL CIRCUITO COMPLETO ══════════════ -->
+<section class="pagina">
+  <h2>2 · El circuito completo de la plataforma</h2>
+  <p>Todo lo que administras gira alrededor de <b>un circuito</b>: de la solicitud que entra al cierre que la resuelve.
+  Conocerlo de memoria te permite <b>supervisar</b>, detectar dónde algo se estanca y <b>derivar</b> a la vía correcta.</p>
+  <figure>
+    <svg width="650" height="384" viewBox="0 0 680 400" role="img" aria-label="El circuito completo, de la solicitud al cierre, con difusión y captación en paralelo">
+      <defs>
+        <marker id="fa" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker>
+        <marker id="fg" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker>
+      </defs>
+      <text x="340" y="15" text-anchor="middle" font-size="10.5" font-weight="800" fill="#0033A0" letter-spacing=".06em">EL ADMINISTRADOR COORDINA TODO EL CIRCUITO</text>
+      <!-- spine -->
+      <g font-family="system-ui" text-anchor="middle">
+        <rect x="14" y="30" width="150" height="52" rx="11" fill="#0033A0"/>
+        <text x="89" y="52" font-size="11.5" font-weight="800" fill="#fff">Recopilación</text>
+        <text x="89" y="68" font-size="7.6" fill="#cfe0ff">solicitud · ubicación · doble contacto</text>
+        <rect x="196" y="30" width="150" height="52" rx="11" fill="#FFCE00"/>
+        <text x="271" y="52" font-size="11.5" font-weight="800" fill="#5b4a00">Verificación</text>
+        <text x="271" y="68" font-size="7.6" fill="#7a6100">semáforo por campo · valida (candado)</text>
+        <rect x="378" y="30" width="150" height="52" rx="11" fill="#0033A0"/>
+        <text x="453" y="52" font-size="11.5" font-weight="800" fill="#fff">Derivación</text>
+        <text x="453" y="68" font-size="7.6" fill="#cfe0ff">a una o varias áreas</text>
+      </g>
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="164" y1="56" x2="194" y2="56" marker-end="url(#fa)"/>
+        <line x1="346" y1="56" x2="376" y2="56" marker-end="url(#fa)"/>
+      </g>
+      <text x="340" y="101" text-anchor="middle" font-size="8.3" fill="#556074">Verificación valida (todos los campos en verde) y deriva a las áreas que correspondan:</text>
+      <!-- chips -->
+      <g font-family="system-ui" text-anchor="middle" font-size="9" font-weight="700">
+        <rect x="12" y="110" width="124" height="34" rx="9" fill="#eef3ff" stroke="#c9d8fb"/><text x="74" y="131" fill="#1e40af">Logística</text>
+        <rect x="146" y="110" width="124" height="34" rx="9" fill="#eef3ff" stroke="#c9d8fb"/><text x="208" y="131" fill="#1e40af">Redes Sociales</text>
+        <rect x="280" y="110" width="124" height="34" rx="9" fill="#eef3ff" stroke="#c9d8fb"/><text x="342" y="131" fill="#1e40af">Donaciones</text>
+        <rect x="414" y="110" width="124" height="34" rx="9" fill="#eef3ff" stroke="#c9d8fb"/><text x="476" y="131" fill="#1e40af">Alianzas</text>
+        <rect x="548" y="110" width="124" height="34" rx="9" fill="#eef3ff" stroke="#c9d8fb"/><text x="610" y="131" fill="#1e40af">Coordinación</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.1" fill="none">
+        <line x1="453" y1="82" x2="74" y2="108" marker-end="url(#fg)"/>
+        <line x1="453" y1="82" x2="208" y2="108" marker-end="url(#fg)"/>
+        <line x1="453" y1="82" x2="342" y2="108" marker-end="url(#fg)"/>
+        <line x1="453" y1="82" x2="476" y2="108" marker-end="url(#fg)"/>
+        <line x1="453" y1="82" x2="610" y2="108" marker-end="url(#fg)"/>
+      </g>
+      <text x="340" y="170" text-anchor="middle" font-size="8.3" fill="#556074">cada derivación avanza por su propio estado operativo — visible para TODAS las áreas:</text>
+      <!-- estados + cierre -->
+      <g font-family="system-ui" text-anchor="middle" font-size="9" font-weight="700">
+        <rect x="24" y="180" width="110" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="79" y="201" fill="#475569">sin tomar</text>
+        <rect x="164" y="180" width="104" height="34" rx="17" fill="#fef3c7" stroke="#f2c14e"/><text x="216" y="201" fill="#92400e">tomada</text>
+        <rect x="298" y="180" width="116" height="34" rx="17" fill="#fef3c7" stroke="#f2c14e"/><text x="356" y="201" fill="#92400e">en proceso</text>
+        <rect x="444" y="180" width="104" height="34" rx="17" fill="#dcfce7" stroke="#86c9a0"/><text x="496" y="201" fill="#166534">cerrada</text>
+        <rect x="578" y="180" width="92" height="34" rx="11" fill="#047857"/><text x="624" y="201" fill="#fff">CIERRE</text>
+      </g>
+      <g stroke="#64748b" stroke-width="1.6" fill="none">
+        <line x1="134" y1="197" x2="162" y2="197" marker-end="url(#fa)"/>
+        <line x1="268" y1="197" x2="296" y2="197" marker-end="url(#fa)"/>
+        <line x1="414" y1="197" x2="442" y2="197" marker-end="url(#fa)"/>
+        <line x1="548" y1="197" x2="576" y2="197" marker-end="url(#fa)"/>
+      </g>
+      <!-- paralelo -->
+      <text x="24" y="242" text-anchor="start" font-size="8.5" font-weight="800" fill="#CF142B">EN PARALELO</text>
+      <g font-family="system-ui">
+        <rect x="24" y="248" width="392" height="50" rx="11" fill="#fff" stroke="#e6e9f0"/>
+        <text x="40" y="270" font-size="10" font-weight="800" fill="#0033A0">Redacción / Redes — difunde las confirmadas</text>
+        <text x="40" y="286" font-size="8.3" fill="#556074">vista curada · NUNCA ve el contacto interno</text>
+        <rect x="430" y="248" width="240" height="50" rx="11" fill="#fff" stroke="#e6e9f0"/>
+        <text x="446" y="270" font-size="10" font-weight="800" fill="#0033A0">Captación — aliados y ofertas</text>
+        <text x="446" y="286" font-size="8.3" fill="#556074">capta quién ofrece ayudar</text>
+      </g>
+      <!-- timeline -->
+      <rect x="24" y="320" width="646" height="34" rx="10" fill="#f2f6ff" stroke="#c9d8fb"/>
+      <text x="347" y="341" text-anchor="middle" font-size="9.3" font-weight="700" fill="#1e40af">Línea de tiempo e historial en cada paso — nada se borra (auditoría)</text>
+    </svg>
+    <figcaption>Del reporte al cierre. Recopilación crea, Verificación valida y deriva, cada área opera su parte; Redacción difunde y Captación capta en paralelo.</figcaption>
+  </figure>
+  <div class="grid g3">
+    <div class="card"><span class="n" style="background:#0033A0">1</span><h4>Entra y se valida</h4><p>Recopilación reporta con ubicación y doble contacto; Verificación revisa <b>campo por campo</b> (semáforo) y la deja validada.</p></div>
+    <div class="card"><span class="n" style="background:#E6B800">2</span><h4>Se deriva y se opera</h4><p>La solicitud validada se <b>deriva</b> a una o varias áreas; cada una la lleva de <b>sin tomar</b> a <b>cerrada</b>.</p></div>
+    <div class="card"><span class="n" style="background:#CF142B">3</span><h4>Se difunde y se cierra</h4><p>Redacción difunde las confirmadas; al entregarse la ayuda, el caso queda <b>cerrado</b>. Todo con historial.</p></div>
+  </div>
+  <div class="callout"><b>Regla institucional:</b> <b>ningún área recibe una derivación si el caso no está validado</b>
+  (todos los campos en verde). Lo garantiza la base de datos, no solo la pantalla. Y toda derivación es <b>visible para
+  todas las áreas</b>: así ningún caso queda «perdido».</div>
+</section>
+
+<!-- ══════════════ 3. USUARIOS Y ROLES ══════════════ -->
+<section class="pagina">
+  <h2>3 · Usuarios y roles</h2>
+  <p>Desde <b>«Administración → Usuarios»</b> apruebas registros, das de alta cuentas y gestionas roles. El acceso a la
+  plataforma se rige por <b>ROL</b>, no por pertenecer a un grupo.</p>
+  <h3>Quién puede dar de alta una cuenta</h3>
+  <figure>
+    <svg width="620" height="164" viewBox="0 0 660 176" role="img" aria-label="Vías de alta de usuario: directa por admin o líder; con confirmación por coordinador">
+      <defs><marker id="a3" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="10" font-weight="700">
+        <!-- fila directa -->
+        <rect x="10" y="20" width="180" height="40" rx="10" fill="#0033A0"/><text x="100" y="44" fill="#fff">Admin o Líder de grupo</text>
+        <rect x="300" y="20" width="180" height="40" rx="10" fill="#dcfce7" stroke="#86c9a0"/><text x="390" y="44" fill="#166534">Cuenta creada (directo)</text>
+        <!-- fila coordinador -->
+        <rect x="10" y="104" width="150" height="40" rx="10" fill="#FFCE00"/><text x="85" y="128" fill="#5b4a00">Coordinador</text>
+        <rect x="196" y="104" width="150" height="40" rx="10" fill="#fff" stroke="#cbd5e1"/><text x="271" y="123" fill="#475569" font-size="9">Solicitud</text><text x="271" y="137" fill="#475569" font-size="9">pendiente</text>
+        <rect x="382" y="104" width="120" height="40" rx="10" fill="#fff" stroke="#cbd5e1"/><text x="442" y="128" fill="#475569" font-size="9">Líder confirma</text>
+        <rect x="524" y="104" width="126" height="40" rx="10" fill="#dcfce7" stroke="#86c9a0"/><text x="587" y="128" fill="#166534" font-size="9">Cuenta creada</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.8" fill="none">
+        <line x1="190" y1="40" x2="298" y2="40" marker-end="url(#a3)"/>
+        <line x1="160" y1="124" x2="194" y2="124" marker-end="url(#a3)"/>
+        <line x1="346" y1="124" x2="380" y2="124" marker-end="url(#a3)"/>
+        <line x1="502" y1="124" x2="522" y2="124" marker-end="url(#a3)"/>
+      </g>
+      <text x="100" y="76" text-anchor="middle" font-size="8" fill="#556074">crea la cuenta al instante</text>
+      <text x="271" y="164" text-anchor="middle" font-size="8" fill="#556074">el rol otorgado es SIEMPRE el del grupo; el líder aprueba o rechaza</text>
+    </svg>
+    <figcaption>El líder crea directo; el coordinador propone y el líder de su grupo confirma (así no quedan cuentas huérfanas).</figcaption>
+  </figure>
+  <div class="callout"><b>Cuentas acotadas a un grupo:</b> además de los admins, los <b>líderes y coordinadores</b> pueden
+  dar de alta cuentas <b>del rol de su grupo</b> (no un rol arbitrario). Toda cuenta nueva queda <b>pendiente</b> hasta
+  que un admin la verifica.</div>
+  <h3>Gestionar rol</h3>
+  <p>En la fila de la persona, «<b>Gestionar</b>» abre el panel con tres bloques: <b>Rol principal</b>,
+  <b>Roles adicionales</b> (una persona puede sumar varios) y <b>Agregar a un grupo</b>.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Al asignar líder o coordinador: eliges el grupo</h4><p>Si el rol es <b>líder</b> o
+      <b>coordinador</b>, el panel te pide «<b>¿Qué grupo dirige?</b>» / «¿Qué grupo coordina?». El cargo es aditivo:
+      puede llevar varios grupos.</p></div>
+    <div class="card"><h4>Los voluntarios NO heredan el rol operativo</h4><p>Sumar a un <b>voluntario</b> a un grupo lo hace
+      <b>miembro</b>, pero <b>no</b> le da el rol operativo del grupo. Para que opere, asígnale el rol a mano. El acceso
+      va por <b>rol</b>, no por membresía.</p></div>
+  </div>
+  <div class="callout warn"><b>Blindaje de roles:</b> solo el <b>superadministrador</b> crea o cambia a un
+  <b>administrador</b>; solo un <b>admin general</b> concede un rol de <b>administrador de área</b>; y el rol de
+  <b>líder de plataforma aliada</b> se otorga únicamente por <b>doble aprobación</b>. Cada rol sensible avisa en el panel
+  cuando requiere <b>2ª verificación</b>.</div>
+</section>
+
+<!-- ══════════════ 4. SEGUNDA VERIFICACIÓN DE IDENTIDAD ══════════════ -->
+<section class="pagina">
+  <h2>4 · Segunda verificación de identidad</h2>
+  <p>Es la <b>puerta de seguridad</b> para los roles sensibles: quien maneja información delicada se identifica primero.
+  La persona sube dos imágenes; <b>tú (admin) las apruebas o rechazas</b>. Menú <b>«Administración → Verificaciones»</b>.</p>
+  <figure>
+    <svg width="620" height="150" viewBox="0 0 660 160" role="img" aria-label="Flujo de la segunda verificación de identidad">
+      <defs><marker id="a4" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="10" font-weight="700">
+        <rect x="10" y="55" width="176" height="52" rx="11" fill="#eef1f6" stroke="#cbd5e1"/>
+        <text x="98" y="76" fill="#334155" font-size="9.5">La persona sube</text>
+        <text x="98" y="92" fill="#556074" font-size="8.3">selfie (rostro + documento) + cédula</text>
+        <rect x="242" y="55" width="176" height="52" rx="11" fill="#0033A0"/>
+        <text x="330" y="76" fill="#fff" font-size="9.5">Admin compara</text>
+        <text x="330" y="92" fill="#cfe0ff" font-size="8.3">lado a lado, con zoom («Comparar»)</text>
+        <!-- decision -->
+        <rect x="474" y="20" width="176" height="42" rx="11" fill="#dcfce7" stroke="#86c9a0"/><text x="562" y="46" fill="#166534">Aprobada</text>
+        <rect x="474" y="100" width="176" height="42" rx="11" fill="#fee2e2" stroke="#eda3a3"/><text x="562" y="126" fill="#991b1b">Rechazada (con nota)</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.8" fill="none">
+        <line x1="186" y1="81" x2="240" y2="81" marker-end="url(#a4)"/>
+        <path d="M418,72 C446,60 452,48 472,42" marker-end="url(#a4)"/>
+        <path d="M418,90 C446,102 452,114 472,120" marker-end="url(#a4)"/>
+      </g>
+    </svg>
+    <figcaption>La persona presenta; el admin coteja rostro contra documento y decide. Nadie se auto-aprueba.</figcaption>
+  </figure>
+  <div class="steps">
+    <div class="step"><span class="sn">PASO 1</span><p>La persona completa el asistente en «Verificación»: <b>foto en vivo</b> (rostro con documento a la vista) + <b>foto del documento</b>.</p></div>
+    <div class="step"><span class="sn">PASO 2</span><p>Abres su solicitud y usas el <b>comparador</b> («Comparar»): rostro y cédula <b>lado a lado</b>, con zoom.</p></div>
+    <div class="step"><span class="sn">PASO 3</span><p><b>Apruebas</b> o <b>rechazas</b> (con nota). Al aprobar, la persona ya puede operar los roles sensibles.</p></div>
+  </div>
+  <div class="callout blind"><b>Datos protegidos:</b> las imágenes viven en un almacén <b>privado</b>; solo la persona
+  dueña y los administradores pueden verlas. <b>Nadie se auto-aprueba</b> (la persona solo puede reenviar su solicitud,
+  nunca cambiar su propio estado). Es <b>requisito</b> para roles como recopilación, búsqueda, enlace de contacto y
+  digitalización.</div>
+</section>
+
+<!-- ══════════════ 5. SUPERVISIÓN POR ÁREA ══════════════ -->
+<section class="pagina">
+  <h2>5 · Supervisión por área (y el límite de Psicosocial)</h2>
+  <p>Supervisar es <b>ver el recorrido</b> sin necesidad de intervenir. El alcance depende de tu escala.</p>
+  <table>
+    <thead><tr><th style="width:28%">Quién</th><th>Qué supervisa</th></tr></thead>
+    <tbody>
+      <tr><td><b>Admin general</b></td><td>Todo el circuito: solicitudes, verificación, derivaciones y contenido de <b>todas</b> las áreas.</td></tr>
+      <tr><td><b>Admin de Verificaciones</b></td><td>Casos, verificación, búsqueda y digitalización de su área (lectura + operación acotada).</td></tr>
+      <tr><td><b>Admin de Redes Sociales</b></td><td>Cola de redacción y producción de contenido (con la <b>vista curada</b>, sin contacto interno).</td></tr>
+      <tr><td><b>Admin de Logística y Acopio</b></td><td>Derivaciones de logística y donaciones, centros de acopio y traspasos.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout blind"><b>El límite de Apoyo Psicosocial:</b> el área de salud mental tiene un modelo de privacidad
+  <b>más estricto que el resto</b>. Cada caso y su <b>bitácora clínica</b> los ven <b>solo</b> el profesional asignado y la
+  coordinación psicosocial. <b>Ni el administrador general ni la coordinación general</b> ven ese contenido. Es una
+  decisión de diseño y la impone la base de datos, no la interfaz.</div>
+  <div class="callout"><b>Cómo se ve la supervisión:</b> cuando un coordinador o admin entra a un grupo del que no es
+  miembro para «revisar cómo va», la plataforma lo señala con un <b>aviso de supervisión</b>. Supervisar deja rastro; es
+  transparente para el equipo.</div>
+</section>
+
+<!-- ══════════════ 6. BLINDAJE DE DATOS SENSIBLES Y NNA ══════════════ -->
+<section class="pagina">
+  <h2>6 · Blindaje de datos sensibles y NNA</h2>
+  <p class="lead">La plataforma protege la información por capas. Como admin, tu trabajo es <b>respetarlas</b> y
+  asegurarte de que nadie las rodee.</p>
+  <figure>
+    <svg width="640" height="120" viewBox="0 0 680 128" role="img" aria-label="Capas de blindaje de datos sensibles">
+      <g font-family="system-ui" text-anchor="middle">
+        <rect x="8"   y="20" width="126" height="88" rx="11" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="71" y="44" font-size="9" font-weight="800" fill="#991b1b">Apellidos</text>
+        <text x="71" y="68" font-size="8" fill="#b91c1c">ocultos salvo</text><text x="71" y="80" font-size="8" fill="#b91c1c">al admin</text>
+        <rect x="142" y="20" width="126" height="88" rx="11" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="205" y="44" font-size="9" font-weight="800" fill="#991b1b">Avisos discretos</text>
+        <text x="205" y="68" font-size="8" fill="#b91c1c">push / Telegram</text><text x="205" y="80" font-size="8" fill="#b91c1c">sin el detalle</text>
+        <rect x="276" y="20" width="126" height="88" rx="11" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="339" y="44" font-size="9" font-weight="800" fill="#991b1b">Archivos privados</text>
+        <text x="339" y="68" font-size="8" fill="#b91c1c">enlaces</text><text x="339" y="80" font-size="8" fill="#b91c1c">temporales</text>
+        <rect x="410" y="20" width="126" height="88" rx="11" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="473" y="44" font-size="9" font-weight="800" fill="#991b1b">Redes: sin contacto</text>
+        <text x="473" y="68" font-size="8" fill="#b91c1c">vista curada,</text><text x="473" y="80" font-size="8" fill="#b91c1c">nunca el interno</text>
+        <rect x="544" y="20" width="128" height="88" rx="11" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="608" y="44" font-size="9" font-weight="800" fill="#991b1b">NNA / Desapar.</text>
+        <text x="608" y="68" font-size="8" fill="#b91c1c">flujo desactivado</text><text x="608" y="80" font-size="8" fill="#b91c1c">nunca se difunde</text>
+      </g>
+    </svg>
+    <figcaption>Cinco capas de blindaje que la base de datos impone (no dependen de la pantalla).</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="card"><h4>Apellidos y contactos</h4><p>Los <b>apellidos</b> se ocultan salvo a la administración. El
+      <b>contacto interno</b> de un caso nunca sale hacia Redes: leen una <b>vista curada</b> con solo lo autorizado.</p></div>
+    <div class="card"><h4>Avisos y archivos</h4><p>Las notificaciones (push y Telegram) son <b>discretas</b>: avisan sin
+      revelar el detalle sensible. Los <b>adjuntos</b> son privados, con enlaces <b>temporales</b>.</p></div>
+    <div class="card"><h4>Menores y desaparecidos</h4><p>El flujo de <b>Desaparecidos / menores</b> está <b>desactivado</b>
+      y <b>nunca se difunde</b>: queda fuera de la difusión y del seguimiento cross-área.</p></div>
+    <div class="card"><h4>Tu regla como admin</h4><p>No copies ni traslades datos sensibles fuera de la plataforma. Si un
+      canal necesita un dato, usa el que la plataforma ya expone (curado), no el interno.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════ 7. SEGUIMIENTO, COORDINACIÓN Y ALERTAS ══════════════ -->
+<section class="pagina">
+  <h2>7 · Seguimiento, Coordinación y alertas</h2>
+  <p>Para que <b>ninguna área quede a ciegas</b>, la sección <b>«Seguimiento»</b> deja consultar el <b>estado y el
+  recorrido</b> de cualquier solicitud —sea o no de tu área— con solo los campos <b>no sensibles</b> (sin contacto ni
+  evidencias). Además, el sistema <b>te alerta</b> solo.</p>
+  <figure>
+    <svg width="620" height="150" viewBox="0 0 660 160" role="img" aria-label="Seguimiento cross-área y alertas automáticas">
+      <defs><marker id="a7" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle">
+        <rect x="230" y="58" width="200" height="46" rx="12" fill="#0033A0"/>
+        <text x="330" y="80" font-size="11" font-weight="800" fill="#fff">Seguimiento</text>
+        <text x="330" y="95" font-size="8" fill="#cfe0ff">recorrido de cualquier solicitud</text>
+        <!-- alerta 1 -->
+        <rect x="12" y="18" width="196" height="42" rx="10" fill="#fffbe9" stroke="#f2c14e"/>
+        <text x="110" y="36" font-size="9" font-weight="800" fill="#92400e">Duda (requiere info)</text>
+        <text x="110" y="50" font-size="8" fill="#a16207">avisa a Coordinación</text>
+        <!-- alerta 2 -->
+        <rect x="12" y="102" width="196" height="42" rx="10" fill="#fef2f2" stroke="#eda3a3"/>
+        <text x="110" y="120" font-size="9" font-weight="800" fill="#991b1b">+48 h sin avance</text>
+        <text x="110" y="134" font-size="8" fill="#b91c1c">alerta al responsable / Verificación</text>
+        <!-- coordinacion -->
+        <rect x="452" y="58" width="196" height="46" rx="12" fill="#dcfce7" stroke="#86c9a0"/>
+        <text x="550" y="80" font-size="10.5" font-weight="800" fill="#166534">Coordinación</text>
+        <text x="550" y="95" font-size="8" fill="#15803d">recibe dudas y alertas</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.7" fill="none">
+        <line x1="208" y1="40" x2="252" y2="62" marker-end="url(#a7)"/>
+        <line x1="208" y1="122" x2="252" y2="100" marker-end="url(#a7)"/>
+        <line x1="430" y1="81" x2="450" y2="81" marker-end="url(#a7)"/>
+      </g>
+    </svg>
+    <figcaption>El seguimiento cruza áreas; las dudas y los estancamientos generan avisos automáticos.</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="card"><h4>Aviso a Coordinación ante dudas</h4><p>Cuando Verificación marca un campo como «<b>requiere
+      información</b>», el sistema <b>avisa a Coordinación</b> (los admins) para desatascarlo.</p></div>
+    <div class="card"><h4>Alerta por tiempo</h4><p>Una solicitud en <b>pendiente</b> o <b>en proceso</b> que lleva
+      <b>+48 h sin actualizarse</b> genera un aviso: al <b>responsable</b> que la tomó, o a <b>Verificación</b> si nadie
+      la tomó.</p></div>
+  </div>
+  <div class="callout ok"><b>Úsalo para supervisar:</b> con «Seguimiento» respondes «¿dónde va esta solicitud?» sin abrir
+  el caso completo ni tocar datos sensibles. Es tu vista de conjunto del circuito.</div>
+</section>
+
+<!-- ══════════════ 8. AVISOS ══════════════ -->
+<section class="pagina">
+  <h2>8 · Avisos a la comunidad</h2>
+  <p>Como admin puedes <b>enviar avisos</b> a todo el equipo o a los grupos que elijas. Llegan por <b>campana</b> in-app,
+  <b>push</b> del navegador y <b>Telegram</b> (si la persona lo vinculó).</p>
+  <div class="steps">
+    <div class="step"><span class="sn">PASO 1</span><p>Escribe el <b>título</b> (obligatorio) y el <b>cuerpo</b> del aviso.</p></div>
+    <div class="step"><span class="sn">PASO 2</span><p>Elige el destino: <b>«Todos»</b> (verificados) o <b>«Grupos»</b> y marca los grupos.</p></div>
+    <div class="step"><span class="sn">PASO 3</span><p>Si quieres, adjunta una <b>imagen</b> (PNG/JPG/WebP/GIF, hasta 4 MB) y envía.</p></div>
+  </div>
+  <div class="callout"><b>Alcance:</b> un aviso a «Todos» llega a cada persona <b>verificada</b>; a «Grupos», solo a los
+  <b>miembros</b> de los grupos elegidos. La imagen viaja también al push y a Telegram. Son <b>anuncios de difusión</b>:
+  nunca metas en ellos datos sensibles de un caso.</div>
+</section>
+
+<!-- ══════════════ 9. MANTENIMIENTO TÉCNICO ══════════════ -->
+<section class="pagina">
+  <h2>9 · Mantenimiento técnico (nota para el admin técnico)</h2>
+  <p>Esta sección es para quien administra el <b>despliegue</b>, no para el uso diario. Tras publicar cambios que tocan la
+  <b>base de datos</b>, hay que <b>aplicar las migraciones</b> y regenerar los tipos.</p>
+  <div class="callout"><b>Después de desplegar cambios de base de datos:</b><br>
+    <code>pnpm db:reset</code> &nbsp;— aplica las migraciones en orden.<br>
+    <code>pnpm db:types</code> &nbsp;— regenera los tipos TypeScript desde el esquema.</div>
+  <div class="grid g2">
+    <div class="card"><h4>Migraciones numeradas</h4><p>Van en orden (<code>0001</code>, <code>0002</code>, …). Cada una
+      documenta qué cambia y tras qué migración se ejecuta. No se saltan ni se reordenan.</p></div>
+    <div class="card"><h4>Idempotentes</h4><p>Están escritas para poder <b>re-ejecutarse sin romper</b> nada (usan
+      <code>if not exists</code>, <code>create or replace</code>…). Aun así, respeta el orden.</p></div>
+  </div>
+  <div class="callout warn"><b>La RLS es la fuente de verdad.</b> Los permisos que describe esta guía los impone la base de
+  datos (Row Level Security), no la interfaz. Nunca expongas la clave <b>service_role</b> en el cliente: si algo «no se ve»,
+  suele ser la RLS haciendo su trabajo, no un error de pantalla.</div>
+</section>
+
+<!-- ══════════════ 10. FAQ ══════════════ -->
+<section class="pagina">
+  <h2>10 · Preguntas frecuentes</h2>
+  <h3>¿Cuál es la diferencia entre admin general y admin de área?</h3>
+  <p>El <b>general</b> ve y gestiona casi todo. El <b>de área</b> tiene poderes acotados a su área (Verificaciones, Redes o
+  Logística): supervisa y opera lo suyo, pero no obtiene los poderes de base de datos del general.</p>
+  <h3>Quiero dar un rol sensible a alguien y no lo deja operar.</h3>
+  <p>Le falta la <b>2ª verificación de identidad</b> aprobada. El panel lo avisa: la persona debe subir selfie + documento
+  y tú aprobarlo en «Administración → Verificaciones».</p>
+  <h3>Agregué a un voluntario a un grupo y no ve la sección del grupo.</h3>
+  <p>Es correcto: el <b>voluntario no hereda</b> el rol operativo al unirse; queda como miembro. Para que opere, asígnale
+  el rol a mano desde «Gestionar».</p>
+  <h3>¿Puedo ver los casos de Apoyo Psicosocial?</h3>
+  <p><b>No.</b> La bitácora clínica solo la ven el profesional asignado y la coordinación psicosocial. Ni el admin general
+  la ve; es un blindaje deliberado.</p>
+  <h3>¿Por qué Redes no ve el teléfono del caso?</h3>
+  <p>Porque <b>Redes nunca ve el contacto interno</b>: lee una <b>vista curada</b> con solo lo autorizado para difusión.
+  Es una protección de la base de datos.</p>
+  <h3>Una solicitud lleva días sin moverse.</h3>
+  <p>El sistema ya avisa a los <b>+48 h</b>. Además puedes revisar su recorrido en <b>«Seguimiento»</b> y, si hay una duda,
+  Coordinación recibe el aviso para desatascarla.</p>
+
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía para Administradores · Actualizada julio 2026.<br>
+    <b>Nota técnica (desarrollo):</b> administración por área (<code>0103</code>: <code>admin_verificacion</code> /
+    <code>admin_redes</code> / <code>admin_logistica</code>; un admin de área no es <code>es_admin()</code>); 2ª verificación
+    de identidad (<code>0063</code>, bucket privado <code>identidad</code>, sin auto-aprobación); alta de usuarios delegada
+    (<code>0089</code>); el voluntario no hereda el rol del grupo (<code>0154</code>); derivación multi-área
+    (<code>0177</code>: <code>casos_derivaciones</code>, estados <code>sin_tomar · tomada · en_proceso · cerrada</code>);
+    seguimiento cross-área (<code>0179</code>: <code>seguimiento_casos()</code>); avisos a Coordinación y alertas por tiempo
+    (<code>0176</code>); blindaje de difusión — Redes con vista curada (<code>0180</code>: <code>casos_difusion</code>);
+    supervisión psicosocial confidencial (<code>0054</code>); avisos de admin con imagen (bucket <code>avisos</code>).
+    La <b>RLS es la fuente de verdad</b>. Tras cambios de esquema: <code>pnpm db:reset</code> + <code>pnpm db:types</code>.
+    PDF generado desde <code>docs/GUIA-ADMINISTRADORES.html</code> (Chromium).
+  </div>
+</section>

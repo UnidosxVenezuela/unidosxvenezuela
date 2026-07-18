@@ -152,8 +152,8 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
           a la tabla-señal (sin contacto) y al recibir el evento refresca la vista curada. */}
       <RealtimeRefrescar tabla="casos_difusion_senal" />
       <Consejo id="envio-redaccion" titulo="Difundir las solicitudes confirmadas">
-        Toda solicitud <strong>confirmada</strong> llega aquí para difundirse en redes, en paralelo a Logística.
-        <strong> Tómala</strong> para redactarla, <strong>copia</strong> su información, publícala y <strong>márcala publicada</strong> con sus canales. Las de <strong>prioridad</strong> son las que Logística no pudo cubrir.
+        Toda solicitud <strong>confirmada</strong> llega aquí para difundirse en redes, en paralelo a Logística; la bandeja se <strong>actualiza sola</strong>.
+        <strong> Tómala</strong> para redactarla, <strong>copia</strong> su información, publícala y <strong>márcala publicada</strong> con sus canales. Las de <strong>prioridad</strong> son las que Logística no pudo cubrir. <strong>Privacidad:</strong> solo ves lo <strong>difundible</strong>, nunca el contacto interno.
       </Consejo>
 
       <div className="pagina-cab">

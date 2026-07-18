@@ -75,9 +75,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   // Consejo acorde al rol: cada quien ve solo lo que hace en el flujo de casos,
   // sin describirle acciones de otros roles.
   const tipCasos = esAdmin
-    ? { t: 'El flujo de una solicitud', c: <>Recopilación <strong>reporta</strong> → Verificación (otras solicitudes) o el Grupo de Búsqueda (desaparecidos) <strong>confirma o descarta</strong> → Envío a Redacción <strong>pasa a contenido</strong> solo «Otras informaciones». Toca una solicitud para ver su historial.</> }
+    ? { t: 'El flujo de una solicitud', c: <>Recopilación <strong>reporta</strong> → Verificación <strong>valida por campo</strong> (semáforo 🟢🟡🔴) y <strong>deriva a las áreas</strong> (Logística, Redes, Donaciones…) → cada área la trabaja hasta el cierre. Toca una solicitud para ver su <strong>línea de tiempo</strong> e historial.</> }
     : puedeVerif
-      ? { t: 'Verificar solicitudes', c: <>Revisa lo reportado (que no sean desaparecidos) y <strong>confírmalo o descártalo</strong>. Toca una solicitud para ver su fuente, su detalle y quién intervino.</> }
+      ? { t: 'Verificar y derivar', c: <>Revisa lo reportado y <strong>valida cada dato</strong> con el semáforo 🟢🟡🔴 (o pide más info / descártalo). Al <strong>validar</strong>, <strong>derívalo a las áreas</strong> que lo atenderán. Toca una solicitud para ver su detalle, fuente e historial.</> }
       : accesoBusqueda
         ? { t: 'Buscar y verificar desaparecidos', c: <>Toma los casos de <strong>personas desaparecidas</strong> y <strong>confírmalos o descártalos</strong>. Esta información la gestiona el Grupo de Búsqueda.</> }
         : { t: 'Reportar y seguir solicitudes', c: <>Reporta con <strong>«Nueva solicitud»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca una solicitud para seguir su estado.</> };

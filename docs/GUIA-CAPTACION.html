@@ -1,0 +1,406 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --ok:#047857; --aviso:#a16207; --crit:#b91c1c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.5; font-size:11.5pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:16pt; color:var(--azul); margin:0 0 .35rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:12.5pt; color:var(--azul-osc); margin:1rem 0 .3rem; }
+  p{ margin:.4rem 0; }
+  a{ color:var(--azul); text-decoration:none; }
+  small{ color:var(--suave); }
+  .pagina{ padding:2mm 0; }
+  section{ break-inside:avoid; margin-bottom:14px; }
+  .lead{ color:var(--suave); font-size:11pt; }
+  /* Portada */
+  .cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .tri{ height:14px; display:flex; }
+  .cover .tri i{ flex:1; } .tri .a{ background:var(--azul);} .tri .y{ background:var(--amarillo);} .tri .r{ background:var(--rojo);}
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 24mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:30pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .punto{ width:12px; height:12px; border-radius:50%; background:
+     conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  /* Tarjetas y callouts */
+  .grid{ display:grid; gap:10px; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
+  .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
+  .card h4{ margin:.1rem 0 .2rem; font-size:11.5pt; color:var(--azul-osc); }
+  .card p{ margin:.15rem 0; font-size:10pt; }
+  .card .campo{ display:inline-block; margin-top:5px; font-size:8.5pt; font-weight:700; color:var(--azul);
+    background:#eef3ff; border:1px solid #d6e0fb; border-radius:999px; padding:2px 8px; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:9px 13px; margin:10px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:10pt; margin:6px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:6px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9.5pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .pill{ display:inline-block; font-size:8.5pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .p-gray{ background:#eef1f6; color:#475569; } .p-amber{ background:#fef3c7; color:#92400e; }
+  .p-green{ background:#dcfce7; color:#166534; } .p-blue{ background:#dbeafe; color:#1e40af; }
+  .p-red{ background:#fee2e2; color:#991b1b; }
+  figure{ margin:12px 0; text-align:center; break-inside:avoid; }
+  figcaption{ font-size:9pt; color:var(--suave); margin-top:4px; }
+  .steps{ display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; margin:8px 0; }
+  .step{ flex:1; min-width:120px; border:1px solid var(--borde); border-radius:10px; padding:8px 10px; background:#fff; position:relative; }
+  .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
+  .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+  .mini{ font-size:9.5pt; color:var(--suave); }
+</style>
+
+<!-- ══════════════ PORTADA ══════════════ -->
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
+    <h1>Captación de<br>Oportunidades</h1>
+    <div class="sub">Cómo buscar y registrar <b>aliados y oportunidades</b> —fundaciones, organizaciones,
+      empresas, proyectos y alianzas— y captar <b>ofertas de donación</b> para la respuesta.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela · Alianzas Estratégicas</div>
+    <div class="pie">Versión imprimible · Actualizada julio 2026 · Captación / Aliados + Donación-Ofrecimiento</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- ══════════════ 1. QUÉ HACE CAPTACIÓN ══════════════ -->
+<section class="pagina">
+  <h2>1 · Qué hace este equipo</h2>
+  <p class="lead">El equipo de <b>Captación de Oportunidades</b> —parte de <b>Alianzas Estratégicas</b>— busca y registra
+  <b>aliados y oportunidades</b>: fundaciones, organizaciones, empresas, proyectos y alianzas que pueden aportar a la
+  respuesta. Su trabajo abre <b>puertas de ayuda</b> que después Logística concreta.</p>
+  <div class="grid g3">
+    <div class="card"><h4>Investiga</h4><p>Detecta quién puede aportar: una empresa, una fundación, un proyecto, una alianza.</p></div>
+    <div class="card"><h4>Registra</h4><p>Cada aliado u oportunidad se guarda como una <b>tarjeta</b> con contacto, enlace, ubicación y descripción.</p></div>
+    <div class="card"><h4>Conecta</h4><p>Cuando la tarjeta está lista, pasa a ser <b>referencia</b> para Logística y para las derivaciones por área.</p></div>
+  </div>
+  <p>El equipo trabaja en <b>dos frentes</b>, cada uno con su propia sección en la plataforma:</p>
+  <div class="grid g2">
+    <div class="card"><span class="n" style="background:#0033A0">A</span><h4>Captación / Aliados</h4>
+      <p>Sección <b>«Captación»</b>. Tú registras cada entidad como una tarjeta y la llevas por el flujo
+      <b>Investigación → Verificado → Enviado</b>. Es tu tablero propio.</p></div>
+    <div class="card"><span class="n" style="background:#CF142B">B</span><h4>Donación-Ofrecimiento</h4>
+      <p>Sección <b>«Donación-Ofrecimiento»</b>. Un tablero compartido de <b>ofertas</b> (quién ofrece ayudar).
+      Tú lo <b>exploras</b> para detectar alianzas; Verificación valida y Logística concreta.</p></div>
+  </div>
+  <div class="callout"><b>En una frase:</b> tú <b>abres oportunidades</b>. Una tarjeta bien hecha —contacto claro,
+  descripción concreta, enlace válido— es la que se convierte en ayuda real cuando Logística la toma.</div>
+</section>
+
+<!-- ══════════════ 2. ANTES DE EMPEZAR ══════════════ -->
+<section class="pagina">
+  <h2>2 · Antes de empezar: tu acceso</h2>
+  <p>Para trabajar en Captación, la administración te suma al grupo <b>«Captación de Oportunidades»</b>. Ese grupo lleva
+  el rol <b>«captación»</b>, que es <b>acotado</b>: te muestra <b>solo</b> tu sección, no el resto de la plataforma.</p>
+  <div class="steps">
+    <div class="step"><span class="sn">PASO 1</span><p>La administración (o el líder) <b>te suma al grupo</b> «Captación de Oportunidades». No hay auto-inscripción.</p></div>
+    <div class="step"><span class="sn">PASO 2</span><p>Al entrar te sincroniza el rol <b>«captación»</b>: verás el menú <b>«Captación»</b> y <b>«Donación-Ofrecimiento»</b>.</p></div>
+    <div class="step"><span class="sn">PASO 3</span><p>Ya puedes <b>registrar aliados</b> y <b>explorar ofertas</b>. Todo cambio queda en el registro de actividad.</p></div>
+  </div>
+  <div class="callout ok"><b>Buena noticia:</b> Captación <b>no maneja datos de personas afectadas</b>, así que <b>no</b>
+  necesitas la <b>2ª verificación de identidad</b> que sí piden otros equipos (Recopilación, Búsqueda…). Con pertenecer
+  al grupo, ya entras.</div>
+  <div class="callout warn"><b>Si no ves «Captación» en el menú:</b> es que aún no estás en el grupo o no te sincronizó
+  el rol. Pídele a tu líder o a la administración que te agregue; la seguridad de la base de datos (RLS) exige el rol para
+  mostrar la sección.</div>
+</section>
+
+<!-- ══════════════ 3. REGISTRAR UN ALIADO ══════════════ -->
+<section class="pagina">
+  <h2>3 · Registrar un aliado (la tarjeta)</h2>
+  <p>Menú <b>«Captación» → «Nueva oportunidad»</b>. Cada aliado u oportunidad se guarda como una <b>tarjeta</b>. Llena los
+  campos y pulsa <b>«Registrar oportunidad»</b>: nace en estado <b>Investigación</b>.</p>
+  <table>
+    <thead><tr><th style="width:32%">Campo en pantalla</th><th style="width:14%">¿Obligatorio?</th><th>Qué poner</th></tr></thead>
+    <tbody>
+      <tr><td><b>Categoría</b></td><td>Sí</td><td>Qué tipo de aliado es: <b>Fundación · Organización · Empresa · Proyecto · Alianza</b>.</td></tr>
+      <tr><td><b>Nombre de la oportunidad</b></td><td>Sí</td><td>El nombre del aliado. Ej.: «Fundación Amigos de Venezuela».</td></tr>
+      <tr><td><b>Contacto</b></td><td>No <small>(muy recomendado)</small></td><td>Nombre · teléfono · correo de la persona a contactar. Es el dato más valioso.</td></tr>
+      <tr><td><b>Ubicación</b></td><td>No</td><td>Ciudad o dirección donde opera el aliado.</td></tr>
+      <tr><td><b>Enlace o referencia</b></td><td>No</td><td>Web o red social (<code>https://…</code>). La app la revisa y solo la muestra si es segura.</td></tr>
+      <tr><td><b>Descripción</b></td><td>No</td><td>Qué es, por qué es una oportunidad y los próximos pasos.</td></tr>
+      <tr><td><b>Foto o archivo adjunto</b></td><td>No</td><td>Logo, folleto o documento de respaldo (imagen, PDF u ofimática; hasta 15 MB).</td></tr>
+    </tbody>
+  </table>
+  <div class="grid g2">
+    <div class="card"><h4>Las 5 categorías</h4>
+      <p><span class="pill p-blue">Fundación</span> <span class="pill p-green">Organización</span>
+      <span class="pill p-red">Empresa</span> <span class="pill p-amber">Proyecto</span>
+      <span class="pill p-gray">Alianza</span></p>
+      <p class="mini">En el tablero puedes <b>filtrar por categoría</b> con un clic para ver solo un tipo.</p></div>
+    <div class="card"><h4>El archivo es privado</h4>
+      <p>La foto o el documento se guardan en un <b>almacén privado</b>: solo Captación (y, cuando la envías, Logística)
+      lo ven mediante enlaces temporales. Nunca queda público.</p></div>
+  </div>
+  <div class="callout"><b>Consejo de calidad:</b> antes de registrar, revisa que el <b>contacto</b> sea correcto y la
+  <b>descripción</b> diga con claridad qué puede aportar el aliado. De eso depende que la oportunidad avance sin idas y vueltas.</div>
+</section>
+
+<!-- ══════════════ 4. FLUJO DE LA TARJETA ══════════════ -->
+<section class="pagina">
+  <h2>4 · El flujo de la tarjeta: Investigación → Verificado → Enviado</h2>
+  <p>Cada tarjeta avanza por <b>tres etapas</b>. Tú la mueves con un botón; también puedes <b>regresarla</b> si necesitas
+  seguir trabajándola. El tablero se organiza en tres columnas, una por etapa.</p>
+  <figure>
+    <svg width="640" height="250" viewBox="0 0 700 250" role="img" aria-label="Flujo de la tarjeta de Captación: Investigación, Verificado, Enviado">
+      <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle">
+        <!-- Investigación -->
+        <rect x="14" y="46" width="190" height="66" rx="12" fill="#fffbe9" stroke="#f2c14e" stroke-width="1.5"/>
+        <circle cx="46" cy="70" r="13" fill="#FFCE00"/><text x="46" y="75" font-size="13" font-weight="800" fill="#5b4a00">1</text>
+        <text x="118" y="74" font-size="13" font-weight="800" fill="#92400e">Investigación</text>
+        <text x="109" y="94" font-size="9" fill="#a16207">Recién detectada</text>
+        <text x="109" y="106" font-size="9" fill="#a16207">datos por confirmar</text>
+        <!-- Verificado -->
+        <rect x="255" y="46" width="190" height="66" rx="12" fill="#ecfdf5" stroke="#86c9a0" stroke-width="1.5"/>
+        <circle cx="287" cy="70" r="13" fill="#16a34a"/><text x="287" y="75" font-size="13" font-weight="800" fill="#fff">2</text>
+        <text x="360" y="74" font-size="13" font-weight="800" fill="#166534">Verificado</text>
+        <text x="350" y="94" font-size="9" fill="#15803d">Datos confirmados</text>
+        <text x="350" y="106" font-size="9" fill="#15803d">contacto comprobado</text>
+        <!-- Enviado -->
+        <rect x="496" y="46" width="190" height="66" rx="12" fill="#eef3ff" stroke="#93b4f0" stroke-width="1.5"/>
+        <circle cx="528" cy="70" r="13" fill="#0033A0"/><text x="528" y="75" font-size="13" font-weight="800" fill="#fff">3</text>
+        <text x="601" y="74" font-size="13" font-weight="800" fill="#1e40af">Enviado</text>
+        <text x="591" y="94" font-size="9" fill="#1e40af">Contactada / derivada</text>
+        <text x="591" y="106" font-size="9" fill="#1e40af">visible a Logística</text>
+      </g>
+      <!-- flechas avanzar (arriba) -->
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="204" y1="70" x2="253" y2="70" marker-end="url(#ar)"/>
+        <line x1="445" y1="70" x2="494" y2="70" marker-end="url(#ar)"/>
+      </g>
+      <text x="228" y="60" text-anchor="middle" font-size="8.5" fill="#16a34a" font-weight="700">Verificar →</text>
+      <text x="469" y="60" text-anchor="middle" font-size="8.5" fill="#0033A0" font-weight="700">Enviar →</text>
+      <!-- flechas regresar (abajo, punteadas) -->
+      <g stroke="#94a3b8" stroke-width="1.4" fill="none" stroke-dasharray="4 4">
+        <path d="M253,96 L204,96" marker-end="url(#ar)"/>
+        <path d="M494,96 L445,96" marker-end="url(#ar)"/>
+      </g>
+      <text x="228" y="128" text-anchor="middle" font-size="8" fill="#94a3b8">← puedes regresar</text>
+      <text x="469" y="128" text-anchor="middle" font-size="8" fill="#94a3b8">← puedes regresar</text>
+      <!-- salida a Logística -->
+      <g font-family="system-ui" text-anchor="middle">
+        <rect x="496" y="170" width="190" height="50" rx="12" fill="#f6f8fb" stroke="#cbd5e1" stroke-dasharray="3 3"/>
+        <text x="591" y="190" font-size="10.5" font-weight="800" fill="#334155">Logística (referencia)</text>
+        <text x="591" y="206" font-size="8.5" fill="#64748b">la ve en solo lectura</text>
+      </g>
+      <line x1="591" y1="112" x2="591" y2="168" stroke="#0033A0" stroke-width="1.6" fill="none" marker-end="url(#ar)"/>
+      <text x="470" y="150" text-anchor="middle" font-size="8.5" fill="#0033A0" font-weight="700">al enviar →</text>
+    </svg>
+    <figcaption>El flujo de la tarjeta. Al llegar a «Enviado», el aliado queda disponible como referencia para Logística.</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th style="width:24%">Etapa</th><th>Qué significa · qué haces</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-amber">Investigación</span></td><td>Recién la creaste o la sigues trabajando. Reúne y completa los datos del aliado.</td></tr>
+      <tr><td><span class="pill p-green">Verificado</span></td><td>Confirmaste que el contacto y los datos son reales. Pulsa <b>«Verificar →»</b> para llegar aquí.</td></tr>
+      <tr><td><span class="pill p-blue">Enviado</span></td><td>Lista para conectar. Pulsa <b>«Enviar →»</b>: desde ahora Logística la ve como referencia. Sigues pudiendo editarla o regresarla.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Tu tablero de un vistazo:</b> arriba ves los números del equipo —<b>Total</b>, <b>Investigación</b>,
+  <b>Verificado</b>, <b>Enviado</b>— y una tira que recuerda el recorrido. La gestión de las fichas es <b>siempre</b> tuya:
+  moverlas, editarlas o eliminarlas.</div>
+</section>
+
+<!-- ══════════════ 5. DONACIÓN-OFRECIMIENTO ══════════════ -->
+<section class="pagina">
+  <h2>5 · Donación-Ofrecimiento: captar ofertas</h2>
+  <p class="lead">La sección <b>«Donación-Ofrecimiento»</b> es el otro frente. Aquí vive un tablero de <b>ofertas</b>:
+  una empresa, un proyecto o una persona que <b>ofrece ayudar</b>. Cada oferta se clasifica en dos ejes y avanza por un
+  ciclo de contacto hasta concretarse.</p>
+  <div class="grid g2">
+    <div class="card"><h4>¿Qué se ofrece? — clase</h4>
+      <p><b>Donación:</b> se entregan bienes o recursos (alimentos, agua, medicamentos, ropa, kits, materiales, dinero…).<br>
+      <b>Servicio de ayuda o atención:</b> una acción por un tiempo, sin entregar bienes (consulta médica, apoyo psicológico, traslado, orientación legal, refugio, comidas…).</p></div>
+    <div class="card"><h4>¿Quién ofrece? — origen</h4>
+      <p><span class="pill p-gray">Centro de acopio</span> <span class="pill p-gray">Persona</span> <span class="pill p-gray">Organización</span></p>
+      <p class="mini">Y una <b>forma</b> de detalle: en especie · dinero · servicio · transporte · otro. Si es dinero, se anota un monto estimado.</p></div>
+  </div>
+  <div class="callout warn"><b>Quién da de alta:</b> en producción, el <b>alta</b> de un ofrecimiento la hace <b>Recopilación</b>
+  (que capta las ofertas del terreno) y la administración. <b>Captación entra en solo lectura</b>: exploras el tablero para
+  detectar <b>alianzas, convenios o futuras donaciones</b> que puedas trabajar como tarjeta en tu sección. La gestión y el
+  emparejamiento los lleva Logística.</div>
+
+  <h3>El ciclo de una oferta (con candado de verificación)</h3>
+  <p>Una oferta avanza por cinco etapas. Hay un <b>candado</b>: <b>no puede pasar de «Nueva»</b> hasta que
+  <b>Verificación</b> la marque como <b>«Verificada»</b>. Descartar una oferta falsa o regresarla a «Nueva» sí se permite
+  sin verificar.</p>
+  <figure>
+    <svg width="650" height="235" viewBox="0 0 700 235" role="img" aria-label="Ciclo de una oferta de donación con candado de verificación">
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="10.5" font-weight="700">
+        <rect x="10" y="60" width="112" height="46" rx="11" fill="#eef1f6" stroke="#cbd5e1"/><text x="66" y="88" fill="#475569">Nueva</text>
+        <rect x="188" y="60" width="112" height="46" rx="11" fill="#eef1f6" stroke="#cbd5e1"/><text x="244" y="88" fill="#475569">Contactada</text>
+        <rect x="318" y="60" width="112" height="46" rx="11" fill="#fffbe9" stroke="#f2c14e"/><text x="374" y="84" fill="#92400e">En</text><text x="374" y="97" fill="#92400e">conversación</text>
+        <rect x="448" y="60" width="112" height="46" rx="11" fill="#eef3ff" stroke="#93b4f0"/><text x="504" y="88" fill="#1e40af">Comprometida</text>
+        <rect x="578" y="60" width="112" height="46" rx="11" fill="#dcfce7" stroke="#86c9a0"/><text x="634" y="88" fill="#166534">Cumplida</text>
+      </g>
+      <!-- flechas -->
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="122" y1="83" x2="186" y2="83" marker-end="url(#ar2)"/>
+        <line x1="300" y1="83" x2="316" y2="83" marker-end="url(#ar2)"/>
+        <line x1="430" y1="83" x2="446" y2="83" marker-end="url(#ar2)"/>
+        <line x1="560" y1="83" x2="576" y2="83" marker-end="url(#ar2)"/>
+      </g>
+      <!-- candado entre Nueva y Contactada -->
+      <g text-anchor="middle">
+        <rect x="140" y="16" width="30" height="24" rx="4" fill="#fef2f2" stroke="#CF142B" stroke-width="1.5"/>
+        <path d="M148,16 v-4 a6,6 0 0 1 12,0 v4" fill="none" stroke="#CF142B" stroke-width="1.5"/>
+        <circle cx="154" cy="27" r="2.4" fill="#CF142B"/>
+        <text x="154" y="52" font-size="8.5" font-weight="800" fill="#b91c1c">CANDADO</text>
+        <line x1="154" y1="54" x2="154" y2="59" stroke="#CF142B" stroke-width="1.2"/>
+      </g>
+      <text x="330" y="34" text-anchor="middle" font-size="9" fill="#b91c1c" font-weight="700">Verificación debe marcar «Verificada» antes de avanzar</text>
+      <!-- carriles quién actúa -->
+      <g font-size="8.5" text-anchor="middle">
+        <text x="66"  y="132" font-weight="800" fill="#0033A0">RECOPILACIÓN</text><text x="66" y="144" fill="#64748b">registra</text>
+        <text x="66"  y="156" font-weight="800" fill="#a16207">VERIFICACIÓN</text><text x="66" y="168" fill="#64748b">verifica</text>
+        <text x="424" y="132" font-weight="800" fill="#166534">LOGÍSTICA</text>
+        <text x="424" y="144" fill="#64748b">contacta · negocia · concreta · cierra</text>
+      </g>
+      <!-- descartada aparte -->
+      <g font-family="system-ui" text-anchor="middle">
+        <rect x="290" y="190" width="120" height="34" rx="10" fill="#fee2e2" stroke="#eda3a3"/>
+        <text x="350" y="211" font-size="10" font-weight="800" fill="#991b1b">Descartada</text>
+      </g>
+      <path d="M244,106 C244,150 300,180 320,188" stroke="#94a3b8" stroke-width="1.3" fill="none" stroke-dasharray="4 4" marker-end="url(#ar2)"/>
+      <text x="230" y="176" text-anchor="middle" font-size="8" fill="#94a3b8">falsa o duplicada</text>
+    </svg>
+    <figcaption>El ciclo: nueva → contactada → en conversación → comprometida → cumplida. El candado exige verificación antes de avanzar.</figcaption>
+  </figure>
+
+  <h3>Verificación con checklist por tipo</h3>
+  <p>El equipo de <b>Verificación</b> revisa cada oferta con una <b>lista de verificación según su clase</b> y fija un
+  resultado: <span class="pill p-amber">Pendiente de verificar</span> · <span class="pill p-green">Verificada</span> ·
+  <span class="pill p-red">Observada</span>.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Si es Donación (bienes)</h4>
+      <p class="mini">Quién dona · qué se dona · cantidad · cuándo estará disponible · cómo y dónde se entrega · quién coordina la entrega · condiciones.</p></div>
+    <div class="card"><h4>Si es Servicio de ayuda o atención</h4>
+      <p class="mini">Quién presta el servicio · qué atención brinda · a quién va dirigido · dónde · días y horarios · ¿está activo? · ¿es gratuito? · ¿requiere turno o registro? · capacidad · responsable.</p></div>
+  </div>
+  <div class="callout"><b>La bitácora de contacto:</b> cada oferta lleva su propia <b>bitácora</b>. En cada gestión se anota
+  el <b>canal</b> (llamada · WhatsApp · correo · reunión · otro) y el <b>resultado</b> (positivo · pendiente · sin respuesta ·
+  negativo). Así queda el rastro de cómo se contactó al aliado. Cada oferta tiene además un número <b>OF-00000</b> para
+  ubicarla rápido.</div>
+</section>
+
+<!-- ══════════════ 6. CONEXIÓN CON LOGÍSTICA Y DERIVACIÓN ══════════════ -->
+<section class="pagina">
+  <h2>6 · Cómo se conecta con Logística y la derivación por áreas</h2>
+  <p>Captación no trabaja sola: lo que registras alimenta a otros equipos. Hay <b>tres puentes</b>.</p>
+
+  <h3>a) Tus fichas «Enviado» son referencia para Logística</h3>
+  <p>Cuando marcas una tarjeta como <b>«Enviado»</b>, aparece en la vista <b>«Captación — referencia para Logística»</b>.
+  Logística la ve en <b>solo lectura</b> (con búsqueda y filtro por categoría) para revisar si ese aliado sirve para
+  <b>completar una solicitud</b> y usar su contacto. La gestión de la ficha sigue siendo <b>solo tuya</b>.</p>
+
+  <h3>b) La bitácora en las solicitudes de insumo</h3>
+  <p>Del otro lado, tú puedes <b>ver las solicitudes de insumo</b> de Logística (sin editarlas ni avanzarlas) y dejar
+  <b>notas en su bitácora</b>: sugerir qué empresa o alianza podría ayudar a cubrirlas. Esas notas quedan a la mano de
+  Logística. Es la forma de acercar tus aliados a una necesidad concreta.</p>
+
+  <h3>c) La derivación por áreas</h3>
+  <p>Cuando <b>Verificación</b> valida una solicitud, puede <b>derivarla</b> a una o varias áreas de destino. Dos de ellas
+  llegan a <b>Captación</b>: <b>«Alianzas Estratégicas»</b> y <b>«Donaciones»</b>. La derivación te llega con
+  <b>responsable</b>, <b>acción requerida</b>, <b>prioridad</b> y <b>observaciones</b>, y tú la haces avanzar por su estado.</p>
+  <figure>
+    <svg width="620" height="150" viewBox="0 0 680 150" role="img" aria-label="Derivación de una solicitud validada hacia Captación">
+      <defs><marker id="ar3" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
+      <g font-family="system-ui" text-anchor="middle" font-size="10.5" font-weight="700">
+        <rect x="10" y="52" width="150" height="46" rx="12" fill="#dcfce7" stroke="#86c9a0"/><text x="85" y="72" fill="#166534">Solicitud</text><text x="85" y="87" font-size="8.5" fill="#15803d">Validada por Verificación</text>
+        <rect x="270" y="20" width="170" height="40" rx="12" fill="#eef3ff" stroke="#93b4f0"/><text x="355" y="44" fill="#1e40af">Alianzas Estratégicas</text>
+        <rect x="270" y="90" width="170" height="40" rx="12" fill="#eef3ff" stroke="#93b4f0"/><text x="355" y="114" fill="#1e40af">Donaciones</text>
+        <rect x="520" y="55" width="150" height="40" rx="12" fill="#FFCE00"/><text x="595" y="79" fill="#5b4a00">CAPTACIÓN toma</text>
+      </g>
+      <g stroke="#94a3b8" stroke-width="1.6" fill="none">
+        <path d="M160,66 C205,60 225,44 268,40" marker-end="url(#ar3)"/>
+        <path d="M160,84 C205,92 225,108 268,110" marker-end="url(#ar3)"/>
+        <path d="M440,40 C475,46 490,62 518,70" marker-end="url(#ar3)"/>
+        <path d="M440,110 C475,104 490,88 518,80" marker-end="url(#ar3)"/>
+      </g>
+      <text x="215" y="14" text-anchor="middle" font-size="8.5" fill="#b91c1c" font-weight="700">Solo casos Validados se derivan (candado)</text>
+    </svg>
+    <figcaption>Verificación deriva una solicitud validada a «Alianzas Estratégicas» o «Donaciones», y Captación la toma.</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th style="width:26%">Estado de la derivación</th><th>Qué significa · qué haces</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-gray">Sin tomar</span></td><td>Recién derivada a tu área; nadie la ha tomado. Recibes un aviso.</td></tr>
+      <tr><td><span class="pill p-amber">Tomada</span></td><td>Alguien de Captación la <b>tomó</b> y se hace cargo.</td></tr>
+      <tr><td><span class="pill p-blue">En proceso</span></td><td>Se está trabajando (buscando el aliado, gestionando la donación).</td></tr>
+      <tr><td><span class="pill p-green">Cerrada</span></td><td>Se resolvió; se anota el motivo de cierre. Ciclo terminado.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>Regla del candado:</b> <b>ninguna</b> solicitud se deriva si no está <b>Validada</b>. Así,
+  todo lo que te llega ya pasó por Verificación: no pierdes tiempo en información sin confirmar.</div>
+</section>
+
+<!-- ══════════════ 7. SEGUIMIENTO Y BLINDAJE ══════════════ -->
+<section class="pagina">
+  <h2>7 · Seguimiento y buenas prácticas</h2>
+  <p>Para que <b>ninguna área quede a ciegas</b>, existe la sección <b>«Seguimiento»</b>: cualquier persona verificada del
+  equipo puede consultar el <b>estado y el recorrido</b> de cualquier solicitud —sea o no de su área— buscándola por nombre
+  o número. Muestra <b>solo campos no sensibles</b> (nunca el contacto ni las evidencias) y deja fuera el flujo restringido
+  de «Desaparecidos».</p>
+  <div class="callout blind"><b>Blindaje — qué cuidas y qué no es tuyo:</b> el <b>contacto de los aliados</b> es un dato
+  valioso: trátalo con discreción y no lo compartas fuera de la plataforma. En cambio, los <b>datos sensibles de las
+  personas afectadas</b> (nombres, ubicaciones exactas, evidencias) <b>no son de este equipo</b>: no los necesitas para
+  captar aliados y no aparecen en tus secciones.</div>
+  <div class="grid g2">
+    <div class="card"><h4>✓ Contacto siempre claro</h4><p>Nombre, teléfono y correo completos. Sin contacto verificable, el aliado no sirve a Logística.</p></div>
+    <div class="card"><h4>✓ Cuida los enlaces</h4><p>La app revisa el enlace y solo lo muestra si es seguro (<code>https</code>). Si lo marca como inseguro, busca otra referencia.</p></div>
+    <div class="card"><h4>✓ Mueve al estado correcto</h4><p>No dejes en «Investigación» algo que ya confirmaste. Envía solo lo que de verdad está listo para Logística.</p></div>
+    <div class="card"><h4>✓ Adjunta respaldo</h4><p>Un logo, un folleto o un documento hacen la ficha más creíble y fácil de retomar.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════ 8. FAQ ══════════════ -->
+<section class="pagina">
+  <h2>8 · Preguntas frecuentes</h2>
+  <h3>No veo la sección «Captación».</h3>
+  <p>Aún no estás en el grupo <b>«Captación de Oportunidades»</b> o no te sincronizó el rol. Pídele a tu líder o a la
+  administración que te agregue. Recuerda: el rol es <b>acotado</b>, solo verás tus secciones.</p>
+  <h3>¿Necesito la segunda verificación de identidad?</h3>
+  <p><b>No.</b> Captación no maneja datos de personas afectadas, así que ese requisito no aplica. Con pertenecer al grupo, entras.</p>
+  <h3>Registré una oferta de donación y no la puedo avanzar.</h3>
+  <p>Es el <b>candado</b>: una oferta no pasa de «Nueva» hasta que <b>Verificación</b> la marque como «Verificada».
+  Además, el <b>alta y el avance</b> del ofrecimiento los llevan Recopilación y Logística; Captación explora ese tablero en
+  <b>solo lectura</b>.</p>
+  <h3>¿Puedo editar o regresar una tarjeta que ya envié?</h3>
+  <p><b>Sí.</b> La gestión de las tarjetas de Captación es siempre tuya: puedes editarla, moverla de estado (hacia adelante
+  o hacia atrás) o eliminarla, aunque ya esté en «Enviado».</p>
+  <h3>¿Por qué Logística ve mis tarjetas?</h3>
+  <p>Solo ve las que marcaste como <b>«Enviado»</b>, y en <b>solo lectura</b>, como referencia para completar solicitudes.
+  Las de «Investigación» y «Verificado» siguen siendo internas de Captación.</p>
+  <h3>Me derivaron una solicitud a «Alianzas Estratégicas». ¿Qué hago?</h3>
+  <p>Ábrela, <b>tómala</b> (pasa a «Tomada»), trabájala (<b>«En proceso»</b>) y, al resolverla, <b>ciérrala</b> con un motivo.
+  Todas las áreas ven ese recorrido, así ningún caso se pierde.</p>
+
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía del equipo de Captación de Oportunidades (Alianzas Estratégicas) · Actualizada julio 2026.<br>
+    Nota técnica (desarrollo): rol <code>captacion</code> y grupo del sistema <code>captacion</code>, sección
+    <b>Captación</b> (<code>/captacion</code>, tabla <code>oportunidades</code>, estados
+    <code>investigacion · verificado · enviado</code>; migraciones 0129 y 0133). <b>Donación-Ofrecimiento</b>
+    (<code>/insumos/oportunidades</code>, tabla <code>oportunidades_donacion</code>; clase/origen en 0152; alta por
+    Recopilación/admin, <code>puedeRegistrarOportunidad</code>). Verificación de ofrecimientos por RPC
+    <code>verificar_oportunidad_donacion</code> (0144); candado de flujo <code>proteger_campos_oportunidad</code> (0161).
+    Logística lee las «Enviado» de Captación (0162); bitácora de la solicitud de insumos compartida con Captación (0163).
+    Derivación multi-área a <code>alianzas</code> / <code>donaciones</code> (<code>derivar_caso</code>, estados
+    <code>sin_tomar · tomada · en_proceso · cerrada</code>, migración 0177). Seguimiento cross-área
+    <code>seguimiento_casos</code> (0179). PDF generado desde <code>docs/GUIA-CAPTACION.html</code> (Chromium).
+  </div>
+</section>
