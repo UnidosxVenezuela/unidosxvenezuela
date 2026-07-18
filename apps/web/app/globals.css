@@ -230,6 +230,11 @@ h2 { font-size: 1.05rem; font-weight: 600; margin: 1.2rem 0 .5rem; }
 /* Móvil: la barra lateral es un cajón off-canvas */
 @media (max-width: 820px) {
   .sidebar { position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top); transform: translateX(-100%); margin-left: 0; }
+  /* En móvil el cajón se controla SOLO por transform. Anulamos el margen del colapso de
+     escritorio (misma especificidad que .lateral-colapsada, pero aquí gana por orden):
+     si no, con la barra colapsada en escritorio el cajón quedaba empujado 264px fuera de
+     pantalla y solo se veía el fondo atenuado. */
+  .app-shell.lateral-colapsada .sidebar { margin-left: 0; }
   .app-shell.lateral-movil .sidebar { transform: translateX(0); }
   .contenedor { padding: 18px 16px 40px; }
 }
