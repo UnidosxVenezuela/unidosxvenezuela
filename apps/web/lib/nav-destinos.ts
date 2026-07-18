@@ -16,6 +16,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.gestionCasos || flags.verificacion) {
     d.push({ href: '/casos', etiqueta: 'Solicitudes', icono: flags.verificacion ? 'ok' : 'documento' });
   }
+  // Seguimiento cross-área (Paso 5): recorrido de cualquier solicitud, para todas las áreas.
+  if (flags.seguimiento) d.push({ href: '/seguimiento', etiqueta: 'Seguimiento', icono: 'buscar' });
   if (flags.envioRedaccion) d.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) d.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });

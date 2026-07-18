@@ -1749,4 +1749,34 @@ begin;
   reset role;
 rollback;
 
+\echo '== Test 68: seguimiento cross-área — verificado ve el recorrido no sensible; excluye Desaparecidos; no verificado nada (0179) =='
+begin;
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000093a1', 'logi-seg@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000093a1';
+  insert into public.casos (id, titulo, categoria, estado, creado_por) values
+    ('00000000-0000-0000-0000-0000000093ac', '_TEST_seg_otras', 'Otras informaciones', 'en_proceso', null),
+    ('00000000-0000-0000-0000-0000000093ad', '_TEST_seg_desap', 'Desaparecidos', 'en_proceso', null);
+
+  -- Logística (verificada) ve el recorrido de solicitudes NO sensibles, no las de Desaparecidos.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000093a1')::text, true);
+  do $$ declare n int; d int; begin
+    select count(*) into n from public.seguimiento_casos('_TEST_seg');
+    select count(*) into d from public.seguimiento_casos('_TEST_seg') where categoria = 'Desaparecidos';
+    if n < 1 then raise exception 'FALLO 68a: personal verificado no ve el recorrido (n=%)', n; end if;
+    if d <> 0 then raise exception 'FALLO 68b: el seguimiento incluyó Desaparecidos'; end if;
+  end $$;
+  reset role;
+
+  -- Un usuario NO verificado no ve nada.
+  update public.perfiles set verificado = false where id = '00000000-0000-0000-0000-0000000093a1';
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000093a1')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.seguimiento_casos('_TEST_seg');
+    if n <> 0 then raise exception 'FALLO 68c: un usuario no verificado vio el recorrido (n=%)', n; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
