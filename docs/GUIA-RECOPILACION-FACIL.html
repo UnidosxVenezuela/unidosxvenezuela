@@ -3,13 +3,13 @@
   :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
     --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
   *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
-  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.42; font-size:11pt; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.4; font-size:11pt; }
   .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
   .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 4px; }
   .head h1{ font-size:21pt; color:var(--azul); margin:0; line-height:1.05; }
   .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 13px; font-size:10pt; white-space:nowrap; }
   .sub{ color:var(--suave); margin:0 0 12px; font-size:10.5pt; }
-  h2{ font-size:12.5pt; color:var(--azul-osc); margin:14px 0 7px; display:flex; align-items:center; gap:7px; }
+  h2{ font-size:12.5pt; color:var(--azul-osc); margin:13px 0 7px; display:flex; align-items:center; gap:7px; }
   .pasos{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
   .paso{ border:1px solid var(--borde); border-radius:12px; padding:11px 12px; position:relative; background:#fff; }
   .paso .n{ width:30px;height:30px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;font-size:14pt;
@@ -20,11 +20,14 @@
   .col{ border-radius:12px; padding:10px 13px; }
   .col.si{ background:#ecfdf5; border:1px solid #a7f3d0; } .col.no{ background:#fef2f2; border:1px solid #fecaca; }
   .col h3{ margin:0 0 5px; font-size:11pt; } .col.si h3{ color:var(--ok);} .col.no h3{ color:var(--crit);}
-  .col ul{ margin:0; padding-left:18px; } .col li{ margin:3px 0; font-size:10pt; }
+  .col ul{ margin:0; padding-left:18px; } .col li{ margin:3px 0; font-size:9.8pt; }
+  .nv{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .nv .c{ background:#eef3ff; border:1px solid #c7d2fe; border-radius:12px; padding:10px 13px; }
+  .nv .c h3{ margin:0 0 3px; font-size:10.5pt; color:var(--azul-osc); }
+  .nv .c p{ margin:0; font-size:9.7pt; color:#334155; }
+  .tag{ display:inline-block; font-size:7.5pt; font-weight:800; color:#fff; background:var(--rojo); border-radius:999px; padding:1px 6px; margin-left:3px; vertical-align:middle; }
   .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:12px; font-size:10pt; }
   .rec b{ color:var(--azul-osc); }
-  figure{ margin:8px 0 0; text-align:center; }
-  figcaption{ font-size:8.5pt; color:var(--suave); margin-top:3px; }
   .pie{ margin-top:12px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
   .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
     background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
@@ -34,54 +37,39 @@
   <h1>Recopilación y Gestión<br>de la Información</h1>
   <span class="rp">GUÍA RÁPIDA · 1 página</span>
 </div>
-<p class="sub">Tu misión: convertir lo que llega en una <b>solicitud clara, ubicada y con fuente</b>.</p>
+<p class="sub">Tu misión: convertir lo que llega en una <b>solicitud clara, ubicada y con fuente</b> — y captar también <b>quién ofrece ayudar</b>.</p>
 
 <h2>✅ Tu trabajo en 3 pasos</h2>
 <div class="pasos">
-  <div class="paso"><div class="n">1</div><b>Abre</b><p>Menú <b>«Solicitudes» → «Nueva solicitud»</b></p></div>
+  <div class="paso"><div class="n">1</div><b>Abre</b><p>Menú <b>«Solicitudes» → «Nueva solicitud»</b> (o <b>«Oportunidades de donación»</b> para una oferta).</p></div>
   <div class="paso"><div class="n">2</div><b>Responde 6 preguntas</b><p>Qué es · cuándo · fuente · responsable · <b>dónde (pin en el mapa)</b> · qué se necesita.</p></div>
-  <div class="paso"><div class="n">3</div><b>Crea</b><p>Revisa que esté completa y pulsa <b>«Crear solicitud»</b></p></div>
+  <div class="paso"><div class="n">3</div><b>Crea</b><p>Revisa que esté completa y pulsa <b>«Crear solicitud»</b>.</p></div>
 </div>
 
 <h2>Lo que sí y lo que no</h2>
 <div class="sino">
   <div class="col si"><h3>✔ Sí</h3><ul>
     <li>Reportar con <b>ubicación</b>, fuente y contacto.</li>
-    <li>Revisar el aviso de <b>posibles duplicados</b>.</li>
-    <li>Usar datos de las <b>últimas 48 h</b> (o reconfirmarlos).</li>
+    <li>Captar <b>oportunidades de donación</b> (ofertas).</li>
+    <li><b>Marcar un punto</b> (albergue / hospital / acopio) si es un lugar.</li>
     <li>Editar tu solicitud mientras esté <b>pendiente / en proceso</b>.</li>
   </ul></div>
   <div class="col no"><h3>✘ No</h3><ul>
-    <li><b>No</b> confirmas ni descartas: eso lo hace Verificación.</li>
+    <li><b>No</b> confirmas ni verificas: eso lo hace Verificación.</li>
+    <li><b>No</b> gestionas ni concretas donaciones: eso es Logística.</li>
     <li><b>No</b> reportas desapariciones ni datos de menores por aquí.</li>
-    <li><b>No</b> inventes datos ni uses enlaces que la app marque como inseguros.</li>
   </ul></div>
 </div>
 
-<h2>🔀 Dónde encajas</h2>
-<figure>
-  <svg width="600" height="72" viewBox="0 0 660 72" role="img" aria-label="Flujo: tu equipo es Recopilación">
-    <defs><marker id="a" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0,0 L5,3 L0,6 Z" fill="#94a3b8"/></marker></defs>
-    <!-- chips -->
-    <g font-family="system-ui" text-anchor="middle" font-size="11" font-weight="700">
-      <rect x="6" y="20" width="150" height="34" rx="17" fill="#0033A0"/><text x="81" y="42" fill="#fff">Recopilación</text>
-      <rect x="180" y="20" width="140" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="250" y="42" fill="#475569">Verificación</text>
-      <rect x="344" y="20" width="160" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="424" y="42" fill="#475569">Envío a Redacción</text>
-      <rect x="528" y="20" width="126" height="34" rx="17" fill="#eef1f6" stroke="#cbd5e1"/><text x="591" y="42" fill="#475569">Redacción / Logística</text>
-    </g>
-    <g stroke="#94a3b8" stroke-width="1.6" fill="none">
-      <line x1="156" y1="37" x2="178" y2="37" marker-end="url(#a)"/>
-      <line x1="320" y1="37" x2="342" y2="37" marker-end="url(#a)"/>
-      <line x1="504" y1="37" x2="526" y2="37" marker-end="url(#a)"/>
-    </g>
-    <text x="81" y="14" text-anchor="middle" font-size="9" font-weight="800" fill="#0033A0">TÚ ESTÁS AQUÍ</text>
-  </svg>
-</figure>
+<h2>★ Novedades</h2>
+<div class="nv">
+  <div class="c"><h3>Oportunidades de donación</h3><p>Registra a quien ofrece ayudar (empresa, proyecto, persona). Verificación la valida y Logística la concreta.</p></div>
+  <div class="c"><h3>Marca puntos del mapa <span class="tag">nuevo</span></h3><p>En el bloque de ubicación, elige «¿Es un punto del mapa?» (fijo o temporal). Al <b>verificarse</b>, se crea el centro en el mapa.</p></div>
+</div>
 
-<div class="rec"><b>Recuerda:</b> para reportar necesitas tu <b>2ª verificación de identidad aprobada</b>. Vincula tu
-<b>Telegram</b> (botón en la barra superior) para enterarte al instante cuando confirmen o descarten tus solicitudes.</div>
+<div class="rec"><b>Recuerda:</b> para reportar necesitas tu <b>2ª verificación de identidad aprobada</b>. Si Verificación te devuelve una solicitud como «<b>Requiere información</b>», complétala y vuelve a enviarla. Vincula tu <b>Telegram</b> (barra superior) para enterarte al instante.</div>
 
 <div class="pie">
   <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Recopilación y Gestión de la Información</span>
-  <span>Guía rápida · Julio 2026</span>
+  <span>Guía rápida · Actualizada julio 2026</span>
 </div>
