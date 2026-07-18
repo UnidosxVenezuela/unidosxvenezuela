@@ -757,9 +757,10 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 .presencia-tag { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; white-space: nowrap; }
 .presencia-tag .presencia-cuando { color: var(--texto-suave); font-size: .78rem; }
 @media (max-width: 600px) {
-  /* En teléfonos el interruptor se reduce al punto, como el chip y los consejos. */
-  .presencia-btn .presencia-txt { display: none; }
-  .presencia-btn { padding: 8px; gap: 0; }
+  /* En teléfonos CONSERVAMOS la etiqueta: un punto de color solo no se entiende.
+     Pill compacta (punto + «Conectado»/«Ocupado») que se lee de un vistazo. */
+  .presencia-btn { padding: 5px 10px; gap: 6px; font-size: .78rem; }
+  .presencia-btn .presencia-txt { display: inline; }
 }
 
 /* ── Disponibilidad al pasar el mouse por el nombre (0120): tooltip con la conversión
