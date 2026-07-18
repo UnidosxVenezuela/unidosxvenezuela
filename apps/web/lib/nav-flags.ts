@@ -18,6 +18,7 @@ export type NavFlags = {
   psicosocial: boolean;    // área confidencial (o supervisión si admin)
   aliados: boolean;        // base de datos de plataformas aliadas
   captacion: boolean;      // Captación de Oportunidades (contactos estratégicos)
+  seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
 };
 
 // Grupos/roles del área de contenido (producción y publicación).
@@ -81,6 +82,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     // Captación de Oportunidades (0129): rol propio 'captacion' (ve solo esta
     // sección) o el admin general. No exige 2ª verificación.
     captacion: admin || roles.includes('captacion'),
+    // Seguimiento cross-área (Paso 5): cualquier persona con un rol operativo puede
+    // consultar el recorrido de cualquier solicitud (la RPC 0179 acota a datos no
+    // sensibles y exige identidad verificada). Fuera para voluntario/observador.
+    seguimiento: admin || !!areaAdmin || roles.some((r) => !['voluntario', 'observador'].includes(r)),
   };
 }
 
