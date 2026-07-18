@@ -12,7 +12,22 @@ const sora = Sora({ subsets: ['latin'], weight: ['600', '700', '800'], variable:
 export const metadata: Metadata = {
   title: 'Apoyo por Venezuela',
   description: 'Coordinación de equipos para la respuesta al terremoto de Venezuela.',
+  applicationName: 'Apoyo por Venezuela',
   manifest: '/manifest.json',
+  // Instalación en iOS: ícono de pantalla de inicio + arranque a pantalla completa.
+  appleWebApp: {
+    capable: true,
+    title: 'ApoyoxVzla',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png' }],
+    shortcut: '/favicon.ico',
+  },
 };
 
 export const viewport: Viewport = {

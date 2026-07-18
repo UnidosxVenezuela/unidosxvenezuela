@@ -12,6 +12,8 @@ import UserChip from './UserChip';
 import SonidoBotones from './SonidoBotones';
 import TemaToggle from './TemaToggle';
 import PaletaComandos from './PaletaComandos';
+import InstalarApp from './InstalarApp';
+import RegistrarSW from './RegistrarSW';
 
 import type { NavFlags } from '@/lib/nav-flags';
 
@@ -71,6 +73,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
     <div className={'app-shell' + (colapsada ? ' lateral-colapsada' : '') + (cajon ? ' lateral-movil' : '')}>
       <a href="#contenido-principal" className="skip-link">Saltar al contenido</a>
       <SonidoBotones />
+      <RegistrarSW />
       <PaletaComandos flags={nav} />
       <aside ref={asideRef} id="menu-lateral" className="sidebar" {...(oculto ? ({ inert: '' } as any) : {})}>
         <div className="tricolor" />
@@ -93,6 +96,7 @@ export default function Shell({ usuario, nav, children }: { usuario: Usuario; na
             <span className="topbar-marca"><img src="/logo.png" alt="" width={26} height={24} /> Apoyo por Venezuela</span>
           </div>
           <div className="topbar-der">
+            <InstalarApp />
             <ToggleConsejos />
             <BotonTelegram vinculado={usuario.telegramVinculado} />
             <Presencia estadoInicial={usuario.estadoPresencia} />
