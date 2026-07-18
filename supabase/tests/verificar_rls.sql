@@ -1704,4 +1704,49 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 67: historial de correcciones — original→corregido; contacto sin valores; RLS (0178) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000092a1', 'verif-hist@test.local'),
+    ('00000000-0000-0000-0000-0000000092a2', 'logi-hist@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000092a1';
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000092a2';
+  insert into public.casos (id, titulo, categoria, estado, descripcion, contacto_whatsapp, creado_por)
+    values ('00000000-0000-0000-0000-0000000092ac', '_TEST_hist', 'Otras informaciones', 'en_proceso', 'desc vieja', '+58412', null);
+
+  -- Un editor autorizado (admin) corrige un dato y un campo de contacto.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
+  update public.casos set descripcion = 'desc corregida' where id = '00000000-0000-0000-0000-0000000092ac';
+  update public.casos set contacto_whatsapp = '+58414' where id = '00000000-0000-0000-0000-0000000092ac';
+  reset role;
+
+  -- Se guardó el original→corregido; el contacto (Paso 10) sin valores.
+  do $$ declare r record; begin
+    select * into r from public.casos_historial_cambios where caso_id = '00000000-0000-0000-0000-0000000092ac' and campo = 'Descripción';
+    if r.id is null then raise exception 'FALLO 67a: no se registró la corrección de descripción'; end if;
+    if r.valor_anterior <> 'desc vieja' or r.valor_nuevo <> 'desc corregida' then raise exception 'FALLO 67a: valores mal (% -> %)', r.valor_anterior, r.valor_nuevo; end if;
+    select * into r from public.casos_historial_cambios where caso_id = '00000000-0000-0000-0000-0000000092ac' and campo = 'WhatsApp de contacto';
+    if r.id is null or not r.sensible then raise exception 'FALLO 67b: no se registró el cambio de contacto como sensible'; end if;
+    if r.valor_anterior is not null or r.valor_nuevo is not null then raise exception 'FALLO 67b: se filtraron valores de contacto'; end if;
+  end $$;
+
+  -- RLS: Verificación SÍ ve el historial…
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000092a1')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_historial_cambios where caso_id = '00000000-0000-0000-0000-0000000092ac';
+    if n < 2 then raise exception 'FALLO 67c: Verificación no ve el historial (n=%)', n; end if;
+  end $$;
+  reset role;
+  -- …un rol ajeno (Logística, no creador) NO.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000092a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_historial_cambios where caso_id = '00000000-0000-0000-0000-0000000092ac';
+    if n <> 0 then raise exception 'FALLO 67d: un rol ajeno vio el historial (n=%)', n; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

@@ -13,6 +13,7 @@ import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCa
 import FormEditarCaso from './FormEditarCaso';
 import VerificacionPorCampo from './VerificacionPorCampo';
 import Derivaciones from './Derivaciones';
+import LineaTiempoCaso from './LineaTiempoCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -28,8 +29,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [] }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[];
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [] }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[];
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -228,6 +229,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           ? <VerificacionPorCampo casoId={caso.id} esRequerimiento={caso.es_requerimiento} estados={estados} volver={volver} nombres={nombres} puedeVerificar={puedeEditar} />
           : null;
       })()}
+
+      {/* Línea de tiempo (Paso 5): recorrido completo del caso, sin datos sensibles. */}
+      <LineaTiempoCaso caso={caso} derivaciones={derivaciones} casoValidado={casoValidado} nombres={nombres} />
 
       {/* Observaciones de verificación: lo que anota el equipo de Verificación.
           Visibles para TODOS los que abren la solicitud (transparencia). Se agregan
@@ -482,6 +486,32 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
       ) : (
         <div className="tarjeta">
           <p className="muted" style={{ margin: 0 }}>Enviaste esta solicitud para verificación. El equipo de Verificación decidirá si se confirma o se descarta.</p>
+        </div>
+      )}
+
+      {/* Historial de correcciones (Paso 12): valor original → corregido, append-only.
+          El contacto (Paso 10) se registra sin valores. Lo ve el equipo de la solicitud. */}
+      {(correcciones ?? []).length > 0 && (
+        <div className="tarjeta">
+          <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Correcciones de datos</h3>
+          <p className="muted" style={{ margin: '0 0 8px', fontSize: '.8rem' }}>Valor original → corregido. Nada se borra; el contacto no se muestra por privacidad.</p>
+          <ul className="timeline">
+            {(correcciones ?? []).map((c: any) => (
+              <li key={c.id}>
+                <div style={{ fontWeight: 600, fontSize: '.88rem' }}>{c.campo}</div>
+                {c.sensible ? (
+                  <div className="muted" style={{ fontSize: '.82rem' }}>Actualizado</div>
+                ) : (
+                  <div style={{ fontSize: '.82rem' }}>
+                    <span style={{ textDecoration: 'line-through', opacity: .7 }}>{c.valor_anterior || '—'}</span>{' → '}<strong>{c.valor_nuevo || '—'}</strong>
+                  </div>
+                )}
+                <div className="muted" style={{ fontSize: '.76rem' }}>
+                  {fechaHora(c.creado_en)}{c.actor_id ? ' · por ' + (nombres.get(c.actor_id) ?? '—') : ''}
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

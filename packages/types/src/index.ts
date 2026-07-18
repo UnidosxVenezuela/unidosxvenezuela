@@ -342,6 +342,20 @@ export interface Derivacion {
   actualizado_en: string;
 }
 
+// Historial de correcciones de una solicitud (Requerimiento Paso 12, migración 0178):
+// valor original → corregido, quién y cuándo. Append-only. Los campos de contacto
+// (Paso 10) se registran con `sensible = true` y sin valores.
+export interface CambioCaso {
+  id: string;
+  caso_id: string;
+  campo: string;
+  valor_anterior: string | null;
+  valor_nuevo: string | null;
+  sensible: boolean;
+  actor_id: string | null;
+  creado_en: string;
+}
+
 /** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */
 export interface SolicitudAyudaMapa {
   id: string;

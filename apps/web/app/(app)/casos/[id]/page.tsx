@@ -45,7 +45,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   for (const r of ((vcampos ?? []) as any[])) mapaVC[r.campo] = r;
   caso.verif_campos = mapaVC;
 
-  const [{ data: perfiles }, { data: historial }, { data: sol }, { data: derivaciones }] = await Promise.all([
+  const [{ data: perfiles }, { data: historial }, { data: sol }, { data: derivaciones }, { data: correcciones }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
       .eq('entidad', 'casos').eq('entidad_id', id).order('creado_en', { ascending: false }).limit(50),
@@ -53,6 +53,8 @@ export default async function CasoDetallePage({ params }: { params: { id: string
     supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', id).maybeSingle(),
     // Derivaciones multi-área (0177) best-effort: si la tabla aún no existe, se omite.
     supabase.from('casos_derivaciones').select('*').eq('caso_id', id).order('derivado_en', { ascending: true }),
+    // Historial de correcciones (0178, Paso 12) best-effort: si la tabla no existe, se omite.
+    supabase.from('casos_historial_cambios').select('*').eq('caso_id', id).order('creado_en', { ascending: false }),
   ]);
   // Áreas de destino que este usuario puede tomar/avanzar/cerrar (espejo de la RPC).
   const areasOperables = areasOperablesDe(rolesDe(perfil));
@@ -65,7 +67,7 @@ export default async function CasoDetallePage({ params }: { params: { id: string
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
           esAdmin={esAdministrador(perfil)} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} solicitud={sol}
-          derivaciones={derivaciones ?? []} areasOperables={areasOperables} />
+          derivaciones={derivaciones ?? []} areasOperables={areasOperables} correcciones={correcciones ?? []} />
       </div>
     </div>
   );
