@@ -1826,4 +1826,51 @@ begin;
   reset role;
 rollback;
 
+\echo '== Test 70: realtime seguro de difusión — señal SIN contacto; la ven Redacción/Redes, no Logística; Desaparecidos excluido (0181) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000095a1', 'redac-rt@test.local'),
+    ('00000000-0000-0000-0000-0000000095a2', 'logi-rt@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000095a1';
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000095a2';
+
+  -- Confirmar una solicitud de difusión SELLA la señal (vía trigger); un Desaparecidos NO.
+  insert into public.casos (id, titulo, categoria, estado, contacto, creado_por) values
+    ('00000000-0000-0000-0000-0000000095ac', '_TEST_senal_rt',  'Otras informaciones', 'confirmado', 'TELEFONO_SECRETO', null),
+    ('00000000-0000-0000-0000-0000000095ad', '_TEST_senal_nna', 'Desaparecidos',       'confirmado', 'TELEFONO_SECRETO', null);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_difusion_senal where caso_id = '00000000-0000-0000-0000-0000000095ac';
+    if n <> 1 then raise exception 'FALLO 70a: confirmar no selló la señal (n=%)', n; end if;
+    select count(*) into n from public.casos_difusion_senal where caso_id = '00000000-0000-0000-0000-0000000095ad';
+    if n <> 0 then raise exception 'FALLO 70b: un Desaparecidos generó señal de difusión (n=%)', n; end if;
+  end $$;
+
+  -- La señal NO expone contacto interno (solo caso_id + estado + sello).
+  do $$ begin
+    begin
+      perform contacto from public.casos_difusion_senal limit 1;
+      raise exception 'FALLO 70c: casos_difusion_senal expone la columna contacto';
+    exception when undefined_column then null;  -- esperado
+    end;
+  end $$;
+
+  -- Redacción SÍ lee la señal.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000095a1')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_difusion_senal where caso_id = '00000000-0000-0000-0000-0000000095ac';
+    if n <> 1 then raise exception 'FALLO 70d: Redacción no lee la señal (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- Logística NO lee la señal (no es su canal de difusión).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000095a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_difusion_senal;
+    if n <> 0 then raise exception 'FALLO 70e: Logística lee la señal de difusión (n=%)', n; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
