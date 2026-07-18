@@ -26,7 +26,7 @@ function numOpt(v: FormDataEntryValue | null): number | null {
 }
 
 // Valores válidos de los enums reutilizados (public.tipo_insumo, public.prioridad).
-const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refugio', 'otro'];
+const TIPOS_INSUMO_VAL = ['medicamentos', 'materiales', 'alimentos', 'agua', 'maquinaria', 'higiene', 'refugio', 'otro'];
 const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
 const TIPOS_LUGAR_VAL = ['hospital', 'albergue', 'acopio', 'otro'];
 // Valores válidos de los campos estructurados nuevos (0173).
@@ -215,6 +215,14 @@ export async function crearCaso(formData: FormData) {
   if (txt(formData.get('confirmo_alcance')) !== 'on') {
     throw new Error('Debes confirmar que la solicitud está dentro del alcance de la organización (no dinero, vivienda, legal, diagnóstico/tratamiento ni política).');
   }
+  // Campos obligatorios de calidad (además de título, alcance y contacto): descripción,
+  // fuente, al menos el Estado y el tipo de ayuda. SOLO al crear; editarCaso no los
+  // re-exige, para no trabar la corrección de solicitudes viejas.
+  if (!opt(formData.get('descripcion'))) throw new Error('Describe brevemente qué se necesita.');
+  if (!opt(formData.get('fuente'))) throw new Error('Indica quién es la fuente de la información.');
+  if (!opt(formData.get('ubicacion_estado'))) throw new Error('Indica al menos el Estado donde ocurre la solicitud.');
+  const reqTipoSel = opt(formData.get('req_tipo'));
+  if (!reqTipoSel || !TIPOS_INSUMO_VAL.includes(reqTipoSel)) throw new Error('Elige el tipo de ayuda que se necesita.');
   // Validar el enlace de la fuente (formato + seguridad heurística).
   const fuenteUrl = opt(formData.get('fuente_url'));
   const an = analizarUrl(fuenteUrl);

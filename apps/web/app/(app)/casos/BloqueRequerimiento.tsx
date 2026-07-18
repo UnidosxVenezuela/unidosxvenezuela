@@ -56,9 +56,9 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
           </LimiteError>
           <div className="grid grid-2" style={{ marginTop: 10 }}>
             <div className="campo">
-              <label htmlFor="req_tipo">¿Qué se necesita? (tipo)</label>
-              <select id="req_tipo" name="req_tipo" className="input" defaultValue={defaults.req_tipo ?? ''}>
-                <option value="">Sin especificar</option>
+              <label htmlFor="req_tipo">¿Qué se necesita? (tipo){fijo ? ' *' : ''}</label>
+              <select id="req_tipo" name="req_tipo" className="input" required={fijo} defaultValue={defaults.req_tipo ?? ''}>
+                <option value="">{fijo ? '— Elige el tipo —' : 'Sin especificar'}</option>
                 {TIPOS_INSUMO.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_INSUMO[t]}</option>)}
               </select>
             </div>

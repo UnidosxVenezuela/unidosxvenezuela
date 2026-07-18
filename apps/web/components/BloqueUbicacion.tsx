@@ -17,7 +17,7 @@ type Defaults = {
  * estructurados nuevos (0173): así `editarCaso` solo los actualiza cuando están
  * presentes, sin borrar lo ya cargado al editar desde formularios reducidos.
  */
-export default function BloqueUbicacion({ defaults = {} }: { defaults?: Defaults }) {
+export default function BloqueUbicacion({ defaults = {}, exigir = false }: { defaults?: Defaults; exigir?: boolean }) {
   return (
     <div className="tarjeta" style={{ marginBottom: 12 }}>
       <input type="hidden" name="_datos_estructurados" value="1" />
@@ -27,8 +27,8 @@ export default function BloqueUbicacion({ defaults = {} }: { defaults?: Defaults
       </p>
       <div className="grid grid-2">
         <div className="campo">
-          <label htmlFor="ubicacion_estado">Estado</label>
-          <input id="ubicacion_estado" name="ubicacion_estado" className="input" maxLength={80}
+          <label htmlFor="ubicacion_estado">Estado{exigir ? ' *' : ''}</label>
+          <input id="ubicacion_estado" name="ubicacion_estado" className="input" maxLength={80} required={exigir}
             defaultValue={defaults.estado ?? ''} placeholder="La Guaira, Carabobo…" />
         </div>
         <div className="campo">
