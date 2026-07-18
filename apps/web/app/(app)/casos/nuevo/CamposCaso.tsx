@@ -25,8 +25,8 @@ export default function CamposCaso() {
       {/* Contacto y referente (datos prioritarios, Paso 3) */}
       <BloqueContacto exigir />
 
-      {/* Ubicación administrativa (Paso 4.2) */}
-      <BloqueUbicacion />
+      {/* Ubicación administrativa (Paso 4.2) — al crear se exige al menos el Estado. */}
+      <BloqueUbicacion exigir />
 
       {/* Necesidad + ubicación en el mapa */}
       <BloqueRequerimiento fijo />
@@ -56,8 +56,8 @@ export default function CamposCaso() {
           </select>
         </div>
         <div className="campo">
-          <label htmlFor="fuente">¿Quién es la fuente?</label>
-          <input id="fuente" name="fuente" className="input" placeholder="Red oficial, persona, grupo o contacto directo" />
+          <label htmlFor="fuente">¿Quién es la fuente? *</label>
+          <input id="fuente" name="fuente" className="input" required placeholder="Red oficial, persona, grupo o contacto directo" />
         </div>
       </div>
       <div className="campo">

@@ -12,6 +12,7 @@ type Defaults = {
   req_tipo?: string | null;
   req_cantidad?: string | null;
   req_urgencia?: string | null;
+  personas_afectadas?: number | null;
   punto_tipo?: string | null;
   punto_temporal?: boolean;
 };
@@ -55,9 +56,9 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
           </LimiteError>
           <div className="grid grid-2" style={{ marginTop: 10 }}>
             <div className="campo">
-              <label htmlFor="req_tipo">¿Qué se necesita? (tipo)</label>
-              <select id="req_tipo" name="req_tipo" className="input" defaultValue={defaults.req_tipo ?? ''}>
-                <option value="">Sin especificar</option>
+              <label htmlFor="req_tipo">¿Qué se necesita? (tipo){fijo ? ' *' : ''}</label>
+              <select id="req_tipo" name="req_tipo" className="input" required={fijo} defaultValue={defaults.req_tipo ?? ''}>
+                <option value="">{fijo ? '— Elige el tipo —' : 'Sin especificar'}</option>
                 {TIPOS_INSUMO.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_INSUMO[t]}</option>)}
               </select>
             </div>
@@ -68,9 +69,19 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
               </select>
             </div>
           </div>
-          <div className="campo">
-            <label htmlFor="req_cantidad">Cantidad estimada (opcional)</label>
-            <input id="req_cantidad" name="req_cantidad" className="input" placeholder="Ej.: 50 cajas de agua · 200 raciones" defaultValue={defaults.req_cantidad ?? ''} />
+          <div className="grid grid-2">
+            <div className="campo">
+              <label htmlFor="req_cantidad">Cantidad estimada (opcional)</label>
+              <input id="req_cantidad" name="req_cantidad" className="input" placeholder="Ej.: 50 cajas de agua · 200 raciones" defaultValue={defaults.req_cantidad ?? ''} />
+            </div>
+            <div className="campo">
+              <label htmlFor="personas_afectadas" className="fila" style={{ gap: 6 }}>
+                <Icono nombre="usuario" size={15} /> Personas afectadas (aprox.)
+              </label>
+              <input id="personas_afectadas" name="personas_afectadas" className="input" type="number" min={0} step={1}
+                inputMode="numeric" placeholder="Ej.: 120" defaultValue={defaults.personas_afectadas ?? ''} />
+              <p className="muted" style={{ fontSize: '.78rem', margin: '2px 0 0' }}>Cuántas personas necesitan esta ayuda. Ayuda a priorizar. Opcional.</p>
+            </div>
           </div>
 
           {/* ¿Es un punto FIJO/TEMPORAL del mapa? Al verificarse la solicitud, se crea el centro (0145). */}

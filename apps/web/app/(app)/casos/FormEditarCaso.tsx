@@ -59,6 +59,7 @@ export default function FormEditarCaso({ caso, volver }: { caso: any; volver: st
           <BloqueRequerimiento defaults={{
             es_requerimiento: caso.es_requerimiento, lat: caso.lat, lng: caso.lng,
             req_tipo: caso.req_tipo, req_cantidad: caso.req_cantidad, req_urgencia: caso.req_urgencia,
+            personas_afectadas: caso.personas_afectadas,
             punto_tipo: caso.punto_tipo, punto_temporal: caso.punto_temporal,
           }} />
         )}

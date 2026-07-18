@@ -206,6 +206,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
             {caso.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[caso.req_tipo] ?? caso.req_tipo}</Pill>}
             {caso.req_urgencia && <Pill tono="aviso" punto={false}>{ETIQUETA_PRIORIDAD[caso.req_urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? caso.req_urgencia}</Pill>}
             {caso.req_cantidad && <span className="muted" style={{ fontSize: '.85rem' }}>· {caso.req_cantidad}</span>}
+            {caso.personas_afectadas != null && <span className="muted fila" style={{ gap: 4, fontSize: '.85rem' }}>· <Icono nombre="usuario" size={13} /> {caso.personas_afectadas} personas afectadas</span>}
             {caso.lat != null && caso.lng != null && <span className="muted" style={{ fontSize: '.82rem' }}>· Ubicación marcada en el mapa</span>}
           </div>
         )}

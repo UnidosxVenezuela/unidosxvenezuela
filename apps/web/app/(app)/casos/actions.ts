@@ -26,7 +26,7 @@ function numOpt(v: FormDataEntryValue | null): number | null {
 }
 
 // Valores válidos de los enums reutilizados (public.tipo_insumo, public.prioridad).
-const TIPOS_INSUMO_VAL = ['medicamentos', 'alimentos', 'agua', 'higiene', 'refugio', 'otro'];
+const TIPOS_INSUMO_VAL = ['medicamentos', 'materiales', 'alimentos', 'agua', 'maquinaria', 'higiene', 'refugio', 'otro'];
 const PRIORIDADES_VAL = ['baja', 'media', 'alta', 'critica'];
 const TIPOS_LUGAR_VAL = ['hospital', 'albergue', 'acopio', 'otro'];
 // Valores válidos de los campos estructurados nuevos (0173).
@@ -40,7 +40,7 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion|revision_alcance/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion|revision_alcance|personas_afectadas/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
 }
 
@@ -56,7 +56,7 @@ function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknow
   delete f.ubicacion_sector; delete f.ubicacion_direccion;
   delete f.sigue_vigente; delete f.ultima_confirmacion;
   delete f.contacto_difusion; delete f.autoriza_difusion;
-  delete f.revision_alcance;
+  delete f.revision_alcance; delete f.personas_afectadas;
   return f;
 }
 
@@ -115,10 +115,13 @@ function datosEstructurados(formData: FormData) {
 // el CHECK de la BD (0112) es el respaldo.
 function datosRequerimiento(formData: FormData, categoria: string | null) {
   const es = txt(formData.get('es_requerimiento')) === 'on';
+  // Personas afectadas (0182): entero ≥ 0 opcional, independiente de la ubicación.
+  const paNum = numOpt(formData.get('personas_afectadas'));
+  const personas_afectadas = paNum != null ? Math.max(0, Math.trunc(paNum)) : null;
   // Nota: NO se toca `punto_acopio_id` (lo fija el trigger al verificar); solo la marca.
   if (!es) {
     return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null,
-      punto_tipo: null, punto_temporal: false };
+      punto_tipo: null, punto_temporal: false, personas_afectadas: null };
   }
   if (categoria === 'Desaparecidos') {
     throw new Error('Una solicitud de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
@@ -146,7 +149,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
   if (!tieneUbic) {
     return { es_requerimiento: false, lat: null, lng: null,
       req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,
-      punto_tipo: null, punto_temporal: false };
+      punto_tipo: null, punto_temporal: false, personas_afectadas };
   }
   return {
     es_requerimiento: true,
@@ -156,6 +159,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
     req_urgencia: reqUrg,
     punto_tipo: puntoTipo,
     punto_temporal: puntoTipo ? txt(formData.get('punto_temporal')) === 'on' : false,
+    personas_afectadas,
   };
 }
 
@@ -211,6 +215,14 @@ export async function crearCaso(formData: FormData) {
   if (txt(formData.get('confirmo_alcance')) !== 'on') {
     throw new Error('Debes confirmar que la solicitud está dentro del alcance de la organización (no dinero, vivienda, legal, diagnóstico/tratamiento ni política).');
   }
+  // Campos obligatorios de calidad (además de título, alcance y contacto): descripción,
+  // fuente, al menos el Estado y el tipo de ayuda. SOLO al crear; editarCaso no los
+  // re-exige, para no trabar la corrección de solicitudes viejas.
+  if (!opt(formData.get('descripcion'))) throw new Error('Describe brevemente qué se necesita.');
+  if (!opt(formData.get('fuente'))) throw new Error('Indica quién es la fuente de la información.');
+  if (!opt(formData.get('ubicacion_estado'))) throw new Error('Indica al menos el Estado donde ocurre la solicitud.');
+  const reqTipoSel = opt(formData.get('req_tipo'));
+  if (!reqTipoSel || !TIPOS_INSUMO_VAL.includes(reqTipoSel)) throw new Error('Elige el tipo de ayuda que se necesita.');
   // Validar el enlace de la fuente (formato + seguridad heurística).
   const fuenteUrl = opt(formData.get('fuente_url'));
   const an = analizarUrl(fuenteUrl);

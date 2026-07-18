@@ -279,6 +279,8 @@ export interface Caso {
   req_tipo: TipoInsumo | null;
   req_cantidad: string | null;
   req_urgencia: Prioridad | null;
+  // Número aproximado de personas afectadas por la solicitud (0182, opcional).
+  personas_afectadas: number | null;
   // Punto del mapa (0145): si `punto_tipo` no es null, esta solicitud declara un
   // hospital / albergue / centro de acopio que, al CONFIRMARSE, crea su centro en el
   // mapa (puntos_acopio) enlazado por `punto_acopio_id`. `punto_temporal` es etiqueta.
