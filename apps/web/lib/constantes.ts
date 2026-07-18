@@ -809,3 +809,49 @@ export const TERMINOS_FUERA_ALCANCE: string[] = [
 // Mensaje de recepción al enviar una solicitud (Paso 2).
 export const MENSAJE_RECEPCION_CASO =
   'La recepción de esta solicitud no implica su aprobación ni garantiza su resolución. El caso pasará a verificación.';
+
+// ── Derivación multi-área (Requerimiento Paso 9, migración 0177) ──
+// Una solicitud VALIDADA se deriva a una o varias áreas de destino. «Área» no es
+// una columna: se enruta por rol (ver ROLES_POR_AREA_DESTINO, espejo de la RPC
+// puede_operar_area_derivacion).
+export const AREAS_DESTINO = ['logistica', 'redes', 'donaciones', 'alianzas', 'coordinacion', 'otra'] as const;
+export type AreaDestino = (typeof AREAS_DESTINO)[number];
+export const ETIQUETA_AREA_DESTINO: Record<AreaDestino, string> = {
+  logistica: 'Logística',
+  redes: 'Redes Sociales',
+  donaciones: 'Donaciones',
+  alianzas: 'Alianzas Estratégicas',
+  coordinacion: 'Coordinación',
+  otra: 'Otra área',
+};
+export const DESCRIPCION_AREA_DESTINO: Record<AreaDestino, string> = {
+  logistica: 'Traslado y entrega de insumos',
+  redes: 'Difusión (solo contacto/imágenes autorizados)',
+  donaciones: 'Conseguir bienes o recursos en especie',
+  alianzas: 'Organizaciones y aliados',
+  coordinacion: 'Seguimiento general',
+  otra: 'Otro destino — especifícalo en la acción',
+};
+export const PRIORIDADES_DERIVACION = ['alta', 'media', 'baja'] as const;
+export type PrioridadDerivacion = (typeof PRIORIDADES_DERIVACION)[number];
+export const ETIQUETA_PRIORIDAD_DERIVACION: Record<PrioridadDerivacion, string> = { alta: 'Alta', media: 'Media', baja: 'Baja' };
+export const ESTADOS_DERIVACION = ['sin_tomar', 'tomada', 'en_proceso', 'cerrada'] as const;
+export type EstadoDerivacion = (typeof ESTADOS_DERIVACION)[number];
+export const ETIQUETA_ESTADO_DERIVACION: Record<EstadoDerivacion, string> = {
+  sin_tomar: 'Sin tomar', tomada: 'Tomada', en_proceso: 'En proceso', cerrada: 'Cerrada',
+};
+// Roles operativos por área (toman / avanzan / cierran). Espejo exacto de
+// puede_operar_area_derivacion() en 0177. Coordinación y «otra» solo admin.
+export const ROLES_POR_AREA_DESTINO: Record<AreaDestino, readonly string[]> = {
+  logistica: ['logistica', 'admin_logistica'],
+  redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers', 'admin_redes'],
+  donaciones: ['logistica', 'admin_logistica', 'captacion'],
+  alianzas: ['captacion'],
+  coordinacion: [],
+  otra: [],
+};
+/** Áreas de destino que un conjunto de roles puede operar (admin opera todas). */
+export function areasOperablesDe(roles: readonly string[]): AreaDestino[] {
+  const admin = roles.includes('admin');
+  return AREAS_DESTINO.filter((a) => admin || ROLES_POR_AREA_DESTINO[a].some((r) => roles.includes(r)));
+}

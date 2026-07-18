@@ -12,6 +12,7 @@ import { pasoDeCaso } from '@/lib/flujo';
 import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import VerificacionPorCampo from './VerificacionPorCampo';
+import Derivaciones from './Derivaciones';
 import { nombreMostrado } from '@/lib/nombre';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -27,8 +28,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [] }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[];
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -297,6 +298,12 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </form>
         </div>
       )}
+
+      {/* Derivación multi-área (Paso 9): reparte una solicitud Validada entre las áreas
+          de destino, con seguimiento por área visible para todas. No aplica a «Desaparecidos». */}
+      <Derivaciones caso={caso} derivaciones={derivaciones} perfiles={perfiles} volver={volver}
+        puedeDerivar={(puedeEditar || esAdmin) && caso.categoria !== 'Desaparecidos'}
+        casoValidado={casoValidado} areasOperables={areasOperables} esAdmin={esAdmin} />
 
       {puedeEditarDatos && <FormEditarCaso caso={caso} volver={volver} />}
 

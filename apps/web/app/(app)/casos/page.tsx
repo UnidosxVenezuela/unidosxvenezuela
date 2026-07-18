@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
@@ -66,6 +66,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   const puedeOperar = supervisa && identidadOK;
   const puedeCrear = esAdmin || rolesU.includes('recopilacion') || puedeOperar;
   const verifica = puedeVerif || accesoBusqueda || puedeOperar;  // puede cambiar estado / tomar
+  // Áreas de destino que este usuario puede tomar/avanzar/cerrar (derivación multi-área, 0177).
+  const areasOperables = areasOperablesDe(rolesU);
   const soloBusqueda = accesoBusqueda && !puedeVerif && !esAdmin; // ve solo Desaparecidos
   const soloVerif = puedeVerif && !accesoBusqueda && !esAdmin;    // ve solo Otras informaciones
   const subAreas = soloBusqueda ? ['Desaparecidos'] : soloVerif ? ['Otras informaciones'] : CATEGORIAS_CASO;
@@ -159,7 +161,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
   }
 
-  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false;
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -184,6 +186,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       const mapaVC: Record<string, any> = {};
       for (const r of ((vcampos ?? []) as any[])) mapaVC[r.campo] = r;
       drawerCaso.verif_campos = mapaVC;
+      // Derivaciones multi-área (0177) best-effort: si la tabla aún no existe, se omite.
+      const { data: dder } = await supabase.from('casos_derivaciones').select('*').eq('caso_id', searchParams.caso).order('derivado_en', { ascending: true });
+      drawerDeriv = (dder ?? []) as any[];
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
@@ -321,7 +326,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la solicitud ' + drawerCaso.titulo}>
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
-                esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} />
+                esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
+                derivaciones={drawerDeriv} areasOperables={areasOperables} />
             </DrawerModal>
           </>
         )}

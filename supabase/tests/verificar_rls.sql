@@ -1642,4 +1642,66 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 66: derivación multi-área — solo casos Validados; el área destino toma la suya (0177) =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000091a1', 'verif-der@test.local'),
+    ('00000000-0000-0000-0000-0000000091a2', 'logi-der@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true, nombre_completo = 'VerifDer' where id = '00000000-0000-0000-0000-0000000091a1';
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true, nombre_completo = 'LogiDer'  where id = '00000000-0000-0000-0000-0000000091a2';
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-0000000091ac', '_TEST_derivar', 'Otras informaciones', 'en_proceso', null);
+
+  -- (1) Verificación NO puede derivar un caso sin validar (regla crítica Paso 9).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000091a1')::text, true);
+  do $$ begin
+    begin
+      perform public.derivar_caso('00000000-0000-0000-0000-0000000091ac', array['logistica']);
+      raise exception 'FALLO: se derivó un caso NO validado';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+  reset role;
+
+  -- Validamos el caso (candado 0173) y derivamos a 2 áreas.
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-0000000091ac');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000091a1')::text, true);
+  do $$ declare v_n int; begin
+    v_n := public.derivar_caso('00000000-0000-0000-0000-0000000091ac', array['logistica','donaciones'], null, 'Coordinar entrega', 'alta', null);
+    if v_n <> 2 then raise exception 'FALLO: derivar_caso devolvió % (esperado 2)', v_n; end if;
+  end $$;
+  reset role;
+
+  -- Se crearon 2 derivaciones y se avisó a Logística.
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_derivaciones where caso_id = '00000000-0000-0000-0000-0000000091ac';
+    if n <> 2 then raise exception 'FALLO: hay % derivaciones (esperado 2)', n; end if;
+    select count(*) into n from public.notificaciones
+      where destinatario_id = '00000000-0000-0000-0000-0000000091a2' and tipo = 'caso_derivado';
+    if n < 1 then raise exception 'FALLO: Logística no recibió aviso de derivación (n=%)', n; end if;
+  end $$;
+
+  -- (2) Un usuario de Logística toma la derivación de su área.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000091a2')::text, true);
+  do $$ declare v_id uuid; e text; begin
+    select id into v_id from public.casos_derivaciones where caso_id = '00000000-0000-0000-0000-0000000091ac' and area = 'logistica';
+    perform public.tomar_derivacion(v_id);
+    select estado into e from public.casos_derivaciones where id = v_id;
+    if e <> 'tomada' then raise exception 'FALLO: Logística no pudo tomar su derivación (estado=%)', e; end if;
+  end $$;
+  reset role;
+
+  -- (3) El gate de tabla bloquea insertar una derivación de un caso NO validado.
+  insert into public.casos (id, titulo, categoria, estado, creado_por)
+    values ('00000000-0000-0000-0000-0000000091ad', '_TEST_derivar_nv', 'Otras informaciones', 'en_proceso', null);
+  do $$ begin
+    begin
+      insert into public.casos_derivaciones (caso_id, area) values ('00000000-0000-0000-0000-0000000091ad', 'logistica');
+      raise exception 'FALLO: se insertó una derivación de un caso no validado';
+    exception when others then if sqlerrm like 'FALLO:%' then raise; end if; end;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

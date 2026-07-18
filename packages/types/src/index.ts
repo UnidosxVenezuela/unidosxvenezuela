@@ -316,6 +316,32 @@ export interface Caso {
   publicado_por: string | null;
 }
 
+// Derivación multi-área (Requerimiento Paso 9, migración 0177): una solicitud
+// Validada se deriva a una o varias áreas de destino, cada una con su propio
+// estado operativo y responsable. Visible para todas las áreas (Paso 5).
+export type AreaDestino = 'logistica' | 'redes' | 'donaciones' | 'alianzas' | 'coordinacion' | 'otra';
+export type EstadoDerivacion = 'sin_tomar' | 'tomada' | 'en_proceso' | 'cerrada';
+export type PrioridadDerivacion = 'alta' | 'media' | 'baja';
+
+export interface Derivacion {
+  id: string;
+  caso_id: string;
+  area: AreaDestino;
+  responsable_id: string | null;
+  accion: string | null;
+  prioridad: PrioridadDerivacion;
+  observaciones: string | null;
+  estado: EstadoDerivacion;
+  derivado_por: string | null;
+  derivado_en: string;
+  tomado_por: string | null;
+  tomado_en: string | null;
+  cerrado_por: string | null;
+  cerrado_en: string | null;
+  motivo_cierre: string | null;
+  actualizado_en: string;
+}
+
 /** Punto de «Solicitud de ayuda» para el mapa (RPC solicitudes_ayuda_mapa). */
 export interface SolicitudAyudaMapa {
   id: string;
