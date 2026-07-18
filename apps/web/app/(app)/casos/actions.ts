@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE } from '@/lib/constantes';
+import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -414,6 +414,57 @@ export async function reubicarCasoOfrecimiento(formData: FormData) {
   if (error) return redirigirError(volver, 'No se pudo reubicar la solicitud: ' + error.message);
   revalidatePath('/casos'); revalidatePath('/insumos/oportunidades');
   redirigirOk('/insumos/oportunidades/' + data, 'Solicitud reubicada como Donación-Ofrecimiento. Complétala o afínala aquí.');
+}
+
+// ── Derivación multi-área (0177, Requerimiento Paso 9) ──
+// Verificación deriva una solicitud VALIDADA a una o varias áreas de destino, con
+// responsable/acción/prioridad/observaciones. El gate «solo Validado», el permiso
+// y el aviso a cada área los hace el RPC derivar_caso (SECURITY DEFINER).
+export async function derivarCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const areas = formData.getAll('areas').map((a) => String(a)).filter((a) => (AREAS_DESTINO as readonly string[]).includes(a));
+  const responsable = opt(formData.get('responsable_id'));
+  const accion = opt(formData.get('accion'));
+  const prioridad = opt(formData.get('prioridad')) || 'media';
+  const observaciones = opt(formData.get('observaciones'));
+  if (!id) return redirigirError(volver, 'Falta la solicitud');
+  if (areas.length === 0) return redirigirError(volver, 'Elegí al menos un área de destino');
+  const { error } = await supabase.rpc('derivar_caso', {
+    p_caso: id, p_areas: areas, p_responsable: responsable,
+    p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
+  });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'La derivación multi-área todavía no está disponible (falta aplicar la migración 0177).');
+    return redirigirError(volver, 'No se pudo derivar: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath(volver);
+  redirigirOk(volver, 'Solicitud derivada a las áreas seleccionadas');
+}
+
+// Acciones de estado de una derivación (tomar / en proceso / cerrar). El RPC
+// verifica que quien actúa pertenece al ÁREA de destino (o es admin).
+async function accionDerivacion(formData: FormData, rpc: string, ok: string, extra?: Record<string, unknown>) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const derivacion = txt(formData.get('derivacion_id'));
+  const volver = opt(formData.get('volver')) || '/casos';
+  const { error } = await supabase.rpc(rpc, { p_derivacion: derivacion, ...(extra || {}) });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'Acción no disponible (falta aplicar la migración 0177).');
+    return redirigirError(volver, error.message);
+  }
+  revalidatePath('/casos'); revalidatePath(volver);
+  redirigirOk(volver, ok);
+}
+export async function tomarDerivacion(formData: FormData) { return accionDerivacion(formData, 'tomar_derivacion', 'Tomaste la derivación'); }
+export async function avanzarDerivacion(formData: FormData) { return accionDerivacion(formData, 'avanzar_derivacion', 'Derivación marcada en proceso'); }
+export async function cerrarDerivacion(formData: FormData) {
+  return accionDerivacion(formData, 'cerrar_derivacion', 'Derivación cerrada', { p_motivo: opt(formData.get('motivo')) });
 }
 
 // Redacción/Redes marca una solicitud como PUBLICADA (con enlace opcional). El

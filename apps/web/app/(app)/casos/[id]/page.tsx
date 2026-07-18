@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
+import { areasOperablesDe } from '@/lib/constantes';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import DetalleCaso from '../DetalleCaso';
@@ -44,13 +45,17 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   for (const r of ((vcampos ?? []) as any[])) mapaVC[r.campo] = r;
   caso.verif_campos = mapaVC;
 
-  const [{ data: perfiles }, { data: historial }, { data: sol }] = await Promise.all([
+  const [{ data: perfiles }, { data: historial }, { data: sol }, { data: derivaciones }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
       .eq('entidad', 'casos').eq('entidad_id', id).order('creado_en', { ascending: false }).limit(50),
     // Solicitud de insumo enlazada, si el caso ya fue derivado a Logística (Fase 2).
     supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', id).maybeSingle(),
+    // Derivaciones multi-área (0177) best-effort: si la tabla aún no existe, se omite.
+    supabase.from('casos_derivaciones').select('*').eq('caso_id', id).order('derivado_en', { ascending: true }),
   ]);
+  // Áreas de destino que este usuario puede tomar/avanzar/cerrar (espejo de la RPC).
+  const areasOperables = areasOperablesDe(rolesDe(perfil));
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -59,7 +64,8 @@ export default async function CasoDetallePage({ params }: { params: { id: string
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
-          esAdmin={esAdministrador(perfil)} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} solicitud={sol} />
+          esAdmin={esAdministrador(perfil)} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} solicitud={sol}
+          derivaciones={derivaciones ?? []} areasOperables={areasOperables} />
       </div>
     </div>
   );
