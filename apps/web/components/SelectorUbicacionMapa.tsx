@@ -29,6 +29,9 @@ export default function SelectorUbicacionMapa({
   const [sel, setSel] = useState<{ lat: number; lng: number } | null>(
     latInicial != null && lngInicial != null ? { lat: latInicial, lng: lngInicial } : null,
   );
+  const [busq, setBusq] = useState('');
+  const [buscando, setBuscando] = useState(false);
+  const [avisoBusq, setAvisoBusq] = useState('');
 
   useEffect(() => {
     if (mapa.current || !cont.current) return;
@@ -74,14 +77,52 @@ export default function SelectorUbicacionMapa({
     );
   }
 
+  // Geocodificación: la persona ESCRIBE una dirección y el pin «viaja» a ese lugar
+  // (además de poder tocar/arrastrar). Usa Nominatim (OpenStreetMap), sin clave, sesgado
+  // a Venezuela. Es best-effort: si no encuentra o falla la red, se marca a mano.
+  async function buscarDireccion() {
+    const texto = busq.trim();
+    if (!texto || buscando) return;
+    setBuscando(true); setAvisoBusq('');
+    try {
+      const params = new URLSearchParams({ format: 'json', limit: '1', countrycodes: 've', 'accept-language': 'es', q: texto });
+      const res = await fetch('https://nominatim.openstreetmap.org/search?' + params.toString());
+      if (!res.ok) throw new Error('geo');
+      const arr = await res.json();
+      const primero = Array.isArray(arr) ? arr[0] : null;
+      if (primero && primero.lat && primero.lon) {
+        const m = mapa.current as unknown as { _poner?: (lng: number, lat: number, v?: boolean) => void } | null;
+        m?._poner?.(parseFloat(primero.lon), parseFloat(primero.lat), true);
+      } else {
+        setAvisoBusq('No se encontró esa dirección. Prueba con menos detalle (ciudad, sector) o marca el pin a mano.');
+      }
+    } catch {
+      setAvisoBusq('No se pudo buscar la dirección ahora. Marca el pin en el mapa.');
+    } finally {
+      setBuscando(false);
+    }
+  }
+
   return (
     <div>
       <input type="hidden" name={nombreLat} value={sel ? sel.lat : ''} readOnly />
       <input type="hidden" name={nombreLng} value={sel ? sel.lng : ''} readOnly />
+      {/* Buscar por dirección: escribe y el pin viaja a ese lugar (además de tocar/arrastrar). */}
+      <div className="fila" style={{ gap: 6, marginBottom: 6 }}>
+        <input className="input" style={{ flex: 1, minWidth: 0 }} value={busq}
+          onChange={(e) => { setBusq(e.target.value); if (avisoBusq) setAvisoBusq(''); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); buscarDireccion(); } }}
+          placeholder="Buscar dirección (calle, sector, ciudad…)" aria-label="Buscar dirección para ubicar el pin" />
+        <button type="button" className="btn" style={{ minHeight: 34, padding: '4px 12px', whiteSpace: 'nowrap' }}
+          onClick={buscarDireccion} disabled={buscando}>
+          <Icono nombre="buscar" size={14} /> {buscando ? 'Buscando…' : 'Buscar'}
+        </button>
+      </div>
+      {avisoBusq && <p className="muted" style={{ fontSize: '.8rem', margin: '0 0 6px' }}>{avisoBusq}</p>}
       <div ref={cont} style={{ height: alto, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--borde)' }} />
       <div className="fila" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
         <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>
-          <Icono nombre="ubicacion" size={14} /> {sel ? 'Ubicación marcada. Arrastra el pin para ajustar.' : 'Toca el mapa donde se necesita la ayuda.'}
+          <Icono nombre="ubicacion" size={14} /> {sel ? 'Ubicación marcada. Arrastra el pin para ajustar.' : 'Busca la dirección arriba o toca el mapa donde se necesita la ayuda.'}
         </p>
         <button type="button" className="btn" style={{ minHeight: 34, padding: '4px 12px' }} onClick={usarMiUbicacion}>
           <Icono nombre="ubicacion" size={14} /> Usar mi ubicación

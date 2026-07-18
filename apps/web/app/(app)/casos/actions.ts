@@ -40,7 +40,7 @@ function faltanColumnasPunto(error: { message?: string; code?: string } | null |
   if (!error) return false;
   if (error.code === '42703') return true; // undefined_column
   const m = (error.message || '').toLowerCase();
-  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion|revision_alcance/.test(m)
+  return /punto_tipo|punto_temporal|punto_acopio|referente|contacto_whatsapp|contacto_instagram|referente_rol|fuente_tipo|ubicacion_|sigue_vigente|ultima_confirmacion|contacto_difusion|autoriza_difusion|revision_alcance|personas_afectadas/.test(m)
     || (/column/.test(m) && /does not exist|no existe/.test(m));
 }
 
@@ -56,7 +56,7 @@ function sinColumnasNuevas(fila: Record<string, unknown>): Record<string, unknow
   delete f.ubicacion_sector; delete f.ubicacion_direccion;
   delete f.sigue_vigente; delete f.ultima_confirmacion;
   delete f.contacto_difusion; delete f.autoriza_difusion;
-  delete f.revision_alcance;
+  delete f.revision_alcance; delete f.personas_afectadas;
   return f;
 }
 
@@ -115,10 +115,13 @@ function datosEstructurados(formData: FormData) {
 // el CHECK de la BD (0112) es el respaldo.
 function datosRequerimiento(formData: FormData, categoria: string | null) {
   const es = txt(formData.get('es_requerimiento')) === 'on';
+  // Personas afectadas (0182): entero ≥ 0 opcional, independiente de la ubicación.
+  const paNum = numOpt(formData.get('personas_afectadas'));
+  const personas_afectadas = paNum != null ? Math.max(0, Math.trunc(paNum)) : null;
   // Nota: NO se toca `punto_acopio_id` (lo fija el trigger al verificar); solo la marca.
   if (!es) {
     return { es_requerimiento: false, lat: null, lng: null, req_tipo: null, req_cantidad: null, req_urgencia: null,
-      punto_tipo: null, punto_temporal: false };
+      punto_tipo: null, punto_temporal: false, personas_afectadas: null };
   }
   if (categoria === 'Desaparecidos') {
     throw new Error('Una solicitud de «Desaparecidos» no puede marcarse como solicitud de ayuda con ubicación (esos van al Grupo de Búsqueda, no a Logística).');
@@ -146,7 +149,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
   if (!tieneUbic) {
     return { es_requerimiento: false, lat: null, lng: null,
       req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,
-      punto_tipo: null, punto_temporal: false };
+      punto_tipo: null, punto_temporal: false, personas_afectadas };
   }
   return {
     es_requerimiento: true,
@@ -156,6 +159,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
     req_urgencia: reqUrg,
     punto_tipo: puntoTipo,
     punto_temporal: puntoTipo ? txt(formData.get('punto_temporal')) === 'on' : false,
+    personas_afectadas,
   };
 }
 
