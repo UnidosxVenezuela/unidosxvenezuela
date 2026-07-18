@@ -31,11 +31,11 @@ import DetalleRedaccion from './DetalleRedaccion';
 
 type SP = { q?: string; categoria?: string; etapa?: string; canal?: string; prioridad?: string; vista?: string; caso?: string };
 
-// Columnas seguras (0166 ya desplegado). redactor_id/canales (0169) se traen aparte,
-// best-effort, para no romper la vista si esa migración aún no está aplicada.
-// Paso 10 (privacidad): Redacción/Redes NO ven el contacto interno ni las evidencias.
-// Por eso este COLS NO trae `contacto`/`referente`/`contacto_whatsapp`/`contacto_instagram`
-// y solo expone el `contacto_difusion` autorizado. Las evidencias tampoco se bajan aquí.
+// Paso 10 (Fase 2b, 0180): Redacción lee de la VISTA CURADA `casos_difusion`, no de
+// `casos` (a la que ya NO tiene acceso por RLS). La vista solo expone columnas seguras
+// —nunca `contacto`/`referente`/`contacto_whatsapp`/`contacto_instagram`— y sí el
+// `contacto_difusion` autorizado. Las evidencias tampoco se bajan aquí. redactor_id/
+// canales (0169) se traen aparte, best-effort, por si esa migración aún no está aplicada.
 const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, creado_por, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, estado, publicado_en, publicacion_url';
 
 export default async function EnvioRedaccionPage({ searchParams }: { searchParams: SP }) {
@@ -58,7 +58,7 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
   const hayFiltros = Boolean(q || fCat || fEtapa || fCanal || fPrioridad);
 
   // ── KPIs (conteos exactos, RLS-scoped) ──
-  const base = () => supabase.from('casos').select('*', { count: 'exact', head: true });
+  const base = () => supabase.from('casos_difusion').select('*', { count: 'exact', head: true });
   const [kPorDif, kEnviadas, kPublicadas, kPrioridad] = await Promise.all([
     base().eq('estado', 'confirmado').is('publicado_en', null),
     base().eq('estado', 'enviado_redaccion').is('publicado_en', null),
@@ -73,8 +73,8 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
   // ── Conjunto relevante para Redacción: confirmadas/enviadas (pipeline activo) +
   //    las ya publicadas (pueden estar en cualquier estado). Se unen y de-duplican. ──
   const [{ data: activos }, { data: publicados }] = await Promise.all([
-    supabase.from('casos').select(COLS).in('estado', ['confirmado', 'enviado_redaccion']).order('actualizado_en', { ascending: false }).limit(500),
-    supabase.from('casos').select(COLS).not('publicado_en', 'is', null).order('actualizado_en', { ascending: false }).limit(500),
+    supabase.from('casos_difusion').select(COLS).in('estado', ['confirmado', 'enviado_redaccion']).order('actualizado_en', { ascending: false }).limit(500),
+    supabase.from('casos_difusion').select(COLS).not('publicado_en', 'is', null).order('actualizado_en', { ascending: false }).limit(500),
   ]);
   const porId = new Map<string, any>();
   for (const c of [...((activos as any[]) ?? []), ...((publicados as any[]) ?? [])]) porId.set(c.id, c);
@@ -83,7 +83,7 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
   // redactor_id + canales (0169) best-effort: si faltan las columnas, se omite sin romper.
   const ids = lista.map((c) => c.id);
   if (ids.length) {
-    const { data: ext } = await supabase.from('casos').select('id, redactor_id, canales_publicacion').in('id', ids);
+    const { data: ext } = await supabase.from('casos_difusion').select('id, redactor_id, canales_publicacion').in('id', ids);
     if (ext) {
       const m = new Map((ext as any[]).map((r) => [r.id, r]));
       for (const c of lista) { const e: any = m.get(c.id); if (e) { c.redactor_id = e.redactor_id; c.canales_publicacion = e.canales_publicacion ?? []; } }
@@ -129,10 +129,10 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
   // ── Drawer (?caso=ID) ──
   let dCaso: any = null;
   if (searchParams.caso) {
-    const { data: dc } = await supabase.from('casos').select(COLS).eq('id', searchParams.caso).single();
+    const { data: dc } = await supabase.from('casos_difusion').select(COLS).eq('id', searchParams.caso).single();
     dCaso = dc;
     if (dCaso) {
-      const { data: dext } = await supabase.from('casos').select('id, redactor_id, canales_publicacion').eq('id', dCaso.id).maybeSingle();
+      const { data: dext } = await supabase.from('casos_difusion').select('id, redactor_id, canales_publicacion').eq('id', dCaso.id).maybeSingle();
       if (dext) { dCaso.redactor_id = (dext as any).redactor_id; dCaso.canales_publicacion = (dext as any).canales_publicacion ?? []; }
       // Evidencias: uso interno (Paso 10). No se bajan para la difusión.
       dCaso.adjuntos = [];

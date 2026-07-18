@@ -9,9 +9,10 @@ const TOPE = 10000;
 
 /** Todo lo que Redacción trabaja: confirmadas (por difundir) + ya enviadas. */
 export async function consultarRedaccion(supabase: any): Promise<any[]> {
-  // Paso 10: Redacción exporta el contacto AUTORIZADO para difusión, nunca el interno.
+  // Paso 10 (Fase 2b, 0180): Redacción lee de la VISTA CURADA `casos_difusion`, que solo
+  // expone columnas seguras (el contacto AUTORIZADO para difusión, nunca el interno).
   const COLS = 'id, numero, titulo, descripcion, categoria, estado, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, req_tipo, req_cantidad, req_urgencia, requiere_difusion, publicado_en, publicacion_url, actualizado_en';
-  const { data } = await supabase.from('casos').select(COLS)
+  const { data } = await supabase.from('casos_difusion').select(COLS)
     .in('estado', ['confirmado', 'enviado_redaccion'])
     .order('actualizado_en', { ascending: false }).limit(TOPE);
   return (data ?? []) as any[];

@@ -1783,4 +1783,44 @@ begin;
   reset role;
 rollback;
 
+\echo '== Test 69: Redacción NO lee casos directo (Paso 10, 0180); lee la vista curada; el contacto no se expone =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000094a1', 'redac-b@test.local'),
+    ('00000000-0000-0000-0000-0000000094a2', 'verif94@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'redaccion',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000094a1';
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000094a2';
+  insert into public.casos (id, titulo, categoria, estado, contacto, creado_por)
+    values ('00000000-0000-0000-0000-0000000094ac', '_TEST_red_priv', 'Otras informaciones', 'confirmado', 'TELEFONO_SECRETO', null);
+
+  -- Redacción ya NO lee filas de `casos` (ni el contacto interno), pero SÍ la vista curada.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000094a1')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos;
+    if n <> 0 then raise exception 'FALLO 69a: Redacción todavía lee filas de casos (n=%)', n; end if;
+    select count(*) into n from public.casos_difusion;
+    if n <> 1 then raise exception 'FALLO 69b: Redacción no ve la vista curada casos_difusion (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- La vista NO expone la columna de contacto interno.
+  do $$ begin
+    begin
+      perform contacto from public.casos_difusion limit 1;
+      raise exception 'FALLO 69c: casos_difusion expone la columna contacto';
+    exception when undefined_column then null;  -- esperado: la columna no existe en la vista
+    end;
+  end $$;
+
+  -- Verificación SIGUE leyendo casos (su rama de casos_select quedó intacta).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000094a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos where id = '00000000-0000-0000-0000-0000000094ac';
+    if n <> 1 then raise exception 'FALLO 69d: Verificación perdió acceso a casos (n=%)', n; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
