@@ -95,7 +95,7 @@ export default async function ServiciosPage() {
               Todavía no hay servicios <strong>verificados</strong> disponibles. Los que están en verificación se listan más abajo.
             </p>
           ) : (
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%,280px),1fr))', gap: 12 }}>
               {disponibles.map((s) => <TarjetaServicio key={s.id} s={s} gestor={gestor} />)}
             </div>
           )}
@@ -109,7 +109,7 @@ export default async function ServiciosPage() {
               <p className="muted" style={{ fontSize: '.84rem', margin: '8px 0 12px' }}>
                 Estos servicios ya se registraron pero Verificación aún no los confirma. Se vuelven «disponibles» al verificarse.
               </p>
-              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 12 }}>
+              <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%,280px),1fr))', gap: 12 }}>
                 {pendientes.map((s) => <TarjetaServicio key={s.id} s={s} gestor={gestor} />)}
               </div>
             </details>
