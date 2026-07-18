@@ -58,6 +58,7 @@ create view public.casos_difusion
   from public.casos c
   where c.categoria is distinct from 'Desaparecidos'
     and (c.estado::text in ('confirmado', 'enviado_redaccion') or c.publicado_en is not null)
+    and public.es_verificado()   -- mismo requisito de identidad que casos_select
     and (public.es_admin() or public.opera_redes() or public.tiene_rol('redaccion'));
 
 grant select on public.casos_difusion to authenticated;

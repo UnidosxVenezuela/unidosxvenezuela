@@ -157,7 +157,7 @@ begin;
   end $$;
 rollback;
 
-\echo '== Test 8: envio_redaccion ve confirmados pero NO en_proceso ajenos =='
+\echo '== Test 8: Redacción ve confirmados por la VISTA CURADA, no en_proceso; y ya NO lee casos directo (0180) =='
 begin;
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_conf', 'confirmado', null);
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_proc', 'en_proceso', null);
@@ -165,11 +165,14 @@ begin;
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
   do $$
-  declare n_conf int; n_proc int;
+  declare n_casos int; n_conf int; n_proc int;
   begin
-    select count(*) into n_conf from public.casos where titulo = '_TEST_conf';
-    select count(*) into n_proc from public.casos where titulo = '_TEST_proc';
-    if n_conf <> 1 then raise exception 'FALLO: envío no ve un caso confirmado'; end if;
+    -- Fase 2b (0180): Redacción ya NO lee `casos` directo; lo hace por `casos_difusion`.
+    select count(*) into n_casos from public.casos;
+    if n_casos <> 0 then raise exception 'FALLO: Redacción todavía lee casos directamente (n=%)', n_casos; end if;
+    select count(*) into n_conf from public.casos_difusion where titulo = '_TEST_conf';
+    select count(*) into n_proc from public.casos_difusion where titulo = '_TEST_proc';
+    if n_conf <> 1 then raise exception 'FALLO: envío no ve un caso confirmado (vía vista curada)'; end if;
     if n_proc <> 0 then raise exception 'FALLO: envío ve casos en proceso ajenos'; end if;
   end $$;
 rollback;
