@@ -52,7 +52,7 @@ function TablaTareas({ tareas, conEntregables, hrefDetalle, verFull = false }: {
   tareas: any[]; conEntregables?: Set<string>; hrefDetalle: (id: string) => string; verFull?: boolean;
 }) {
   return (
-    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(290px,1fr))' }}>
+    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%,290px),1fr))' }}>
       {tareas.map((t) => (
         <div key={t.id} className={'tarjeta tarea-card ' + claseTarjetaEstado(t.estado)}>
           <div className="fila" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>

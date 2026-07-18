@@ -112,7 +112,7 @@ export default async function CaptacionReferenciaPage({ searchParams }: { search
             : 'Cuando el equipo de Captación marque oportunidades como «Enviadas», aparecerán aquí como referencia.'}
         />
       ) : (
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 12, marginTop: 16 }}>
+        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%,260px),1fr))', gap: 12, marginTop: 16 }}>
           {entidades.map((o) => {
             const url = urls.get(o.id);
             const link = hrefSeguro(o.enlace);
