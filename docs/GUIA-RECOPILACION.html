@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<title>Guía · Recopilación y Gestión de la Información — Apoyo por Venezuela</title>
 <style>
   :root{
     --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
@@ -25,13 +26,15 @@
   .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
   .cover h1{ font-size:30pt; color:var(--azul); margin:10px 0 6px; }
   .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
-  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .marca{ margin-top:22px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
   .cover .punto{ width:12px; height:12px; border-radius:50%; background:
      conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
   .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  .cover .idx{ margin-top:18px; font-size:9.5pt; color:var(--suave); max-width:520px; }
+  .cover .idx b{ color:var(--azul-osc); }
   /* Tarjetas y callouts */
   .grid{ display:grid; gap:10px; }
-  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; } .g4{ grid-template-columns:1fr 1fr 1fr 1fr; }
   .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
   .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
     font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
@@ -60,17 +63,50 @@
   .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
   ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
   .mini{ font-size:9.5pt; color:var(--suave); }
+  /* Mockups de pantalla */
+  .device{ border:1px solid #d5dbe8; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 1px 0 #eef1f7;
+    max-width:560px; margin:0 auto; break-inside:avoid; }
+  .device .bar{ display:flex; align-items:center; gap:6px; padding:7px 12px; background:#0033A0; }
+  .device .bar i{ width:9px; height:9px; border-radius:50%; background:#ffffff66; display:inline-block; }
+  .device .bar .t{ color:#fff; font-size:9pt; font-weight:700; margin-left:6px; letter-spacing:.02em; }
+  .device .body{ padding:12px 13px; }
+  .kpirow{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:8px 0; }
+  .kpi{ border:1px solid var(--borde); border-radius:9px; padding:7px 6px; text-align:left; background:#fff; }
+  .kpi .v{ font-size:15pt; font-weight:800; line-height:1; }
+  .kpi .l{ font-size:7pt; color:var(--suave); text-transform:uppercase; letter-spacing:.02em; margin-top:3px; display:block; font-weight:700; }
+  .fakebtn{ display:inline-block; background:var(--azul); color:#fff; font-weight:700; font-size:9pt; border-radius:8px; padding:6px 12px; }
+  .fakebtn.sec{ background:#eef2ff; color:var(--azul); border:1px solid #d6e0fb; }
+  .lrow{ display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--borde);
+    border-radius:9px; padding:8px 10px; margin-top:6px; background:#fff; }
+  .lrow .ti{ font-weight:700; font-size:9.5pt; } .lrow .me{ font-size:7.5pt; color:var(--suave); }
+  .prog{ height:6px; width:120px; border-radius:99px; background:#eef1f6; overflow:hidden; }
+  .prog i{ display:block; height:100%; background:linear-gradient(90deg,var(--azul),#4f7de0); }
+  .fform-mock{ max-width:430px; margin:0 auto; }
+  .fblock{ border:1px solid var(--borde); border-left:3px solid var(--azul); border-radius:8px; padding:7px 10px; margin:6px 0; background:#fff; break-inside:avoid; }
+  .fblock .fh{ font-weight:800; font-size:9.5pt; color:var(--azul-osc); display:flex; align-items:center; gap:6px; }
+  .fblock .fn{ display:inline-flex; width:18px; height:18px; border-radius:50%; background:var(--azul); color:#fff; font-size:8pt; align-items:center; justify-content:center; font-weight:800; }
+  .fblock .fd{ font-size:8.5pt; color:var(--suave); margin-top:2px; }
+  .fblock.req{ border-left-color:var(--rojo); }
+  .fblock.opt{ border-left-color:#94a3b8; }
+  .tag{ display:inline-block; font-size:7.5pt; font-weight:700; border-radius:5px; padding:1px 6px; margin-left:4px; }
+  .tag.o{ background:#fee2e2; color:#991b1b; } .tag.p{ background:#eef1f6; color:#475569; }
 </style>
 
 <!-- ══════════════ PORTADA ══════════════ -->
 <div class="cover">
   <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
   <div class="cuerpo">
-    <div class="kicker">Guía del equipo · Apoyo por Venezuela</div>
+    <div class="kicker">Guía completa del equipo · Apoyo por Venezuela</div>
     <h1>Recopilación y Gestión<br>de la Información</h1>
-    <div class="sub">Cómo convertir cada información que llega en una <b>solicitud con ubicación</b>,
-      verificable y accionable — con el modelo del <b>circuito de ayuda</b>.</div>
+    <div class="sub">Todo lo que necesitas para convertir cada dato que llega en una <b>solicitud clara,
+      ubicada y verificable</b> — con pantallas, diagramas y el paso a paso del formulario.</div>
     <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
+    <div class="idx">
+      <b>Contenido:</b> 1 Qué es tu equipo · 2 Tu pantalla «Solicitudes» · 3 El circuito de 6 preguntas ·
+      4 ¿Está dentro de nuestro alcance? · 5 Tu acceso · 6 Crear una solicitud (paso a paso) · 7 La regla de 48 horas ·
+      8 Ciclo de vida y flujo completo · 9 Marcar puntos del mapa · 10 Oportunidades de donación · 11 Quién hace qué ·
+      12 Blindaje · 13 Avisos y seguimiento · 14 Preguntas frecuentes.
+    </div>
     <div class="pie">Versión imprimible · Actualizada julio 2026 · Solicitudes + Oportunidades de donación</div>
   </div>
   <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
@@ -81,182 +117,220 @@
   <h2>1 · Qué es este equipo</h2>
   <p class="lead">El equipo de <b>Recopilación y Gestión de la Información</b> es la <b>puerta de entrada</b> de la
   plataforma: recibe información dispersa (redes, contactos, terreno) y la convierte en una <b>solicitud clara,
-  ubicada y con fuente</b>, lista para que el equipo de <b>Verificación</b> la valide y siga el flujo.</p>
+  ubicada y con fuente</b>, lista para que <b>Verificación</b> la valide y siga el flujo.</p>
   <div class="grid g3">
-    <div class="card"><h4>Recopila</h4><p>Reúne lo que llega y lo ordena en una solicitud completa.</p></div>
-    <div class="card"><h4>Ubica</h4><p>Toda solicitud lleva un <b>pin en el mapa</b>: dónde ocurre.</p></div>
-    <div class="card"><h4>Da fuente</h4><p>Deja claro <b>de quién</b> viene y <b>cuándo</b> se publicó.</p></div>
+    <div class="card"><h4>① Recopila</h4><p>Reúne lo que llega y lo ordena en una solicitud completa.</p></div>
+    <div class="card"><h4>② Ubica</h4><p>Toda solicitud lleva un <b>pin en el mapa</b>: dónde ocurre.</p></div>
+    <div class="card"><h4>③ Da fuente</h4><p>Deja claro <b>de quién</b> viene y <b>cuándo</b> se publicó.</p></div>
   </div>
   <div class="callout"><b>En una frase:</b> ustedes no verifican ni entregan — ustedes <b>reportan bien</b>.
-  Una solicitud bien hecha (completa, ubicada, con fuente y contacto) es la que avanza rápido y sin ruido.</div>
-  <div class="callout warn"><b>Cambio importante (jul 2026):</b> ya <b>no</b> se clasifica el tipo de caso ni se hace
+  Una solicitud completa, ubicada, con fuente y contacto es la que avanza rápido y sin ruido.</div>
+  <div class="callout warn"><b>Recordatorio importante:</b> ya <b>no</b> se clasifica el tipo de caso ni se hace
   búsqueda de personas ni digitalización. <b>Toda</b> información es una «<b>solicitud con ubicación</b>».
-  En el menú, la sección se llama ahora <b>«Solicitudes»</b>.</div>
+  En el menú, la sección se llama <b>«Solicitudes»</b>.</div>
 </section>
 
-<!-- ══════════════ NOVEDAD · OPORTUNIDADES DE DONACIÓN ══════════════ -->
+<!-- ══════════════ 2. TU PANTALLA ══════════════ -->
 <section class="pagina">
-  <h2>★ Novedad · También captas Oportunidades de donación</h2>
-  <p class="lead">Recopilación ya no solo reporta <b>quién necesita</b> ayuda (solicitudes): ahora también capta
-  <b>quién ofrece</b> ayudar. Una <b>oportunidad de donación</b> es una <b>oferta</b> —una empresa, un proyecto o una
-  persona que quiere aportar insumos, dinero, un servicio o transporte—. Tú la registras; <b>Verificación</b> la valida
-  y <b>Logística</b> la concreta.</p>
-  <div class="grid g2">
-    <div class="card"><h4>Dónde se registra</h4><p>Menú <b>«Oportunidades de donación»</b> → <b>«Registrar oportunidad»</b>.
-      Cualquier persona verificada puede crear la suya; tú, como Recopilación, las captas de forma habitual.</p></div>
-    <div class="card"><h4>Qué anotar</h4><p>Quién ofrece (organización/persona), <b>tipo de oferta</b> (especie, dinero,
-      servicio, transporte…), qué cubre, contacto, una breve descripción y, si hay, ubicación y enlace.</p></div>
-  </div>
-  <div class="steps">
-    <div class="step"><span class="sn">TÚ</span><p><b>Registras</b> la oferta con los datos de contacto claros.</p></div>
-    <div class="step"><span class="sn">VERIFICACIÓN</span><p>La <b>verifica</b> u <b>observa</b> (confirma que es real y seria).</p></div>
-    <div class="step"><span class="sn">LOGÍSTICA</span><p><b>Contacta</b>, la <b>empareja</b> con una solicitud y <b>concreta la donación</b>.</p></div>
-  </div>
-  <div class="callout"><b>Tu alcance con las ofertas:</b> igual que con las solicitudes, tú <b>registras</b> — no llevas
-  el seguimiento de contacto ni la verificas. Cuida que el <b>contacto</b> y la <b>descripción</b> sean claros: de eso
-  depende que Logística pueda concretarla.</div>
-  <div class="callout warn"><b>Si te llega «Requiere información adicional»:</b> cuando Verificación revisa una de tus
-  solicitudes y falta un dato, en vez de descartarla puede <b>devolvértela</b> pidiendo que la completes. Recibirás un
-  <b>aviso</b>: ábrela, agrega lo que falte y quedará de nuevo lista para verificar. Es una ida y vuelta normal, no un
-  rechazo.</div>
+  <h2>2 · Un vistazo a tu pantalla «Solicitudes»</h2>
+  <p>Al entrar a <b>«Solicitudes»</b> ves el <b>tablero del equipo</b>: arriba, cinco tarjetas con los números del
+  momento; a la derecha, el botón <b>«Nueva solicitud»</b>; y debajo, la lista, donde cada solicitud muestra su
+  <b>estado</b> y una barra <b>«Paso N de 5»</b> que indica en qué punto del recorrido va.</p>
+  <figure>
+    <div class="device">
+      <div class="bar"><i></i><i></i><i></i><span class="t">Apoyo por Venezuela · Solicitudes</span></div>
+      <div class="body">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="font-size:13pt;font-weight:800;color:var(--azul)">Solicitudes</div>
+          <div><span class="fakebtn">＋ Nueva solicitud</span></div>
+        </div>
+        <div class="kpirow">
+          <div class="kpi"><span class="v" style="color:var(--azul)">128</span><span class="l">Total</span></div>
+          <div class="kpi"><span class="v" style="color:#475569">14</span><span class="l">Pendientes</span></div>
+          <div class="kpi"><span class="v" style="color:#a16207">9</span><span class="l">En proceso</span></div>
+          <div class="kpi"><span class="v" style="color:#16a34a">88</span><span class="l">Confirmados</span></div>
+          <div class="kpi"><span class="v" style="color:#b91c1c">17</span><span class="l">Falsos/resueltos</span></div>
+        </div>
+        <div class="lrow">
+          <div><div class="ti">Agua potable — sector La Playa</div><div class="me">#00128 · La Guaira · hace 3 h</div></div>
+          <div style="text-align:right"><span class="pill p-gray">Pendiente</span><div class="prog" style="margin-top:5px"><i style="width:20%"></i></div><div class="me">Paso 1 de 5</div></div>
+        </div>
+        <div class="lrow">
+          <div><div class="ti">Insumos médicos — ambulatorio</div><div class="me">#00126 · Vargas · hace 1 día</div></div>
+          <div style="text-align:right"><span class="pill p-green">Confirmado</span><div class="prog" style="margin-top:5px"><i style="width:60%"></i></div><div class="me">Paso 3 de 5</div></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Así se ve tu tablero (ejemplo). Las cinco tarjetas y la barra «Paso N de 5» son reales.</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th style="width:30%">Tarjeta</th><th>Qué cuenta</th></tr></thead>
+    <tbody>
+      <tr><td><b>Total de solicitudes</b></td><td>Todos los registros que puedes ver.</td></tr>
+      <tr><td><b>Pendientes</b></td><td>Recién llegadas, <b>sin tomar</b> por Verificación todavía.</td></tr>
+      <tr><td><b>En proceso</b></td><td>Ya tomadas, <b>en verificación</b>.</td></tr>
+      <tr><td><b>Confirmados y activos</b></td><td>Confirmadas y en redacción — información validada.</td></tr>
+      <tr><td><b>Falsos / resueltos</b></td><td>Ya <b>no continúan</b> (descartadas o atendidas).</td></tr>
+    </tbody>
+  </table>
+  <div class="callout ok"><b>Si eres coordinador o líder</b> de tu grupo, el tablero te muestra las solicitudes de
+  <b>todo el equipo</b> (no solo las tuyas), para acompañar el trabajo.</div>
 </section>
 
-<!-- ══════════════ NOVEDAD · MARCAR PUNTOS DEL MAPA ══════════════ -->
+<!-- ══════════════ 3. CIRCUITO 6 PREGUNTAS ══════════════ -->
 <section class="pagina">
-  <h2>★ Novedad · Marca albergues, hospitales y centros de acopio</h2>
-  <p class="lead">Además de reportar necesidades, ayudas a <b>mapear la infraestructura de respuesta</b>: si una
-  solicitud es en realidad un <b>punto</b> —un albergue, un hospital o un centro de acopio, <b>fijo o temporal</b>—,
-  márcalo al crearla. Al <b>verificarse</b>, ese punto aparece en el mapa para que Logística lo gestione.</p>
-  <div class="grid g2">
-    <div class="card"><h4>Cómo se marca</h4><p>En el bloque de <b>ubicación</b> de la solicitud, elige el tipo en
-      «<b>¿Es un punto del mapa?</b>» (Hospital / Albergue / Centro de acopio / Otro) y marca «temporal» si no es permanente.</p></div>
-    <div class="card"><h4>Qué pasa al verificarse</h4><p>Cuando <b>Verificación confirma</b> la solicitud, se crea
-      <b>automáticamente el centro en el mapa</b> con su tipo y ubicación. Se avisa a Logística para que complete sus datos.</p></div>
-  </div>
-  <div class="callout"><b>Igual que siempre:</b> tú <b>marcas y ubicas</b> el punto; <b>no</b> lo verificas ni lo
-  gestionas. Un punto bien ubicado, con nombre claro y contacto, es el que se publica rápido y sin errores.</div>
-</section>
-
-<!-- ══════════════ 2. CIRCUITO 6 PREGUNTAS ══════════════ -->
-<section class="pagina">
-  <h2>2 · El circuito de ayuda — las 6 preguntas</h2>
+  <h2>3 · El circuito de ayuda — las 6 preguntas</h2>
   <p>Cada solicitud responde <b>seis preguntas</b>. Si las seis están completas, la información es útil y verificable.
   Guíate por este circuito al crearla:</p>
   <figure>
     <svg width="620" height="470" viewBox="0 0 680 500" role="img" aria-label="Circuito de las 6 preguntas">
-      <!-- anillo -->
       <polygon points="340,95 478.6,175 478.6,335 340,415 201.4,335 201.4,175" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="4 5"/>
-      <!-- radios -->
       <g stroke="#e2e8f0" stroke-width="1.5">
         <line x1="340" y1="255" x2="340" y2="95"/><line x1="340" y1="255" x2="478.6" y2="175"/>
         <line x1="340" y1="255" x2="478.6" y2="335"/><line x1="340" y1="255" x2="340" y2="415"/>
         <line x1="340" y1="255" x2="201.4" y2="335"/><line x1="340" y1="255" x2="201.4" y2="175"/>
       </g>
-      <!-- centro -->
       <circle cx="340" cy="255" r="72" fill="#0033A0"/>
       <text x="340" y="248" text-anchor="middle" fill="#fff" font-size="14" font-weight="800">SOLICITUD</text>
       <text x="340" y="266" text-anchor="middle" fill="#cfe0ff" font-size="11">con ubicación</text>
-      <!-- nodos: color, número, keyword -->
-      <!-- 1 top azul -->
       <circle cx="340" cy="95" r="40" fill="#0033A0"/><text x="340" y="103" text-anchor="middle" fill="#fff" font-size="22" font-weight="800">1</text>
       <text x="340" y="40" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿QUÉ ES?</text>
-      <!-- 2 up-right amarillo -->
       <circle cx="478.6" cy="175" r="40" fill="#FFCE00"/><text x="478.6" y="183" text-anchor="middle" fill="#5b4a00" font-size="22" font-weight="800">2</text>
       <text x="478.6" y="123" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿CUÁNDO?</text>
-      <!-- 3 down-right rojo -->
       <circle cx="478.6" cy="335" r="40" fill="#CF142B"/><text x="478.6" y="343" text-anchor="middle" fill="#fff" font-size="22" font-weight="800">3</text>
       <text x="478.6" y="400" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿FUENTE?</text>
-      <!-- 4 bottom azul -->
       <circle cx="340" cy="415" r="40" fill="#0033A0"/><text x="340" y="423" text-anchor="middle" fill="#fff" font-size="22" font-weight="800">4</text>
       <text x="340" y="480" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿RESPONSABLE?</text>
-      <!-- 5 down-left amarillo -->
       <circle cx="201.4" cy="335" r="40" fill="#FFCE00"/><text x="201.4" y="343" text-anchor="middle" fill="#5b4a00" font-size="22" font-weight="800">5</text>
       <text x="201.4" y="400" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿DÓNDE?</text>
-      <!-- 6 up-left rojo -->
       <circle cx="201.4" cy="175" r="40" fill="#CF142B"/><text x="201.4" y="183" text-anchor="middle" fill="#fff" font-size="22" font-weight="800">6</text>
       <text x="201.4" y="123" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="800">¿QUÉ SE NECESITA?</text>
     </svg>
     <figcaption>El circuito de ayuda: seis preguntas alrededor de una solicitud con ubicación.</figcaption>
   </figure>
   <div class="grid g3">
-    <div class="card"><span class="n" style="background:#0033A0">1</span><h4>¿Qué es?</h4><p>Un título claro y una descripción concreta de la ayuda que se solicita u ofrece.</p><span class="campo">Título + Descripción</span></div>
+    <div class="card"><span class="n" style="background:#0033A0">1</span><h4>¿Qué es?</h4><p>Un título claro y una descripción concreta de la ayuda que se solicita.</p><span class="campo">Título + Descripción</span></div>
     <div class="card"><span class="n" style="background:#E6B800">2</span><h4>¿Cuándo?</h4><p>La fecha en que la información se publicó o se confirmó.</p><span class="campo">¿Cuándo se publicó o confirmó?</span></div>
-    <div class="card"><span class="n" style="background:#CF142B">3</span><h4>¿Fuente?</h4><p>Quién lo dice: red oficial, persona, grupo o contacto directo (y su enlace si hay).</p><span class="campo">¿Quién es la fuente? + Enlace</span></div>
-    <div class="card"><span class="n" style="background:#0033A0">4</span><h4>¿Responsable?</h4><p>Un <b>referente</b> y <b>dos vías de contacto</b> obligatorias: <b>WhatsApp</b> (con código de país) e <b>Instagram</b>.</p><span class="campo">Referente + WhatsApp + Instagram</span></div>
+    <div class="card"><span class="n" style="background:#CF142B">3</span><h4>¿Fuente?</h4><p>Quién lo dice: red oficial, persona, grupo o contacto directo (y su enlace si hay).</p><span class="campo">Tipo de fuente + Enlace</span></div>
+    <div class="card"><span class="n" style="background:#0033A0">4</span><h4>¿Responsable?</h4><p>Un <b>referente</b> obligatorio y <b>al menos una vía</b> de contacto: <b>WhatsApp/teléfono</b> o <b>Instagram</b>.</p><span class="campo">Referente + 1 contacto</span></div>
     <div class="card"><span class="n" style="background:#E6B800">5</span><h4>¿Dónde?</h4><p>El lugar exacto, marcado con un <b>pin en el mapa</b>. Es obligatorio.</p><span class="campo">Ubicación de la solicitud</span></div>
     <div class="card"><span class="n" style="background:#CF142B">6</span><h4>¿Qué se necesita?</h4><p>El tipo de ayuda, la urgencia y una cantidad estimada si se conoce.</p><span class="campo">Tipo · Urgencia · Cantidad</span></div>
   </div>
+  <div class="callout warn"><b>Sobre el contacto (pregunta 4):</b> el <b>referente es obligatorio</b> y basta con
+  <b>una</b> vía de contacto —WhatsApp/teléfono <b>o</b> Instagram—. Si tienes las dos, mejor; pero con una alcanza para
+  que la solicitud quede lista para verificar.</div>
 </section>
 
-<!-- ══════════════ 3. ANTES DE EMPEZAR ══════════════ -->
+<!-- ══════════════ 4. ALCANCE ══════════════ -->
 <section class="pagina">
-  <h2>3 · Antes de empezar: tu acceso</h2>
+  <h2>4 · Antes de cargar: ¿está dentro de nuestro alcance?</h2>
+  <p class="lead">La organización articula <b>ayuda en especie y servicios</b>. Antes de crear una solicitud, confirma
+  que <b>encaja</b>. Lo que queda fuera no se reporta aquí: se <b>orienta</b> a un canal oficial. Este filtro evita
+  cargar solicitudes que después habría que descartar — te ahorra trabajo a ti y a Verificación.</p>
+  <figure>
+    <svg width="620" height="228" viewBox="0 0 640 228" role="img" aria-label="Qué entra y qué no entra en el alcance">
+      <!-- SÍ -->
+      <rect x="8" y="8" width="300" height="212" rx="12" fill="#ecfdf5" stroke="#86c9a0"/>
+      <circle cx="40" cy="40" r="15" fill="#047857"/><text x="40" y="46" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">✓</text>
+      <text x="66" y="46" fill="#065f46" font-size="14" font-weight="800">SÍ entra</text>
+      <g fill="#065f46" font-size="11.5">
+        <text x="26" y="82">• Insumos: agua, alimentos, medicinas, higiene…</text>
+        <text x="26" y="106">• Servicios: atención médica, apoyo psicosocial</text>
+        <text x="26" y="130">• Traslado, orientación, acompañamiento</text>
+        <text x="26" y="154">• Albergues, hospitales, centros de acopio</text>
+        <text x="26" y="178">• Voluntariado y donaciones en especie</text>
+        <text x="26" y="202" font-weight="700">→ Reportas la solicitud con ubicación.</text>
+      </g>
+      <!-- NO -->
+      <rect x="332" y="8" width="300" height="212" rx="12" fill="#fef2f2" stroke="#eda3a3"/>
+      <circle cx="364" cy="40" r="15" fill="#b91c1c"/><text x="364" y="46" text-anchor="middle" fill="#fff" font-size="17" font-weight="800">✕</text>
+      <text x="390" y="46" fill="#991b1b" font-size="14" font-weight="800">NO entra (se orienta)</text>
+      <g fill="#991b1b" font-size="11.5">
+        <text x="350" y="82">• Dinero en efectivo</text>
+        <text x="350" y="106">• Vivienda</text>
+        <text x="350" y="130">• Asuntos legales</text>
+        <text x="350" y="154">• Diagnóstico o tratamiento médico</text>
+        <text x="350" y="178">• Atención psicológica profesional · política</text>
+        <text x="350" y="202" font-weight="700">→ Se orienta a un canal oficial.</text>
+      </g>
+    </svg>
+    <figcaption>El formulario te pide marcar una casilla confirmando que la solicitud está dentro del alcance.</figcaption>
+  </figure>
+  <div class="callout"><b>Cómo se ve en la app:</b> es el bloque «<b>¿Está dentro de nuestro alcance?</b>» con una
+  casilla obligatoria. Si no la marcas, la solicitud no se crea. No es burocracia: es lo que mantiene la plataforma
+  enfocada en lo que sí podemos resolver.</div>
+</section>
+
+<!-- ══════════════ 5. ANTES DE EMPEZAR ══════════════ -->
+<section class="pagina">
+  <h2>5 · Antes de empezar: tu acceso</h2>
   <p>Para reportar solicitudes, la administración te suma al grupo <b>«Recopilación y Gestión de la Información»</b> y
-  necesitas tu <b>segunda verificación de identidad</b> aprobada. Es un requisito de seguridad: quien maneja información
+  necesitas tu <b>verificación de identidad</b> aprobada. Es un requisito de seguridad: quien maneja información
   sensible se identifica primero.</p>
   <div class="steps">
     <div class="step"><span class="sn">PASO 1</span><p>La administración (o el líder) <b>te suma al grupo</b>. No hay auto-inscripción.</p></div>
-    <div class="step"><span class="sn">PASO 2</span><p>Completas la <b>2ª verificación de identidad</b> en <b>«Verificación»</b> (selfie + documento).</p></div>
+    <div class="step"><span class="sn">PASO 2</span><p>Completas tu <b>verificación de identidad</b> en <b>«Verificación»</b> (selfie + documento).</p></div>
     <div class="step"><span class="sn">PASO 3</span><p>Un <b>administrador la aprueba</b>. Nadie se auto-aprueba.</p></div>
     <div class="step"><span class="sn">PASO 4</span><p>Ya ves y creas <b>Solicitudes</b>. Recibes un aviso cuando quede aprobada.</p></div>
   </div>
-  <div class="callout warn"><b>Si aún no ves «Solicitudes»</b> o te aparece «Completa tu segunda verificación»,
+  <div class="callout warn"><b>Si aún no ves «Solicitudes»</b> o te aparece «Completa tu verificación de identidad»,
   es que falta el paso 2 o el paso 3. La seguridad de la base de datos (RLS) lo exige: no es un error de la pantalla.</div>
 </section>
 
-<!-- ══════════════ 4. CÓMO CREAR ══════════════ -->
+<!-- ══════════════ 6. CÓMO CREAR ══════════════ -->
 <section class="pagina">
-  <h2>4 · Cómo crear una solicitud, paso a paso</h2>
-  <p>Menú <b>«Solicitudes» → «Nueva solicitud»</b>. El formulario ahora está <b>organizado por bloques</b>: llenas los
-  datos por grupos afines, con menos confusión. Cada campo sigue respondiendo una pregunta del circuito.</p>
-  <div class="steps">
-    <div class="step"><span class="sn">BLOQUE 1</span><p><b>Datos generales</b> — título y descripción de la ayuda.</p></div>
-    <div class="step"><span class="sn">BLOQUE 2</span><p><b>Contacto</b> — referente y sus dos vías: WhatsApp e Instagram.</p></div>
-    <div class="step"><span class="sn">BLOQUE 3</span><p><b>Requerimiento</b> — tipo, urgencia, cantidad y ubicación.</p></div>
-    <div class="step"><span class="sn">BLOQUE 4</span><p><b>Fuente y vigencia</b> — quién lo dice, enlace y fecha.</p></div>
-  </div>
-  <p>Completa cada bloque y pulsa <b>«Crear solicitud»</b>.</p>
+  <h2>6 · Crear una solicitud, paso a paso</h2>
+  <p>Menú <b>«Solicitudes» → «Nueva solicitud»</b>. El formulario está <b>organizado por bloques</b>: llenas los datos
+  por grupos afines, de arriba hacia abajo. Este es el orden real de la pantalla:</p>
+  <figure>
+    <div class="fform-mock">
+      <div class="fblock req"><div class="fh"><span class="fn">1</span> Título <span class="tag o">obligatorio</span></div><div class="fd">Resumen corto y claro. Al escribir, la app avisa de <b>posibles duplicados</b>.</div></div>
+      <div class="fblock"><div class="fh"><span class="fn">2</span> ¿Qué se necesita?</div><div class="fd">Descripción concreta, clara y actualizada de la ayuda.</div></div>
+      <div class="fblock req"><div class="fh"><span class="fn">3</span> ¿Está dentro de nuestro alcance? <span class="tag o">casilla</span></div><div class="fd">Confirmas que encaja (no dinero, vivienda, legal, médico, psicológico profesional ni política).</div></div>
+      <div class="fblock req"><div class="fh"><span class="fn">4</span> Contacto <span class="tag o">referente + 1 vía</span></div><div class="fd">Referente (persona/institución) y su rol · WhatsApp/teléfono <b>o</b> Instagram (con uno basta).</div></div>
+      <div class="fblock"><div class="fh"><span class="fn">5</span> Ubicación (dirección)</div><div class="fd">Estado, municipio, parroquia, comunidad/sector y una referencia.</div></div>
+      <div class="fblock req"><div class="fh"><span class="fn">6</span> ¿Dónde ocurre? — pin en el mapa <span class="tag o">obligatorio</span></div><div class="fd">Tipo de ayuda, urgencia, cantidad · y si es un <b>punto del mapa</b> (albergue/hospital/acopio).</div></div>
+      <div class="fblock"><div class="fh"><span class="fn">7</span> Vigencia y fuente</div><div class="fd">¿Cuándo se publicó/confirmó? · ¿sigue vigente? · tipo de fuente · quién es · enlace.</div></div>
+      <div class="fblock opt"><div class="fh"><span class="fn">8</span> Adjuntar archivos <span class="tag p">opcional</span></div><div class="fd">Capturas, fotos o documentos de respaldo (hasta 10 MB c/u).</div></div>
+      <div style="text-align:center;margin-top:8px"><span class="fakebtn">Crear solicitud</span></div>
+    </div>
+    <figcaption>Los ocho bloques del formulario «Nueva solicitud», en el orden en que aparecen.</figcaption>
+  </figure>
   <table>
-    <thead><tr><th style="width:34%">Campo en pantalla</th><th style="width:12%">Circuito</th><th>Qué poner</th></tr></thead>
+    <thead><tr><th style="width:32%">Campo en pantalla</th><th style="width:12%">Circuito</th><th>Qué poner</th></tr></thead>
     <tbody>
-      <tr><td><b>Título</b> <small>(obligatorio)</small></td><td>1 ¿Qué es?</td><td>Resumen corto y claro. Al escribir, la app avisa de <b>posibles duplicados</b>.</td></tr>
-      <tr><td><b>¿Qué se necesita o qué se ofrece?</b></td><td>1 ¿Qué es?</td><td>Descripción concreta, clara y actualizada de la ayuda.</td></tr>
-      <tr><td><b>¿Cuándo se publicó o confirmó?</b></td><td>2 ¿Cuándo?</td><td>La fecha (idealmente dentro de las últimas 48 h).</td></tr>
-      <tr><td><b>¿Quién es la fuente?</b></td><td>3 ¿Fuente?</td><td>Red oficial, persona, grupo o contacto directo.</td></tr>
-      <tr><td><b>Enlace de la fuente</b> <small>(opcional)</small></td><td>3 ¿Fuente?</td><td>URL de respaldo. La app revisa que sea segura al escribirla.</td></tr>
-      <tr><td><b>Referente</b> <small>(obligatorio)</small></td><td>4 ¿Responsable?</td><td>La persona de contacto: su nombre y su rol o relación con el caso.</td></tr>
-      <tr><td><b>WhatsApp</b> <small>(obligatorio)</small></td><td>4 ¿Responsable?</td><td>Número con <b>código de país</b> (ej.: +58…). Debe ser real y verificable.</td></tr>
-      <tr><td><b>Instagram</b> <small>(obligatorio)</small></td><td>4 ¿Responsable?</td><td>Usuario de Instagram (@…) del referente o la fuente.</td></tr>
-      <tr><td><b>¿Dónde ocurre?</b> — ubicación <small>(obligatorio)</small></td><td>5 ¿Dónde?</td><td>Toca o arrastra el <b>pin</b> en el mapa. Sin ubicación no se guarda.</td></tr>
-      <tr><td><b>¿Qué se necesita? (tipo)</b></td><td>6 ¿Qué?</td><td>Elige el tipo de insumo/ayuda (o «Sin especificar»).</td></tr>
-      <tr><td><b>Urgencia</b></td><td>6 ¿Qué?</td><td>Prioridad (por defecto «media»).</td></tr>
+      <tr><td><b>Título</b> <small>(obligatorio)</small></td><td>1 ¿Qué es?</td><td>Resumen corto y claro. La app avisa de <b>posibles duplicados</b>.</td></tr>
+      <tr><td><b>¿Qué se necesita?</b></td><td>1 ¿Qué es?</td><td>Descripción concreta, clara y actualizada de la ayuda.</td></tr>
+      <tr><td><b>Confirmo el alcance</b> <small>(casilla)</small></td><td>—</td><td>Marca que la solicitud <b>sí entra</b> en lo que atiende la organización.</td></tr>
+      <tr><td><b>Referente</b> <small>(obligatorio)</small></td><td>4 ¿Responsable?</td><td>La persona o institución de contacto, y su rol o relación con el caso.</td></tr>
+      <tr><td><b>WhatsApp/teléfono</b> <small>o</small> <b>Instagram</b></td><td>4 ¿Responsable?</td><td><b>Al menos uno</b>. WhatsApp con <b>código de país</b> (+58…) o usuario de Instagram (@…).</td></tr>
+      <tr><td><b>Ubicación (dirección)</b></td><td>5 ¿Dónde?</td><td>Estado, municipio, parroquia, sector y una referencia de dirección.</td></tr>
+      <tr><td><b>Pin en el mapa</b> <small>(obligatorio)</small></td><td>5 ¿Dónde?</td><td>Toca o arrastra el <b>pin</b>. Sin ubicación en el mapa no se guarda.</td></tr>
+      <tr><td><b>¿Qué se necesita? (tipo)</b> · <b>Urgencia</b></td><td>6 ¿Qué?</td><td>Elige el tipo (o «Sin especificar») y la prioridad (por defecto «media»).</td></tr>
       <tr><td><b>Cantidad estimada</b> <small>(opcional)</small></td><td>6 ¿Qué?</td><td>Ej.: «50 cajas de agua · 200 raciones».</td></tr>
-      <tr><td><b>Adjuntar archivos</b> <small>(opcional)</small></td><td>—</td><td>Capturas, fotos o documentos de respaldo (hasta 10 MB c/u, máx. 10).</td></tr>
+      <tr><td><b>¿Es un punto del mapa?</b> <small>(opcional)</small></td><td>—</td><td>Albergue / hospital / centro de acopio (fijo o <b>temporal</b>). Ver sección 9.</td></tr>
+      <tr><td><b>¿Cuándo se publicó/confirmó?</b></td><td>2 ¿Cuándo?</td><td>La fecha (idealmente dentro de las últimas 48 h).</td></tr>
+      <tr><td><b>Tipo de fuente</b> · <b>¿Quién es?</b></td><td>3 ¿Fuente?</td><td>WhatsApp, Instagram, página oficial, organización, contacto directo… y quién.</td></tr>
+      <tr><td><b>Enlace de la fuente</b> <small>(opcional)</small></td><td>3 ¿Fuente?</td><td>URL de respaldo. La app revisa que sea segura al escribirla.</td></tr>
+      <tr><td><b>Adjuntar archivos</b> <small>(opcional)</small></td><td>—</td><td>Imágenes, video, PDF u ofimática (no ejecutables), hasta 10 MB c/u.</td></tr>
     </tbody>
   </table>
-  <div class="callout warn"><b>Doble contacto obligatorio (nuevo):</b> toda solicitud necesita un <b>referente</b> y
-  <b>dos vías</b> para ubicarlo: <b>WhatsApp con código de país</b> e <b>Instagram</b>. Sin referente y sin esas dos vías,
-  la solicitud <b>no queda lista para verificar</b>. Escríbelos completos y verificables: cuando la solicitud se valida,
-  de ese contacto depende que el área que la atienda pueda actuar.</div>
-  <div class="callout ok"><b>Consejo de calidad:</b> antes de crear, revisa que la información esté <b>completa</b>,
-  con los <b>contactos correctos</b>, la <b>ubicación clara</b> y el <b>enlace de la fuente</b>. Verificación revisa
-  <b>cada dato por separado</b> con un semáforo (🟢🟡🔴): cuanto más completo lo reportes, <b>más rápido</b> se ponen
-  todos en verde y avanza sin idas y vueltas.</div>
+  <div class="callout ok"><b>Consejo de calidad:</b> antes de crear, revisa que la información esté <b>completa</b>, con
+  el <b>contacto correcto</b>, la <b>ubicación clara</b> y el <b>enlace de la fuente</b>. Verificación revisa <b>cada
+  dato por separado</b> con un semáforo (🟢🟡🔴): cuanto más completo lo reportes, <b>más rápido</b> se ponen todos en
+  verde y avanza sin idas y vueltas.</div>
 </section>
 
-<!-- ══════════════ 5. VIGENCIA 48H ══════════════ -->
+<!-- ══════════════ 7. VIGENCIA 48H ══════════════ -->
 <section class="pagina">
-  <h2>5 · La regla de las 48 horas</h2>
+  <h2>7 · La regla de las 48 horas</h2>
   <p>La información debe haberse <b>publicado o confirmado en las últimas 48 horas</b>. La ayuda cambia rápido:
   un dato viejo puede enviar recursos a donde ya no hacen falta.</p>
   <figure>
     <svg width="620" height="150" viewBox="0 0 660 150" role="img" aria-label="Línea de tiempo de vigencia 48 horas">
-      <!-- barra -->
       <rect x="30" y="55" width="380" height="26" rx="13" fill="#047857"/>
       <rect x="410" y="55" width="220" height="26" rx="13" fill="#CF142B"/>
-      <!-- marcador origen -->
       <circle cx="30" cy="68" r="9" fill="#0033A0" stroke="#fff" stroke-width="2"/>
-      <!-- ticks -->
       <g font-size="11" fill="#334155" font-weight="700" text-anchor="middle">
         <text x="30" y="104">0 h</text><text x="220" y="104">24 h</text><text x="410" y="104">48 h</text>
       </g>
@@ -271,41 +345,34 @@
   reportarlo, y usa la fecha de esa nueva confirmación.</div>
 </section>
 
-<!-- ══════════════ 6. CICLO DE ESTADOS ══════════════ -->
+<!-- ══════════════ 8. CICLO DE VIDA + FLUJO ══════════════ -->
 <section class="pagina">
-  <h2>6 · El ciclo de vida de una solicitud</h2>
-  <p>Una vez creada, la solicitud avanza por <b>estados</b>. Tú la creas; <b>otros equipos</b> la mueven. Así se ve el recorrido:</p>
+  <h2>8 · El ciclo de vida de una solicitud</h2>
+  <p>Una vez creada, la solicitud avanza por <b>estados</b> (los cinco pasos de la barra «Paso N de 5»). Tú la creas;
+  <b>otros equipos</b> la mueven. Así se ve el recorrido feliz y sus desvíos:</p>
   <figure>
     <svg width="640" height="250" viewBox="0 0 700 250" role="img" aria-label="Flujo de estados de una solicitud">
       <defs><marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
-      <!-- boxes -->
       <g font-family="system-ui" text-anchor="middle">
-        <!-- Pendiente -->
         <rect x="8" y="30" width="150" height="50" rx="10" fill="#eef1f6" stroke="#cbd5e1"/>
-        <text x="83" y="52" font-size="12" font-weight="800" fill="#334155">Pendiente</text>
-        <text x="83" y="68" font-size="8.5" fill="#64748b">nadie lo tomó aún</text>
-        <!-- En proceso -->
+        <text x="83" y="50" font-size="12" font-weight="800" fill="#334155">1 · Pendiente</text>
+        <text x="83" y="66" font-size="8.5" fill="#64748b">nadie lo tomó aún</text>
         <rect x="190" y="30" width="150" height="50" rx="10" fill="#fef3c7" stroke="#f2c14e"/>
-        <text x="265" y="52" font-size="12" font-weight="800" fill="#92400e">En proceso</text>
-        <text x="265" y="68" font-size="8.5" fill="#a16207">alguien lo revisa</text>
-        <!-- Confirmado -->
+        <text x="265" y="50" font-size="12" font-weight="800" fill="#92400e">2 · En proceso</text>
+        <text x="265" y="66" font-size="8.5" fill="#a16207">alguien lo revisa</text>
         <rect x="372" y="30" width="158" height="50" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
-        <text x="451" y="52" font-size="12" font-weight="800" fill="#166534">Confirmado y activo</text>
-        <text x="451" y="68" font-size="8.5" fill="#15803d">información validada</text>
-        <!-- Enviado a Redacción -->
+        <text x="451" y="50" font-size="12" font-weight="800" fill="#166534">3 · Confirmado</text>
+        <text x="451" y="66" font-size="8.5" fill="#15803d">información validada</text>
         <rect x="548" y="6" width="146" height="44" rx="10" fill="#dbeafe" stroke="#93b4f0"/>
-        <text x="621" y="26" font-size="11" font-weight="800" fill="#1e40af">Enviado a</text>
+        <text x="621" y="26" font-size="11" font-weight="800" fill="#1e40af">4 · Enviado a</text>
         <text x="621" y="40" font-size="11" font-weight="800" fill="#1e40af">Redacción</text>
-        <!-- Resuelto -->
         <rect x="548" y="92" width="146" height="44" rx="10" fill="#dcfce7" stroke="#86c9a0"/>
-        <text x="621" y="112" font-size="11" font-weight="800" fill="#166534">Resuelto /</text>
+        <text x="621" y="112" font-size="11" font-weight="800" fill="#166534">5 · Resuelto /</text>
         <text x="621" y="126" font-size="11" font-weight="800" fill="#166534">atendido</text>
-        <!-- Falso -->
         <rect x="190" y="150" width="150" height="46" rx="10" fill="#fee2e2" stroke="#eda3a3"/>
         <text x="265" y="171" font-size="11.5" font-weight="800" fill="#991b1b">Falso / descartado</text>
-        <text x="265" y="186" font-size="8.5" fill="#b91c1c">no continúa en el flujo</text>
+        <text x="265" y="186" font-size="8.5" fill="#b91c1c">sale del flujo</text>
       </g>
-      <!-- arrows -->
       <g stroke="#64748b" stroke-width="1.8" fill="none">
         <line x1="158" y1="55" x2="186" y2="55" marker-end="url(#ar)"/>
         <line x1="340" y1="55" x2="368" y2="55" marker-end="url(#ar)"/>
@@ -314,7 +381,6 @@
         <line x1="265" y1="80" x2="265" y2="148" marker-end="url(#ar)"/>
       </g>
       <text x="600" y="70" font-size="8.5" fill="#15803d" font-weight="700" text-anchor="middle">vía Logística</text>
-      <!-- carriles / quién -->
       <g font-size="9" text-anchor="middle">
         <text x="83"  y="222" font-weight="800" fill="#0033A0">RECOPILACIÓN</text><text x="83"  y="235" fill="#64748b">crea</text>
         <text x="265" y="222" font-weight="800" fill="#a16207">VERIFICACIÓN</text><text x="265" y="235" fill="#64748b">toma · confirma · descarta</text>
@@ -322,73 +388,157 @@
         <text x="621" y="160" font-weight="800" fill="#1e40af">REDACCIÓN / LOGÍSTICA</text>
       </g>
     </svg>
-    <figcaption>Del reporte a la resolución. Recopilación crea; Verificación confirma o descarta; Envío a Redacción y Logística cierran.</figcaption>
+    <figcaption>Los 5 pasos. Recopilación crea; Verificación confirma o descarta; Envío a Redacción y Logística cierran.</figcaption>
+  </figure>
+  <h3>El recorrido completo, de principio a fin</h3>
+  <figure>
+    <svg width="640" height="150" viewBox="0 0 660 150" role="img" aria-label="Flujo end to end por equipos">
+      <defs><marker id="ar2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#0033A0"/></marker></defs>
+      <g text-anchor="middle" font-family="system-ui">
+        <rect x="6" y="45" width="120" height="58" rx="10" fill="#eef2ff" stroke="#0033A0"/>
+        <text x="66" y="70" font-size="10.5" font-weight="800" fill="#0033A0">RECOPILACIÓN</text>
+        <text x="66" y="86" font-size="8.5" fill="#475569">reporta y ubica</text>
+        <rect x="176" y="45" width="120" height="58" rx="10" fill="#fef9c3" stroke="#a16207"/>
+        <text x="236" y="70" font-size="10.5" font-weight="800" fill="#a16207">VERIFICACIÓN</text>
+        <text x="236" y="86" font-size="8.5" fill="#854d0e">confirma / descarta</text>
+        <rect x="346" y="14" width="140" height="42" rx="10" fill="#dbeafe" stroke="#1e40af"/>
+        <text x="416" y="34" font-size="9.5" font-weight="800" fill="#1e40af">ENVÍO A REDACCIÓN</text>
+        <text x="416" y="48" font-size="8" fill="#3b5ba0">se difunde</text>
+        <rect x="346" y="92" width="140" height="42" rx="10" fill="#dcfce7" stroke="#166534"/>
+        <text x="416" y="112" font-size="9.5" font-weight="800" fill="#166534">LOGÍSTICA</text>
+        <text x="416" y="126" font-size="8" fill="#15803d">contacta y entrega</text>
+        <rect x="536" y="45" width="118" height="58" rx="10" fill="#ecfdf5" stroke="#047857"/>
+        <text x="595" y="70" font-size="10.5" font-weight="800" fill="#047857">RESUELTO</text>
+        <text x="595" y="86" font-size="8.5" fill="#15803d">ciclo cerrado</text>
+      </g>
+      <g stroke="#0033A0" stroke-width="1.8" fill="none">
+        <line x1="126" y1="74" x2="174" y2="74" marker-end="url(#ar2)"/>
+        <path d="M296,66 C320,55 322,42 344,38" marker-end="url(#ar2)"/>
+        <path d="M296,82 C320,95 322,108 344,110" marker-end="url(#ar2)"/>
+        <path d="M486,38 C512,45 512,58 534,66" marker-end="url(#ar2)"/>
+        <path d="M486,110 C512,100 512,86 534,82" marker-end="url(#ar2)"/>
+      </g>
+    </svg>
+    <figcaption>Al confirmarse, la solicitud se <b>deriva a una o varias áreas</b> (Logística, Redes, Donaciones…) y a Envío a Redacción.</figcaption>
   </figure>
   <table>
-    <thead><tr><th style="width:24%">Estado</th><th>Qué significa</th></tr></thead>
+    <thead><tr><th style="width:26%">Estado</th><th>Qué significa</th></tr></thead>
     <tbody>
       <tr><td><span class="pill p-gray">Pendiente</span></td><td>Todavía no lo ha tomado nadie; está pendiente de revisión.</td></tr>
       <tr><td><span class="pill p-amber">En proceso</span></td><td>Alguien ya lo tomó y lo está revisando.</td></tr>
       <tr><td><span class="pill p-green">Confirmado y activo</span></td><td>La información fue validada; el equipo de Envío a Redacción lo tomará.</td></tr>
-      <tr><td><span class="pill p-red">Falso / descartado</span></td><td>La información es falsa, antigua o ya resuelta. No continúa en el flujo.</td></tr>
       <tr><td><span class="pill p-blue">Enviado a Redacción</span></td><td>La solicitud pasó a Redacción: el flujo de verificación terminó.</td></tr>
       <tr><td><span class="pill p-green">Resuelto / atendido</span></td><td>La ayuda se entregó (Logística) y la solicitud quedó atendida. Ciclo cerrado.</td></tr>
+      <tr><td><span class="pill p-red">Falso / descartado</span></td><td>La información es falsa, antigua o ya resuelta. Sale del flujo.</td></tr>
     </tbody>
   </table>
   <div class="callout warn"><b>Tu alcance como Recopilación:</b> tú <b>creas</b> la solicitud. <b>No</b> la confirmas, descartas
   ni la mueves de estado — eso es de Verificación. Sí puedes <b>editar tu propia solicitud</b> mientras esté
   <b>Pendiente</b> o <b>En proceso</b> (todo cambio queda registrado).</div>
-  <div class="callout"><b>¿Qué pasa cuando se valida?</b> Al confirmarse, la solicitud se <b>deriva a una o varias áreas</b>
-  (Logística, Redes, Donaciones, Alianzas, Coordinación) que la atienden. Por eso el <b>contacto</b> y la <b>ubicación</b>
-  deben quedar impecables: de ellos depende que el área pueda actuar. El detalle de la derivación lo llevan Verificación
-  y Logística; a ti te basta con reportar completo.</div>
   <div class="callout ok"><b>Nada se borra — historial de correcciones:</b> si corriges un dato de tu solicitud, el sistema
   guarda el <b>valor original</b>, el <b>corregido</b>, <b>quién</b> lo cambió y <b>cuándo</b>. Es para <b>transparencia</b>,
   no para regañar: reporta con confianza y corrige cuando haga falta. <small>(Los datos de contacto se registran como
   «actualizado», sin mostrar el valor, por privacidad.)</small></div>
 </section>
 
-<!-- ══════════════ 7. QUIÉN HACE QUÉ ══════════════ -->
+<!-- ══════════════ 9. PUNTOS DEL MAPA ══════════════ -->
 <section class="pagina">
-  <h2>7 · Quién hace qué</h2>
+  <h2>9 · Marca albergues, hospitales y centros de acopio</h2>
+  <p class="lead">Además de reportar necesidades, ayudas a <b>mapear la infraestructura de respuesta</b>: si una
+  solicitud es en realidad un <b>punto</b> —un albergue, un hospital o un centro de acopio, <b>fijo o temporal</b>—,
+  márcalo al crearla. Al <b>verificarse</b>, ese punto aparece en el mapa para que Logística lo gestione.</p>
+  <figure>
+    <svg width="620" height="120" viewBox="0 0 640 120" role="img" aria-label="De solicitud a punto en el mapa">
+      <defs><marker id="ar3" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#64748b"/></marker></defs>
+      <rect x="10" y="35" width="150" height="50" rx="10" fill="#eef2ff" stroke="#0033A0"/>
+      <text x="85" y="58" text-anchor="middle" font-size="10" font-weight="800" fill="#0033A0">Marcas «punto»</text>
+      <text x="85" y="73" text-anchor="middle" font-size="8" fill="#475569">al crear la solicitud</text>
+      <rect x="245" y="35" width="150" height="50" rx="10" fill="#fef9c3" stroke="#a16207"/>
+      <text x="320" y="58" text-anchor="middle" font-size="10" font-weight="800" fill="#a16207">Verificación</text>
+      <text x="320" y="73" text-anchor="middle" font-size="8" fill="#854d0e">confirma la solicitud</text>
+      <rect x="480" y="35" width="150" height="50" rx="10" fill="#dcfce7" stroke="#166534"/>
+      <text x="555" y="58" text-anchor="middle" font-size="10" font-weight="800" fill="#166534">Aparece en el mapa</text>
+      <text x="555" y="73" text-anchor="middle" font-size="8" fill="#15803d">Logística lo gestiona</text>
+      <g stroke="#64748b" stroke-width="1.8" fill="none">
+        <line x1="160" y1="60" x2="243" y2="60" marker-end="url(#ar3)"/>
+        <line x1="395" y1="60" x2="478" y2="60" marker-end="url(#ar3)"/>
+      </g>
+    </svg>
+    <figcaption>Un punto marcado se convierte en centro del mapa <b>solo cuando se verifica</b> la solicitud.</figcaption>
+  </figure>
+  <div class="grid g2">
+    <div class="card"><h4>Cómo se marca</h4><p>En el bloque del <b>requerimiento</b>, elige el tipo en «<b>¿Es un punto del
+      mapa?</b>» (Hospital / Albergue / Centro de acopio / Otro) y marca «<b>temporal</b>» si no es permanente.</p></div>
+    <div class="card"><h4>Qué pasa al verificarse</h4><p>Cuando <b>Verificación confirma</b> la solicitud, se crea
+      <b>automáticamente el centro</b> en el mapa con su tipo y ubicación, y se avisa a Logística.</p></div>
+  </div>
+  <div class="callout"><b>Igual que siempre:</b> tú <b>marcas y ubicas</b> el punto; <b>no</b> lo verificas ni lo
+  gestionas. Un punto bien ubicado, con nombre claro y contacto, es el que se publica rápido y sin errores.</div>
+</section>
+
+<!-- ══════════════ 10. OPORTUNIDADES ══════════════ -->
+<section class="pagina">
+  <h2>10 · También captas Oportunidades de donación</h2>
+  <p class="lead">Recopilación no solo reporta <b>quién necesita</b> ayuda (solicitudes): también capta <b>quién ofrece</b>
+  ayudar. Una <b>Donación-Ofrecimiento</b> es una <b>oferta</b> —una empresa, un proyecto o una persona que quiere aportar
+  insumos, dinero, un servicio o transporte—. Tú la registras; <b>Verificación</b> la valida y <b>Logística</b> la concreta.</p>
+  <div class="steps">
+    <div class="step"><span class="sn">TÚ</span><p><b>Registras</b> la oferta con los datos de contacto claros.</p></div>
+    <div class="step"><span class="sn">VERIFICACIÓN</span><p>La <b>verifica</b> u <b>observa</b> (confirma que es real y seria).</p></div>
+    <div class="step"><span class="sn">LOGÍSTICA</span><p><b>Contacta</b>, la <b>empareja</b> con una solicitud y <b>concreta la donación</b>.</p></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h4>Dónde se registra</h4><p>Menú <b>«Donación-Ofrecimiento»</b> → <b>«Registrar»</b>. Cualquier persona
+      verificada puede crear la suya; tú las captas de forma habitual.</p></div>
+    <div class="card"><h4>Qué anotar</h4><p>Quién ofrece, <b>tipo de oferta</b> (especie, dinero, servicio, transporte…),
+      qué cubre, contacto, una breve descripción y, si hay, ubicación y enlace.</p></div>
+  </div>
+  <div class="callout"><b>Tu alcance con las ofertas:</b> igual que con las solicitudes, tú <b>registras</b> — no llevas
+  el seguimiento de contacto ni la verificas. Cuida que el <b>contacto</b> y la <b>descripción</b> sean claros: de eso
+  depende que Logística pueda concretarla.</div>
+  <div class="callout warn"><b>Si te llega «Requiere información adicional»:</b> cuando Verificación revisa una de tus
+  solicitudes y falta un dato, en vez de descartarla puede <b>devolvértela</b> pidiendo que la completes. Recibirás un
+  <b>aviso</b>: ábrela, agrega lo que falte y quedará de nuevo lista para verificar. Es una ida y vuelta normal, no un
+  rechazo.</div>
+</section>
+
+<!-- ══════════════ 11. QUIÉN HACE QUÉ ══════════════ -->
+<section class="pagina">
+  <h2>11 · Quién hace qué</h2>
   <table>
     <thead><tr><th style="width:26%">Equipo / rol</th><th>Qué hace con la solicitud</th></tr></thead>
     <tbody>
       <tr><td><b>Recopilación</b> <small>(tú)</small></td><td>Reporta la solicitud con ubicación y fuente. Edita la suya mientras está pendiente/en proceso. <b>No</b> cambia estados.</td></tr>
-      <tr><td><b>Verificación</b></td><td>Toma la solicitud, la revisa y la <b>confirma</b> o la <b>descarta</b> (con motivo).</td></tr>
+      <tr><td><b>Verificación</b></td><td>Toma la solicitud, la revisa <b>dato por dato</b> y la <b>confirma</b> o la <b>descarta</b> (con motivo).</td></tr>
       <tr><td><b>Envío a Redacción</b></td><td>Toma las confirmadas y las <b>envía a Redacción</b> para producir el contenido.</td></tr>
-      <tr><td><b>Logística y Acopio</b></td><td>Atiende las solicitudes de insumo derivadas y, al entregar, las deja <b>resueltas</b>. Gestiona las <b>oportunidades de donación</b> (contacto, emparejamiento, donación).</td></tr>
-      <tr><td><b>Coordinador / Líder</b> <small>(de tu grupo)</small></td><td><b>Supervisa</b> el trabajo del equipo: ve el <b>tablero completo</b> de Recopilación (todas las solicitudes del área), no solo las suyas.</td></tr>
+      <tr><td><b>Logística y Acopio</b></td><td>Atiende las solicitudes de insumo derivadas y, al entregar, las deja <b>resueltas</b>. Gestiona las <b>Donaciones-Ofrecimiento</b>.</td></tr>
+      <tr><td><b>Coordinador / Líder</b> <small>(de tu grupo)</small></td><td><b>Supervisa</b> el trabajo del equipo: ve el <b>tablero completo</b> de Recopilación, no solo lo suyo.</td></tr>
       <tr><td><b>Administración</b></td><td>Ve todo, aprueba verificaciones de identidad y puede editar o eliminar solicitudes.</td></tr>
     </tbody>
   </table>
-  <div class="callout ok"><b>Tu tablero, mejorado:</b> al abrir «Solicitudes» ves <b>tarjetas con los números</b> del equipo
-  (pendientes, en proceso, confirmadas…) y una <b>tira de flujo</b> que recuerda el recorrido. Si eres coordinador o
-  líder, ves el tablero de <b>todo el equipo</b> para acompañar el trabajo.</div>
 </section>
 
-<!-- ══════════════ 8. BLINDAJE ══════════════ -->
+<!-- ══════════════ 12. BLINDAJE ══════════════ -->
 <section class="pagina">
-  <h2>8 · Blindaje y buenas prácticas</h2>
+  <h2>12 · Blindaje y buenas prácticas</h2>
   <div class="callout blind"><b>Protección de datos sensibles y de menores (NNA):</b> la plataforma cuida la información.
-  Los <b>apellidos</b> se ocultan salvo a la administración; los <b>avisos</b> que salen por notificación, push o
-  Telegram son <b>discretos</b> (no llevan el detalle); los <b>archivos</b> adjuntos son privados (enlaces temporales);
-  y el <b>mapa público</b> solo muestra puntos ya confirmados, sin datos personales.</div>
+  Los <b>apellidos</b> se ocultan salvo a la administración; los <b>avisos</b> por notificación, push o Telegram son
+  <b>discretos</b> (no llevan el detalle); los <b>archivos</b> adjuntos son privados (enlaces temporales); y el
+  <b>mapa público</b> solo muestra puntos ya confirmados, sin datos personales.</div>
   <div class="grid g2">
     <div class="card"><h4>✓ Revisa duplicados</h4><p>Si al escribir el título aparece «<b>posibles duplicados</b>», ábrelos: quizá ya está reportado.</p></div>
     <div class="card"><h4>✓ Cuida los enlaces</h4><p>La app marca enlaces inseguros o peligrosos. Si te avisa, <b>no</b> insistas: busca otra fuente.</p></div>
-    <div class="card"><h4>✓ Referente y dos contactos</h4><p><b>Referente + WhatsApp e Instagram</b> son obligatorios. Sin ellos, Verificación no puede validar.</p></div>
-    <div class="card"><h4>✓ Archivos de respaldo</h4><p>Adjunta capturas o documentos. Se aceptan imágenes, PDF y ofimática (no ejecutables).</p></div>
+    <div class="card"><h4>✓ Referente + un contacto</h4><p><b>Referente</b> obligatorio y <b>al menos una</b> vía (WhatsApp/teléfono o Instagram). Sin eso, Verificación no puede validar.</p></div>
+    <div class="card"><h4>✓ Archivos de respaldo</h4><p>Adjunta capturas o documentos. Se aceptan imágenes, video, PDF y ofimática (no ejecutables).</p></div>
   </div>
-  <div class="callout"><b>Nota sobre contactos:</b> ahora el <b>referente</b> y sus dos vías —<b>WhatsApp</b> (con código de
-  país) e <b>Instagram</b>— son <b>obligatorios</b>: sin ellos la solicitud no queda lista para verificar. Escríbelos
-  completos y verificables. La <b>fuente</b> puede seguir siendo texto libre (red, persona, grupo…), pero cuanto más
-  clara, mejor.</div>
+  <div class="callout"><b>Nota sobre contactos:</b> el <b>referente</b> es obligatorio y necesitas <b>al menos una</b> vía —
+  WhatsApp/teléfono (con código de país) <b>o</b> Instagram—. La <b>fuente</b> puede ser texto libre (red, persona,
+  grupo…), pero cuanto más clara, mejor.</div>
 </section>
 
-<!-- ══════════════ 9. AVISOS ══════════════ -->
+<!-- ══════════════ 13. AVISOS ══════════════ -->
 <section class="pagina">
-  <h2>9 · Avisos que envías y recibes</h2>
+  <h2>13 · Avisos que envías y recibes · Seguimiento</h2>
   <p>Cada solicitud mueve el sistema de notificaciones. Los avisos llegan por tres vías a la vez: la <b>campana</b>
   in-app («Avisos»), las <b>notificaciones del navegador</b> (push) y <b>Telegram</b> (si la persona lo vinculó
   desde su perfil).</p>
@@ -398,33 +548,32 @@
     <div class="card"><span class="n" style="background:#047857">↓</span><h4>Recibes</h4>
       <p>Cuando Verificación decide, te llega «<b>Tu caso fue confirmado</b>» o «<b>Tu caso fue descartado</b>».</p></div>
   </div>
-  <div class="callout"><b>Además de los avisos — «Seguimiento»:</b> hay una sección <b>«Seguimiento»</b> donde puedes
-  consultar el <b>recorrido</b> de las solicitudes (sin datos privados) y ver en qué va lo que reportaste, sin tener que
-  esperar una notificación ni preguntar.</div>
+  <div class="callout"><b>Sección «Seguimiento»:</b> ahí consultas el <b>recorrido</b> de las solicitudes (sin datos
+  privados) y ves en qué van las que reportaste, sin esperar una notificación ni preguntar.</div>
   <div class="callout ok"><b>Recomendación:</b> vincula tu <b>Telegram</b> desde <b>tu perfil</b> (botón «Telegram» en la barra
-  superior, junto a «Consejos»). Así te enteras al instante cuando confirman o descartan tus solicitudes, sin depender
-  del navegador.</div>
+  superior). Así te enteras al instante cuando confirman o descartan tus solicitudes, sin depender del navegador.</div>
 </section>
 
-<!-- ══════════════ 10. FAQ ══════════════ -->
+<!-- ══════════════ 14. FAQ ══════════════ -->
 <section class="pagina">
-  <h2>10 · Preguntas frecuentes</h2>
+  <h2>14 · Preguntas frecuentes</h2>
   <h3>No veo la sección «Solicitudes».</h3>
-  <p>Te falta pertenecer al grupo o tener aprobada tu <b>2ª verificación de identidad</b>. Completa la verificación en
-  «Verificación» y espera la aprobación de un administrador.</p>
+  <p>Te falta pertenecer al grupo o tener aprobada tu <b>verificación de identidad</b>. Complétala en «Verificación»
+  y espera la aprobación de un administrador.</p>
+  <h3>¿WhatsApp e Instagram son los dos obligatorios?</h3>
+  <p><b>No.</b> Lo obligatorio es el <b>referente</b> y <b>al menos una</b> vía de contacto: WhatsApp/teléfono <b>o</b>
+  Instagram. Si tienes las dos, cárgalas; con una basta para que la solicitud quede lista para verificar.</p>
   <h3>Creé una solicitud y no puedo confirmarla.</h3>
   <p>Es correcto: Recopilación <b>solo reporta</b>. La confirma el equipo de Verificación. Recibirás el aviso del resultado.</p>
   <h3>Me equivoqué en un dato.</h3>
   <p>Puedes <b>editar tu solicitud</b> mientras esté <b>Pendiente</b> o <b>En proceso</b>. El sistema guarda el
-  <b>historial</b> (valor original → corregido, quién y cuándo): <b>nada se pierde</b> y es solo para transparencia.
-  Si ya está confirmada o enviada, pídelo a Verificación o a la administración.</p>
-  <h3>¿Por qué ahora piden WhatsApp e Instagram?</h3>
-  <p>Porque al validarse, tu solicitud se <b>deriva a un área</b> que necesita <b>ubicar al referente</b> para actuar.
-  Por eso el referente y sus <b>dos vías</b> —WhatsApp con código de país e Instagram— son obligatorios y deben ser
-  verificables.</p>
+  <b>historial</b> (valor original → corregido, quién y cuándo): <b>nada se pierde</b>. Si ya está confirmada o enviada,
+  pídelo a Verificación o a la administración.</p>
+  <h3>La solicitud es sobre dinero / vivienda / un tema legal. ¿La cargo?</h3>
+  <p><b>No por aquí.</b> Eso queda <b>fuera del alcance</b> (ver sección 4): oriéntalo a un canal oficial. La plataforma
+  articula ayuda <b>en especie y servicios</b>.</p>
   <h3>¿Dónde veo en qué va lo que reporté?</h3>
-  <p>En la sección <b>«Seguimiento»</b>: muestra el <b>recorrido</b> de las solicitudes (sin datos privados), para que
-  sepas en qué punto está sin tener que preguntar.</p>
+  <p>En la sección <b>«Seguimiento»</b>: muestra el <b>recorrido</b> de las solicitudes (sin datos privados).</p>
   <h3>¿Puedo reportar una desaparición o datos de un menor?</h3>
   <p><b>No por aquí.</b> Ese flujo se retiró de la plataforma. Toda solicitud es «con ubicación» y nunca de tipo
   «desaparecidos». Para situaciones de menores, sigue el protocolo que indique la coordinación.</p>
@@ -435,13 +584,14 @@
   <div class="footer-note">
     <b>Apoyo por Venezuela</b> · Guía del equipo de Recopilación y Gestión de la Información · Actualizada julio 2026.<br>
     Nota técnica (desarrollo): grupo <code>gestion_casos</code> → rol <code>recopilacion</code>; sección «Solicitudes»
-    (<code>/casos</code>); estados <code>pendiente · en_proceso · confirmado · falso · enviado_redaccion · resuelto</code>;
-    puerta de 2ª verificación (<code>identidad_aprobada()</code>) impuesta por RLS. Oportunidades de donación:
-    <code>/insumos/oportunidades</code> (<code>puedeRegistrarOportunidad</code>, migración 0141). «Requiere información»:
-    <code>casos.info_requerida</code> (0142). Supervisión del mando: <code>es_mando_recopilacion()</code> (0143). Módulos de
-    Búsqueda y Digitalización desactivados (0138). Doble contacto obligatorio —referente + WhatsApp + Instagram—:
-    <code>casos_contacto_estructurado</code> (0171); verificación por campo con semáforo (0172); candado «listo para verificar»
-    y formulario por bloques (0173); derivación multiárea al validarse (0177); historial de correcciones (0178); sección
-    «Seguimiento» del recorrido (0179). PDF generado desde <code>docs/GUIA-RECOPILACION.html</code> (Chromium).
+    (<code>/casos</code>); estados <code>pendiente · en_proceso · confirmado · falso · enviado_redaccion · resuelto</code>
+    (5 pasos felices, <code>PASOS_CASO</code>); puerta de verificación de identidad (<code>identidad_aprobada()</code>)
+    impuesta por RLS. Formulario por bloques: alcance (<code>BloqueAlcance</code>, casilla obligatoria), contacto
+    (<code>BloqueContacto</code>: referente obligatorio + al menos WhatsApp/tel o Instagram, 0171), ubicación
+    (<code>BloqueUbicacion</code>) y requerimiento con punto del mapa (0145). Verificación por campo con semáforo (0172);
+    candado «listo para verificar» (0173); derivación multiárea al validarse (0177); historial de correcciones (0178);
+    sección «Seguimiento» (0179). Donación-Ofrecimiento: <code>/insumos/oportunidades</code> (0141, 0152). «Requiere
+    información»: <code>casos.info_requerida</code> (0142). Módulos de Búsqueda y Digitalización desactivados (0138).
+    PDF generado desde <code>docs/GUIA-RECOPILACION.html</code> (Chromium).
   </div>
 </section>
