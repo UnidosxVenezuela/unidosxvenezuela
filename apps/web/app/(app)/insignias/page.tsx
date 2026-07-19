@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fechaCorta } from '@/lib/fechas';
 import MedallaInsignia, { type NivelInsignia } from '@/components/MedallaInsignia';
 import { cifraInsignia } from '@/components/InsigniasSaludo';
-import CelebracionInsignias from '@/components/CelebracionInsignias';
+import CelebracionInsignias, { type MedallaCelebrable } from '@/components/CelebracionInsignias';
 import Icono from '@/components/Icono';
 
 export const metadata = { title: 'Mis insignias' };
@@ -73,17 +73,19 @@ export default async function InsigniasPage() {
   }
   const esProxima = (i: Insignia) => i.serie != null && proximaMeta.get(i.serie) === i.id;
 
-  // Insignia a celebrar: la ganada más reciente (mayor otorgada_en). La celebración
-  // muestra su medalla «armándose» (animada), fiel al rediseño.
+  // Datos de una insignia para la celebración: su medalla «armándose» (animada), fiel al rediseño.
+  const aCelebrable = (i: Insignia): MedallaCelebrable => ({
+    estilo: i.estilo, nivel: i.nivel, icono: i.icono,
+    texto: i.estilo === 'D' ? cifraInsignia(i.serie, i.umbral) : null,
+    nombre: i.nombre, descripcion: i.descripcion,
+  });
+
+  // Insignia a celebrar en el encabezado: la ganada más reciente (mayor otorgada_en).
   let ultima: Insignia | null = null; let ultimaFecha = '';
   for (const [id, fecha] of ganadas) {
     if (fecha > ultimaFecha) { const ins = todas.find((x) => x.id === id); if (ins) { ultima = ins; ultimaFecha = fecha; } }
   }
-  const medallaCeleb = ultima ? {
-    estilo: ultima.estilo, nivel: ultima.nivel, icono: ultima.icono,
-    texto: ultima.estilo === 'D' ? cifraInsignia(ultima.serie, ultima.umbral) : null,
-    nombre: ultima.nombre, descripcion: ultima.descripcion,
-  } : null;
+  const medallaCeleb = ultima ? aCelebrable(ultima) : null;
 
   return (
     <div>
@@ -127,7 +129,14 @@ export default async function InsigniasPage() {
                     <div style={{ fontWeight: 700, marginTop: 6 }}>{i.nombre}</div>
                     <div className="muted" style={{ fontSize: '.85rem', marginTop: 2 }}>{i.descripcion}</div>
                     {fecha ? (
-                      <div className="pill pill-ok" style={{ marginTop: 8 }}>Ganada el {fechaCorta(fecha)}</div>
+                      <>
+                        <div className="pill pill-ok" style={{ marginTop: 8 }}>Ganada el {fechaCorta(fecha)}</div>
+                        {/* Reproducir la animación de entrada de ESTA insignia (también las ganadas
+                            antes de este parche). */}
+                        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'center' }}>
+                          <CelebracionInsignias medalla={aCelebrable(i)} compacto />
+                        </div>
+                      </>
                     ) : prox ? (
                       <div className="medalla-prog" style={{ marginTop: 10 }}>
                         <div className="medalla-prog-barra" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Progreso: ${cuenta} de ${i.umbral}`}>
