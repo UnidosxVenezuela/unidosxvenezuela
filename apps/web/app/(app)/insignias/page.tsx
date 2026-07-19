@@ -73,6 +73,18 @@ export default async function InsigniasPage() {
   }
   const esProxima = (i: Insignia) => i.serie != null && proximaMeta.get(i.serie) === i.id;
 
+  // Insignia a celebrar: la ganada más reciente (mayor otorgada_en). La celebración
+  // muestra su medalla «armándose» (animada), fiel al rediseño.
+  let ultima: Insignia | null = null; let ultimaFecha = '';
+  for (const [id, fecha] of ganadas) {
+    if (fecha > ultimaFecha) { const ins = todas.find((x) => x.id === id); if (ins) { ultima = ins; ultimaFecha = fecha; } }
+  }
+  const medallaCeleb = ultima ? {
+    estilo: ultima.estilo, nivel: ultima.nivel, icono: ultima.icono,
+    texto: ultima.estilo === 'D' ? cifraInsignia(ultima.serie, ultima.umbral) : null,
+    nombre: ultima.nombre, descripcion: ultima.descripcion,
+  } : null;
+
   return (
     <div>
       <div className="pagina-cab">
@@ -83,7 +95,7 @@ export default async function InsigniasPage() {
             nadie las asigna a mano — y <strong>ninguna se pierde</strong>. 💛💙❤️
           </p>
         </div>
-        {ganadas.size > 0 && <CelebracionInsignias />}
+        {ganadas.size > 0 && <CelebracionInsignias medalla={medallaCeleb} />}
       </div>
 
       {GRUPOS.map((g) => {
