@@ -861,15 +861,27 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 .medalla-prog-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--btn-prim), var(--amarillo)); }
 .medalla-prog-txt { color: var(--texto2); font-size: .72rem; margin-top: 6px; font-weight: 600; }
 
-/* Confeti de la celebración de insignias. Puro CSS: honra prefers-reduced-motion. */
-.confeti-capa { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
-.confeti-pieza { position: absolute; top: -20px; width: 9px; height: 14px; border-radius: 2px; opacity: .95;
-  animation: confeti-caer var(--dur, 2s) cubic-bezier(.2, .6, .3, 1) forwards; }
-@keyframes confeti-caer {
-  0% { transform: translate(0, -20px) rotate(0); opacity: 1; }
-  100% { transform: translate(var(--dx, 0), 100vh) rotate(var(--rot, 360deg)); opacity: 0; }
+/* Celebración de insignia (rediseño): modal a pantalla completa con la medalla que se
+   ARMA por capas (ver MedallaInsignia `animada`), aura pulsante y confeti. Honra
+   prefers-reduced-motion. */
+.celeb-overlay { position: fixed; inset: 0; z-index: 200; overflow: hidden; padding: 20px;
+  display: grid; place-items: center; background: rgba(6, 10, 26, .55); backdrop-filter: blur(8px); }
+.celeb-card { position: relative; width: min(400px, 92vw); text-align: center; background: var(--sup1);
+  color: var(--texto); border: 1px solid var(--borde); border-radius: 24px; padding: 36px 28px 28px;
+  box-shadow: var(--sombra2); animation: celeb-pop .45s cubic-bezier(.2, 1.3, .4, 1); }
+.celeb-aura { position: absolute; top: 26px; left: 50%; width: 200px; height: 200px; margin-left: -100px;
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 206, 0, .35), transparent 70%); animation: celeb-aura 2.4s ease infinite; }
+.celeb-confeti { position: absolute; top: -12px; width: 9px; height: 14px; opacity: .95; pointer-events: none;
+  animation-name: celeb-confeti; animation-timing-function: ease-in; animation-fill-mode: forwards; }
+@keyframes celeb-pop { 0% { opacity: 0; transform: scale(.92) translateY(8px); } 100% { opacity: 1; transform: none; } }
+@keyframes celeb-aura { 0%, 100% { opacity: .5; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes celeb-confeti { 0% { transform: translateY(-30px) rotate(0); opacity: 1; } 100% { transform: translateY(70vh) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .celeb-card { animation: none; }
+  .celeb-aura { animation: none; opacity: .7; }
+  .celeb-confeti { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .confeti-pieza { display: none; } }
 
 /* Comparador de identidad (modal rostro vs documento, con zoom). */
 .comparador-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(6, 10, 20, .72);
