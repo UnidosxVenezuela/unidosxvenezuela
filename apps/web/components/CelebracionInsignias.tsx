@@ -14,12 +14,16 @@ export type MedallaCelebrable = {
 const CONF = ['#FFCE00', '#0033A0', '#CF142B', '#FFCE00', '#3a5cd0', '#CF142B', '#FFCE00', '#0f8a55'];
 
 /**
- * Celebración de una insignia (rediseño / Claude Design): un botón «Ver la celebración»
- * abre un modal a pantalla completa con la medalla grande que se ARMA por capas
- * (MedallaInsignia `animada`), un aura pulsante y confeti cayendo. Cada apertura reinicia
- * la animación (key por ronda). Respeta `prefers-reduced-motion` desde globals.css.
+ * Celebración de una insignia (rediseño / Claude Design): un botón abre un modal a pantalla
+ * completa con la medalla grande que se ARMA por capas (MedallaInsignia `animada`), un aura
+ * pulsante y confeti cayendo. Cada apertura reinicia la animación (key por ronda). Respeta
+ * `prefers-reduced-motion` desde globals.css.
+ *
+ * `compacto`: botón pequeño para reproducir la animación de UNA insignia ya ganada desde su
+ * tarjeta en la vitrina (así los miembros que la ganaron antes de este parche también pueden
+ * verla). Sin `compacto`, el botón grande «Ver la celebración» del encabezado (última ganada).
  */
-export default function CelebracionInsignias({ medalla }: { medalla: MedallaCelebrable | null }) {
+export default function CelebracionInsignias({ medalla, compacto = false }: { medalla: MedallaCelebrable | null; compacto?: boolean }) {
   const [abierto, setAbierto] = useState(false);
   const [ronda, setRonda] = useState(0);
 
@@ -37,7 +41,19 @@ export default function CelebracionInsignias({ medalla }: { medalla: MedallaCele
 
   return (
     <>
-      <button type="button" className="btn btn-acento" onClick={celebrar}>✨ Ver la celebración</button>
+      {compacto ? (
+        <button
+          type="button"
+          className="btn"
+          style={{ minHeight: 30, padding: '2px 12px', borderRadius: 999, fontSize: '.82rem' }}
+          onClick={celebrar}
+          title={medalla ? `Ver la animación de «${medalla.nombre}»` : 'Ver la animación'}
+        >
+          ✨ Ver animación
+        </button>
+      ) : (
+        <button type="button" className="btn btn-acento" onClick={celebrar}>✨ Ver la celebración</button>
+      )}
 
       {abierto && medalla && (
         <div className="celeb-overlay" onClick={() => setAbierto(false)}>
