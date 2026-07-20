@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO } from '@/lib/constantes';
+import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, centroideEstado } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -147,6 +147,16 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
   // Un PUNTO del mapa sí necesita coordenadas: si se marcó sin ubicar, se guarda como
   // solicitud normal (sin la marca de punto), nunca se bloquea el reporte.
   if (!tieneUbic) {
+    // Geolocalización aproximada: si no hay pin pero sí un Estado conocido, se ubica la
+    // solicitud en el CENTROIDE del estado para que sea mapeable y accionable (es_requerimiento
+    // = true satisface el CHECK 0112 porque ya hay lat/lng). Nunca es un PUNTO fijo
+    // (hospital/albergue), que exige pin exacto → punto_tipo se deja en null.
+    const centro = centroideEstado(opt(formData.get('ubicacion_estado')));
+    if (centro) {
+      return { es_requerimiento: true, lat: centro.lat, lng: centro.lng,
+        req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,
+        punto_tipo: null, punto_temporal: false, personas_afectadas };
+    }
     return { es_requerimiento: false, lat: null, lng: null,
       req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,
       punto_tipo: null, punto_temporal: false, personas_afectadas };

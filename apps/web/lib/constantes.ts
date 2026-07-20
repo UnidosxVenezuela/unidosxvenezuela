@@ -248,6 +248,51 @@ export function etiquetaPais(codigo?: string | null): string {
 export function zonaPais(codigo?: string | null): string {
   return codigo ? (MAPA_PAIS[codigo]?.utc ?? '') : '';
 }
+
+/** Estados de Venezuela (23 estados + Distrito Capital + Dependencias Federales) con un
+ *  centroide APROXIMADO (lat/lng). Sirve para: (1) normalizar el campo «Estado» como
+ *  desplegable (no texto libre) y poder agregar/filtrar/deduplicar; (2) ubicar en el mapa
+ *  una solicitud que no trae pin, con la coordenada aproximada del estado — nunca un punto
+ *  FIJO (hospital/albergue), que sí exige pin exacto. */
+export const ESTADOS_VE: { nombre: string; lat: number; lng: number }[] = [
+  { nombre: 'Amazonas', lat: 3.9, lng: -65.9 },
+  { nombre: 'Anzoátegui', lat: 9.1, lng: -64.3 },
+  { nombre: 'Apure', lat: 7.1, lng: -68.6 },
+  { nombre: 'Aragua', lat: 10.1, lng: -67.4 },
+  { nombre: 'Barinas', lat: 8.2, lng: -70.1 },
+  { nombre: 'Bolívar', lat: 5.6, lng: -63.3 },
+  { nombre: 'Carabobo', lat: 10.2, lng: -68.1 },
+  { nombre: 'Cojedes', lat: 9.4, lng: -68.4 },
+  { nombre: 'Delta Amacuro', lat: 8.9, lng: -60.9 },
+  { nombre: 'Distrito Capital', lat: 10.5, lng: -66.9 },
+  { nombre: 'Falcón', lat: 11.1, lng: -69.9 },
+  { nombre: 'Guárico', lat: 8.7, lng: -66.5 },
+  { nombre: 'La Guaira', lat: 10.6, lng: -66.7 },
+  { nombre: 'Lara', lat: 10.1, lng: -69.8 },
+  { nombre: 'Mérida', lat: 8.5, lng: -71.1 },
+  { nombre: 'Miranda', lat: 10.2, lng: -66.3 },
+  { nombre: 'Monagas', lat: 9.5, lng: -63.0 },
+  { nombre: 'Nueva Esparta', lat: 11.0, lng: -63.9 },
+  { nombre: 'Portuguesa', lat: 9.1, lng: -69.6 },
+  { nombre: 'Sucre', lat: 10.5, lng: -63.4 },
+  { nombre: 'Táchira', lat: 7.8, lng: -72.1 },
+  { nombre: 'Trujillo', lat: 9.4, lng: -70.5 },
+  { nombre: 'Yaracuy', lat: 10.3, lng: -68.8 },
+  { nombre: 'Zulia', lat: 9.9, lng: -72.0 },
+  { nombre: 'Dependencias Federales', lat: 11.9, lng: -66.7 },
+];
+/** Solo los nombres, para poblar el desplegable de «Estado». */
+export const NOMBRES_ESTADOS_VE: string[] = ESTADOS_VE.map((e) => e.nombre);
+const normEstado = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const MAPA_ESTADO_VE = new Map(ESTADOS_VE.map((e) => [normEstado(e.nombre), e]));
+/** Centroide aproximado del estado (para ubicar en el mapa cuando no hay pin). Devuelve
+ *  null si el nombre no coincide con un estado conocido. Tolera acentos y mayúsculas. */
+export function centroideEstado(nombre?: string | null): { lat: number; lng: number } | null {
+  if (!nombre) return null;
+  const e = MAPA_ESTADO_VE.get(normEstado(nombre));
+  return e ? { lat: e.lat, lng: e.lng } : null;
+}
+
 /** Bandera emoji a partir del código ISO alfa-2 (símbolos indicadores regionales). */
 export function banderaPais(codigo?: string | null): string {
   if (!codigo || codigo.length !== 2 || codigo === 'ZZ') return codigo === 'ZZ' ? '🌍' : '';
