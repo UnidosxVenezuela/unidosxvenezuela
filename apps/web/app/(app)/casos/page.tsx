@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import { scoreCaso, nivelPrioridad, ETIQUETA_NIVEL_PRIORIDAD, TONO_NIVEL_PRIORIDAD } from '@/lib/prioridad';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import EstadoCaso from '@/components/EstadoCaso';
@@ -24,8 +25,10 @@ import FiltroSelect from '@/components/FiltroSelect';
 import BotonExportar from '@/components/BotonExportar';
 import { nombreMostrado } from '@/lib/nombre';
 
-type SP = { q?: string; estado?: string; categoria?: string; caso?: string };
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en';
+type SP = { q?: string; estado?: string; categoria?: string; caso?: string; orden?: string };
+// req_urgencia/sigue_vigente/creado_en/es_requerimiento (columnas antiguas, seguras) alimentan
+// el score de prioridad; personas_afectadas (0182) se lee aparte por si aún no está aplicada.
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, req_urgencia, sigue_vigente, creado_en, es_requerimiento';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -129,6 +132,36 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     for (const r of ((pts ?? []) as any[])) if (r.punto_tipo) puntoPorCaso.set(r.id, r.punto_tipo);
   }
 
+  // ── Prioridad (score) y % verificado ──
+  const ahora = Date.now();
+  const ids = (casos ?? []).map((c: any) => c.id);
+  // personas_afectadas (0182) puede no estar aplicada: consulta aparte para no romper el
+  // tablero; si falla, el factor «personas» del score queda neutro.
+  const personasPorCaso = new Map<string, number>();
+  if (ids.length) {
+    const { data: pa } = await supabase.from('casos').select('id, personas_afectadas').in('id', ids);
+    for (const r of ((pa ?? []) as any[])) if (r.personas_afectadas != null) personasPorCaso.set(r.id, Number(r.personas_afectadas));
+  }
+  const orden = searchParams.orden === 'prioridad' ? 'prioridad' : 'fecha';
+  const filas = (casos ?? []).map((c: any) => {
+    const score = scoreCaso({ ...c, personas_afectadas: personasPorCaso.get(c.id) ?? null }, ahora);
+    return { ...c, _nivel: nivelPrioridad(score), _score: score };
+  });
+  if (orden === 'prioridad') filas.sort((a, b) => b._score - a._score);
+
+  // % verificado por caso (solo Verificación; 0172 best-effort). Total esperado = campos
+  // base + (requerimiento ? campos de requerimiento : 0).
+  const pctVerif = new Map<string, number>();
+  if (puedeVerif && ids.length) {
+    const { data: vc } = await supabase.from('casos_verificacion_campo').select('caso_id, estado').in('caso_id', ids);
+    const verPorCaso = new Map<string, number>();
+    for (const r of ((vc ?? []) as any[])) if (r.estado === 'verificado') verPorCaso.set(r.caso_id, (verPorCaso.get(r.caso_id) ?? 0) + 1);
+    for (const c of filas) {
+      const total = CAMPOS_VERIFICACION_BASE.length + (c.es_requerimiento ? CAMPOS_VERIFICACION_REQ.length : 0);
+      pctVerif.set(c.id, Math.round((Math.min(verPorCaso.get(c.id) ?? 0, total) / total) * 100));
+    }
+  }
+
   const { data: listos } = await supabase.from('casos')
     .select('id, numero, titulo, asignado_a').eq('estado', 'confirmado')
     .order('actualizado_en', { ascending: false }).limit(8);
@@ -150,6 +183,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (searchParams.q) p.set('q', searchParams.q);
     if (searchParams.categoria) p.set('categoria', searchParams.categoria);
     if (estado) p.set('estado', estado);
+    const s = p.toString();
+    return '/casos' + (s ? '?' + s : '');
+  };
+  // Alterna el orden del tablero (Actualización ↔ Prioridad), conservando los filtros.
+  const ordenHref = (o: 'fecha' | 'prioridad') => {
+    const p = new URLSearchParams(filtros);
+    if (o === 'prioridad') p.set('orden', 'prioridad'); else p.delete('orden');
     const s = p.toString();
     return '/casos' + (s ? '?' + s : '');
   };
@@ -277,6 +317,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
       <div>
         <div className="grupo-main">
+      <div className="fila" style={{ gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span className="muted" style={{ fontSize: '.82rem' }}>{puedeVerif ? 'Cola de verificación:' : 'Orden:'}</span>
+        <Link href={ordenHref('fecha')} className={'pill ' + (orden === 'fecha' ? 'pill-info' : 'pill-neutra')} style={{ textDecoration: 'none' }}>Actualización</Link>
+        <Link href={ordenHref('prioridad')} className={'pill ' + (orden === 'prioridad' ? 'pill-info' : 'pill-neutra')} style={{ textDecoration: 'none' }}>Prioridad</Link>
+        {orden === 'prioridad' && <span className="muted" style={{ fontSize: '.76rem' }}>por urgencia · personas afectadas · espera · vigencia</span>}
+      </div>
       <div className="tarjeta">
         {(casos ?? []).length === 0 ? (
           (total.count ?? 0) === 0 ? (
@@ -293,13 +339,14 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
           <div className="tabla-scroll"><table>
             <thead><tr><th>ID</th><th>Título</th><th>Categoría</th><th>Fuente</th><th>Estado</th><th>Actualización</th></tr></thead>
             <tbody>
-              {(casos ?? []).map((c: any) => (
+              {filas.map((c: any) => (
                 <tr key={c.id}>
                   <td className="muted">#{String(c.numero).padStart(5, '0')}</td>
                   <td>
                     <div className="celda-titulo">
-                      <span className="fila" style={{ gap: 6 }}>
+                      <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
                         <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                        {orden === 'prioridad' && <Pill tono={TONO_NIVEL_PRIORIDAD[c._nivel as keyof typeof TONO_NIVEL_PRIORIDAD]} punto={false}>{ETIQUETA_NIVEL_PRIORIDAD[c._nivel as keyof typeof ETIQUETA_NIVEL_PRIORIDAD]}</Pill>}
                         {c.fecha_publicacion && (Date.now() - new Date(c.fecha_publicacion + 'T00:00:00').getTime()) > 2 * 86400000 ? (
                           <Pill tono="aviso" punto={false}>+2 días</Pill>
                         ) : null}
@@ -314,6 +361,14 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                     <EstadoCaso estado={c.estado} />
                     {c.info_requerida && <div style={{ marginTop: 4 }}><Pill tono="aviso" punto={false}>Requiere info</Pill></div>}
                     {(() => { const p = pasoDeCaso(c.estado); return <FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} compacto />; })()}
+                    {puedeVerif && (() => { const pv = pctVerif.get(c.id) ?? 0; return (
+                      <div style={{ marginTop: 5 }} title={'Datos verificados: ' + pv + '%'}>
+                        <div style={{ height: 5, borderRadius: 3, background: 'var(--borde)', overflow: 'hidden', maxWidth: 120 }}>
+                          <div style={{ width: pv + '%', height: '100%', background: pv >= 100 ? 'var(--verde, #1c8a5c)' : 'var(--azul, #2563eb)' }} />
+                        </div>
+                        <span className="muted" style={{ fontSize: '.72rem' }}>Verificado {pv}%</span>
+                      </div>
+                    ); })()}
                   </td>
                   <td className="muted" style={{ fontSize: '.82rem' }}>{fechaHora(c.actualizado_en)}</td>
                 </tr>
