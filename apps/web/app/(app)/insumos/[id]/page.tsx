@@ -12,7 +12,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro } from '../actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
 function waLink(contacto: string | null): string | null {
@@ -32,7 +32,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   const id = params.id;
 
   const { data: sData } = await supabase.from('solicitudes_insumo')
-    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
+    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, punto_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
     .eq('id', id).single();
   const s: any = sData;
   if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Logística</Link></div>;
@@ -87,6 +87,15 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   if (s.caso_id && s.estado !== 'entregado' && s.estado !== 'cancelado') {
     const { data: cc } = await supabase.rpc('centros_cercanos_para_solicitud', { p_solicitud: id, p_limite: 5 });
     centros = (cc as any[]) ?? [];
+  }
+
+  // Inventario del centro ASIGNADO (si hay), para «surtir» la entrega descontando stock
+  // real. Solo existencias > 0. Si no hay centro asignado, queda vacío y no se ofrece surtir.
+  let invCentro: any[] = [];
+  if (gestor && s.punto_id && s.estado !== 'entregado' && s.estado !== 'cancelado') {
+    const { data: ic } = await supabase.from('inventario_acopio')
+      .select('id, producto, cantidad, unidad').eq('punto_id', s.punto_id).gt('cantidad', 0).order('producto');
+    invCentro = (ic as any[]) ?? [];
   }
 
   return (
@@ -204,6 +213,36 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 <div className="campo"><label>Notas</label><input name="notas" className="input" /></div>
                 <button className="btn btn-primario" type="submit">Registrar envío</button>
               </form>
+            </div>
+          )}
+
+          {gestor && s.punto_id && s.estado !== 'entregado' && s.estado !== 'cancelado' && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="caja" size={16} /> Surtir desde el centro</h3>
+              <p className="muted" style={{ fontSize: '.82rem', margin: '0 0 8px' }}>
+                Descuenta del inventario de <strong>{s.puntos_acopio?.nombre ?? 'el centro asignado'}</strong> lo que se entrega; queda registrado en su bitácora. Así la entrega mueve el stock de verdad.
+              </p>
+              {invCentro.length === 0 ? (
+                <p className="muted" style={{ fontSize: '.82rem', margin: 0 }}>El centro asignado no tiene existencias registradas. <Link href={'/acopio/' + s.punto_id}>Ver su inventario →</Link></p>
+              ) : (
+                <form action={surtirDesdeCentro}>
+                  <input type="hidden" name="id" value={id} />
+                  <input type="hidden" name="punto_id" value={s.punto_id} />
+                  <div className="grid grid-2">
+                    <div className="campo"><label>Producto del centro</label>
+                      <select name="item_id" className="input" required defaultValue="">
+                        <option value="" disabled>Elige…</option>
+                        {invCentro.map((it: any) => <option key={it.id} value={it.id}>{it.producto} ({it.cantidad} {it.unidad || ''})</option>)}
+                      </select>
+                    </div>
+                    <div className="campo"><label>Cantidad a surtir</label><input name="cantidad" type="number" min={0} step="any" className="input" required /></div>
+                  </div>
+                  <label className="fila" style={{ gap: 6, fontSize: '.85rem', cursor: 'pointer', margin: '2px 0 8px' }}>
+                    <input type="checkbox" name="marcar_entregada" value="1" defaultChecked style={{ width: 'auto', minHeight: 0 }} /> Marcar la solicitud como entregada
+                  </label>
+                  <button className="btn btn-primario" type="submit"><Icono nombre="salida" size={16} /> Surtir y descontar</button>
+                </form>
+              )}
             </div>
           )}
           {gestor && s.estado === 'entregado' && (
