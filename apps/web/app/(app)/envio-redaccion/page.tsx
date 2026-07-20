@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fechaHora } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
 import {
-  CATEGORIAS_CASO, CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION,
+  CATEGORIAS_CASO, CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, RANGO_PRIORIDAD,
 } from '@/lib/constantes';
 import {
   etapaRedaccion, ETAPAS_REDACCION, ETIQUETA_ETAPA_REDACCION, pasoRedaccion,
@@ -78,7 +78,14 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
   ]);
   const porId = new Map<string, any>();
   for (const c of [...((activos as any[]) ?? []), ...((publicados as any[]) ?? [])]) porId.set(c.id, c);
-  let lista = Array.from(porId.values()).sort((a, b) => (a.actualizado_en < b.actualizado_en ? 1 : -1));
+  // Cola por urgencia: primero lo que Logística no pudo cubrir (requiere_difusion, sin
+  // publicar), luego por urgencia declarada (crítica→baja) y, a igualdad, lo más reciente.
+  const rangoUrg = (c: any) => RANGO_PRIORIDAD[(c.req_urgencia ?? 'baja') as keyof typeof RANGO_PRIORIDAD] ?? 3;
+  const prioNoCubierta = (c: any) => (c.requiere_difusion && !c.publicado_en ? 0 : 1);
+  let lista = Array.from(porId.values()).sort((a, b) =>
+    prioNoCubierta(a) - prioNoCubierta(b)
+    || rangoUrg(a) - rangoUrg(b)
+    || (a.actualizado_en < b.actualizado_en ? 1 : -1));
 
   // redactor_id + canales (0169) best-effort: si faltan las columnas, se omite sin romper.
   const ids = lista.map((c) => c.id);
