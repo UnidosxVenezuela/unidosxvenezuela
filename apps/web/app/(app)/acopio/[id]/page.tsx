@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { requireUsuario, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { fechaHora } from '@/lib/fechas';
+import { fechaHora, fechaCorta, estadoVencimiento } from '@/lib/fechas';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, TIPOS_INSUMO, ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia } from '@/lib/constantes';
 import Icono from '@/components/Icono';
@@ -151,6 +151,8 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
                 </div>
                 <div className="campo"><label>Cantidad a ingresar</label><input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={1} /></div>
                 {gestor && <div className="campo"><label>Mínimo (alerta, opcional)</label><input name="minimo" className="input" type="number" min={0} step="any" defaultValue={0} /></div>}
+                {gestor && <div className="campo"><label>Vence (opcional)</label><input name="vencimiento" className="input" type="date" /></div>}
+                {gestor && <div className="campo"><label>Lote (opcional)</label><input name="lote" className="input" maxLength={60} placeholder="Ej. L-2026-07" /></div>}
               </div>
               <button className="btn btn-primario" type="submit"><Icono nombre="mas" size={16} /> Ingresar al inventario</button>
               <p className="muted" style={{ fontSize: '.8rem', marginBottom: 0 }}>Si el producto ya existe, se suma a su cantidad.</p>
@@ -322,7 +324,7 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
               <tbody>
                 {inventario.map((it) => (
                   <tr key={it.id}>
-                    <td><strong>{it.producto}</strong> {esBajo(it) && <Pill tono="critica" punto={false}>Bajo</Pill>}{it.codigo && <div className="muted" style={{ fontSize: '.75rem' }}>{it.codigo}</div>}{Number(it.minimo) > 0 && <div className="muted" style={{ fontSize: '.72rem' }}>mín: {fmt(it.minimo)}</div>}</td>
+                    <td><strong>{it.producto}</strong> {esBajo(it) && <Pill tono="critica" punto={false}>Bajo</Pill>}{(() => { const ev = estadoVencimiento(it.vencimiento); return ev && ev.nivel !== 'ok' ? <Pill tono={ev.nivel === 'vencido' ? 'critica' : 'aviso'} punto={false}>{ev.nivel === 'vencido' ? 'Vencido' : 'Vence pronto'}</Pill> : null; })()}{it.codigo && <div className="muted" style={{ fontSize: '.75rem' }}>{it.codigo}</div>}{Number(it.minimo) > 0 && <div className="muted" style={{ fontSize: '.72rem' }}>mín: {fmt(it.minimo)}</div>}{it.vencimiento && <div className="muted" style={{ fontSize: '.72rem' }}>vence: {fechaCorta(it.vencimiento)}{it.lote ? ' · lote ' + it.lote : ''}</div>}</td>
                     <td>{it.categoria ? (ETIQUETA_TIPO_INSUMO[it.categoria] ?? it.categoria) : '—'}</td>
                     {gestor ? (
                       <td>

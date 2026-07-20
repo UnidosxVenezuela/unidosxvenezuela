@@ -43,10 +43,17 @@ export async function agregarProducto(formData: FormData) {
     p_donante: null, p_nota: null,
   });
   if (error) throw new Error('No se pudo ingresar: ' + error.message);
-  // El mínimo solo lo fijan los gestores; best-effort (los voluntarios lo omiten).
+  // Mínimo / vencimiento / lote (0186) los fijan los gestores; best-effort: los
+  // voluntarios, sin permiso de update, los omiten sin romper el ingreso.
+  const patch: Record<string, unknown> = {};
   const minimo = Math.max(0, num(formData.get('minimo')));
-  if (minimo > 0) {
-    await supabase.from('inventario_acopio').update({ minimo })
+  if (minimo > 0) patch.minimo = minimo;
+  const vencimiento = opt(formData.get('vencimiento'));
+  if (vencimiento) patch.vencimiento = vencimiento;
+  const lote = opt(formData.get('lote'));
+  if (lote) patch.lote = lote;
+  if (Object.keys(patch).length > 0) {
+    await supabase.from('inventario_acopio').update(patch)
       .eq('punto_id', puntoId).eq('producto', producto);
   }
   rev(puntoId);
