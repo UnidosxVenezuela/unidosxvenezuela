@@ -1,0 +1,120 @@
+<meta charset="utf-8">
+<title>Notas del parche · Julio 2026</title>
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  @page{ size:A4; margin:12mm 12mm 10mm; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.4; font-size:10.5pt;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 2px; gap:12px; }
+  .head h1{ font-size:24pt; color:var(--azul); margin:0; line-height:1.03; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:6px 14px; font-size:10pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:2px 0 10px; font-size:10.5pt; }
+  .kpis{ display:flex; gap:8px; margin:0 0 14px; flex-wrap:wrap; }
+  .kpi{ border:1px solid var(--borde); border-radius:10px; padding:6px 12px; background:#fff; font-size:9.5pt; }
+  .kpi b{ color:var(--azul); font-size:12pt; margin-right:5px; }
+  h2{ font-size:13pt; color:var(--azul-osc); margin:15px 0 8px; display:flex; align-items:center; gap:8px;
+    border-bottom:2px solid var(--borde); padding-bottom:5px; }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:10px 13px; background:#fff; break-inside:avoid; }
+  .card .t{ display:flex; align-items:center; gap:7px; margin-bottom:3px; }
+  .card .t b{ color:var(--azul-osc); font-size:10.7pt; }
+  .card p{ margin:0; font-size:9.7pt; color:#334155; }
+  .tag{ font-size:7.6pt; font-weight:800; text-transform:uppercase; letter-spacing:.04em; border-radius:999px;
+    padding:2px 7px; white-space:nowrap; }
+  .tag.nuevo{ background:#ecfdf5; color:var(--ok); border:1px solid #a7f3d0; }
+  .tag.mejora{ background:#eff6ff; color:var(--azul); border:1px solid #bfdbfe; }
+  .tag.db{ background:#fffbe9; color:#8a6d00; border:1px solid #fde68a; }
+  .admin{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:11px 14px; margin:16px 0 4px; font-size:9.8pt; }
+  .admin b{ color:var(--azul-osc); } .admin code{ background:#fff3c4; border-radius:4px; padding:1px 5px; font-size:9pt; }
+  .broma{ margin-top:14px; border:2px dashed var(--amarillo); border-radius:14px; padding:12px 16px; background:#fffdf5; }
+  .broma .et{ font-size:8.2pt; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#8a6d00; margin-bottom:3px; }
+  .broma p{ margin:0; font-size:10.3pt; color:#3a3320; }
+  .pie{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Notas del parche</h1>
+  <span class="rp">NOVEDADES · 20 jul 2026</span>
+</div>
+<p class="sub">Todo lo nuevo de esta tanda, reunido en un solo lugar. Esta versión endereza el <b>acopio</b> de punta a punta y hace que el trabajo <b>llegue solo</b> a quien le toca.</p>
+
+<div class="kpis">
+  <div class="kpi"><b>10</b> mejoras</div>
+  <div class="kpi"><b>5</b> áreas</div>
+  <div class="kpi"><b>3</b> cambios de base de datos</div>
+</div>
+
+<h2>📦 Acopio y Logística</h2>
+<div class="grid">
+  <div class="card">
+    <div class="t"><b>Tablero de red + «Preparar traspaso»</b> <span class="tag nuevo">Nuevo</span></div>
+    <p>La foto de toda la red: qué producto <b>sobra</b> en un centro y <b>falta</b> en otro. Cada oportunidad trae un botón que <b>precarga</b> el traspaso —producto, centro destino y cantidad sugerida—: mover el sobrante al faltante en un clic.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Inventario a prueba de descuadres</b> <span class="tag db">Base de datos</span></div>
+    <p>Cada ingreso, salida, traspaso o ajuste queda <b>asentado en la bitácora</b> del centro en una sola operación atómica. Se acabaron los números que no cuadran cuando dos personas tocan el stock a la vez.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Surtir la entrega desde el centro</b> <span class="tag nuevo">Nuevo</span></div>
+    <p>Marcar <b>«entregado»</b> ahora <b>descuenta el stock de verdad</b> del inventario del centro asignado. Antes se cerraba la entrega sin mover existencias, y la foto del acopio mentía.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Caducidad y lote + «Próximos a vencer»</b> <span class="tag db">Base de datos</span></div>
+    <p>Cada producto puede llevar <b>fecha de vencimiento</b> y <b>lote</b>. La app pinta «vence pronto / vencido» y el Tablero de red lista todo lo que caduca en <b>30 días</b>, para entregarlo o traspasarlo antes de perderlo.</p>
+  </div>
+</div>
+
+<h2>📝 Solicitudes y Recopilación</h2>
+<div class="grid">
+  <div class="card">
+    <div class="t"><b>Estados de Venezuela</b> <span class="tag mejora">Mejora</span></div>
+    <p>Al crear una solicitud, el estado se elige de una <b>lista</b> (ya no texto libre) y se <b>geolocaliza</b> por estado: datos más limpios y ubicables en el mapa.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Prioridad automática del tablero</b> <span class="tag nuevo">Nuevo</span></div>
+    <p>El tablero puede ordenarse por un <b>score</b> que combina urgencia, personas afectadas, tiempo de espera y vigencia. Lo más <b>crítico, arriba</b>.</p>
+  </div>
+</div>
+
+<h2>🔎 Verificación</h2>
+<div class="grid">
+  <div class="card">
+    <div class="t"><b>Cola priorizada + % verificado</b> <span class="tag nuevo">Nuevo</span></div>
+    <p>La bandeja se puede ver como <b>cola por criticidad</b>, y cada solicitud muestra una barra con el <b>porcentaje de campos ya verificados</b>: atacas primero lo urgente y ves cuánto falta.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Semáforo honesto</b> <span class="tag db">Base de datos</span></div>
+    <p>Si editas un dato que <b>ya estaba verificado</b>, ese campo vuelve solo a «sin revisar». El semáforo nunca miente sobre lo que de verdad está confirmado.</p>
+  </div>
+</div>
+
+<h2>📣 Redacción &nbsp;·&nbsp; 🛠️ Administración</h2>
+<div class="grid">
+  <div class="card">
+    <div class="t"><b>Bandeja proactiva de Redacción</b> <span class="tag db">Base de datos</span></div>
+    <p>Cuando una solicitud difundible se confirma, Redacción recibe un <b>aviso</b> (campana + push + Telegram) y la bandeja se ordena como <b>cola por urgencia</b>: primero lo que Logística no pudo cubrir. El trabajo llega solo.</p>
+  </div>
+  <div class="card">
+    <div class="t"><b>Reporte de usuarios (CSV)</b> <span class="tag nuevo">Nuevo</span></div>
+    <p>Administración exporta un <b>CSV de usuarios con su última conexión</b>, para ver de un vistazo quién está activo.</p>
+  </div>
+</div>
+
+<div class="admin">
+  <b>🔧 Para el administrador:</b> estas novedades traen cambios de base de datos. Aplica las migraciones nuevas en Supabase con <code>pnpm db:reset</code> y regenera los tipos con <code>pnpm db:types</code> (van las <b>0182 a 0186</b>). La más importante es la <b>0184</b> (inventario atómico): sin ella, surtir/ajustar stock fallará. Las de <b>vencimiento (0186)</b> y <b>aviso a Redacción (0185)</b> se activan al aplicarse; mientras tanto la app sigue funcionando sin romperse.
+</div>
+
+<div class="broma">
+  <div class="et">Y lo más importante del parche…</div>
+  <p>😄 Corregimos <b>99 errores</b>… y aparecieron <b>100</b>. La buena noticia: el nuevo ya trae <b>lote y fecha de vencimiento</b>, así que el sistema te avisará cuando esté «próximo a vencer». 🥫</p>
+</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Notas del parche</span>
+  <span>Julio 2026</span>
+</div>
