@@ -1873,4 +1873,48 @@ begin;
   reset role;
 rollback;
 
+-- ══ Reseteo del semáforo al editar un dato ya verificado (0183) ══
+
+\echo '== Test 71: editar un dato ya verificado devuelve SOLO su campo a sin_revisar (0183) =='
+begin;
+  insert into public.casos (id, titulo, estado, descripcion, fuente, contacto_whatsapp, creado_por) values
+    ('00000000-0000-0000-0000-0000000183aa', '_TEST_reset', 'en_proceso', 'desc v1', 'fuente v1', '+58 412 0000000', null);
+  -- Tres campos del semáforo en verde (como los dejaría Verificación).
+  insert into public.casos_verificacion_campo (caso_id, campo, estado) values
+    ('00000000-0000-0000-0000-0000000183aa', 'descripcion', 'verificado'),
+    ('00000000-0000-0000-0000-0000000183aa', 'fuente',      'verificado'),
+    ('00000000-0000-0000-0000-0000000183aa', 'referente',   'verificado');
+
+  -- (a) Editar la descripción resetea SOLO 'descripcion'; 'fuente' y 'referente' siguen verdes.
+  update public.casos set descripcion = 'desc v2 EDITADA' where id = '00000000-0000-0000-0000-0000000183aa';
+  do $$
+  declare v_desc text; v_fuente text; v_ref text;
+  begin
+    select estado into v_desc   from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'descripcion';
+    select estado into v_fuente from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'fuente';
+    select estado into v_ref    from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'referente';
+    if v_desc   <> 'sin_revisar' then raise exception 'FALLO 71a: editar descripcion no reseteó su semáforo (estado=%)', v_desc; end if;
+    if v_fuente <> 'verificado'  then raise exception 'FALLO 71b: editar descripcion tumbó el semáforo de fuente (estado=%)', v_fuente; end if;
+    if v_ref    <> 'verificado'  then raise exception 'FALLO 71c: editar descripcion tumbó el semáforo de referente (estado=%)', v_ref; end if;
+  end $$;
+
+  -- (b) Un dato de contacto (contacto_whatsapp) pertenece al campo 'referente' → lo resetea.
+  update public.casos set contacto_whatsapp = '+58 424 1111111' where id = '00000000-0000-0000-0000-0000000183aa';
+  do $$
+  declare v_ref text;
+  begin
+    select estado into v_ref from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'referente';
+    if v_ref <> 'sin_revisar' then raise exception 'FALLO 71d: editar contacto_whatsapp no reseteó el campo referente (estado=%)', v_ref; end if;
+  end $$;
+
+  -- (c) Un cambio en una columna que NO mapea a ningún campo (titulo) no resetea nada.
+  update public.casos set titulo = '_TEST_reset (renombrado)' where id = '00000000-0000-0000-0000-0000000183aa';
+  do $$
+  declare v_fuente text;
+  begin
+    select estado into v_fuente from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'fuente';
+    if v_fuente <> 'verificado' then raise exception 'FALLO 71e: renombrar el titulo reseteó un campo del semáforo (estado=%)', v_fuente; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
