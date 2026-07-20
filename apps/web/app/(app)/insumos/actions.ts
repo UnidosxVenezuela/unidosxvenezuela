@@ -64,6 +64,33 @@ export async function asignarCentroSolicitud(formData: FormData) {
   redirigirOk('/insumos/' + id, 'Centro de acopio asignado');
 }
 
+// Surtir la entrega DESDE el inventario del centro asignado: descuenta con la RPC atómica
+// registrar_salida (0184) —que bloquea la fila y deja el asiento en la bitácora del centro—
+// y, si se pide, marca la solicitud como entregada. Así «entregar» SÍ mueve inventario
+// (antes se cerraba la solicitud sin descontar). La RPC exige puede_gestionar_acopio, que
+// cubre a Logística. El motivo enlaza el asiento con la solicitud de origen.
+export async function surtirDesdeCentro(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const puntoId = String(formData.get('punto_id') ?? '').trim();
+  const itemId = String(formData.get('item_id') ?? '').trim();
+  const cantidad = Number(String(formData.get('cantidad') ?? '').replace(',', '.'));
+  const marcarEntregada = String(formData.get('marcar_entregada') ?? '') === '1';
+  if (!puntoId || !itemId) throw new Error('Elige el centro y el producto a surtir.');
+  if (!Number.isFinite(cantidad) || cantidad <= 0) throw new Error('Indica cuánto se surte.');
+  const { data: sol } = await supabase.from('solicitudes_insumo').select('titulo').eq('id', id).maybeSingle();
+  const ref = ((sol as any)?.titulo ? 'Entrega — ' + (sol as any).titulo : 'Entrega de solicitud') + ' (sol. ' + id.slice(0, 8) + ')';
+  const { error } = await supabase.rpc('registrar_salida', {
+    p_punto: puntoId, p_item: itemId, p_cantidad: cantidad, p_motivo: ref,
+  });
+  if (error) throw new Error('No se pudo surtir del inventario: ' + error.message);
+  if (marcarEntregada) {
+    await supabase.from('solicitudes_insumo').update({ estado: 'entregado', actualizado_en: new Date().toISOString() }).eq('id', id);
+  }
+  revalidatePath('/insumos/' + id); revalidatePath('/acopio/' + puntoId);
+  redirigirOk('/insumos/' + id, 'Surtido del inventario' + (marcarEntregada ? ' · solicitud entregada' : ''));
+}
+
 // Evidencia de entrega (Fase 3, paso 6 del flujograma): foto y/o nota que respalda
 // que el recurso llegó. La RLS (solins_update) exige puede_logistica().
 export async function guardarEvidenciaEntrega(formData: FormData) {
