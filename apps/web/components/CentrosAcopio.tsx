@@ -196,6 +196,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
         </div>
         {editando === null && (
           <div className="fila" style={{ gap: 8 }}>
+            <a className="btn" href="/acopio/red" style={{ textDecoration: 'none' }}><Icono nombre="camion" size={16} /> Tablero de red</a>
             <a className="btn" href="/acopio/necesidades" style={{ textDecoration: 'none' }}><Icono nombre="avisos" size={16} /> Panel de necesidades</a>
             <button className="btn btn-primario" onClick={() => abrir('nuevo')}><Icono nombre="mas" /> Nuevo centro</button>
           </div>
