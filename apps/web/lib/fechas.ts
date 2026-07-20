@@ -33,3 +33,21 @@ export function fechaHora(v: string | number | Date | null | undefined): string 
   const p = partesVE(v);
   return p ? `${d2(p.dia)}/${d2(p.mes)}/${p.anio} ${d2(p.hora)}:${d2(p.min)}` : '';
 }
+
+/**
+ * Estado de caducidad de un producto a partir de su fecha de vencimiento (columna `date`,
+ * viene como 'YYYY-MM-DD'). «pronto» = vence dentro de los próximos 30 días. Se compara a
+ * mediodía UTC para no saltar de día por zona horaria. Null si no hay fecha válida.
+ */
+export function estadoVencimiento(v: string | null | undefined):
+  { nivel: 'vencido' | 'pronto' | 'ok'; dias: number } | null {
+  if (!v) return null;
+  const venc = new Date(String(v).slice(0, 10) + 'T12:00:00Z').getTime();
+  if (isNaN(venc)) return null;
+  const n = new Date();
+  const hoy = Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), 12, 0, 0);
+  const dias = Math.round((venc - hoy) / 86_400_000);
+  if (dias < 0) return { nivel: 'vencido', dias };
+  if (dias <= 30) return { nivel: 'pronto', dias };
+  return { nivel: 'ok', dias };
+}

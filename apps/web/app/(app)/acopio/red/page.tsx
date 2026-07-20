@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_URGENCIA } from '@/lib/constantes';
+import { estadoVencimiento, fechaCorta } from '@/lib/fechas';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -46,6 +47,17 @@ export default async function TableroRedPage() {
   const inv = ((invData ?? []) as any[]).filter((r) => r.puntos_acopio?.activo !== false);
   const nec = ((necData ?? []) as any[]).filter((r) => r.puntos_acopio?.activo !== false);
   const centrosActivos = new Set<string>(inv.map((r) => r.punto_id));
+
+  // Próximos a vencer (0186) best-effort: si la columna aún no existe, la consulta vuelve
+  // con error → se ignora y queda vacío (no rompe el tablero). Vencidos + los que vencen
+  // dentro de 30 días, de toda la red, ordenados por fecha más próxima.
+  const { data: vencData } = await supabase.from('inventario_acopio')
+    .select('punto_id, producto, unidad, cantidad, vencimiento, lote, puntos_acopio(nombre, activo)')
+    .not('vencimiento', 'is', null).gt('cantidad', 0).order('vencimiento', { ascending: true }).limit(60);
+  const proximosVencer = ((vencData ?? []) as any[])
+    .filter((r) => r.puntos_acopio?.activo !== false)
+    .map((r) => ({ ...r, ev: estadoVencimiento(r.vencimiento) }))
+    .filter((r) => r.ev && r.ev.nivel !== 'ok');
 
   const mapa = new Map<string, Prod>();
   const get = (producto: string, categoria: string | null) => {
@@ -107,12 +119,39 @@ export default async function TableroRedPage() {
         <div className="fila" style={{ gap: 6 }}>
           {oportunidades.length > 0 && <Pill tono="ok" punto={false}>{oportunidades.length} oportunidades</Pill>}
           {sinCobertura.length > 0 && <Pill tono="critica" punto={false}>{sinCobertura.length} sin cobertura</Pill>}
+          {proximosVencer.length > 0 && <Pill tono="aviso" punto={false}>{proximosVencer.length} por vencer</Pill>}
           <Pill tono="neutra" punto={false}>{centrosActivos.size} centros</Pill>
         </div>
       </div>
 
+      {/* Próximos a vencer (0186): vencidos + los que caducan dentro de 30 días */}
+      {proximosVencer.length > 0 && (
+        <>
+          <h2 className="fila" style={{ gap: 6 }}><Icono nombre="avisos" size={20} /> Próximos a vencer</h2>
+          <p className="muted" style={{ marginTop: 0 }}>Producto vencido o que caduca dentro de 30 días en algún centro. Priorízalo para entregar o traspasar antes de que se pierda.</p>
+          <div className="tarjeta"><div className="tabla-scroll"><table>
+            <thead><tr><th>Producto</th><th>Centro</th><th>Cantidad</th><th>Vence</th><th>Estado</th></tr></thead>
+            <tbody>
+              {proximosVencer.map((r, i) => (
+                <tr key={r.punto_id + ':' + r.producto + ':' + i}>
+                  <td><strong>{r.producto}</strong>{r.lote ? <span className="muted" style={{ fontSize: '.8rem' }}> · lote {r.lote}</span> : null}</td>
+                  <td><Link href={'/acopio/' + r.punto_id}>{r.puntos_acopio?.nombre ?? 'Centro'}</Link></td>
+                  <td>{fmt(r.cantidad)} <span className="muted" style={{ fontSize: '.8rem' }}>{r.unidad ?? ''}</span></td>
+                  <td>{fechaCorta(r.vencimiento)}</td>
+                  <td>
+                    {r.ev.nivel === 'vencido'
+                      ? <Pill tono="critica" punto={false}>Vencido hace {Math.abs(r.ev.dias)} d</Pill>
+                      : <Pill tono="aviso" punto={false}>{r.ev.dias === 0 ? 'Vence hoy' : 'Vence en ' + r.ev.dias + ' d'}</Pill>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table></div></div>
+        </>
+      )}
+
       {/* Oportunidades de traspaso: superávit ↔ déficit */}
-      <h2 className="fila" style={{ gap: 6 }}><Icono nombre="camion" size={20} /> Oportunidades de traspaso</h2>
+      <h2 className="fila" style={{ gap: 6, marginTop: 18 }}><Icono nombre="camion" size={20} /> Oportunidades de traspaso</h2>
       {oportunidades.length === 0 ? (
         <div className="tarjeta vacio"><p className="muted" style={{ marginBottom: 0 }}>
           Ahora mismo no hay un producto que sobre en un centro y falte en otro. Para sugerir traspasos, cada centro debe fijar el <strong>mínimo</strong> de sus productos.
