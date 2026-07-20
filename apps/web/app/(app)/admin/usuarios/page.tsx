@@ -10,6 +10,7 @@ import GestionUsuarioModal from './GestionUsuarioModal';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
 import BotonConfirmar from '@/components/BotonConfirmar';
+import BotonExportar from '@/components/BotonExportar';
 import Avatar from '@/components/Avatar';
 import Pill from '@/components/Pill';
 import PresenciaTag from '@/components/PresenciaTag';
@@ -173,6 +174,14 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
     return esSuper || !objetivoEsAdmin;
   };
 
+  // Reporte CSV de usuarios (con última conexión): respeta los filtros activos y el
+  // alcance (admin general → todos; admin de área → su gente). La descarga se registra.
+  const paramsRep = new URLSearchParams();
+  if (searchParams.q) paramsRep.set('q', searchParams.q);
+  if (searchParams.frol) paramsRep.set('frol', searchParams.frol);
+  if (searchParams.fest) paramsRep.set('fest', searchParams.fest);
+  const csvUsuariosHref = '/admin/usuarios/export' + (paramsRep.toString() ? '?' + paramsRep.toString() : '');
+
   return (
     <div>
       <div className="pagina-cab">
@@ -186,6 +195,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
         </div>
         <div className="fila">
           <BotonActualizar />
+          <BotonExportar etiqueta="Reporte de usuarios" csvHref={csvUsuariosHref} />
           {!area && (
             <>
               <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
