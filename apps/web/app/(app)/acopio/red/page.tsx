@@ -16,7 +16,7 @@ const fmt = (n: any) => { const x = Number(n); return Number.isInteger(x) ? Stri
 const norm = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 
 type Centro = { punto_id: string; nombre: string };
-type Excedente = Centro & { excedente: number; unidad: string | null };
+type Excedente = Centro & { excedente: number; unidad: string | null; producto: string };
 type Falta = Centro & { falta: number; necesidad: boolean; urgencia: string | null };
 type Prod = {
   clave: string; nombre: string; categoria: string | null; unidades: Set<string>;
@@ -63,7 +63,7 @@ export default async function TableroRedPage() {
     p.total += cant; p.centros += 1;
     if (r.unidad) p.unidades.add(r.unidad);
     const nombre = r.puntos_acopio?.nombre ?? 'Centro';
-    if (min > 0 && cant > min) p.superavit.push({ punto_id: r.punto_id, nombre, excedente: cant - min, unidad: r.unidad ?? null });
+    if (min > 0 && cant > min) p.superavit.push({ punto_id: r.punto_id, nombre, excedente: cant - min, unidad: r.unidad ?? null, producto: r.producto });
     else if (min > 0 && cant < min) p.deficit.push({ punto_id: r.punto_id, nombre, falta: min - cant, necesidad: false, urgencia: null });
   }
   // Necesidades explícitas → déficit (aunque el centro no tenga fila de inventario).
@@ -149,9 +149,25 @@ export default async function TableroRedPage() {
                   </div>
                 ))}
               </div>
-              <div className="muted" style={{ fontSize: '.82rem', borderTop: '1px dashed var(--borde)', paddingTop: 8 }}>
-                Sugerencia: mover de <strong>{p.superavit[0]?.nombre}</strong> → <strong>{p.deficit[0]?.nombre}</strong>. Pídelo desde el centro que recibe.
-              </div>
+              {(() => {
+                // Emparejador: precarga el traspaso directo desde el mayor excedente hacia el
+                // primer centro en déficit que NO sea el mismo (la RPC exige origen ≠ destino).
+                const top = p.superavit[0];
+                const need = p.deficit.find((d) => d.punto_id !== top?.punto_id);
+                if (!top || !need) return null;
+                const sug = Math.min(top.excedente, need.falta > 0 ? need.falta : top.excedente);
+                const href = `/acopio/${top.punto_id}?tr_producto=${encodeURIComponent(top.producto)}&tr_destino=${need.punto_id}&tr_cant=${sug}#traspasar`;
+                return (
+                  <div style={{ borderTop: '1px dashed var(--borde)', paddingTop: 10 }}>
+                    <Link href={href} className="btn btn-acento" style={{ width: '100%', justifyContent: 'center' }}>
+                      <Icono nombre="camion" size={16} /> Preparar traspaso
+                    </Link>
+                    <div className="muted" style={{ fontSize: '.8rem', marginTop: 6, textAlign: 'center' }}>
+                      {top.nombre} → {need.nombre} · sugerido {fmt(sug)}{uni(p) ? ' ' + uni(p) : ''}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>

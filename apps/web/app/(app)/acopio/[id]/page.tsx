@@ -30,7 +30,7 @@ const MOV: Record<string, { etiqueta: string; signo: '+' | '−' | '='; clase: s
   ajuste:           { etiqueta: 'Ajuste',             signo: '=', clase: 'neutra' },
 };
 
-export default async function CentroAcopioPage({ params, searchParams }: { params: { id: string }; searchParams: { q?: string } }) {
+export default async function CentroAcopioPage({ params, searchParams }: { params: { id: string }; searchParams: { q?: string; tr_producto?: string; tr_destino?: string; tr_cant?: string } }) {
   const { perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
@@ -72,6 +72,16 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
   const esBajo = (i: any) => Number(i.minimo) > 0 && Number(i.cantidad) <= Number(i.minimo);
   const bajoStock = inventarioAll.filter(esBajo);
 
+  // Emparejador del Tablero de red: precarga el formulario de traspaso (producto/destino/
+  // cantidad) al llegar con ?tr_producto&tr_destino&tr_cant. Solo se aceptan valores
+  // válidos para ESTE centro (un producto que existe aquí y un destino real distinto).
+  const trProductoPre = inventarioAll.some((it) => it.producto === searchParams.tr_producto) ? String(searchParams.tr_producto) : '';
+  const trDestinoPre = otrosCentros.some((c) => c.id === searchParams.tr_destino) ? String(searchParams.tr_destino) : '';
+  const trCantNum = Number(searchParams.tr_cant);
+  const trCantPre = Number.isFinite(trCantNum) && trCantNum > 0 ? trCantNum : 1;
+  const traspasoPrecargado = !!(trProductoPre || trDestinoPre);
+  const puedeTraspasar = gestor && inventarioAll.length > 0 && otrosCentros.length > 0;
+
   // QR que abre ESTE inventario en el teléfono.
   const host = headers().get('host') || 'unidosxvnezuela.com';
   const proto = host.includes('localhost') ? 'http' : 'https';
@@ -106,6 +116,14 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
           </div>
         )}
       </div>
+
+      {traspasoPrecargado && !puedeTraspasar && (
+        <div className="tarjeta" style={{ marginBottom: 12, boxShadow: '0 0 0 2px rgba(37, 99, 235, .2)' }}>
+          <p className="muted" style={{ margin: 0, fontSize: '.9rem' }}>
+            Llegaste desde el <strong>Tablero de red</strong> para preparar un traspaso, pero {gestor ? 'aquí no hay productos u otros centros de destino disponibles' : 'no gestionas este centro'}. Pídelo como <strong>solicitud</strong> desde tu propio centro, o que lo haga Logística.
+          </p>
+        </div>
+      )}
 
       <div className="grupo-grid">
         <div className="grupo-main">
@@ -201,25 +219,26 @@ export default async function CentroAcopioPage({ params, searchParams }: { param
             )}
           </div>
 
-          {gestor && inventarioAll.length > 0 && otrosCentros.length > 0 && (
-            <div className="tarjeta" style={{ marginTop: 10 }}>
+          {puedeTraspasar && (
+            <div id="traspasar" className="tarjeta" style={{ marginTop: 10, scrollMarginTop: 80, ...(traspasoPrecargado ? { boxShadow: '0 0 0 2px rgba(37, 99, 235, .35)' } : {}) }}>
               <h3 className="aside-titulo" style={{ marginTop: 0 }}><Icono nombre="enlace" size={16} /> Traspasar a otro centro</h3>
+              {traspasoPrecargado && <p className="muted" style={{ fontSize: '.8rem', marginTop: 0 }}>Precargado desde el <strong>Tablero de red</strong>. Revisa la cantidad y confirma.</p>}
               <form action={traspasarStock}>
                 <input type="hidden" name="punto_id" value={id} />
                 <div className="grid grid-2">
                   <div className="campo"><label>Producto</label>
-                    <select name="producto" className="input" required defaultValue="">
+                    <select name="producto" className="input" required defaultValue={trProductoPre}>
                       <option value="" disabled>Elige…</option>
                       {inventarioAll.map((it) => <option key={it.id} value={it.producto}>{it.producto} ({fmt(it.cantidad)} {it.unidad || ''})</option>)}
                     </select>
                   </div>
                   <div className="campo"><label>Centro de destino</label>
-                    <select name="destino" className="input" required defaultValue="">
+                    <select name="destino" className="input" required defaultValue={trDestinoPre}>
                       <option value="" disabled>Elige…</option>
                       {otrosCentros.map((c) => <option key={c.id} value={c.id}>{c.nombre}{c.activo ? '' : ' (inactivo)'}</option>)}
                     </select>
                   </div>
-                  <div className="campo"><label>Cantidad</label><input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={1} /></div>
+                  <div className="campo"><label>Cantidad</label><input name="cantidad" className="input" type="number" min={0} step="any" defaultValue={traspasoPrecargado ? trCantPre : 1} /></div>
                   <div className="campo"><label>Nota (opcional)</label><input name="nota" className="input" placeholder="motivo del traspaso" /></div>
                 </div>
                 <button className="btn btn-primario" type="submit" style={{ width: '100%' }}><Icono nombre="enlace" size={16} /> Traspasar</button>
