@@ -13,7 +13,7 @@ import Icono from '@/components/Icono';
  */
 export default function BotonExportar(
   { csvHref, imprimirHref, etiqueta = 'Exportar' }:
-  { csvHref: string; imprimirHref: string; etiqueta?: string },
+  { csvHref: string; imprimirHref?: string; etiqueta?: string },
 ) {
   const [abierto, setAbierto] = useState(false);
   const [acepto, setAcepto] = useState(false);
@@ -60,9 +60,11 @@ export default function BotonExportar(
             </label>
             <div className="fila" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
               <button type="button" className="btn" onClick={cerrar}>Cancelar</button>
-              <button type="button" className="btn" disabled={!acepto} onClick={() => ir(imprimirHref)}>
-                <Icono nombre="documento" size={16} /> Versión imprimible (PDF)
-              </button>
+              {imprimirHref && (
+                <button type="button" className="btn" disabled={!acepto} onClick={() => ir(imprimirHref)}>
+                  <Icono nombre="documento" size={16} /> Versión imprimible (PDF)
+                </button>
+              )}
               <button type="button" className="btn btn-primario" disabled={!acepto} onClick={() => ir(csvHref)}>
                 <Icono nombre="documento" size={16} /> Descargar CSV
               </button>
