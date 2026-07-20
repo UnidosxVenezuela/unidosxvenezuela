@@ -69,24 +69,18 @@ export async function registrarDonacion(formData: FormData) {
   rev(puntoId);
 }
 
-/** Registra una SALIDA / consumo (descuenta y deja asiento). Solo gestores. */
+/** Registra una SALIDA / consumo. RPC atómica: bloquea la fila, descuenta (con
+ *  clamp a lo disponible) y deja el asiento 'salida' en la misma transacción. */
 export async function registrarSalida(formData: FormData) {
   const puntoId = txt(formData.get('punto_id'));
-  const { supabase, user } = await ctx(puntoId);
-  const id = txt(formData.get('item_id'));
+  const { supabase } = await ctx(puntoId);
   const cant = Math.max(0, num(formData.get('cantidad')));
   if (cant <= 0) throw new Error('Indica cuánto sale.');
-  const { data: it } = await supabase.from('inventario_acopio').select('producto, cantidad, unidad').eq('id', id).single();
-  if (!it) throw new Error('Producto no encontrado.');
-  const salida = Math.min(cant, Number(it.cantidad || 0));
-  const nueva = Math.max(0, Number(it.cantidad || 0) - salida);
-  const { error } = await supabase.from('inventario_acopio')
-    .update({ cantidad: nueva, actualizado_por: user.id, actualizado_en: new Date().toISOString() }).eq('id', id);
-  if (error) throw new Error('No se pudo registrar la salida: ' + error.message);
-  await supabase.from('movimientos_acopio').insert({
-    punto_id: puntoId, item_id: id, producto: it.producto, tipo: 'salida',
-    cantidad: salida, unidad: it.unidad, nota: opt(formData.get('motivo')), actor_id: user.id,
+  const { error } = await supabase.rpc('registrar_salida', {
+    p_punto: puntoId, p_item: txt(formData.get('item_id')),
+    p_cantidad: cant, p_motivo: opt(formData.get('motivo')),
   });
+  if (error) throw new Error('No se pudo registrar la salida: ' + error.message);
   rev(puntoId);
 }
 
@@ -239,35 +233,40 @@ export async function fijarMinimo(formData: FormData) {
   rev(puntoId);
 }
 
-/** Ajusta la cantidad por un delta (+/-), sin bajar de 0. Corrección rápida
- *  (no deja asiento en la bitácora; para eso están Ingresar/Salida/Traspaso). */
+/** Ajusta la cantidad por un delta (+/-), sin bajar de 0. RPC atómica: bloquea la
+ *  fila y AHORA SÍ deja un asiento 'ajuste' con el delta aplicado (ledger fiel). */
 export async function ajustarCantidad(formData: FormData) {
   const puntoId = txt(formData.get('punto_id'));
-  const { supabase, user } = await ctx(puntoId);
-  const id = txt(formData.get('item_id'));
-  const { data: it } = await supabase.from('inventario_acopio').select('cantidad').eq('id', id).single();
-  const nueva = Math.max(0, Number(it?.cantidad ?? 0) + num(formData.get('delta')));
-  const { error } = await supabase.from('inventario_acopio')
-    .update({ cantidad: nueva, actualizado_por: user.id, actualizado_en: new Date().toISOString() }).eq('id', id);
+  const { supabase } = await ctx(puntoId);
+  const { error } = await supabase.rpc('ajustar_stock', {
+    p_punto: puntoId, p_item: txt(formData.get('item_id')),
+    p_delta: num(formData.get('delta')), p_nota: opt(formData.get('motivo')),
+  });
   if (error) throw new Error('No se pudo ajustar: ' + error.message);
   rev(puntoId);
 }
 
-/** Fija la cantidad exacta (conteo físico). Solo gestores. */
+/** Fija la cantidad exacta (conteo físico). RPC atómica: bloquea la fila y deja un
+ *  asiento 'ajuste' con la corrección aplicada (vieja → nueva). Solo gestores. */
 export async function fijarCantidad(formData: FormData) {
   const puntoId = txt(formData.get('punto_id'));
-  const { supabase, user } = await ctx(puntoId);
-  const { error } = await supabase.from('inventario_acopio')
-    .update({ cantidad: Math.max(0, num(formData.get('cantidad'))), actualizado_por: user.id, actualizado_en: new Date().toISOString() })
-    .eq('id', txt(formData.get('item_id')));
+  const { supabase } = await ctx(puntoId);
+  const { error } = await supabase.rpc('fijar_stock', {
+    p_punto: puntoId, p_item: txt(formData.get('item_id')),
+    p_cantidad: Math.max(0, num(formData.get('cantidad'))), p_nota: opt(formData.get('motivo')),
+  });
   if (error) throw new Error('No se pudo guardar: ' + error.message);
   rev(puntoId);
 }
 
+/** Elimina un producto. RPC atómica: si tenía stock, deja un asiento 'ajuste' de baja
+ *  en la bitácora (sobrevive con item_id null) antes de borrar el item. Solo gestores. */
 export async function eliminarProducto(formData: FormData) {
   const puntoId = txt(formData.get('punto_id'));
   const { supabase } = await ctx(puntoId);
-  const { error } = await supabase.from('inventario_acopio').delete().eq('id', txt(formData.get('item_id')));
+  const { error } = await supabase.rpc('eliminar_producto_acopio', {
+    p_punto: puntoId, p_item: txt(formData.get('item_id')), p_nota: null,
+  });
   if (error) throw new Error('No se pudo eliminar: ' + error.message);
   rev(puntoId);
 }
