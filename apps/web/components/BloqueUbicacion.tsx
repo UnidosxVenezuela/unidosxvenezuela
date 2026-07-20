@@ -1,5 +1,6 @@
 'use client';
 import Icono from '@/components/Icono';
+import { NOMBRES_ESTADOS_VE } from '@/lib/constantes';
 
 type Defaults = {
   estado?: string | null; municipio?: string | null; parroquia?: string | null;
@@ -18,6 +19,11 @@ type Defaults = {
  * presentes, sin borrar lo ya cargado al editar desde formularios reducidos.
  */
 export default function BloqueUbicacion({ defaults = {}, exigir = false }: { defaults?: Defaults; exigir?: boolean }) {
+  // El «Estado» es un desplegable con la lista canónica de Venezuela; si un caso viejo trae
+  // un valor de texto libre fuera de la lista, se conserva como opción «(actual)» para no
+  // perderlo al editar.
+  const estadoActual = defaults.estado ?? '';
+  const estadoLegado = estadoActual && !NOMBRES_ESTADOS_VE.includes(estadoActual) ? estadoActual : null;
   return (
     <div className="tarjeta" style={{ marginBottom: 12 }}>
       <input type="hidden" name="_datos_estructurados" value="1" />
@@ -28,8 +34,12 @@ export default function BloqueUbicacion({ defaults = {}, exigir = false }: { def
       <div className="grid grid-2">
         <div className="campo">
           <label htmlFor="ubicacion_estado">Estado{exigir ? ' *' : ''}</label>
-          <input id="ubicacion_estado" name="ubicacion_estado" className="input" maxLength={80} required={exigir}
-            defaultValue={defaults.estado ?? ''} placeholder="La Guaira, Carabobo…" />
+          <select id="ubicacion_estado" name="ubicacion_estado" className="input" required={exigir}
+            defaultValue={estadoActual}>
+            <option value="">— Selecciona el estado —</option>
+            {NOMBRES_ESTADOS_VE.map((n) => <option key={n} value={n}>{n}</option>)}
+            {estadoLegado && <option value={estadoLegado}>{estadoLegado} (actual)</option>}
+          </select>
         </div>
         <div className="campo">
           <label htmlFor="ubicacion_municipio">Municipio</label>
