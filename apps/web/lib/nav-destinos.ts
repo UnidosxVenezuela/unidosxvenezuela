@@ -36,9 +36,10 @@ export function destinosNav(flags: NavFlags): Destino[] {
   }
   if (flags.aliados) d.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) d.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
-  // Departamento de Alianzas Estratégicas (0198): Captación + Afiliación (Prospección: Fase 2).
-  // Captación ya NO cuelga del menú de «Logística»: vive bajo su departamento.
-  if (flags.captacion) d.push({ href: '/captacion', etiqueta: 'Captación', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
+  // Departamento de Alianzas Estratégicas (0198/0199): el registro «Captado» (Captación +
+  // Prospección de empresas, con Ficha de Prospección) y Afiliación. Captación ya NO cuelga
+  // del menú de «Logística»: vive bajo su departamento.
+  if (flags.captacion || flags.prospeccion) d.push({ href: '/captacion', etiqueta: 'Captación y Prospección', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
   if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
