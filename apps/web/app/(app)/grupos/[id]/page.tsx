@@ -18,7 +18,7 @@ import PresenciaTag from '@/components/PresenciaTag';
 import Bandera from '@/components/Bandera';
 import DisponibilidadHover from '@/components/DisponibilidadHover';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, nombrarCoordinador, quitarCoordinador, guardarWhatsappGrupo, guardarDescripcionGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, nombrarCoordinador, quitarCoordinador, cambiarRolAreaMiembro, guardarWhatsappGrupo, guardarDescripcionGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -419,6 +419,28 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                             </form>
                           )
                         )}
+                        {/* Rol de área: pasar un voluntario al rol operativo del grupo (o devolverlo a voluntario). */}
+                        {rolDelGrupo && (rolDelGrupo as string) !== 'apoyo_psicosocial' && esAsignable(m) && (() => {
+                          const tieneExtra = ((m.perfiles?.roles_extra ?? []) as string[]).includes(rolDelGrupo as string);
+                          const tieneBase = m.perfiles?.rol === rolDelGrupo;
+                          if (tieneExtra) return (
+                            <form action={cambiarRolAreaMiembro}>
+                              <input type="hidden" name="grupo_id" value={grupoId} />
+                              <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                              <input type="hidden" name="otorgar" value="0" />
+                              <button className="btn" style={{ minHeight: 36, padding: '4px 10px' }} title="Devolver a voluntario: sigue en el grupo, sin el rol operativo.">Quitar rol de {ETIQUETA_ROL[rolDelGrupo as Rol]}</button>
+                            </form>
+                          );
+                          if (!tieneBase) return (
+                            <form action={cambiarRolAreaMiembro}>
+                              <input type="hidden" name="grupo_id" value={grupoId} />
+                              <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                              <input type="hidden" name="otorgar" value="1" />
+                              <button className="btn btn-primario" style={{ minHeight: 36, padding: '4px 10px' }} title={'Dar el rol de ' + ETIQUETA_ROL[rolDelGrupo as Rol] + ' a esta persona para que opere en el área.'}>Dar rol de {ETIQUETA_ROL[rolDelGrupo as Rol]}</button>
+                            </form>
+                          );
+                          return null;
+                        })()}
                         <form action={quitarMiembro}>
                           <input type="hidden" name="grupo_id" value={grupoId} />
                           <input type="hidden" name="perfil_id" value={m.perfil_id} />
@@ -543,7 +565,7 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                 </form>
               )}
               <p className="muted" style={{ margin: '10px 0 0', fontSize: '.8rem', borderTop: '1px solid var(--borde)', paddingTop: 8 }}>
-                Un grupo tiene <strong>un líder</strong>, pero puede sumar <strong>varios co-líderes</strong> (coordinadores) desde la tabla de miembros: comparten la gestión (tareas, altas de usuarios, verificación, edición del grupo y anuncios).
+                Un grupo tiene <strong>un líder</strong>, pero puede sumar <strong>varios co-líderes</strong> (coordinadores) desde la tabla de miembros: comparten la gestión (tareas, altas de usuarios, verificación, edición del grupo y anuncios). El líder y los co-líderes también pueden <strong>dar el rol del área</strong> a un voluntario (o devolverlo a voluntario) desde su fila.
               </p>
             </div>
 

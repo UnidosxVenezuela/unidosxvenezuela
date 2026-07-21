@@ -313,6 +313,33 @@ export async function asignarRolesContenido(formData: FormData) {
   redirigirOk('/grupos/' + grupoId, 'Roles de contenido actualizados');
 }
 
+// El líder/coordinador (o admin) del grupo otorga o retira el ROL DE ÁREA del grupo
+// a uno de sus miembros: pasa a un voluntario al rol operativo (para que opere), o lo
+// devuelve a voluntario. Todas las barreras las impone la RPC cambiar_rol_area_miembro
+// (0191): solo el rol funcional del grupo, solo miembros gestionables, nunca roles
+// sensibles; al quitar el rol el miembro NO sale del grupo.
+export async function cambiarRolAreaMiembro(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
+  const otorgar = String(formData.get('otorgar')) === '1';
+  const { error } = await supabase.rpc('cambiar_rol_area_miembro', { p_grupo: grupoId, p_perfil: perfilId, p_otorgar: otorgar });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (error.code === 'PGRST202' || /cambiar_rol_area_miembro|schema cache|no existe la funci/.test(m)) {
+      return redirigirError('/grupos/' + grupoId, 'Aún no disponible (falta aplicar la migración 0191).');
+    }
+    return redirigirError('/grupos/' + grupoId, 'No se pudo cambiar el rol: ' + error.message);
+  }
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'cambio_rol_area', p_entidad_id: perfilId, p_metadata: { grupo: grupoId, otorgar, via: 'grupo' },
+  });
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, otorgar ? 'Rol de área otorgado' : 'Rol de área retirado (queda como voluntario)');
+}
+
 // Eliminar un grupo: SOLO administradores (la RLS 0049 también lo exige). Borra
 // el grupo y su contenido en cascada; las tareas se conservan sin grupo.
 export async function eliminarGrupo(formData: FormData) {
