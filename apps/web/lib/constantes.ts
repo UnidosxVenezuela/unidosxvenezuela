@@ -949,3 +949,25 @@ export const CARGOS_AFILIACION: string[] = [
   'Ingeniero/a', 'Abogado/a', 'Comunicador/a', 'Diseñador/a', 'Traductor/a',
   'Chofer / Transporte', 'Logística', 'Cocina', 'Voluntario/a general',
 ];
+
+// ── Ficha de Prospección (0199) ──
+// 2ª verificación campo por campo (coincide con campos_requeridos_prospeccion() en SQL).
+export const CAMPOS_VERIF_FICHA: { key: string; etiqueta: string }[] = [
+  { key: 'identidad',     etiqueta: 'Identidad de la empresa (nombre, rubro, dirección)' },
+  { key: 'responsable',   etiqueta: 'Responsable de la alianza y su contacto' },
+  { key: 'capacidad',     etiqueta: 'Capacidades y recursos (volumen, transporte, logística)' },
+  { key: 'condiciones',   etiqueta: 'Restricciones, horarios y condiciones' },
+  { key: 'confiabilidad', etiqueta: 'Confiabilidad (score y antecedentes)' },
+];
+export const RUBROS_PROSPECCION: string[] = [
+  'Alimentación', 'Tecnología', 'Banca', 'Salud', 'Educación', 'Comercio',
+  'Transporte', 'Construcción', 'Fundación', 'Iglesia', 'Organización', 'Otro',
+];
+/** Score de confiabilidad de la empresa (1-5). */
+export const SCORE_CONFIABILIDAD: { valor: number; etiqueta: string }[] = [
+  { valor: 5, etiqueta: '5 · Muy confiable' },
+  { valor: 4, etiqueta: '4 · Confiable' },
+  { valor: 3, etiqueta: '3 · Aceptable' },
+  { valor: 2, etiqueta: '2 · Dudosa' },
+  { valor: 1, etiqueta: '1 · No confiable' },
+];

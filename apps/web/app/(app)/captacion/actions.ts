@@ -1,8 +1,10 @@
 'use server';
-// Captación de Oportunidades (0129): crear/editar/mover/eliminar tarjetas de
-// oportunidades. Lo gestionan el admin general y el rol 'captacion'. El archivo
-// (foto/adjunto) va a un bucket privado con RLS. La autorización real la impone
-// la RLS (puede_captacion); aquí se valida en la acción para dar buen error.
+// Captación de Oportunidades (0129) · Departamento de Alianzas Estratégicas (0198/0199):
+// crear/editar/mover/eliminar tarjetas de oportunidades. Es el registro «Captado» que
+// alimentan Prospección y Captación. Lo gestiona todo el departamento (admin general +
+// captación + prospección + afiliación). El archivo (foto/adjunto) va a un bucket privado
+// con RLS. La autorización real la impone la RLS (puede_alianzas); aquí se valida en la
+// acción para dar buen error.
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -13,9 +15,17 @@ import type { Rol } from '@unidos/types';
 
 const CATS = ['fundacion', 'organizacion', 'empresa', 'proyecto', 'alianza'];
 const ESTADOS = ['investigacion', 'verificado', 'enviado'];
+const ORIGENES = ['prospeccion', 'captacion'];
 
 function txt(v: FormDataEntryValue | null | undefined) { return String(v ?? '').trim(); }
 function opt(v: FormDataEntryValue | null | undefined) { const s = txt(v); return s ? s : null; }
+function bool(v: FormDataEntryValue | null | undefined) { const s = txt(v); return s === 'on' || s === 'true'; }
+// Entero opcional acotado a [min,max] (score de confiabilidad 1-5); fuera de rango → null.
+function intOpt(v: FormDataEntryValue | null | undefined, min: number, max: number): number | null {
+  const s = txt(v); if (!s) return null;
+  const n = parseInt(s, 10);
+  return Number.isNaN(n) || n < min || n > max ? null : n;
+}
 // Normaliza el enlace: si no trae esquema, se asume https (se muestra solo si es https).
 function enlaceOpt(v: FormDataEntryValue | null | undefined) {
   let s = txt(v); if (!s) return null;
@@ -23,13 +33,37 @@ function enlaceOpt(v: FormDataEntryValue | null | undefined) {
   return s.slice(0, 500);
 }
 
-async function exigirCaptacion() {
+// Campos de la Ficha de Prospección (0199): datos de empresa para el «Captado». Todos
+// opcionales — el CRM simple de Captación sigue funcionando sin llenarlos. El candado de
+// la 2ª verificación solo se activa si la ficha se está usando (ver guardar_prospeccion).
+function fichaCampos(formData: FormData): Record<string, any> {
+  const origen = txt(formData.get('origen'));
+  return {
+    rubro: opt(formData.get('rubro')),
+    direccion: opt(formData.get('direccion')),
+    responsable_nombre: opt(formData.get('responsable_nombre')),
+    responsable_telefono: opt(formData.get('responsable_telefono')),
+    responsable_cargo: opt(formData.get('responsable_cargo')),
+    contactos_operativos: opt(formData.get('contactos_operativos')),
+    contactos_alternos: opt(formData.get('contactos_alternos')),
+    capacidades: opt(formData.get('capacidades')),
+    volumen: opt(formData.get('volumen')),
+    transporte: bool(formData.get('transporte')),
+    logistica_entrega: opt(formData.get('logistica_entrega')),
+    restricciones: opt(formData.get('restricciones')),
+    score_confiabilidad: intOpt(formData.get('score_confiabilidad'), 1, 5),
+    origen: ORIGENES.includes(origen) ? origen : null,
+  };
+}
+
+async function exigirAlianzas() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin') && !roles.includes('captacion')) throw new Error('No tienes permiso para gestionar oportunidades.');
+  if (!(['admin', 'captacion', 'prospeccion', 'afiliacion'] as Rol[]).some((r) => roles.includes(r)))
+    throw new Error('No tienes permiso para gestionar oportunidades.');
   return { supabase, user };
 }
 
@@ -38,7 +72,7 @@ async function exigirCaptacion() {
 // permiso real y es idempotente (si ya existe, devuelve el mismo). Al crearse, el
 // trigger de aviso (0144) notifica a Logística/Verificación.
 export async function crearOfrecimientoDesdeCaptacion(formData: FormData) {
-  const { supabase } = await exigirCaptacion();
+  const { supabase } = await exigirAlianzas();
   const id = txt(formData.get('id'));
   const { data, error } = await supabase.rpc('crear_ofrecimiento_desde_captacion', { p_oportunidad: id });
   if (error) {
@@ -70,7 +104,7 @@ async function subirArchivoOportunidad(supabase: any, id: string, archivo: FormD
 }
 
 export async function crearOportunidad(formData: FormData) {
-  const { supabase, user } = await exigirCaptacion();
+  const { supabase, user } = await exigirAlianzas();
   const categoria = txt(formData.get('categoria'));
   if (!CATS.includes(categoria)) throw new Error('Elige una categoría válida.');
   const titulo = txt(formData.get('titulo')).slice(0, 160);
@@ -84,6 +118,7 @@ export async function crearOportunidad(formData: FormData) {
     enlace: enlaceOpt(formData.get('enlace')),
     ubicacion: opt(formData.get('ubicacion')),
     descripcion: opt(formData.get('descripcion')),
+    ...fichaCampos(formData),
     creado_por: user.id,
   }).select('id').single();
   if (error) throw new Error('No se pudo crear la oportunidad: ' + error.message);
@@ -97,7 +132,7 @@ export async function crearOportunidad(formData: FormData) {
 }
 
 export async function editarOportunidad(formData: FormData) {
-  const { supabase } = await exigirCaptacion();
+  const { supabase } = await exigirAlianzas();
   const id = txt(formData.get('id'));
   if (!id) throw new Error('Falta la oportunidad.');
   const categoria = txt(formData.get('categoria'));
@@ -112,6 +147,7 @@ export async function editarOportunidad(formData: FormData) {
     enlace: enlaceOpt(formData.get('enlace')),
     ubicacion: opt(formData.get('ubicacion')),
     descripcion: opt(formData.get('descripcion')),
+    ...fichaCampos(formData),
     actualizado_en: new Date().toISOString(),
   };
   const ruta = await subirArchivoOportunidad(supabase, id, formData.get('archivo'));
@@ -124,19 +160,50 @@ export async function editarOportunidad(formData: FormData) {
 }
 
 export async function cambiarEstadoOportunidad(formData: FormData) {
-  const { supabase } = await exigirCaptacion();
+  const { supabase } = await exigirAlianzas();
   const id = txt(formData.get('id'));
   const estado = txt(formData.get('estado'));
   const volver = txt(formData.get('volver')) || '/captacion';
   if (!id || !ESTADOS.includes(estado)) throw new Error('Datos no válidos.');
   const { error } = await supabase.from('oportunidades').update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
-  if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
+  if (error) {
+    // El candado 0199 impide «Enviar a Logística» una ficha sin la 2ª verificación.
+    if (error.code === '42501' || /2ª verificaci|verificaci.n de la ficha/i.test(error.message || '')) {
+      return redirigirError(volver, 'Completa la 2ª verificación de la ficha antes de enviar a Logística.');
+    }
+    throw new Error('No se pudo cambiar el estado: ' + error.message);
+  }
   revalidatePath('/captacion'); revalidatePath('/captacion/' + id);
   redirigirOk(volver, 'Estado actualizado a «' + estado + '».');
 }
 
+// 2ª verificación de la Ficha campo por campo (0199): la marca todo el departamento
+// (gate puede_alianzas en la RPC). Cuando los 5 campos requeridos quedan en verde, la
+// ficha queda «Verificada» y puede enviarse a Logística.
+export async function marcarCampoVerifProspeccion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('oportunidad_id'));
+  const campo = txt(formData.get('campo'));
+  const estado = txt(formData.get('estado'));
+  const volver = opt(formData.get('volver')) || ('/captacion/' + id);
+  const { error } = await supabase.rpc('marcar_campo_verif_prospeccion', {
+    p_oportunidad: id, p_campo: campo, p_estado: estado, p_nota: txt(formData.get('nota')).slice(0, 500) || null,
+  });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (error.code === 'PGRST202' || /marcar_campo_verif_prospeccion|schema cache|no existe la funci/.test(m)) {
+      return redirigirError(volver, 'Aún no disponible (falta aplicar la migración 0199).');
+    }
+    return redirigirError(volver, 'No se pudo verificar el campo: ' + error.message);
+  }
+  revalidatePath('/captacion'); revalidatePath('/captacion/' + id);
+  redirigirOk(volver, 'Verificación del campo actualizada.');
+}
+
 export async function eliminarOportunidad(formData: FormData) {
-  const { supabase } = await exigirCaptacion();
+  const { supabase } = await exigirAlianzas();
   const id = txt(formData.get('id'));
   if (!id) throw new Error('Falta la oportunidad.');
   const { data: o } = await supabase.from('oportunidades').select('archivo_path').eq('id', id).maybeSingle();

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeAlianzas } from '@/lib/auth';
 import Icono from '@/components/Icono';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import BotonEnviar from '@/components/BotonEnviar';
@@ -9,7 +9,7 @@ import { crearOportunidad } from '../actions';
 
 export default async function NuevaOportunidadPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeCaptacion(perfil)) redirect('/dashboard');
+  if (!puedeAlianzas(perfil)) redirect('/dashboard');
   return (
     <AnimarEntrada>
       <Link href="/captacion" className="muted">← Captación</Link>

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeCaptacion } from '@/lib/auth';
+import { requireUsuario, puedeAlianzas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { urlFirmada } from '@/lib/storage';
+import { nombreMostrado } from '@/lib/nombre';
 import { hrefSeguro } from '@/lib/constantes';
 import {
   CATEGORIAS_OPORTUNIDAD, ETIQUETA_CATEGORIA_OPORTUNIDAD, TONO_CATEGORIA_OPORTUNIDAD,
@@ -25,17 +26,23 @@ const esImagen = (p?: string | null) => !!p && /\.(jpe?g|png|webp|gif|avif)$/i.t
 
 export default async function CaptacionPage({ searchParams }: { searchParams: { cat?: string } }) {
   const { perfil } = await requireUsuario();
-  if (!puedeCaptacion(perfil)) redirect('/dashboard');
+  if (!puedeAlianzas(perfil)) redirect('/dashboard');
+  const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
 
   const cat = (searchParams.cat ?? '').trim();
   const filtro = CATEGORIAS_OPORTUNIDAD.includes(cat as any) ? cat : null;
 
-  let q = supabase.from('oportunidades')
-    .select('id, categoria, estado, titulo, contacto, enlace, ubicacion, descripcion, archivo_path, creado_en, actualizado_en')
-    .order('actualizado_en', { ascending: false }).limit(400);
-  if (filtro) q = q.eq('categoria', filtro);
-  const { data } = await q;
+  // Se piden también verificado_en/por (0199). Si la migración aún no está aplicada, el
+  // select falla y se reintenta sin esas columnas (degradación elegante: sin métrica de tiempo).
+  const COLS_BASE = 'id, categoria, estado, titulo, contacto, enlace, ubicacion, descripcion, archivo_path, creado_en, actualizado_en';
+  const consultar = (cols: string) => {
+    let q = supabase.from('oportunidades').select(cols).order('actualizado_en', { ascending: false }).limit(400);
+    if (filtro) q = q.eq('categoria', filtro);
+    return q;
+  };
+  let { data, error } = await consultar(COLS_BASE + ', verificado_en, verificado_por');
+  if (error) ({ data } = await consultar(COLS_BASE));
   const oportunidades = (data ?? []) as any[];
 
   // Firmar las miniaturas (bucket privado) en paralelo.
@@ -50,6 +57,33 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
   const cInv = porEstado('investigacion').length;
   const cVer = porEstado('verificado').length;
   const cEnv = porEstado('enviado').length;
+
+  // ── Tiempo Pendiente → Verificado (sellado por el trigger 0199, verificado_en) ──
+  const DIA = 86400000;
+  const diasA = (o: any): number | null => {
+    if (!o.verificado_en || !o.creado_en) return null;
+    const a = new Date(o.creado_en).getTime(), b = new Date(o.verificado_en).getTime();
+    return Number.isNaN(a) || Number.isNaN(b) ? null : Math.max(0, (b - a) / DIA);
+  };
+  const conTiempo = oportunidades.map(diasA).filter((d): d is number => d != null);
+  const promGlobal = conTiempo.length ? conTiempo.reduce((s, d) => s + d, 0) / conTiempo.length : null;
+  const fmtDias = (d: number) => d < 1 ? 'menos de 1 día' : Math.round(d) + (Math.round(d) === 1 ? ' día' : ' días');
+  // Desglose por persona (quién verifica y en cuánto tiempo, en promedio).
+  const porPersona = new Map<string, { n: number; suma: number }>();
+  oportunidades.forEach((o) => {
+    const d = diasA(o);
+    if (d == null || !o.verificado_por) return;
+    const acc = porPersona.get(o.verificado_por) ?? { n: 0, suma: 0 };
+    acc.n += 1; acc.suma += d; porPersona.set(o.verificado_por, acc);
+  });
+  const nombres = new Map<string, string>();
+  if (porPersona.size) {
+    const { data: perfilesData } = await supabase.from('perfiles').select('id, nombre_completo').in('id', Array.from(porPersona.keys()));
+    ((perfilesData as any[]) ?? []).forEach((p) => nombres.set(p.id, nombreMostrado(p.nombre_completo, esAdmin)));
+  }
+  const filasPersona = Array.from(porPersona.entries())
+    .map(([id, v]) => ({ nombre: nombres.get(id) ?? '—', n: v.n, prom: v.suma / v.n }))
+    .sort((a, b) => a.prom - b.prom);
 
   const Tarjeta = ({ o }: { o: any }) => {
     const url = urls.get(o.id);
@@ -129,12 +163,14 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
         </div>
       </div>
 
-      {/* Tarjetas de estado (resumen del proceso) */}
+      {/* Tablero de indicadores estilo «Verificación»: Pendiente ⚪️ / Verificado 🟠 /
+          Enviado a Logística 🟢, más el tiempo Pendiente→Verificado (sello 0199). */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
         <Kpi etiqueta="Total" valor={total} sub={filtro ? ETIQUETA_CATEGORIA_OPORTUNIDAD[filtro as keyof typeof ETIQUETA_CATEGORIA_OPORTUNIDAD] : 'Todas las oportunidades'} color="var(--azul)" icono="enlace" tinte="#eef2ff" />
-        <Kpi etiqueta="Investigación" valor={cInv} sub="Recién detectadas" color="#a16207" icono="buscar" tinte="#fef9c3" />
-        <Kpi etiqueta="Verificado" valor={cVer} sub="Datos confirmados" color="#16a34a" icono="ok" tinte="#d1fae5" />
-        <Kpi etiqueta="Enviado" valor={cEnv} sub="Contactadas / derivadas" color="var(--azul)" icono="cohete" tinte="#eef2ff" />
+        <Kpi etiqueta="Pendiente ⚪️" valor={cInv} sub="En investigación" color="#a16207" icono="buscar" tinte="#fef9c3" />
+        <Kpi etiqueta="Verificado 🟠" valor={cVer} sub="Datos confirmados" color="#16a34a" icono="ok" tinte="#d1fae5" />
+        <Kpi etiqueta="Enviado a Logística 🟢" valor={cEnv} sub="Contactadas / derivadas" color="var(--azul)" icono="cohete" tinte="#eef2ff" />
+        <Kpi etiqueta="Tiempo a verificado" valor={promGlobal == null ? '—' : fmtDias(promGlobal)} sub={promGlobal == null ? 'Aún sin datos' : 'Promedio Pendiente → Verificado'} color="#0ea5e9" icono="reloj" tinte="#e0f2fe" />
       </div>
 
       {/* Flujo del proceso */}
@@ -144,6 +180,30 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
         { etiqueta: 'Verificado', valor: cVer, icono: 'ok', color: '#16a34a', tinte: '#d1fae5' },
         { etiqueta: 'Enviado', valor: cEnv, icono: 'cohete', color: '#0033A0', tinte: '#eef2ff' },
       ]} />
+
+      {/* Tiempo de verificación por persona (Pendiente → Verificado). */}
+      {filasPersona.length > 0 && (
+        <details className="tarjeta" style={{ margin: '12px 0' }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }} className="fila">
+            <Icono nombre="reloj" size={16} /> Tiempo de verificación por persona
+            <span className="muted" style={{ fontWeight: 400, fontSize: '.82rem' }}>· {conTiempo.length} verificadas</span>
+          </summary>
+          <div style={{ overflowX: 'auto', marginTop: 8 }}>
+            <table className="tabla" style={{ width: '100%' }}>
+              <thead><tr><th>Persona</th><th style={{ textAlign: 'right' }}>Verificadas</th><th style={{ textAlign: 'right' }}>Tiempo promedio</th></tr></thead>
+              <tbody>
+                {filasPersona.map((f, i) => (
+                  <tr key={i}>
+                    <td>{f.nombre}</td>
+                    <td style={{ textAlign: 'right' }}>{f.n}</td>
+                    <td style={{ textAlign: 'right' }}>{fmtDias(f.prom)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      )}
 
       {/* Filtro por categoría */}
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap', margin: '4px 0 14px' }}>
