@@ -18,7 +18,7 @@ import PresenciaTag from '@/components/PresenciaTag';
 import Bandera from '@/components/Bandera';
 import DisponibilidadHover from '@/components/DisponibilidadHover';
 import FijarAnuncio from './FijarAnuncio';
-import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, guardarWhatsappGrupo, guardarDescripcionGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
+import { agregarMiembro, quitarMiembro, asignarLider, quitarLider, nombrarCoordinador, quitarCoordinador, guardarWhatsappGrupo, guardarDescripcionGrupo, programarReunion, desfijarMensaje, banearMiembro, desbanearMiembro, asignarRolesContenido, eliminarGrupo, aprobarSolicitudAlta, rechazarSolicitudAlta } from '../actions';
 
 export default async function GrupoDetallePage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
@@ -403,6 +403,22 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                             <button className="btn" style={{ minHeight: 36, padding: '4px 10px' }}>Hacer líder</button>
                           </form>
                         )}
+                        {/* Co-líder = coordinador (varios por grupo): comparte la gestión con el líder. */}
+                        {grupo.lider_id !== m.perfil_id && (
+                          m.rol_en_grupo === 'coordinador' ? (
+                            <form action={quitarCoordinador}>
+                              <input type="hidden" name="grupo_id" value={grupoId} />
+                              <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                              <button className="btn" style={{ minHeight: 36, padding: '4px 10px' }} title="Quitar el rol de co-líder; sigue en el grupo como miembro.">Quitar co-líder</button>
+                            </form>
+                          ) : (
+                            <form action={nombrarCoordinador}>
+                              <input type="hidden" name="grupo_id" value={grupoId} />
+                              <input type="hidden" name="perfil_id" value={m.perfil_id} />
+                              <button className="btn" style={{ minHeight: 36, padding: '4px 10px' }} title="Nombrar co-líder (coordinador): comparte la gestión del grupo. Se permiten varios.">Hacer co-líder</button>
+                            </form>
+                          )
+                        )}
                         <form action={quitarMiembro}>
                           <input type="hidden" name="grupo_id" value={grupoId} />
                           <input type="hidden" name="perfil_id" value={m.perfil_id} />
@@ -526,6 +542,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
                   <BotonConfirmar mensaje="¿Quitar al líder de este grupo? El grupo quedará sin líder." className="btn btn-peligro" style={{ width: '100%' }}>Quitar líder</BotonConfirmar>
                 </form>
               )}
+              <p className="muted" style={{ margin: '10px 0 0', fontSize: '.8rem', borderTop: '1px solid var(--borde)', paddingTop: 8 }}>
+                Un grupo tiene <strong>un líder</strong>, pero puede sumar <strong>varios co-líderes</strong> (coordinadores) desde la tabla de miembros: comparten la gestión (tareas, altas de usuarios, verificación, edición del grupo y anuncios).
+              </p>
             </div>
 
             {esAdminGeneral(perfil) && (

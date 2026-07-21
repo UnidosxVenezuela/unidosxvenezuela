@@ -256,6 +256,43 @@ export async function quitarLider(formData: FormData) {
   redirigirOk('/grupos/' + grupoId, 'Grupo sin líder');
 }
 
+// ── Co-líderes (coordinadores del grupo) ──
+// El grupo tiene UN líder (columna única `grupos.lider_id`), pero puede tener VARIOS
+// «co-líderes»: el rol de membresía `coordinador`, que ya comparte los poderes de
+// gestión del líder (crear/asignar tareas, dar de alta usuarios, verificación/mando,
+// editar el grupo, anuncios fijados). Así se cubre «más de un líder por grupo» sin
+// tocar el modelo de líder único. La autoría real la impone la RLS de miembros_grupo
+// (0109): admin general/superadmin, o el líder del grupo sobre miembros gestionables.
+export async function nombrarCoordinador(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
+  // Asegura pertenencia y marca el rol de coordinador (co-líder). Se permiten varios
+  // por grupo: no hay índice único sobre 'coordinador' (solo lo hay sobre 'lider').
+  const { error } = await supabase.from('miembros_grupo')
+    .upsert({ grupo_id: grupoId, perfil_id: perfilId, rol_en_grupo: 'coordinador' }, { onConflict: 'grupo_id,perfil_id' });
+  if (error) throw new Error('No se pudo nombrar co-líder: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Co-líder (coordinador) nombrado');
+}
+
+// Baja a un co-líder a miembro normal (no lo saca del grupo). Misma autoría (RLS 0109).
+export async function quitarCoordinador(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const grupoId = String(formData.get('grupo_id'));
+  const perfilId = String(formData.get('perfil_id'));
+  const { error } = await supabase.from('miembros_grupo')
+    .update({ rol_en_grupo: 'miembro' })
+    .eq('grupo_id', grupoId).eq('perfil_id', perfilId).eq('rol_en_grupo', 'coordinador');
+  if (error) throw new Error('No se pudo quitar el co-líder: ' + error.message);
+  revalidatePath('/grupos/' + grupoId);
+  redirigirOk('/grupos/' + grupoId, 'Co-líder retirado');
+}
+
 // Asigna roles ADICIONALES de la cadena de contenido a un miembro (o a uno
 // mismo). La autorización real la hace la función asignar_roles_contenido:
 // coordinación a cualquiera; un líder solo a voluntarios o a sí mismo, y solo
