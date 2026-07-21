@@ -8,6 +8,7 @@ import {
   ETIQUETA_ESTADO_VERIF, ESTADOS_VERIF, claseEstadoVerif,
   ETIQUETA_CLASE_OFERTA, CLASES_OFERTA, EXPLICA_CLASE_OFERTA, ETIQUETA_ORIGEN_OFERTA, ORIGENES_OFERTA,
 } from '@/lib/constantes';
+import { compromisoVencido, edadOfrecimiento, DIAS_COMPROMISO_VENCIDO } from '@/lib/semaforo';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import FlujoProgreso from '@/components/FlujoProgreso';
@@ -81,6 +82,8 @@ export default async function OportunidadesPage({ searchParams }: { searchParams
   const activas = ops.filter((o) => o.estado !== 'descartada');
   const descartadas = ops.filter((o) => o.estado === 'descartada');
   const porEstado = (e: string) => activas.filter((o) => o.estado === e);
+  // Semáforo de vida (0193): compromisos vencidos (comprometidos que no llegan).
+  const vencidos = gestor ? activas.filter(compromisoVencido) : [];
 
   // Donaciones concretadas (solo Logística): se crean al conectar una oferta con una
   // solicitud; aquí se les da seguimiento (estado) y se pueden borrar.
@@ -121,6 +124,24 @@ export default async function OportunidadesPage({ searchParams }: { searchParams
         <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
           <Icono nombre="ojo" size={15} /> Ves <strong>todo el tablero</strong> y puedes abrir cada ofrecimiento para <strong>completar o corregir sus datos</strong>. El <strong>estado</strong> lo avanza Logística y la <strong>verificación</strong> la hace el equipo de Verificación.
         </p>
+      )}
+
+      {/* Semáforo de vida (0193): compromisos vencidos — comprometidos que no llegan */}
+      {gestor && vencidos.length > 0 && (
+        <div className="tarjeta" style={{ borderColor: 'var(--peligro, #fca5a5)', background: 'color-mix(in srgb, var(--peligro, #ef4444) 8%, transparent)', marginTop: 12 }}>
+          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Icono nombre="avisos" size={16} />
+            <strong>{vencidos.length} compromiso{vencidos.length > 1 ? 's' : ''} sin concretar</strong>
+            <span className="muted" style={{ fontSize: '.88rem' }}>— comprometidos hace más de {DIAS_COMPROMISO_VENCIDO} días. Contáctalos y muévelos a <em>Cumplida</em> o <em>Descartada</em>.</span>
+          </div>
+          <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+            {vencidos.slice(0, 10).map((o) => (
+              <Link key={o.id} href={'/insumos/oportunidades/' + o.id} className="btn btn-sm">
+                {o.organizacion}{o.numero != null ? ' · OF-' + String(o.numero).padStart(5, '0') : ''}
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Alta de una oferta: la puede registrar Logística y Recopilación (Captación es solo lectura) */}
@@ -313,7 +334,12 @@ function TarjetaOferta({ o }: { o: any }) {
           {[o.origen ? (ETIQUETA_ORIGEN_OFERTA[o.origen] ?? o.origen) : null, ETIQUETA_TIPO_OFERTA[o.tipo_oferta] ?? o.tipo_oferta].filter(Boolean).join(' · ')}
         </div>
       )}
-      <Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill>
+      <div className="fila" style={{ gap: 4, flexWrap: 'wrap' }}>
+        <Pill tono={tonoDeClase(claseEstadoVerif(o.estado_verificacion))} punto={false}>{ETIQUETA_ESTADO_VERIF[o.estado_verificacion] ?? o.estado_verificacion}</Pill>
+        {/* Semáforo de vida (0193): compromiso vencido / envejecimiento */}
+        {compromisoVencido(o) && <Pill tono="alta" punto={false}>⏰ Compromiso vencido</Pill>}
+        {(() => { const e = edadOfrecimiento(o); return e ? <Pill tono={e.tono} punto={false}>⌛ {e.etiqueta}</Pill> : null; })()}
+      </div>
       {(o.cubre_tipos ?? []).length > 0 && (
         <div className="fila" style={{ gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
           {(o.cubre_tipos as string[]).map((t) => <span key={t} className="insignia" style={{ fontSize: '.72rem' }}>{ETIQUETA_TIPO_INSUMO[t] ?? t}</span>)}
