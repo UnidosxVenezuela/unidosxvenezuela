@@ -20,6 +20,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.seguimiento) d.push({ href: '/seguimiento', etiqueta: 'Seguimiento', icono: 'buscar' });
   // Tablero de Coordinación cross-área (0195): foto agregada, solo Coordinación (admin).
   if (flags.admin) d.push({ href: '/coordinacion', etiqueta: 'Coordinación', icono: 'panel' });
+  // SitRep (0196): reporte de situación agregado (imprimible/CSV), solo Coordinación (admin).
+  if (flags.admin) d.push({ href: '/reportes/sitrep', etiqueta: 'SitRep', icono: 'documento' });
   if (flags.envioRedaccion) d.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) d.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
