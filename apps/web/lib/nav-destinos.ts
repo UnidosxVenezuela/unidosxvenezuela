@@ -1,7 +1,7 @@
 import type { NavFlags } from './nav-flags';
 import { ETIQUETA_AREA_ADMIN } from './constantes';
 
-export type Destino = { href: string; etiqueta: string; icono: string };
+export type Destino = { href: string; etiqueta: string; icono: string; grupo?: string };
 
 /**
  * Fuente única de los destinos de navegación por función (según las banderas del
@@ -31,15 +31,15 @@ export function destinosNav(flags: NavFlags): Destino[] {
     d.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
   }
-  if (!flags.acopio && flags.captacion) {
-    d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
-  }
-  if (!flags.acopio && !flags.captacion && (flags.gestionCasos || flags.verificacion)) {
+  if (!flags.acopio && (flags.gestionCasos || flags.verificacion)) {
     d.push({ href: '/insumos/oportunidades', etiqueta: 'Donación-Ofrecimiento', icono: 'corazon' });
   }
   if (flags.aliados) d.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) d.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
-  if (flags.captacion) d.push({ href: '/captacion', etiqueta: 'Captación', icono: 'enlace' });
+  // Departamento de Alianzas Estratégicas (0198): Captación + Afiliación (Prospección: Fase 2).
+  // Captación ya NO cuelga del menú de «Logística»: vive bajo su departamento.
+  if (flags.captacion) d.push({ href: '/captacion', etiqueta: 'Captación', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
+  if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   d.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });

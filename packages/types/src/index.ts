@@ -29,6 +29,9 @@ export type Rol =
   | 'coordinador_psicosocial'  // Coordina el área psicosocial (ve todo, asigna)
   // Captación de Oportunidades: registra contactos estratégicos; ve SOLO esa sección.
   | 'captacion'                // Captación de Oportunidades (0129)
+  // Departamento de Alianzas Estratégicas (0198): prospección de empresas + afiliación.
+  | 'prospeccion'              // Prospección de grandes/medianas empresas, organizaciones, fundaciones e iglesias
+  | 'afiliacion'               // Afiliación y clasificación de profesionales y voluntarios
   // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
   | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
   | 'admin_redes'              // Admin · Redes Sociales (grupos de contenido/marketing)
@@ -55,6 +58,23 @@ export type AreaClave =
   | 'diseno'
   | 'marketing'
   | 'transcripcion';
+
+// Departamento de Alianzas Estratégicas — base de Afiliación (0198).
+export type TipoAfiliado = 'profesional' | 'voluntario';
+export interface Afiliado {
+  id: string;
+  tipo: TipoAfiliado;
+  cargo: string | null;
+  nombre: string;
+  contacto: string | null;
+  habilidades: string | null;
+  perfil_id: string | null;
+  estado: 'activo' | 'inactivo';
+  notas: string | null;
+  creado_por: string | null;
+  creado_en: string;
+  actualizado_en: string;
+}
 
 export type EstadoTarea =
   | 'pendiente'
