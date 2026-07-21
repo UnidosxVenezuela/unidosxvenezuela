@@ -105,7 +105,7 @@
   administrador, y dentro de cada equipo hay un <b>coordinador o líder</b> que guía a los <b>miembros</b>.
   Recopilación y Verificación forman el <b>área de gestión de la información</b>; Logística es su <b>propia área</b>.</p>
   <figure>
-    <svg width="660" height="470" viewBox="0 0 680 470" role="img" aria-label="Organigrama de los equipos">
+    <svg width="660" height="492" viewBox="0 0 680 492" role="img" aria-label="Organigrama de los equipos">
       <defs>
         <marker id="oa" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><circle cx="4" cy="4" r="2.5" fill="#94a3b8"/></marker>
       </defs>
@@ -173,11 +173,12 @@
       <text x="449" y="332" fill="#556074" font-size="9">contacto, emparejamiento, entrega</text>
 
       <!-- nota otras áreas -->
-      <rect x="26" y="376" width="608" height="76" rx="11" fill="#f8fafc" stroke="#e2e8f0" stroke-dasharray="4 4"/>
+      <rect x="26" y="376" width="608" height="96" rx="11" fill="#f8fafc" stroke="#e2e8f0" stroke-dasharray="4 4"/>
       <text x="40" y="398" fill="#334155" font-size="10" font-weight="800">También bajo Administración general (fuera del alcance de esta guía):</text>
       <text x="40" y="417" fill="#556074" font-size="9.5">· Admin · Redes Sociales → Contenido (Redacción, Diseño, Video, Redes, Influencers)</text>
-      <text x="40" y="432" fill="#556074" font-size="9.5">· Admin · Digitalización → captura de listados · Apoyo Psicosocial (confidencial) · Captación de oportunidades</text>
-      <text x="40" y="447" fill="#556074" font-size="9.5">· Grupo de Búsqueda (personas desaparecidas) verifica esos casos aparte, con doble verificación de identidad.</text>
+      <text x="40" y="432" fill="#556074" font-size="9.5">· Admin · Digitalización → captura de listados · Apoyo Psicosocial (confidencial)</text>
+      <text x="40" y="447" fill="#556074" font-size="9.5">· Departamento Alianzas Estratégicas → Prospección · Captación · Afiliación (ver sección 6)</text>
+      <text x="40" y="462" fill="#556074" font-size="9.5">· Grupo de Búsqueda (personas desaparecidas) verifica esos casos aparte, con doble verificación de identidad.</text>
     </svg>
     <figcaption>Quién dirige a quién. La Administración general lo ve y coordina todo; cada equipo tiene su mando y sus miembros.</figcaption>
   </figure>
@@ -321,6 +322,30 @@
   <b>gestión</b> comercial (la lleva Logística) avanzan por separado. Así, verificar una oferta no interfiere con el
   seguimiento de contacto, y viceversa.</div>
 
+  <div class="callout"><b>Dos pistas más:</b> el registro de empresas y aliados vive en su propio departamento,
+  <b>Alianzas Estratégicas</b> (ver sección 6), que además <b>respalda</b> a Logística cuando una solicitud no se cubre.</div>
+</section>
+
+<!-- ══════════════ 6. ALIANZAS ESTRATÉGICAS ══════════════ -->
+<section class="pagina">
+  <h2>6 · Alianzas Estratégicas</h2>
+  <p>Un <b>departamento</b> propio que reúne tres frentes de consecución de recursos y aliados. Es la <b>puerta a las
+  empresas</b> y al <b>voluntariado profesional</b>, y <b>alimenta a Logística</b> cuando una solicitud no se puede cubrir
+  con inventario o proveedores.</p>
+  <div class="grid g3">
+    <div class="card"><h4>Prospección</h4><p class="mini">Empresas medianas/grandes. Se registran en la <b>Ficha de Prospección</b>: rubro, responsable, contactos, capacidades (volumen, transporte, logística) y un <b>score de confiabilidad 1-5</b>.</p></div>
+    <div class="card"><h4>Captación</h4><p class="mini">Fundaciones, organizaciones, proyectos y alianzas. Ya <b>no cuelga de Logística</b>: vive aquí. Prospección y Captación alimentan el mismo registro <b>«Captado»</b>.</p></div>
+    <div class="card"><h4>Afiliación</h4><p class="mini">Profesionales y voluntarios, clasificados <b>por cargo</b> en un tablero. Un voluntario que además es usuario queda enlazado sin duplicar su identidad.</p></div>
+  </div>
+  <p style="margin-top:12px">El registro «Captado» sigue el flujo <span class="pill p-gray">Pendiente</span>
+  <span class="pill p-amber">Verificado</span> <span class="pill p-green">Enviado a Logística</span>, con una
+  <b>2ª verificación campo por campo</b> (candado: no se envía a Logística sin verificar) y el <b>tiempo Pendiente → Verificado</b>
+  sellado automáticamente. La <b>reportería</b> del departamento es descargable (CSV / PDF) como respaldo para presentar a
+  las empresas («cuántas empresas · qué insumos»).</p>
+  <div class="callout ok"><b>Puente con Logística:</b> en el detalle de una solicitud, Logística puede
+  <b>«Enviar a Alianzas Estratégicas»</b> (que busque una empresa/aliado) o pedir <b>«Voluntariado Profesional»</b>. El
+  departamento recibe el aviso y ve esas solicitudes escaladas en su página de inicio (<code>/alianzas</code>).</div>
+
   <div class="footer-note">
     <b>Apoyo por Venezuela</b> · Organigrama y flujo de trabajo · Julio 2026.<br>
     Nota técnica (desarrollo): áreas <code>admin_verificacion</code> / <code>admin_logistica</code>; equipos por grupo
@@ -328,6 +353,9 @@
     <code>gestion_acopio</code> → <code>logistica</code>); mando por grupo (líder/coordinador) supervisa su área
     (<code>es_mando_recopilacion()</code>). Verificación de ofertas: RPC <code>verificar_oportunidad_donacion()</code>
     gated por <code>puede_verificar()</code> (migración 0144). «Requiere información»: <code>casos.info_requerida</code>
-    (0142). PDF generado desde <code>docs/ORGANIGRAMA-Y-FLUJO.html</code> (Chromium).
+    (0142). <b>Alianzas Estratégicas</b>: roles <code>prospeccion</code> / <code>afiliacion</code> + <code>captacion</code>,
+    gate <code>puede_alianzas()</code>; departamento y Afiliación (0198), Ficha + 2ª verificación + tiempos (0199),
+    reportería <code>resumen_alianzas()</code> + escalado desde Logística (0200). PDF generado desde
+    <code>docs/ORGANIGRAMA-Y-FLUJO.html</code> (Chromium).
   </div>
 </section>
