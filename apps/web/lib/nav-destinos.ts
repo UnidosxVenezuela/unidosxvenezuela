@@ -36,9 +36,10 @@ export function destinosNav(flags: NavFlags): Destino[] {
   }
   if (flags.aliados) d.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'enlace' });
   if (flags.contenido) d.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
-  // Departamento de Alianzas Estratégicas (0198/0199): el registro «Captado» (Captación +
-  // Prospección de empresas, con Ficha de Prospección) y Afiliación. Captación ya NO cuelga
-  // del menú de «Logística»: vive bajo su departamento.
+  // Departamento de Alianzas Estratégicas (0198-0200): su puerta de entrada (hub) más el
+  // registro «Captado» (Captación + Prospección de empresas, con Ficha de Prospección) y
+  // Afiliación. Captación ya NO cuelga del menú de «Logística»: vive bajo su departamento.
+  if (flags.alianzas) d.push({ href: '/alianzas', etiqueta: 'Alianzas Estratégicas', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
   if (flags.captacion || flags.prospeccion) d.push({ href: '/captacion', etiqueta: 'Captación y Prospección', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
   if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
   // Reportería del departamento (0200): respaldo descargable para presentar a empresas.
