@@ -9,7 +9,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill from '@/components/Pill';
 import FlujoProgreso from '@/components/FlujoProgreso';
 import { pasoDeCaso } from '@/lib/flujo';
-import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento } from './actions';
+import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento, marcarAdjuntoDifusion } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import VerificacionPorCampo from './VerificacionPorCampo';
 import Derivaciones from './Derivaciones';
@@ -211,12 +211,38 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
         {(caso.adjuntos ?? []).length > 0 && (
-          <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-            {(caso.adjuntos as any[]).map((a) => a.href ? (
-              <a key={a.id} className="adjunto-chip" href={a.href} target="_blank" rel="noopener noreferrer">
-                <Icono nombre="documento" size={15} /> {a.nombre}
-              </a>
-            ) : null)}
+          <div style={{ marginTop: 10 }}>
+            <div className="fila" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              {(caso.adjuntos as any[]).map((a) => (
+                <div key={a.id} className="fila" style={{ gap: 4, alignItems: 'center' }}>
+                  {a.href ? (
+                    <a className="adjunto-chip" href={a.href} target="_blank" rel="noopener noreferrer">
+                      <Icono nombre="documento" size={15} /> {a.nombre}{a.apto_difusion ? <span title="Apta para difusión" style={{ marginLeft: 4 }}>📣</span> : null}
+                    </a>
+                  ) : (
+                    <span className="adjunto-chip"><Icono nombre="documento" size={15} /> {a.nombre}</span>
+                  )}
+                  {/* Curaduría de fotos para difusión (0187): la marca Verificación; solo las aptas llegan a Redacción. */}
+                  {puedeEditar && candadoAplica && (
+                    <form action={marcarAdjuntoDifusion}>
+                      <input type="hidden" name="adjunto_id" value={a.id} />
+                      <input type="hidden" name="caso_id" value={caso.id} />
+                      <input type="hidden" name="apto" value={a.apto_difusion ? '0' : '1'} />
+                      <input type="hidden" name="volver" value={volver} />
+                      <button className="btn" style={{ minHeight: 28, padding: '1px 8px', fontSize: '.74rem' }}
+                        title={a.apto_difusion ? 'Quitar de difusión' : 'Marcar apta para difusión'}>
+                        {a.apto_difusion ? '📣 Apta ✓' : '📣 Apta para difusión'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
+            {puedeEditar && candadoAplica && (
+              <p className="muted" style={{ fontSize: '.75rem', marginTop: 6, marginBottom: 0 }}>
+                📣 Marca qué imágenes puede usar Redacción para difundir. Solo esas llegan a Envío a Redacción.
+              </p>
+            )}
           </div>
         )}
       </div>

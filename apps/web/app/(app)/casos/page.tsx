@@ -206,7 +206,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
       supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en').eq('entidad', 'casos').eq('entidad_id', searchParams.caso).order('creado_en', { ascending: false }).limit(50),
-      supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', searchParams.caso).order('creado_en'),
+      supabase.from('casos_adjuntos').select('*').eq('caso_id', searchParams.caso).order('creado_en'),  // `*` trae apto_difusion (0187) sin romper si falta la migración
       supabase.from('solicitudes_insumo').select('id, estado').eq('caso_id', searchParams.caso).maybeSingle(),
     ]);
     drawerCaso = dc; drawerHist = dh ?? []; drawerSol = ds;

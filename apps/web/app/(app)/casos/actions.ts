@@ -403,6 +403,24 @@ export async function marcarCampoVerificacion(formData: FormData) {
   redirigirOk(volver, 'Verificación del campo actualizada');
 }
 
+// Fotos aptas para difusión (0187): Verificación marca qué adjunto puede usar
+// Redacción para difundir. La RPC reaplica la frontera por categoría
+// (Verificación↔Otras, Búsqueda↔Desaparecidos) y audita el cambio.
+export async function marcarAdjuntoDifusion(formData: FormData) {
+  const { supabase } = await exigirCasos(true);
+  const adjunto = txt(formData.get('adjunto_id'));
+  const caso = txt(formData.get('caso_id'));
+  const apto = txt(formData.get('apto')) === '1';
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const { error } = await supabase.rpc('marcar_adjunto_difusion', { p_adjunto: adjunto, p_apto: apto });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'Aún no disponible (falta aplicar la migración 0187).');
+    return redirigirError(volver, 'No se pudo actualizar la foto: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/envio-redaccion');
+  redirigirOk(volver, apto ? 'Foto marcada apta para difusión' : 'Foto quitada de difusión');
+}
+
 // El grupo "Envío a Redacción" pasa un caso confirmado al estado final del flujo.
 export async function enviarCasoRedaccion(formData: FormData) {
   const supabase = await createClient();

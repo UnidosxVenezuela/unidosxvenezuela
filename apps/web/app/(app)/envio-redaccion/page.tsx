@@ -141,8 +141,15 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
     if (dCaso) {
       const { data: dext } = await supabase.from('casos_difusion').select('id, redactor_id, canales_publicacion').eq('id', dCaso.id).maybeSingle();
       if (dext) { dCaso.redactor_id = (dext as any).redactor_id; dCaso.canales_publicacion = (dext as any).canales_publicacion ?? []; }
-      // Evidencias: uso interno (Paso 10). No se bajan para la difusión.
-      dCaso.adjuntos = [];
+      // Fotos aptas para difusión (0187): SOLO los adjuntos que Verificación curó
+      // (vista `casos_adjuntos_difusion` + política de storage aparte). Best-effort:
+      // si la migración aún no se aplicó, la consulta vuelve vacía y no se rompe.
+      const { urlFirmada } = await import('@/lib/storage');
+      const { data: adjAptos } = await supabase.from('casos_adjuntos_difusion')
+        .select('id, url, nombre, mime').eq('caso_id', dCaso.id).order('creado_en');
+      dCaso.adjuntos = await Promise.all(((adjAptos ?? []) as any[]).map(async (a) => ({
+        ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
+      })));
       if (dCaso.redactor_id && !nombreRed.has(dCaso.redactor_id)) {
         const { data: rp } = await supabase.from('perfiles').select('nombre_completo').eq('id', dCaso.redactor_id).maybeSingle();
         if (rp) nombreRed.set(dCaso.redactor_id, nombreMostrado((rp as any).nombre_completo, esAdmin));
