@@ -16,8 +16,8 @@ import FormEditarCaso from '../casos/FormEditarCaso';
  *  completa + todas las herramientas (tomar/soltar, enviar, copiar/descargar,
  *  marcar publicada con canales, editar). `volver` mantiene el panel abierto. */
 export default function DetalleRedaccion(
-  { caso, puedeOperar, esAdmin, redactorNombre, miId, volver }:
-  { caso: any; puedeOperar: boolean; esAdmin: boolean; redactorNombre?: string | null; miId: string; volver: string },
+  { caso, puedeOperar, esAdmin, redactorNombre, miId, volver, whatsappGrupo = null, publicaciones = [] }:
+  { caso: any; puedeOperar: boolean; esAdmin: boolean; redactorNombre?: string | null; miId: string; volver: string; whatsappGrupo?: string | null; publicaciones?: any[] },
 ) {
   const p = pasoRedaccion(caso);
   const esMiRedaccion = caso.redactor_id && caso.redactor_id === miId;
@@ -78,8 +78,8 @@ export default function DetalleRedaccion(
         </form>
       )}
 
-      {/* Copiar / descargar + marcar publicada (con canales de difusión) */}
-      <AccionesRedaccionCaso caso={caso} puedeMarcar={puedeOperar} esAdmin={esAdmin} volver={volver} />
+      {/* Copiar / descargar / WhatsApp + tipo de difusión + publicación por canal */}
+      <AccionesRedaccionCaso caso={caso} puedeMarcar={puedeOperar} esAdmin={esAdmin} volver={volver} whatsappGrupo={whatsappGrupo} publicaciones={publicaciones} />
 
       {/* Editar los datos de la solicitud (la RLS decide quién puede guardar) */}
       <div style={{ marginTop: 12 }}>

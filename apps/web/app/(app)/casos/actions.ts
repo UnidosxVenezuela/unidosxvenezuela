@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, centroideEstado } from '@/lib/constantes';
+import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, centroideEstado } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -527,6 +527,64 @@ export async function marcarCasoPublicado(formData: FormData) {
   if (error) return redirigirError(volver, 'No se pudo marcar como publicada: ' + error.message);
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
   redirigirOk(volver, 'Solicitud marcada como publicada');
+}
+
+// Tipo de difusión (0189): Redacción marca si el caso se REDISEÑA y publica
+// ('rediseno') o solo se REPOSTEA ('repost', con el link de la publicación
+// original para el botón de WhatsApp). El permiso y la validación los hace el RPC.
+export async function setDifusionMeta(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const tipo = opt(formData.get('tipo_difusion'));       // 'rediseno' | 'repost' | null
+  const urlOriginal = opt(formData.get('url_original'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const { error } = await supabase.rpc('set_difusion_meta', { p_caso: id, p_tipo: tipo, p_url_original: urlOriginal });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El tipo de difusión aún no está disponible (falta aplicar la migración 0189).');
+    return redirigirError(volver, 'No se pudo guardar el tipo de difusión: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'Tipo de difusión guardado');
+}
+
+// Registro de publicación POR CANAL (0190): en qué red se publicó, con su url propia.
+// La RPC sincroniza el estado global (publicado al PRIMER canal) y valida el permiso.
+export async function registrarPublicacionCanal(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const canal = txt(formData.get('canal'));
+  const url = opt(formData.get('url'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  if (!CANALES_DIFUSION.includes(canal)) return redirigirError(volver, 'Canal no válido.');
+  const { error } = await supabase.rpc('registrar_publicacion_canal', { p_caso: id, p_canal: canal, p_url: url });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El registro por canal aún no está disponible (falta aplicar la migración 0190).');
+    return redirigirError(volver, 'No se pudo registrar la publicación: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'Publicación registrada en ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal));
+}
+
+// Quita la publicación de un canal (0190) y reconcilia el estado global (si era el
+// último canal, un admin despublica; a un no-admin la RPC se lo impide).
+export async function quitarPublicacionCanal(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const canal = txt(formData.get('canal'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
+  const { error } = await supabase.rpc('quitar_publicacion_canal', { p_caso: id, p_canal: canal });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'No disponible (falta aplicar la migración 0190).');
+    return redirigirError(volver, 'No se pudo quitar la publicación: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos');
+  redirigirOk(volver, 'Publicación quitada de ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal));
 }
 
 // Tomar / soltar una solicitud para redactar su difusión (0169). Auto-asignación
