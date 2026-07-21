@@ -25,7 +25,8 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   const esMandoVerif = mandoVerif === true;
   const id = params.id;
 
-  const { data: adjRaw } = await supabase.from('casos_adjuntos').select('id, url, nombre').eq('caso_id', params.id).order('creado_en');
+  // `*` incluye apto_difusion (0187) sin romper si la migración aún no se aplicó.
+  const { data: adjRaw } = await supabase.from('casos_adjuntos').select('*').eq('caso_id', params.id).order('creado_en');
   // `*` incluye los campos estructurados nuevos (0173: referente_rol, fuente_tipo,
   // ubicación administrativa, vigencia) sin romper si la migración aún no se aplicó
   // (las columnas ausentes simplemente no vienen). La RLS acota qué filas se ven.

@@ -74,6 +74,31 @@ export default function AccionesRedaccionCaso(
         <pre style={{ whiteSpace: 'pre-wrap', background: 'var(--sup2)', border: '1px solid var(--borde)', borderRadius: 10, padding: 12, marginTop: 8, fontSize: '.86rem', fontFamily: 'inherit' }}>{texto}</pre>
       )}
 
+      {/* Fotos aptas para difusión (0187): solo las que curó Verificación. */}
+      {(() => {
+        const adj = (caso.adjuntos ?? []) as any[];
+        if (!adj.length) return null;
+        return (
+          <div style={{ marginTop: 8 }}>
+            <div className="muted" style={{ fontSize: '.78rem', marginBottom: 4 }}>📷 Fotos para difundir ({adj.length})</div>
+            <div className="fila" style={{ gap: 8, flexWrap: 'wrap' }}>
+              {adj.map((a) => {
+                if (!a.href) return null;
+                const esImg = String(a.mime || '').startsWith('image/');
+                return (
+                  <a key={a.id} href={a.href} target="_blank" rel="noopener noreferrer" className="adjunto-chip"
+                     style={esImg ? { padding: 0, overflow: 'hidden', borderRadius: 8 } : undefined} title={a.nombre}>
+                    {esImg
+                      ? <img src={a.href} alt={a.nombre || 'imagen'} style={{ width: 76, height: 76, objectFit: 'cover', display: 'block', borderRadius: 8 }} />
+                      : <><Icono nombre="documento" size={15} /> {a.nombre}</>}
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Marca «Publicada» (0166) + canales de difusión (0169). El botón manual solo a Redacción. */}
       {caso.publicado_en ? (
         <div style={{ marginTop: 8 }}>
