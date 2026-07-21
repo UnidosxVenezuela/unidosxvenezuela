@@ -11,7 +11,7 @@ import Pill from '@/components/Pill';
 import BotonEnviar from '@/components/BotonEnviar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import CamposOportunidad from '../CamposOportunidad';
-import { editarOportunidad, cambiarEstadoOportunidad, eliminarOportunidad } from '../actions';
+import { editarOportunidad, cambiarEstadoOportunidad, eliminarOportunidad, crearOfrecimientoDesdeCaptacion } from '../actions';
 
 const esImagen = (p?: string | null) => !!p && /\.(jpe?g|png|webp|gif|avif)$/i.test(p);
 
@@ -24,6 +24,10 @@ export default async function OportunidadPage({ params }: { params: { id: string
   const oo = o as any;
   const url = oo.archivo_path ? await urlFirmada(supabase, 'oportunidades', oo.archivo_path, 3600) : null;
   const link = hrefSeguro(oo.enlace);
+  // Puente a Donación-Ofrecimiento (0192): ¿ya se creó un ofrecimiento desde esta
+  // entidad? Best-effort — si la migración aún no está aplicada, vuelve vacío.
+  const { data: ofr } = await supabase.from('oportunidades_donacion').select('id, numero').eq('captacion_oportunidad_id', params.id).maybeSingle();
+  const ofrecimiento = ofr as any;
 
   return (
     <AnimarEntrada>
@@ -54,6 +58,29 @@ export default async function OportunidadPage({ params }: { params: { id: string
             )
           ))}
         </div>
+      </div>
+
+      {/* Puente a Donación-Ofrecimiento (0192): convertir sin re-tipear */}
+      <div className="tarjeta">
+        <h2 style={{ marginTop: 0, fontSize: '1rem' }}>💛 Donación</h2>
+        {ofrecimiento ? (
+          <div className="fila" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Pill tono="ok" punto={false}>Ofrecimiento creado</Pill>
+            <Link href={'/insumos/oportunidades/' + ofrecimiento.id} className="fila" style={{ gap: 6 }}>
+              <Icono nombre="enlace" size={16} /> Ver ofrecimiento{ofrecimiento.numero ? ' OF-' + String(ofrecimiento.numero).padStart(5, '0') : ''} →
+            </Link>
+          </div>
+        ) : (
+          <>
+            <p className="muted" style={{ marginTop: 0, fontSize: '.88rem' }}>
+              Si esta entidad va a <strong>donar</strong>, crea el ofrecimiento sin re-tipear: se copian sus datos y queda enlazado a esta ficha. Logística y Verificación reciben el aviso.
+            </p>
+            <form action={crearOfrecimientoDesdeCaptacion}>
+              <input type="hidden" name="id" value={oo.id} />
+              <BotonEnviar className="btn btn-primario"><Icono nombre="corazon" size={16} /> Crear ofrecimiento de donación</BotonEnviar>
+            </form>
+          </>
+        )}
       </div>
 
       {/* Adjunto + enlace */}
