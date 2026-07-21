@@ -1,0 +1,178 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --fondo:#f6f8fb; --ok:#047857; --aviso:#a16207; --crit:#b91c1c;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ font-family: system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.5; font-size:11.5pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:16pt; color:var(--azul); margin:0 0 .35rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:12.5pt; color:var(--azul-osc); margin:1rem 0 .3rem; }
+  p{ margin:.4rem 0; }
+  a{ color:var(--azul); text-decoration:none; }
+  small{ color:var(--suave); }
+  .pagina{ padding:2mm 0; }
+  section{ break-inside:avoid; margin-bottom:14px; }
+  .lead{ color:var(--suave); font-size:11pt; }
+  /* Portada */
+  .cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .tri{ height:14px; display:flex; }
+  .cover .tri i{ flex:1; } .tri .a{ background:var(--azul);} .tri .y{ background:var(--amarillo);} .tri .r{ background:var(--rojo);}
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 24mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:30pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:13pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:26px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .punto{ width:12px; height:12px; border-radius:50%; background:
+     conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  /* Tarjetas y callouts */
+  .grid{ display:grid; gap:10px; }
+  .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:11px 13px; background:#fff; break-inside:avoid; }
+  .card .n{ display:inline-flex; width:26px; height:26px; border-radius:50%; align-items:center; justify-content:center;
+    font-weight:800; color:#fff; font-size:11pt; margin-bottom:4px; }
+  .card h4{ margin:.1rem 0 .2rem; font-size:11.5pt; color:var(--azul-osc); }
+  .card p{ margin:.15rem 0; font-size:10pt; }
+  .card .campo{ display:inline-block; margin-top:5px; font-size:8.5pt; font-weight:700; color:var(--azul);
+    background:#eef3ff; border:1px solid #d6e0fb; border-radius:999px; padding:2px 8px; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:9px 13px; margin:10px 0; break-inside:avoid; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:10pt; margin:6px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:6px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9.5pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .pill{ display:inline-block; font-size:8.5pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .p-gray{ background:#eef1f6; color:#475569; } .p-amber{ background:#fef3c7; color:#92400e; }
+  .p-green{ background:#dcfce7; color:#166534; } .p-blue{ background:#dbeafe; color:#1e40af; }
+  .p-red{ background:#fee2e2; color:#991b1b; }
+  figure{ margin:12px 0; text-align:center; break-inside:avoid; }
+  figcaption{ font-size:9pt; color:var(--suave); margin-top:4px; }
+  .steps{ display:flex; gap:6px; align-items:stretch; flex-wrap:wrap; margin:8px 0; }
+  .step{ flex:1; min-width:120px; border:1px solid var(--borde); border-radius:10px; padding:8px 10px; background:#fff; position:relative; }
+  .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
+  .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+  .mini{ font-size:9.5pt; color:var(--suave); }
+</style>
+
+<!-- ══════════════ PORTADA ══════════════ -->
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía del departamento · Apoyo por Venezuela</div>
+    <h1>Alianzas<br>Estratégicas</h1>
+    <div class="sub">Cómo el departamento consigue <b>empresas, aliados y voluntariado profesional</b>: Prospección,
+      Captación y Afiliación, con la <b>Ficha de Prospección</b>, la <b>2ª verificación</b> y la reportería de respaldo.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela · Alianzas Estratégicas</div>
+    <div class="pie">Versión imprimible · Actualizada julio 2026 · Prospección · Captación · Afiliación</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- ══════════════ 1. QUÉ ES EL DEPARTAMENTO ══════════════ -->
+<section class="pagina">
+  <h2>1 · Qué es este departamento</h2>
+  <p class="lead"><b>Alianzas Estratégicas</b> es el departamento que <b>consigue los recursos y aliados</b> que sostienen
+  la respuesta: empresas que donan o prestan servicios, organizaciones y fundaciones, y personas —profesionales y
+  voluntarios— dispuestas a ayudar. Reúne <b>tres frentes</b> que trabajan coordinados y alimentan a Logística.</p>
+  <div class="grid g3">
+    <div class="card"><span class="n" style="background:#0033A0">1</span><h4>Prospección</h4><p>Va tras <b>empresas medianas y grandes</b>. Las registra con una <b>Ficha</b> completa para poder presentarles una alianza con respaldo.</p></div>
+    <div class="card"><span class="n" style="background:#E6B800">2</span><h4>Captación</h4><p>Registra <b>fundaciones, organizaciones, proyectos y alianzas</b>. Antes colgaba de Logística; ahora vive aquí, junto a Prospección.</p></div>
+    <div class="card"><span class="n" style="background:#CF142B">3</span><h4>Afiliación</h4><p>Clasifica a las <b>personas</b> que se suman: <b>profesionales</b> y <b>voluntarios</b>, ordenados por cargo.</p></div>
+  </div>
+  <div class="callout"><b>Idea clave:</b> Prospección y Captación alimentan un <b>mismo registro</b> —el «Captado»—, así que una
+  empresa o aliado se trabaja en un solo sitio, sin datos partidos. Afiliación lleva su propio registro de personas.</div>
+  <p>Todo el departamento entra por la <b>página de inicio <code>/alianzas</code></b>: da acceso a los tres frentes, muestra
+  los conteos (empresas, profesionales, voluntarios) y —importante— la <b>lista de solicitudes que Logística escala</b> al
+  departamento para que les busque una empresa o un voluntario.</p>
+</section>
+
+<!-- ══════════════ 2. LA FICHA DE PROSPECCIÓN ══════════════ -->
+<section class="pagina">
+  <h2>2 · La Ficha de Prospección</h2>
+  <p>Cuando Prospección detecta una <b>empresa</b>, la registra con su <b>Ficha</b>: el respaldo con el que después se le
+  presenta la alianza. La Ficha es <b>opcional</b> —una tarjeta simple de Captación sigue funcionando igual—, pero cuando se
+  usa, activa la 2ª verificación y la reportería. Estos son sus campos:</p>
+  <table>
+    <thead><tr><th style="width:34%">Bloque</th><th>Qué se registra</th></tr></thead>
+    <tbody>
+      <tr><td><b>Identidad</b></td><td>Nombre de la empresa, <b>rubro</b> (salud, alimentación, banca…), dirección.</td></tr>
+      <tr><td><b>Responsable de la alianza</b></td><td>Nombre, cargo y teléfono de quien decide la alianza.</td></tr>
+      <tr><td><b>Contactos</b></td><td>Contactos <b>operativos</b> (quién coordina la entrega) y <b>alternos</b> (respaldo).</td></tr>
+      <tr><td><b>Capacidades y recursos</b></td><td>Qué puede aportar, el <b>volumen</b> («1000 medicamentos/mes»), si tiene <b>transporte</b> propio y su <b>logística de entrega</b>.</td></tr>
+      <tr><td><b>Restricciones</b></td><td>Horarios, requisitos y condiciones para trabajar con la empresa.</td></tr>
+      <tr><td><b>Confiabilidad</b></td><td><b>Score 1-5</b> (de «no confiable» a «muy confiable»), comparable y ordenable.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout ok"><b>Por qué el score es 1-5 y no texto libre:</b> así se puede <b>comparar y ordenar</b> empresas por
+  confiabilidad de un vistazo, en vez de leer párrafos sueltos.</div>
+</section>
+
+<!-- ══════════════ 3. EL FLUJO Y LA 2ª VERIFICACIÓN ══════════════ -->
+<section class="pagina">
+  <h2>3 · El flujo y la 2ª verificación</h2>
+  <p>Cada empresa del registro «Captado» recorre <b>tres etapas</b>, igual que un semáforo:</p>
+  <div class="steps">
+    <div class="step"><div class="sn">⚪️ Pendiente</div><p>Recién detectada, en investigación.</p></div>
+    <div class="step"><div class="sn">🟠 Verificado</div><p>Sus datos fueron confirmados campo por campo.</p></div>
+    <div class="step"><div class="sn">🟢 Enviado a Logística</div><p>Lista para operar; pasa a Logística.</p></div>
+  </div>
+  <p>Entre «Pendiente» y «Verificado» está la <b>2ª verificación</b>: el departamento revisa la Ficha <b>dato por dato</b> y
+  marca cada uno con su semáforo. Los cinco datos requeridos son <b>identidad</b>, <b>responsable</b>, <b>capacidad</b>,
+  <b>condiciones</b> y <b>confiabilidad</b>.</p>
+  <div class="grid g2">
+    <div class="card"><h4>El candado 🔒</h4><p>Una ficha <b>no se puede «Enviar a Logística»</b> hasta que los cinco campos estén en <span class="pill p-green">verde</span>. Evita mandar aliados sin confirmar.</p></div>
+    <div class="card"><h4>El cronómetro ⌛</h4><p>El sistema <b>sella el tiempo</b> que pasa de «Pendiente» a «Verificado» automáticamente. El tablero muestra el <b>promedio</b>, global y <b>por persona</b>.</p></div>
+  </div>
+  <div class="callout warn"><b>Nota:</b> una entrada simple de Captación (sin Ficha) <b>no</b> queda atrapada por el candado —solo
+  se exige la 2ª verificación cuando la Ficha está en uso (hay rubro, capacidades, u origen «Prospección»).</div>
+</section>
+
+<!-- ══════════════ 4. AFILIACIÓN ══════════════ -->
+<section class="pagina">
+  <h2>4 · Afiliación — profesionales y voluntarios</h2>
+  <p>El frente de <b>Afiliación</b> lleva el registro de las <b>personas</b> que se suman a la causa, clasificadas en dos tipos
+  y ordenadas <b>por cargo</b> en un tablero tipo tarjetas:</p>
+  <div class="grid g2">
+    <div class="card"><h4>👩‍⚕️ Profesionales</h4><p>Personas con un oficio o especialidad (médicos, ingenieros, abogados, logistas…). Se busca su <b>voluntariado profesional</b>.</p></div>
+    <div class="card"><h4>🙌 Voluntarios</h4><p>Personas dispuestas a ayudar en tareas generales, organizadas por el <b>cargo</b> que pueden cubrir.</p></div>
+  </div>
+  <p>Cada persona se registra con su nombre, contacto, cargo y habilidades. Si además es <b>usuaria de la plataforma</b>, queda
+  <b>enlazada a su perfil</b> sin duplicar su identidad. El apartado permite <b>segmentar</b> entre Profesionales y Voluntarios y
+  ver el tablero por cargo, como columnas de una pizarra.</p>
+  <div class="callout"><b>Dónde:</b> menú <b>Alianzas Estratégicas → Afiliación</b>. Lo gestiona el rol de Afiliación (o el admin).</div>
+</section>
+
+<!-- ══════════════ 5. REPORTERÍA + PUENTE CON LOGÍSTICA ══════════════ -->
+<section class="pagina">
+  <h2>5 · Reportería y puente con Logística</h2>
+  <h3>Reportería descargable (el respaldo)</h3>
+  <p>En <b>Alianzas Estratégicas → Reportería</b> está la <b>foto del «Captado»</b>: cuántas empresas hay, por estado, por rubro
+  y por score, el <b>tiempo promedio</b> a verificado, y la tabla de empresas con su volumen/insumos. Todo se puede
+  <b>imprimir (PDF)</b> o <b>descargar (CSV)</b> como <b>respaldo formal para presentar a las empresas</b> —del estilo
+  «70 empresas · 1000 medicamentos».</p>
+  <h3>El puente: escalar desde Logística</h3>
+  <p>Cuando <b>Logística</b> no puede cubrir una solicitud con su inventario ni con proveedores, en el detalle de la solicitud
+  tiene dos botones nuevos:</p>
+  <div class="grid g2">
+    <div class="card"><h4>Enviar a Alianzas Estratégicas</h4><p>Pide al departamento que <b>busque una empresa o aliado</b> que cubra la solicitud.</p></div>
+    <div class="card"><h4>Voluntariado Profesional</h4><p>Pide un <b>profesional voluntario</b> (de Afiliación) para la tarea.</p></div>
+  </div>
+  <div class="callout ok"><b>Se avisa solo:</b> al escalar, el departamento recibe la <b>notificación</b> y ve esa solicitud en su
+  <b>página de inicio</b> (<code>/alianzas</code>), en la lista «Solicitudes escaladas desde Logística». Nada se pierde en el camino.</div>
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía del departamento de Alianzas Estratégicas · Julio 2026 · versión imprimible.
+    Nota técnica (desarrollo): roles <code>prospeccion</code> / <code>afiliacion</code> + <code>captacion</code> bajo el gate
+    <code>puede_alianzas()</code>; departamento, grupos y Afiliación (migración 0198); Ficha de Prospección, 2ª verificación
+    campo por campo (<code>marcar_campo_verif_prospeccion</code>), candado y sello de tiempo (0199); reportería
+    <code>resumen_alianzas()</code> + escalado de <code>solicitudes_insumo</code> (0200). PDF generado desde
+    <code>docs/GUIA-ALIANZAS-ESTRATEGICAS.html</code> (Chromium).
+  </div>
+</section>
