@@ -1,0 +1,55 @@
+🇻🇪 *NOTAS DEL PARCHE — 21 jul 2026*
+_Apoyo por Venezuela_
+
+¡Estrenamos un *departamento nuevo*! Esta tanda crea *Alianzas Estratégicas*: el equipo que consigue *empresas, aliados y voluntariado profesional* para la respuesta. Trae la *Ficha de Prospección* de empresas, una *2ª verificación* dato por dato, indicadores con *tiempos*, reportería *descargable* para presentar a las empresas, y un *puente directo desde Logística* para pedir ayuda cuando una solicitud no se puede cubrir.
+
+✅ *10 mejoras*  ·  🏢 *1 departamento nuevo*  ·  🛠️ *3 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🏢 *EL DEPARTAMENTO*
+
+• *Alianzas Estratégicas, un solo lugar.* Antes «Captación» colgaba del menú de *Logística* y todo estaba disperso. Ahora hay un *departamento propio* que agrupa sus tres frentes: *Prospección* (empresas), *Captación* (fundaciones, organizaciones, proyectos y alianzas) y *Afiliación* (personas). Captación *ya no vive bajo Logística*: se mudó a su casa.
+
+• *Página de inicio del departamento.* Una pantalla nueva (`/alianzas`) que da acceso a los tres frentes, muestra los *conteos* (cuántas empresas, cuántos profesionales, cuántos voluntarios) y —lo más útil— la *lista de solicitudes que Logística escaló* para que el departamento les busque una empresa o un voluntario.
+
+• *Dos grupos/roles nuevos.* Se crean los grupos *Prospección* y *Afiliación*, cada uno con su encargado. Captación se integra con ellos bajo el mismo paraguas.
+
+━━━━━━━━━━━━━━━━━━
+🤝 *AFILIACIÓN (personas)*
+
+• *Profesionales y Voluntarios, ordenados por cargo.* Un apartado nuevo donde la persona encargada *clasifica* a quienes se suman: profesionales (con un oficio) y voluntarios (tareas generales), organizados en un *tablero por cargo* tipo tarjetas. Si el voluntario además es usuario de la app, queda *enlazado a su perfil* sin duplicar su identidad.
+
+━━━━━━━━━━━━━━━━━━
+🏢 *PROSPECCIÓN Y LA FICHA*
+
+• *Ficha de Prospección de empresas.* Para las *empresas medianas y grandes*, un formulario completo que sirve de *respaldo* para presentarles una alianza: rubro, dirección, responsable de la alianza y sus contactos (operativos y alternos), *capacidades* (volumen —ej. «1000 medicamentos»—, transporte propio, logística de entrega), restricciones/horarios y un *score de confiabilidad del 1 al 5*. La ficha es *opcional*: una tarjeta simple de Captación sigue funcionando igual que siempre.
+
+• *2ª verificación, dato por dato.* La ficha se revisa *campo por campo* con su semáforo 🟢🟡🔴 (identidad, responsable, capacidad, condiciones y confiabilidad). Y hay un *candado*: una empresa *no se puede «Enviar a Logística»* hasta que sus cinco datos estén en verde. Nada de mandar aliados sin confirmar.
+
+• *Tablero de indicadores con tiempos.* Como el de Verificación: *Pendiente ⚪️ / Verificado 🟠 / Enviado a Logística 🟢*, más el *tiempo promedio que tarda cada persona* en llevar una empresa de «Pendiente» a «Verificado» —se mide y se sella solo, sin apuntarlo a mano.
+
+━━━━━━━━━━━━━━━━━━
+📊 *REPORTERÍA (el respaldo para las empresas)*
+
+• *Descargable e imprimible.* Una pantalla de reportería con la foto del «Captado»: *cuántas empresas* hay (por estado, rubro y score), el tiempo promedio a verificado y la *tabla de empresas con su volumen/insumos*. Todo se puede *descargar en CSV* o *imprimir en PDF* como respaldo formal para presentar a las empresas —del estilo «70 empresas · 1000 medicamentos».
+
+━━━━━━━━━━━━━━━━━━
+🚚 *PUENTE CON LOGÍSTICA*
+
+• *«Enviar a Alianzas Estratégicas» y «Voluntariado Profesional».* En el detalle de una solicitud de Logística, junto a «Avanzar / No se pudo cubrir / Cancelar», hay *dos botones nuevos*: cuando algo no se puede cubrir con inventario ni proveedores, Logística lo *escala* al departamento (para que busque una empresa/aliado) o pide un *profesional voluntario*. El departamento recibe el *aviso* al instante y ve la solicitud en su página de inicio.
+
+━━━━━━━━━━━━━━━━━━
+📄 *DOCUMENTACIÓN*
+
+• *Organigrama actualizado* con el nuevo departamento y sus tres frentes.
+• *Nueva guía imprimible* «Alianzas Estratégicas» (PDF): qué es, la Ficha, la 2ª verificación, Afiliación, la reportería y el puente con Logística.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Esta tanda trae cambios de base de datos. Aplica las migraciones nuevas en Supabase con *pnpm db:reset* y regenera los tipos con *pnpm db:types* (van de la *0198 a la 0200*). Todo es a prueba de fallos: mientras no las apliques, las pantallas nuevas muestran «aún no disponible» en vez de romperse, y el resto de la app sigue igual. Después, asigna los roles *Prospección* y *Afiliación* a sus encargados desde Administración (y confirma que Captación siga con su rol).
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Estrenamos un *candado*: una empresa no sale hacia Logística hasta estar *verificada campo por campo*. Le aplicamos, sin querer, el mismo candado a estas notas del parche… y no querían salir hasta estar «verificadas». Por eso llegaron un pelín tarde. Pero tranquilos: pasaron los cinco campos y les dimos un *score de confiabilidad 5/5* ⭐. 🔒✅
+
+_Apoyo por Venezuela · Notas del parche · Julio 2026_
