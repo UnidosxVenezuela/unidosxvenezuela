@@ -755,6 +755,14 @@ export const ETIQUETA_CANAL_DIFUSION: Record<string, string> = {
   otro: 'Otro',
 };
 export const CANALES_DIFUSION = Object.keys(ETIQUETA_CANAL_DIFUSION);
+
+// ── Tipo de difusión por caso (0189): cómo lo maneja Redacción ──
+export const ETIQUETA_TIPO_DIFUSION: Record<string, string> = {
+  rediseno: 'Rediseñar y publicar',
+  repost: 'Solo repostear',
+};
+export const TIPOS_DIFUSION = Object.keys(ETIQUETA_TIPO_DIFUSION);
+
 // ── Verificación por campo (0172) — semáforo 🟢🟡🔴 por dato de la solicitud ──
 export type EstadoVerifCampo = 'sin_revisar' | 'verificado' | 'requiere_info' | 'falso';
 export const ESTADOS_VERIF_CAMPO: EstadoVerifCampo[] = ['sin_revisar', 'verificado', 'requiere_info', 'falso'];

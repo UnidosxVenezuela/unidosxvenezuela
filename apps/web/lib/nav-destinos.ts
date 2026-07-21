@@ -47,6 +47,7 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.admin) {
     d.push({ href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'llave' });
     d.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
+    d.push({ href: '/admin/ajustes', etiqueta: 'Ajustes', icono: 'admin' });
   }
   d.push({ href: '/ayuda', etiqueta: 'Ayuda', icono: 'ayuda' });
   // Destinos útiles que no están en el menú lateral pero sí son navegables para todos.

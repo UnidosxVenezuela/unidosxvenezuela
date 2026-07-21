@@ -135,12 +135,21 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
 
   // ── Drawer (?caso=ID) ──
   let dCaso: any = null;
+  let dWhatsappGrupo: string | null = null;
+  let dPublicaciones: any[] = [];
   if (searchParams.caso) {
     const { data: dc } = await supabase.from('casos_difusion').select(COLS).eq('id', searchParams.caso).single();
     dCaso = dc;
     if (dCaso) {
       const { data: dext } = await supabase.from('casos_difusion').select('id, redactor_id, canales_publicacion').eq('id', dCaso.id).maybeSingle();
       if (dext) { dCaso.redactor_id = (dext as any).redactor_id; dCaso.canales_publicacion = (dext as any).canales_publicacion ?? []; }
+      // tipo_difusion/url_original (0189) en consulta APARTE best-effort: si la migración
+      // aún no se aplicó, no rompe la carga del redactor/canales de arriba.
+      const { data: dtipo } = await supabase.from('casos_difusion').select('tipo_difusion, url_original').eq('id', dCaso.id).maybeSingle();
+      if (dtipo) { dCaso.tipo_difusion = (dtipo as any).tipo_difusion ?? null; dCaso.url_original = (dtipo as any).url_original ?? null; }
+      // Link del grupo de WhatsApp (0188) + publicaciones por canal (0190), best-effort.
+      { const { data: aj } = await supabase.from('ajustes_app').select('valor').eq('clave', 'whatsapp_grupo_difusion').maybeSingle(); dWhatsappGrupo = (aj as any)?.valor ?? null; }
+      { const { data: pubs } = await supabase.from('casos_publicaciones').select('id, canal, url, estado_canal, publicado_en').eq('caso_id', dCaso.id).eq('estado_canal', 'publicado').order('publicado_en'); dPublicaciones = (pubs as any[]) ?? []; }
       // Fotos aptas para difusión (0187): SOLO los adjuntos que Verificación curó
       // (vista `casos_adjuntos_difusion` + política de storage aparte). Best-effort:
       // si la migración aún no se aplicó, la consulta vuelve vacía y no se rompe.
@@ -305,7 +314,7 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
         <>
           <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
           <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la solicitud ' + dCaso.titulo}>
-            <DetalleRedaccion caso={dCaso} puedeOperar={puedeOperar} esAdmin={esAdmin} redactorNombre={dCaso.redactor_id ? nombreRed.get(dCaso.redactor_id) : null} miId={user!.id} volver={hrefCaso(dCaso.id)} />
+            <DetalleRedaccion caso={dCaso} puedeOperar={puedeOperar} esAdmin={esAdmin} redactorNombre={dCaso.redactor_id ? nombreRed.get(dCaso.redactor_id) : null} miId={user!.id} volver={hrefCaso(dCaso.id)} whatsappGrupo={dWhatsappGrupo} publicaciones={dPublicaciones} />
           </DrawerModal>
         </>
       )}

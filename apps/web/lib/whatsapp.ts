@@ -34,3 +34,13 @@ export function linkWaMe(digitos: string, mensaje?: string): string {
   const base = 'https://wa.me/' + digitos;
   return mensaje ? base + '?text=' + encodeURIComponent(mensaje) : base;
 }
+
+/**
+ * Enlace wa.me SIN número: abre WhatsApp con el texto prellenado y deja elegir
+ * cualquier chat (persona o grupo). Se usa en Redacción para «Compartir…» un caso.
+ * Ojo: los enlaces de INVITACIÓN de grupo (chat.whatsapp.com) NO admiten texto
+ * prellenado; para dirigir a un grupo concreto se copia el texto y se abre el grupo.
+ */
+export function linkWaMeTexto(mensaje: string): string {
+  return 'https://wa.me/?text=' + encodeURIComponent(mensaje);
+}
