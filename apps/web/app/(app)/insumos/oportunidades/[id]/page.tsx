@@ -25,6 +25,7 @@ import {
   requerirInfoOportunidad, eliminarAdjuntoOportunidad, cambiarDisponibilidadServicio,
 } from '../actions';
 import FormEditarOfrecimiento from '../FormEditarOfrecimiento';
+import VerificacionCamposOfrecimiento from '../VerificacionCamposOfrecimiento';
 import { registrarTransportistaDesdeOferta } from '../../actions';
 
 const RANGO_URGENCIA: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
@@ -95,6 +96,14 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   // ¿Quién puede editar el ofrecimiento? Verificación, Logística o TODO el equipo de
   // Recopilación (0161): el candado de columnas impide tocar estado/verificación.
   const puedeEditarOferta = gestor || esVerif || puedeRegistrarOportunidad(perfil);
+
+  // Verificación por campo (0194): estados por campo (best-effort; si 0194 no está
+  // aplicada vuelve vacío y el panel muestra todo «sin revisar»).
+  const { data: vcRaw } = await supabase.from('oportunidad_verificacion_campo')
+    .select('campo, estado, nota, verificado_por, verificado_en').eq('oportunidad_id', id);
+  const estadosVerifCampo: Record<string, any> = {};
+  ((vcRaw as any[]) ?? []).forEach((r) => { estadosVerifCampo[r.campo] = r; });
+  const nombresVerif = new Map<string, string>(((perfilesData ?? []) as any[]).map((p) => [p.id, nombreMostrado(p.nombre_completo, esAdmin)]));
 
   // Sugerencias de emparejamiento (solo Logística): solicitudes abiertas cuyo tipo
   // encaja con lo que la oferta puede cubrir (o todas, si no se especificó tipo).
@@ -480,19 +489,24 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
               {oo.verificada_en && oo.verificador?.nombre_completo && <span className="muted" style={{ fontSize: '.8rem' }}>{nombreMostrado(oo.verificador.nombre_completo, esAdmin)} · {fechaCorta(oo.verificada_en)}</span>}
             </div>
             {oo.nota_verificacion && <p className="muted" style={{ margin: '8px 0 0', fontSize: '.85rem', whiteSpace: 'pre-wrap' }}>{oo.nota_verificacion}</p>}
-            {esVerif ? (
-              <form action={verificarOportunidad} style={{ marginTop: 10 }}>
-                <input type="hidden" name="id" value={id} />
-                <textarea name="nota" className="input" rows={2} placeholder="Nota de verificación (existencia, contacto, canales oficiales…)" defaultValue={oo.nota_verificacion ?? ''} maxLength={500} />
-                <div className="fila" style={{ gap: 6, marginTop: 8, alignItems: 'center' }}>
-                  <select name="estado" className="input" defaultValue={oo.estado_verificacion} style={{ width: 'auto' }}>
-                    {ESTADOS_VERIF.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_VERIF[e]}</option>)}
-                  </select>
-                  <BotonEnviar className="btn btn-primario"><Icono nombre="ok" size={15} /> Guardar</BotonEnviar>
-                </div>
-              </form>
-            ) : (
-              <p className="muted" style={{ margin: '8px 0 0', fontSize: '.82rem' }}>La revisa el equipo de Verificación.</p>
+            {/* Verificación campo por campo (0194): mismo molde que los casos. Al quedar
+                todos en verde el ofrecimiento pasa a «Verificada» (candado real). */}
+            <VerificacionCamposOfrecimiento oportunidadId={id} clase={oo.clase ?? 'donacion'} estados={estadosVerifCampo}
+              volver={'/insumos/oportunidades/' + id} nombres={nombresVerif} puedeVerificar={esVerif} />
+            {esVerif && (
+              <details style={{ marginTop: 10 }}>
+                <summary className="muted" style={{ cursor: 'pointer', fontSize: '.82rem' }}>Marcar el veredicto de una vez (atajo)</summary>
+                <form action={verificarOportunidad} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="id" value={id} />
+                  <textarea name="nota" className="input" rows={2} placeholder="Nota de verificación (existencia, contacto, canales oficiales…)" defaultValue={oo.nota_verificacion ?? ''} maxLength={500} />
+                  <div className="fila" style={{ gap: 6, marginTop: 8, alignItems: 'center' }}>
+                    <select name="estado" className="input" defaultValue={oo.estado_verificacion} style={{ width: 'auto' }}>
+                      {ESTADOS_VERIF.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO_VERIF[e]}</option>)}
+                    </select>
+                    <BotonEnviar className="btn"><Icono nombre="ok" size={15} /> Guardar</BotonEnviar>
+                  </div>
+                </form>
+              </details>
             )}
             {/* Devolver a Recopilación si falta información (0160) */}
             {esVerif && (

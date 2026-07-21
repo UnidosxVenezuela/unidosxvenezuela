@@ -389,6 +389,31 @@ export const VERIF_CHECKLIST_OFERTA: Record<string, string[]> = {
     'Capacidad o restricciones', 'Responsable',
   ],
 };
+/** Verificación campo por campo del ofrecimiento (0194): claves ESTABLES + etiqueta,
+ *  por clase. Debe coincidir con campos_requeridos_ofrecimiento() en la migración. */
+export const CAMPOS_VERIF_OFERTA: Record<string, { key: string; etiqueta: string }[]> = {
+  donacion: [
+    { key: 'quien_dona', etiqueta: 'Quién dona' },
+    { key: 'que_dona', etiqueta: 'Qué se dona' },
+    { key: 'cantidad', etiqueta: 'Cantidad' },
+    { key: 'disponibilidad', etiqueta: 'Cuándo estará disponible' },
+    { key: 'entrega', etiqueta: 'Cómo y dónde se entrega' },
+    { key: 'coordina', etiqueta: 'Quién coordina la entrega' },
+    { key: 'condiciones', etiqueta: 'Condiciones' },
+  ],
+  servicio: [
+    { key: 'quien_presta', etiqueta: 'Quién presta el servicio' },
+    { key: 'que_atencion', etiqueta: 'Qué atención brinda' },
+    { key: 'dirigido', etiqueta: 'A quién va dirigido' },
+    { key: 'donde', etiqueta: 'Dónde se presta' },
+    { key: 'horarios', etiqueta: 'Días y horarios' },
+    { key: 'activo', etiqueta: '¿Está activo?' },
+    { key: 'gratuito', etiqueta: '¿Es gratuito?' },
+    { key: 'turno', etiqueta: '¿Requiere turno o registro?' },
+    { key: 'capacidad', etiqueta: 'Capacidad o restricciones' },
+    { key: 'responsable', etiqueta: 'Responsable' },
+  ],
+};
 export const ETIQUETA_ESTADO_OFERTA: Record<string, string> = {
   nueva: 'Nueva', contactada: 'Contactada', en_conversacion: 'En conversación',
   comprometida: 'Comprometida', cumplida: 'Cumplida', descartada: 'Descartada',

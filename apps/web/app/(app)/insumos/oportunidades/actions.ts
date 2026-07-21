@@ -279,6 +279,31 @@ export async function verificarOportunidad(formData: FormData) {
   redirigirOk('/insumos/oportunidades/' + id, 'Verificación registrada.');
 }
 
+// Verificación por campo del ofrecimiento (0194): marca un campo con su semáforo; la
+// RPC recalcula el veredicto global `estado_verificacion` (candado real). Solo
+// Verificación (la RPC impone el permiso). Mismo molde que los casos (0172).
+export async function marcarCampoVerifOfrecimiento(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('oportunidad_id'));
+  const campo = txt(formData.get('campo'));
+  const estado = txt(formData.get('estado'));
+  const volver = opt(formData.get('volver')) || ('/insumos/oportunidades/' + id);
+  const { error } = await supabase.rpc('marcar_campo_verif_ofrecimiento', {
+    p_oportunidad: id, p_campo: campo, p_estado: estado, p_nota: txt(formData.get('nota')).slice(0, 500) || null,
+  });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (error.code === 'PGRST202' || /marcar_campo_verif_ofrecimiento|schema cache|no existe la funci/.test(m)) {
+      return redirigirError(volver, 'Aún no disponible (falta aplicar la migración 0194).');
+    }
+    return redirigirError(volver, 'No se pudo verificar el campo: ' + error.message);
+  }
+  revalidatePath('/insumos/oportunidades'); revalidatePath('/insumos/oportunidades/' + id);
+  redirigirOk(volver, 'Verificación del campo actualizada.');
+}
+
 // ── Eliminar la oportunidad (Logística) ──
 export async function eliminarOportunidad(formData: FormData) {
   const { supabase } = await exigirLogistica();
