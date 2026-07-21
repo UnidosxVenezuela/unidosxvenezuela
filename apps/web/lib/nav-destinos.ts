@@ -18,6 +18,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
   }
   // Seguimiento cross-área (Paso 5): recorrido de cualquier solicitud, para todas las áreas.
   if (flags.seguimiento) d.push({ href: '/seguimiento', etiqueta: 'Seguimiento', icono: 'buscar' });
+  // Tablero de Coordinación cross-área (0195): foto agregada, solo Coordinación (admin).
+  if (flags.admin) d.push({ href: '/coordinacion', etiqueta: 'Coordinación', icono: 'panel' });
   if (flags.envioRedaccion) d.push({ href: '/envio-redaccion', etiqueta: 'Envío a Redacción', icono: 'cohete' });
   if (flags.psicosocial) d.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
   if (flags.acopio) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
