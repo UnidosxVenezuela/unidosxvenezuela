@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import { validarArchivo } from '@/lib/validaciones';
 import type { Rol } from '@unidos/types';
 
@@ -31,6 +31,29 @@ async function exigirCaptacion() {
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
   if (!roles.includes('admin') && !roles.includes('captacion')) throw new Error('No tienes permiso para gestionar oportunidades.');
   return { supabase, user };
+}
+
+// Puente Captación → Donación-Ofrecimiento (0192): convierte esta entidad del CRM
+// en un ofrecimiento conservando la procedencia, sin re-tipear. La RPC impone el
+// permiso real y es idempotente (si ya existe, devuelve el mismo). Al crearse, el
+// trigger de aviso (0144) notifica a Logística/Verificación.
+export async function crearOfrecimientoDesdeCaptacion(formData: FormData) {
+  const { supabase } = await exigirCaptacion();
+  const id = txt(formData.get('id'));
+  const { data, error } = await supabase.rpc('crear_ofrecimiento_desde_captacion', { p_oportunidad: id });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (error.code === 'PGRST202' || /crear_ofrecimiento_desde_captacion|schema cache|no existe la funci/.test(m)) {
+      return redirigirError('/captacion/' + id, 'Aún no disponible (falta aplicar la migración 0192).');
+    }
+    return redirigirError('/captacion/' + id, 'No se pudo crear el ofrecimiento: ' + error.message);
+  }
+  const nuevoId = String(data ?? '');
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: 'ofrecimiento_desde_captacion', p_entidad: 'oportunidades_donacion', p_entidad_id: nuevoId, p_metadata: { captacion: id },
+  });
+  revalidatePath('/captacion/' + id); revalidatePath('/insumos/oportunidades');
+  redirigirOk('/insumos/oportunidades/' + nuevoId, 'Ofrecimiento creado desde Captación');
 }
 
 // Sube el archivo opcional de una oportunidad (best-effort); devuelve la ruta o null.

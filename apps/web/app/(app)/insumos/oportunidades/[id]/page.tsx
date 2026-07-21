@@ -60,6 +60,15 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
   const link = hrefSeguro(oo.enlace);
   const id = oo.id as string;
 
+  // Procedencia (0192): si este ofrecimiento nació de una entidad del CRM de
+  // Captación, mostrar el vínculo. Best-effort (RLS: solo Captación/Logística/admin
+  // pueden leer la entidad; para el resto queda solo la etiqueta sin enlace).
+  let captOrigen: any = null;
+  if (oo.captacion_oportunidad_id) {
+    const { data: co } = await supabase.from('oportunidades').select('id, titulo').eq('id', oo.captacion_oportunidad_id).maybeSingle();
+    captOrigen = co;
+  }
+
   // Bitácora + conexiones ya hechas (todos los que ven la ficha).
   const [{ data: bitac }, { data: cnx }, { data: perfilesData }] = await Promise.all([
     supabase.from('bitacora_oportunidad')
@@ -159,6 +168,14 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
         {oo.origen && <> · {ETIQUETA_ORIGEN_OFERTA[oo.origen] ?? oo.origen}</>} · registrada {fechaCorta(oo.creado_en)}
         {oo.autor?.nombre_completo && <> · por {nombreMostrado(oo.autor.nombre_completo, esAdmin)}</>}
       </p>
+      {oo.captacion_oportunidad_id && (
+        <p className="muted sub fila" style={{ marginTop: -4, gap: 6, flexWrap: 'wrap' }}>
+          <Pill tono="info" punto={false}>Procedente de Captación</Pill>
+          {captOrigen
+            ? <Link href={'/captacion/' + captOrigen.id} className="fila" style={{ gap: 4 }}><Icono nombre="enlace" size={14} /> {captOrigen.titulo} ↗</Link>
+            : <span>entidad del CRM de Captación</span>}
+        </p>
+      )}
 
       <div className="grupo-grid" style={{ marginTop: 16 }}>
         <div className="grupo-main">
