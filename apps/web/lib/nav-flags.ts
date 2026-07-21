@@ -18,6 +18,9 @@ export type NavFlags = {
   psicosocial: boolean;    // área confidencial (o supervisión si admin)
   aliados: boolean;        // base de datos de plataformas aliadas
   captacion: boolean;      // Captación de Oportunidades (contactos estratégicos)
+  prospeccion: boolean;    // Prospección de empresas (Alianzas Estratégicas)
+  afiliacion: boolean;     // Afiliación de profesionales/voluntarios (Alianzas Estratégicas)
+  alianzas: boolean;       // pertenece al departamento de Alianzas Estratégicas (o admin)
   seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
 };
 
@@ -79,9 +82,12 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     acopio: admin || supLogistica || roles.includes('logistica'),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
-    // Captación de Oportunidades (0129): rol propio 'captacion' (ve solo esta
-    // sección) o el admin general. No exige 2ª verificación.
+    // Departamento de Alianzas Estratégicas (0198): Captación (0129) + Prospección +
+    // Afiliación. Roles propios (ven solo su sección) o el admin general. Sin 2ª verif.
     captacion: admin || roles.includes('captacion'),
+    prospeccion: admin || roles.includes('prospeccion'),
+    afiliacion: admin || roles.includes('afiliacion'),
+    alianzas: admin || roles.includes('captacion') || roles.includes('prospeccion') || roles.includes('afiliacion'),
     // Seguimiento cross-área (Paso 5): cualquier persona con un rol operativo puede
     // consultar el recorrido de cualquier solicitud (la RPC 0179 acota a datos no
     // sensibles y exige identidad verificada). Fuera para voluntario/observador.

@@ -189,6 +189,25 @@ export function puedeCaptacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'captacion']);
 }
 
+// Departamento de Alianzas Estratégicas (0198): Prospección + Captación + Afiliación.
+// Roles propios (ven solo su sección) más el admin general. No exigen 2ª verificación.
+export function esProspeccion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['prospeccion']);
+}
+export function puedeProspeccion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'prospeccion']);
+}
+export function esAfiliacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['afiliacion']);
+}
+export function puedeAfiliacion(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'afiliacion']);
+}
+/** Cualquier integrante del departamento (o el admin): base de Afiliación y reportería. */
+export function puedeAlianzas(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'captacion', 'prospeccion', 'afiliacion']);
+}
+
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para
 // operar? (recopilación, búsqueda, digitalización). El admin queda exento. Se usa
 // para mostrar el aviso de «completa tu segunda verificación» a quien corresponde.

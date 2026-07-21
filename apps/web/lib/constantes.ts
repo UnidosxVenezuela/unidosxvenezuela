@@ -1,4 +1,4 @@
-import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EstadoListado, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda, CategoriaOportunidad, EstadoOportunidad } from '@unidos/types';
+import type { AreaClave, AreaAdmin, Rol, EstadoTarea, Prioridad, NivelSensibilidad, CategoriaTarea, TipoAdjunto, UrgenciaAcopio, EstadoCaso, EstadoListado, EtapaContenido, DestinoContenido, EstadoAcompanamiento, TipoApoyo, EstadoBusqueda, CategoriaOportunidad, EstadoOportunidad, TipoAfiliado } from '@unidos/types';
 
 /** Longitud mínima de contraseña (única fuente de verdad en la UI: registro, alta y cambio de clave). */
 export const MIN_CLAVE = 8;
@@ -95,6 +95,8 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
   captacion: 'Captación de Oportunidades',
+  prospeccion: 'Prospección',
+  afiliacion: 'Afiliación',
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
   admin_logistica: 'Administración · Logística y Acopio',
@@ -924,7 +926,7 @@ export const ROLES_POR_AREA_DESTINO: Record<AreaDestino, readonly string[]> = {
   logistica: ['logistica', 'admin_logistica'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers', 'admin_redes'],
   donaciones: ['logistica', 'admin_logistica', 'captacion'],
-  alianzas: ['captacion'],
+  alianzas: ['captacion', 'prospeccion', 'afiliacion'],
   coordinacion: [],
   otra: [],
 };
@@ -933,3 +935,17 @@ export function areasOperablesDe(roles: readonly string[]): AreaDestino[] {
   const admin = roles.includes('admin');
   return AREAS_DESTINO.filter((a) => admin || ROLES_POR_AREA_DESTINO[a].some((r) => roles.includes(r)));
 }
+
+// ── Departamento de Alianzas Estratégicas · Afiliación (0198) ──
+export const TIPOS_AFILIADO: TipoAfiliado[] = ['profesional', 'voluntario'];
+export const ETIQUETA_TIPO_AFILIADO: Record<TipoAfiliado, string> = {
+  profesional: 'Profesional',
+  voluntario: 'Voluntario',
+};
+/** Catálogo sugerido de cargos para clasificar afiliados (columnas del tablero). El
+ *  campo `cargo` es libre; estos son los cargos frecuentes y «Sin cargo» agrupa el resto. */
+export const CARGOS_AFILIACION: string[] = [
+  'Médico/a', 'Enfermería', 'Psicólogo/a', 'Paramédico/a', 'Rescatista',
+  'Ingeniero/a', 'Abogado/a', 'Comunicador/a', 'Diseñador/a', 'Traductor/a',
+  'Chofer / Transporte', 'Logística', 'Cocina', 'Voluntario/a general',
+];
