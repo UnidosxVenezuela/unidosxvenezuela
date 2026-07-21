@@ -41,6 +41,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
   // del menú de «Logística»: vive bajo su departamento.
   if (flags.captacion || flags.prospeccion) d.push({ href: '/captacion', etiqueta: 'Captación y Prospección', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
   if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
+  // Reportería del departamento (0200): respaldo descargable para presentar a empresas.
+  if (flags.alianzas) d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'documento', grupo: 'Alianzas Estratégicas' });
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   d.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });

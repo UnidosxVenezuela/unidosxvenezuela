@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo } from '@/lib/storage';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 
 async function usuario() {
   const supabase = await createClient();
@@ -40,6 +40,43 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/insumos'); revalidatePath('/insumos/' + id);
   redirigirOk('/insumos/' + id, 'Estado actualizado');
+}
+
+// Escalar una solicitud al departamento de Alianzas Estratégicas (0200): cuando Logística
+// no puede cubrirla con inventario/proveedores, la envía a Alianzas (que busque una
+// empresa/aliado) y/o pide «Voluntariado Profesional». Se marca en la propia solicitud
+// (la RLS solins_update exige puede_logistica) y el trigger avisa al departamento.
+export async function escalarSolicitud(formData: FormData) {
+  const { supabase, userId } = await usuario();
+  const id = String(formData.get('id'));
+  const destino = String(formData.get('destino'));
+  const ahora = new Date().toISOString();
+  const patch: Record<string, any> = { actualizado_en: ahora };
+  if (destino === 'voluntariado') {
+    patch.voluntariado_profesional = true;
+    patch.voluntariado_profesional_en = ahora;
+    patch.voluntariado_profesional_por = userId;
+  } else {
+    patch.escalado_alianzas = true;
+    patch.escalado_alianzas_en = ahora;
+    patch.escalado_alianzas_por = userId;
+  }
+  const { error } = await supabase.from('solicitudes_insumo').update(patch).eq('id', id);
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (/escalado_alianzas|voluntariado_profesional|column .* does not exist|no existe la columna/.test(m)) {
+      return redirigirError('/insumos/' + id, 'Aún no disponible (falta aplicar la migración 0200).');
+    }
+    throw new Error('No se pudo escalar la solicitud: ' + error.message);
+  }
+  await supabase.rpc('registrar_auditoria', {
+    p_accion: destino === 'voluntariado' ? 'solicitud_voluntariado_profesional' : 'solicitud_escalada_alianzas',
+    p_entidad: 'solicitudes_insumo', p_entidad_id: id, p_metadata: {},
+  });
+  revalidatePath('/insumos'); revalidatePath('/insumos/' + id);
+  redirigirOk('/insumos/' + id, destino === 'voluntariado'
+    ? 'Marcada como «Voluntariado Profesional». Alianzas fue avisada.'
+    : 'Enviada a Alianzas Estratégicas. El departamento fue avisado.');
 }
 
 export async function asignarProveedorSolicitud(formData: FormData) {

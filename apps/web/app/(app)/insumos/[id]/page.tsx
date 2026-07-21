@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeCaptacion, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeCaptacion, puedeAlianzas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
@@ -12,7 +12,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud } from '../actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
 function waLink(contacto: string | null): string | null {
@@ -26,14 +26,19 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   // en la bitácora las empresas/alianzas que puedan ayudar, sin editar ni avanzar nada.
   const gestor = puedeLogistica(perfil);
   const esCapt = !gestor && puedeCaptacion(perfil);
-  if (!gestor && !esCapt) redirect('/dashboard');
+  // Alianzas (prospección/afiliación) entra en modo CONSULTA a las escaladas: recibe el
+  // aviso y abre la solicitud para verla, sin editar ni avanzar (como Captación, 0163).
+  const esAliado = !gestor && !esCapt && puedeAlianzas(perfil);
+  if (!gestor && !esCapt && !esAliado) redirect('/dashboard');
   const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
 
-  const { data: sData } = await supabase.from('solicitudes_insumo')
-    .select('id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, punto_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)')
-    .eq('id', id).single();
+  const COLS = 'id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, punto_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)';
+  // Columnas de escalado a Alianzas (0200); si la migración no está aplicada, se reintenta sin ellas.
+  let { data: sData } = await supabase.from('solicitudes_insumo')
+    .select(COLS + ', escalado_alianzas, escalado_alianzas_en, voluntariado_profesional, voluntariado_profesional_en').eq('id', id).single();
+  if (!sData) ({ data: sData } = await supabase.from('solicitudes_insumo').select(COLS).eq('id', id).single());
   const s: any = sData;
   if (!s) return <div className="tarjeta"><h2>Solicitud no encontrada</h2><Link href="/insumos">Volver a Logística</Link></div>;
 
@@ -109,6 +114,14 @@ export default async function SolicitudPage({ params }: { params: { id: string }
           <Pill tono={tonoDeClase(claseEstadoInsumo(s.estado))}>{ETIQUETA_ESTADO_INSUMO[s.estado] ?? s.estado}</Pill>
         </span>
       </div>
+
+      {(s.escalado_alianzas || s.voluntariado_profesional) && (
+        <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10, padding: '8px 12px', background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)', borderRadius: 8, fontSize: '.85rem' }}>
+          <Icono nombre="enlace" size={14} />
+          {s.escalado_alianzas && <span>Enviada a <strong style={{ color: 'var(--texto)' }}>Alianzas Estratégicas</strong>{s.escalado_alianzas_en ? ' · ' + fechaHora(s.escalado_alianzas_en) : ''}.</span>}
+          {s.voluntariado_profesional && <span><strong style={{ color: 'var(--texto)' }}>Voluntariado Profesional</strong> solicitado.</span>}
+        </div>
+      )}
 
       <div className={gestor ? 'grupo-grid' : undefined} style={{ marginTop: 16 }}>
         <div className="grupo-main">
@@ -343,6 +356,32 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 </form>
               )}
             </div>
+
+            {/* Escalar a Alianzas Estratégicas (0200): cuando no se cubre con inventario/proveedores. */}
+            {s.estado !== 'cancelado' && s.estado !== 'entregado' && (
+              <div className="tarjeta">
+                <h3 className="aside-titulo"><Icono nombre="enlace" size={16} /> Alianzas Estratégicas</h3>
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>Si no se cubre con inventario ni proveedores, escálala para que el departamento busque una empresa/aliado.</p>
+                {s.escalado_alianzas ? (
+                  <p style={{ margin: '0 0 8px', fontSize: '.82rem', color: 'var(--verde, #16a34a)' }}>✅ Enviada a Alianzas{s.escalado_alianzas_en ? ' · ' + fechaHora(s.escalado_alianzas_en) : ''}.</p>
+                ) : (
+                  <form action={escalarSolicitud}>
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="destino" value="alianzas" />
+                    <BotonEnviar className="btn btn-primario" style={{ width: '100%' }}>Enviar a Alianzas Estratégicas</BotonEnviar>
+                  </form>
+                )}
+                {s.voluntariado_profesional ? (
+                  <p style={{ margin: '8px 0 0', fontSize: '.82rem', color: 'var(--verde, #16a34a)' }}>✅ Voluntariado Profesional solicitado{s.voluntariado_profesional_en ? ' · ' + fechaHora(s.voluntariado_profesional_en) : ''}.</p>
+                ) : (
+                  <form action={escalarSolicitud} style={{ marginTop: 8 }}>
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="destino" value="voluntariado" />
+                    <BotonEnviar className="btn" style={{ width: '100%' }}>Voluntariado Profesional</BotonEnviar>
+                  </form>
+                )}
+              </div>
+            )}
 
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="usuario" size={16} /> Proveedor</h3>
