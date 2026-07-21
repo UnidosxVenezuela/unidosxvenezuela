@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation';
 import { requireUsuario, puedeLogistica, puedeVerOportunidades, puedeVerificar, puedeRegistrarOportunidad, esAdministrador, esAdminVerificacion, esCaptacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { urlFirmada } from '@/lib/storage';
+import { compromisoVencido, DIAS_COMPROMISO_VENCIDO } from '@/lib/semaforo';
 import {
   ETIQUETA_TIPO_OFERTA, ETIQUETA_ESTADO_OFERTA, ESTADOS_OFERTA, claseEstadoOferta,
   ETIQUETA_TIPO_INSUMO, ETIQUETA_CANAL, CANALES, ETIQUETA_RESULTADO, claseResultadoOferta,
@@ -179,6 +180,13 @@ export default async function OportunidadDetallePage({ params }: { params: { id:
 
       <div className="grupo-grid" style={{ marginTop: 16 }}>
         <div className="grupo-main">
+          {/* Semáforo de vida (0193): compromiso vencido */}
+          {compromisoVencido(oo) && (
+            <div className="tarjeta" style={{ background: 'color-mix(in srgb, var(--peligro, #ef4444) 8%, transparent)', borderColor: 'var(--peligro, #fca5a5)' }}>
+              <div className="fila" style={{ gap: 6 }}><Icono nombre="avisos" size={16} /> <strong>Compromiso sin concretar</strong></div>
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: '.88rem' }}>Se comprometió hace más de {DIAS_COMPROMISO_VENCIDO} días y aún no se cierra. Retoma el contacto y muévelo a <em>Cumplida</em> o <em>Descartada</em>.</p>
+            </div>
+          )}
           {oo.info_requerida && (
             <div className="tarjeta" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
               <div className="fila" style={{ gap: 6 }}><Icono nombre="avisos" size={16} /> <strong>Requiere información adicional</strong></div>
