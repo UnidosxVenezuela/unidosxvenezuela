@@ -34,7 +34,10 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   const supabase = await createClient();
   const id = params.id;
 
-  const COLS = 'id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, punto_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles(nombre_completo)';
+  // El embed de perfiles se cualifica por la FK `solicitado_por`: desde 0200 hay 3 FKs de
+  // solicitudes_insumo → perfiles (solicitado_por + escalado_alianzas_por + voluntariado_profesional_por)
+  // y `perfiles(...)` sin cualificar quedaría ambiguo (PostgREST no sabría cuál usar).
+  const COLS = 'id, titulo, tipo, descripcion, cantidad, urgencia, estado, creado_en, proveedor_id, punto_id, caso_id, entrega_nota, entrega_evidencia_path, puntos_acopio(nombre), proveedores(nombre, contacto), perfiles!solicitudes_insumo_solicitado_por_fkey(nombre_completo)';
   // Columnas de escalado a Alianzas (0200); si la migración no está aplicada, se reintenta sin ellas.
   let { data: sData } = await supabase.from('solicitudes_insumo')
     .select(COLS + ', escalado_alianzas, escalado_alianzas_en, voluntariado_profesional, voluntariado_profesional_en').eq('id', id).single();
