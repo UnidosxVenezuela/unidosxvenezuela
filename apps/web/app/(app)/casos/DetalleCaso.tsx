@@ -1,6 +1,6 @@
 import { fechaCorta, fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, ETIQUETA_VIGENCIA, ETIQUETA_TIPO_FUENTE, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, hrefSeguro, ETIQUETA_TIPO_INSUMO, ETIQUETA_PRIORIDAD, ETIQUETA_ESTADO_INSUMO, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, ETIQUETA_VIGENCIA, ETIQUETA_TIPO_FUENTE, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ, ETIQUETA_AREA_DESTINO } from '@/lib/constantes';
 import Icono from '@/components/Icono';
 import EstadoCaso from '@/components/EstadoCaso';
 import Avatar from '@/components/Avatar';
@@ -82,6 +82,12 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         default: return meta?.estado ? `Actualizado · estado: ${etiquetaEstado(meta.estado)}` : 'Notas / datos actualizados';
       }
     }
+    // Relevo entre áreas (0201): las RPC de derivación auditan también con entidad='casos',
+    // así el «Historial de cambios» muestra quién tomó/avanzó/cerró cada derivación por área.
+    const areaRelevo = ETIQUETA_AREA_DESTINO[meta?.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? meta?.area ?? 'un área';
+    if (accion === 'tomar_derivacion') return `Relevo tomado · ${areaRelevo}`;
+    if (accion === 'avanzar_derivacion') return `Relevo en proceso · ${areaRelevo}`;
+    if (accion === 'cerrar_derivacion') return `Relevo cerrado · ${areaRelevo}${meta?.motivo ? ` (${meta.motivo})` : ''}`;
     return accion;
   };
 
@@ -102,6 +108,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         default: return 'Actualizó';
       }
     }
+    if (accion === 'tomar_derivacion') return 'Tomó un relevo de área';
+    if (accion === 'avanzar_derivacion') return 'Avanzó un relevo de área';
+    if (accion === 'cerrar_derivacion') return 'Cerró un relevo de área';
     return accion;
   };
 

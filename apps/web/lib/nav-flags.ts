@@ -1,6 +1,7 @@
 // Qué secciones ve cada persona: se deriva de sus GRUPOS (clave de sistema) y
 // de sus roles. El admin lo ve todo. Fuente única para el menú, el panel y Ayuda.
 import { esAdministrador, esSuperadmin, areaDeAdmin, puedeSupervisarPsicosocial, rolesDe } from '@/lib/auth';
+import { areasOperablesDe } from '@/lib/constantes';
 import type { Perfil, AreaAdmin } from '@unidos/types';
 
 export type NavFlags = {
@@ -21,6 +22,7 @@ export type NavFlags = {
   prospeccion: boolean;    // Prospección de empresas (Alianzas Estratégicas)
   afiliacion: boolean;     // Afiliación de profesionales/voluntarios (Alianzas Estratégicas)
   alianzas: boolean;       // pertenece al departamento de Alianzas Estratégicas (o admin)
+  miArea: boolean;         // opera alguna área de derivación → bandeja «Mi área» (0201/0202)
   seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
 };
 
@@ -88,6 +90,11 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     prospeccion: admin || roles.includes('prospeccion'),
     afiliacion: admin || roles.includes('afiliacion'),
     alianzas: admin || roles.includes('captacion') || roles.includes('prospeccion') || roles.includes('afiliacion'),
+    // Bandeja «Mi área» (0201/0202): quien opera al menos un área de derivación
+    // (logistica/redes/donaciones/alianzas…) puede tomar/avanzar/cerrar SUS derivaciones
+    // sin abrir el detalle del caso (que está cerrado para el operador puro de área).
+    // Espejo exacto de la RPC mis_derivaciones() / puede_operar_area_derivacion.
+    miArea: areasOperablesDe(roles).length > 0,
     // Seguimiento cross-área (Paso 5): cualquier persona con un rol operativo puede
     // consultar el recorrido de cualquier solicitud (la RPC 0179 acota a datos no
     // sensibles y exige identidad verificada). Fuera para voluntario/observador.
