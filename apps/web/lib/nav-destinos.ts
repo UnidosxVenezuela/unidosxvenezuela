@@ -31,7 +31,10 @@ export function destinosNav(flags: NavFlags): Destino[] {
   // Analítica del pipeline de difusión (0197): por canal, plazo y cola. Redacción/Redes/admin.
   if (flags.envioRedaccion) d.push({ href: '/reportes/difusion', etiqueta: 'Analítica difusión', icono: 'filtro' });
   if (flags.psicosocial) d.push({ href: '/psicosocial', etiqueta: 'Apoyo Psicosocial', icono: 'corazon' });
-  if (flags.acopio) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
+  // Mapa: panorama geográfico COMPARTIDO de solo lectura (0204) para todo rol operativo
+  // (heatmap de necesidades + filtro «albergues con cupo»). Logística/admin/digitalización
+  // lo ven además con las capas operativas (tareas, lugares) y editable desde Centros de acopio.
+  if (flags.seguimiento) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
   if (flags.acopio) {
     d.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
