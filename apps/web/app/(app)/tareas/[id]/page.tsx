@@ -33,7 +33,7 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     return <div className="tarjeta"><h2>Tarea no encontrada</h2><Link href="/tareas">Volver</Link></div>;
   }
 
-  const [{ data: comentarios }, { data: perfiles }, { data: adjuntos }, { data: personasData }] = await Promise.all([
+  const [{ data: comentarios }, { data: perfiles }, { data: adjuntos }, { data: personasData }, { data: historialData }] = await Promise.all([
     supabase.from('comentarios_tarea')
       .select('id, contenido, creado_en, autor:perfiles ( nombre_completo )')
       .eq('tarea_id', id).order('creado_en', { ascending: true }),
@@ -44,7 +44,12 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
     supabase.from('tarea_personas')
       .select('perfil_id, unido_en, perfiles ( nombre_completo )')
       .eq('tarea_id', id).order('unido_en', { ascending: true }),
+    // Historial de cambios (0206); degrada a vacío si la migración aún no se aplicó.
+    supabase.from('tarea_historial_cambios')
+      .select('id, campo, valor_anterior, valor_nuevo, actor_id, creado_en')
+      .eq('tarea_id', id).order('creado_en', { ascending: false }),
   ]);
+  const historial = (historialData ?? []) as any[];
   const personas = (personasData ?? []) as any[];
   const cupo: number | null = tarea.cupo ?? null;
   const ocupados = personas.length;
@@ -68,6 +73,16 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
   const tieneEntregables = adjuntosConUrl.some((a: any) => a.clase === 'entregable');
   // Etiqueta de autoría: quién compartió cada archivo.
   const nombreDe = new Map<string, string>((perfiles ?? []).map((p: any) => [p.id, nombreMostrado(p.nombre_completo, verFull)]));
+
+  // Formatea un valor del historial de cambios (0206) según el campo (crudo → legible).
+  const fmtHistorial = (campo: string, val: string | null): string => {
+    if (campo === 'Estado') return val ? (ETIQUETA_ESTADO[val as keyof typeof ETIQUETA_ESTADO] ?? val) : '—';
+    if (campo === 'Prioridad') return val ? (ETIQUETA_PRIORIDAD[val as keyof typeof ETIQUETA_PRIORIDAD] ?? val) : '—';
+    if (campo === 'Vencimiento') return val ? fechaHora(val) : 'sin fecha';
+    if (campo === 'Asignación') return val ? (nombreDe.get(val) ?? 'alguien') : 'Sin asignar';
+    if (campo === 'Cupo') return val ?? 'sin límite';
+    return val ?? '—';
+  };
 
   // Reasignación acotada al propio grupo de la tarea (paridad con el trigger 0101).
   // Tarea sin grupo: se conserva la lista completa (es abierta).
@@ -275,6 +290,29 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
             </div>
             <button className="btn btn-primario" type="submit">Comentar</button>
           </form>
+        )}
+      </div>
+
+      {/* Historial de cambios (0206): estado / prioridad / asignación / vencimiento / cupo */}
+      <h2 className="fila" style={{ gap: 6 }}><Icono nombre="historial" size={20} /> Historial de cambios</h2>
+      <div className="tarjeta">
+        {historial.length === 0 ? (
+          <p className="muted" style={{ margin: 0 }}>Sin cambios registrados todavía.</p>
+        ) : (
+          <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {historial.map((h: any) => (
+              <li key={h.id} style={{ borderBottom: '1px solid var(--borde)', paddingBottom: 8 }}>
+                <div>
+                  <strong>{h.campo}:</strong> {fmtHistorial(h.campo, h.valor_anterior)}
+                  <span className="muted" style={{ margin: '0 6px' }}>→</span>
+                  {fmtHistorial(h.campo, h.valor_nuevo)}
+                </div>
+                <div className="muted" style={{ fontSize: '.8rem' }}>
+                  {h.actor_id ? (nombreDe.get(h.actor_id) ?? 'alguien') : 'sistema'} · {fechaHora(h.creado_en)}
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
