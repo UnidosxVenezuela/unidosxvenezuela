@@ -39,8 +39,16 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   // El Admin de Verificaciones entra como SUPERVISOR (solo lectura; la RLS decide qué
   // ve y OPERA su área) — pero, como blindaje, EXIGE su 2ª verificación aprobada.
   const supervisa = esAdminVerificacion(perfil);
-  if (!puedeRecopilar(perfil) && !accesoBusqueda && !supervisa) redirect('/dashboard');
   const supabase = await createClient();
+  // El MANDO de Recopilación (líder/coordinador de «gestion_casos») también entra a
+  // Solicitudes: supervisa (0143) y ahora también crea (0207). Solo consultamos la RPC
+  // cuando los chequeos rápidos por rol no bastan (evita un ida y vuelta para el resto).
+  let esMandoRecop = false;
+  if (!puedeRecopilar(perfil) && !accesoBusqueda && !supervisa) {
+    const { data: mr } = await supabase.rpc('es_mando_recopilacion');
+    esMandoRecop = mr === true;
+    if (!esMandoRecop) redirect('/dashboard');
+  }
 
   // 2ª verificación obligatoria para Recopilación, Búsqueda y el Admin de Verificaciones
   // (Verificación y admin general quedan exentos). Sin identidad aprobada, se oculta Casos.
@@ -67,7 +75,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
 
   // El Admin de Verificaciones opera casos como el equipo (con su 2ª verificación aprobada).
   const puedeOperar = supervisa && identidadOK;
-  const puedeCrear = esAdmin || rolesU.includes('recopilacion') || puedeOperar;
+  const puedeCrear = esAdmin || rolesU.includes('recopilacion') || puedeOperar || esMandoRecop;
   const verifica = puedeVerif || accesoBusqueda || puedeOperar;  // puede cambiar estado / tomar
   // Áreas de destino que este usuario puede tomar/avanzar/cerrar (derivación multi-área, 0177).
   const areasOperables = areasOperablesDe(rolesU);

@@ -12,13 +12,24 @@ import BotonEnviar from '@/components/BotonEnviar';
 
 export default async function NuevoCasoPage() {
   const { user, perfil } = await requireUsuario();
-  if (!esAdministrador(perfil) && !rolesDe(perfil).includes('recopilacion') && !esAdminVerificacion(perfil)) redirect('/casos');
+  const supabase = await createClient();
+  // Pueden reportar: admin, el rol operativo 'recopilacion', el Admin de Verificaciones y
+  // el MANDO de Recopilación (líder/coordinador de «gestion_casos»). Este último antes solo
+  // supervisaba (0143); ahora también crea solicitudes (0207). Sin esto, un coordinador/
+  // líder sin el rol operativo era rebotado aquí a «/casos» («presiono el botón y no pasa
+  // nada»). es_mando_recopilacion() ya exige su 2ª verificación de identidad aprobada.
+  const puedeReportar = esAdministrador(perfil) || rolesDe(perfil).includes('recopilacion') || esAdminVerificacion(perfil);
+  let esMando = false;
+  if (!puedeReportar) {
+    const { data } = await supabase.rpc('es_mando_recopilacion');
+    esMando = data === true;
+  }
+  if (!puedeReportar && !esMando) redirect('/casos');
 
   // Reportar casos exige la 2ª verificación de identidad aprobada (salvo admin): la RLS
   // lo impone. Mostramos un aviso claro en vez de dejar que el guardado falle con un
   // error críptico de la base de datos.
   if (!esAdministrador(perfil)) {
-    const supabase = await createClient();
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
     if ((vi as any)?.estado !== 'aprobada') {
       const enRevision = (vi as any)?.estado === 'pendiente';

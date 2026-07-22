@@ -38,13 +38,17 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   const roles = rolesDe(perfil);
   let clavesLidero = new Set<string>();  // grupos que LIDERO (grupos.lider_id = yo)
   let identidadOK = false;               // 2ª verificación (identidad) aprobada
+  let mandoRecopilacion = false;         // líder/coordinador de «gestion_casos» (0143/0207)
   if (!admin) {
-    const [{ data: lid }, { data: vi }] = await Promise.all([
+    const [{ data: lid }, { data: vi }, { data: mr }] = await Promise.all([
       supabase.from('grupos').select('clave').eq('lider_id', userId),
       supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', userId).maybeSingle(),
+      // Mando de Recopilación: la RPC (0143) ya exige su 2ª verificación aprobada.
+      supabase.rpc('es_mando_recopilacion'),
     ]);
     clavesLidero = new Set(((lid ?? []) as any[]).map((g) => g.clave).filter(Boolean));
     identidadOK = (vi as any)?.estado === 'aprobada';
+    mandoRecopilacion = mr === true;
   }
   // Recopilación y Búsqueda EXIGEN 2ª verificación: sin ella se ocultan Casos y
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
@@ -69,7 +73,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     admin,
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
     areaAdmin,
-    gestionCasos: admin || supVerif || (esRecopilacion && identidadOK),
+    // Recopilación: por el rol operativo (con identidad) o por ser MANDO del grupo
+    // (líder/coordinador de gestion_casos, 0143/0207) — así su liderazgo ve la sección,
+    // el panel, la ayuda y los KPIs de Recopilación, y puede crear solicitudes.
+    gestionCasos: admin || supVerif || (esRecopilacion && identidadOK) || mandoRecopilacion,
     verificacion: admin || supVerif || roles.includes('verificador'),
     busqueda: admin || supVerif || (esBusqueda && identidadOK),
     // Enlace de contacto: rol propio con 2ª verificación (identidad) obligatoria.
