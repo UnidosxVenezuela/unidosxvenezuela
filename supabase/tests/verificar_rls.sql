@@ -1304,6 +1304,34 @@ begin;
   end $$;
 rollback;
 
+\echo '== Test 55b: el MANDO de Recopilación (coordinador SIN el rol operativo) CREA solicitudes (0207) =='
+begin;
+  -- Caso real reportado: una COORDINADORA con rol PRINCIPAL 'voluntario' y SIN el rol
+  -- operativo 'recopilacion' (el trigger de sync no se lo otorgó por ser voluntaria).
+  -- Antes de 0207 la RLS le negaba el alta («no pasa nada» en la web); ahora, por ser
+  -- mando de Recopilación (identidad aprobada), debe poder crear.
+  insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000fa21', 'mandorec@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-00000000fa21';
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento)
+    values ('00000000-0000-0000-0000-00000000fa21', 'aprobada', 'x/s.jpg', 'x/d.jpg', true)
+    on conflict (perfil_id) do update set estado = 'aprobada';
+  do $$ declare gid uuid; begin
+    select id into gid from public.grupos where clave = 'gestion_casos' limit 1;
+    insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+      values (gid, '00000000-0000-0000-0000-00000000fa21', 'coordinador')
+      on conflict (grupo_id, perfil_id) do update set rol_en_grupo = 'coordinador';
+  end $$;
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-00000000fa21')::text, true);
+  do $$ begin
+    if public.tiene_rol('recopilacion') then raise exception 'FALLO setup 55b: el mando no debería tener el rol operativo (invalidaría la prueba)'; end if;
+    if not public.es_mando_recopilacion() then raise exception 'FALLO 55b: la coordinadora no resultó es_mando_recopilacion()'; end if;
+    -- Si la RLS negara el alta, este INSERT abortaría la transacción (y la prueba).
+    insert into public.casos (titulo, descripcion, categoria, estado, creado_por, fuente)
+      values ('_TEST_mando_crea', 'desc', 'Otras informaciones', 'pendiente', '00000000-0000-0000-0000-00000000fa21', 'fuente');
+  end $$;
+rollback;
+
 \echo '== Test 56: un recopilador SIN mando NO ve solicitudes ajenas (0143) =='
 begin;
   insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000fb01', 'rec-plain@test.local') on conflict do nothing;

@@ -204,6 +204,15 @@ async function exigirCasos(soloVerificar: boolean) {
     const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user.id).maybeSingle();
     ok = (vi as any)?.estado === 'aprobada';
   }
+  // El MANDO de Recopilación (líder/coordinador de «gestion_casos») puede CREAR
+  // solicitudes aunque no tenga el rol operativo 'recopilacion' (espejo de la política
+  // casos_insert, 0207). Solo aplica al alta (no a verificar). es_mando_recopilacion()
+  // ya exige la 2ª verificación de identidad aprobada, por eso no se re-condiciona a
+  // `verificado`; así el mando puede crear aunque el flag `verificado` no esté puesto.
+  if (!ok && !soloVerificar) {
+    const { data: mando } = await supabase.rpc('es_mando_recopilacion');
+    if (mando === true) ok = true;
+  }
   if (!ok) throw new Error('No tienes permisos para esta acción.');
   return { supabase, user };
 }

@@ -1,0 +1,52 @@
+🇻🇪 *NOTAS DEL PARCHE — 21 jul 2026*
+_Apoyo por Venezuela_
+
+¡Nueva tanda de mejoras! Esta versión reorganiza la *difusión* de punta a punta (WhatsApp, canales y fotos), estrena la *Coordinación* y los *reportes* para tener por fin la foto completa de la respuesta, y le pone orden al circuito de *Donación-Ofrecimiento*.
+
+✅ *12 mejoras*  ·  🗂️ *6 áreas*  ·  🛠️ *11 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+📣 *DIFUSIÓN Y REDACCIÓN*
+
+• *Enviar al grupo de WhatsApp en 1 clic.* Desde «Envío a Redacción» ahora hay un botón que arma el mensaje del caso y lo manda directo al grupo de WhatsApp de difusión. Lo mejor: el *link del grupo lo configura el administrador desde la propia app* (en Ajustes), sin tocar código ni volver a desplegar.
+
+• *Fotos aptas para difusión.* Verificación marca cuáles fotos de una solicitud son *seguras de publicar*, y Redacción solo ve esas. Adiós al riesgo de difundir por error una imagen sensible.
+
+• *Rediseñar o repostear (queda claro de entrada).* Cada caso se etiqueta según cómo se difunde: _«rediseñar y publicar»_ (pieza propia) o _«solo repostear»_ (compartir una publicación que ya existe, con su enlace original). Redacción sabe qué le toca sin preguntar.
+
+• *Publicación por canal.* Antes se guardaba un solo enlace para todas las redes. Ahora se registra *red por red*: «en Instagram ✅, en X pendiente…», cada una con su propio enlace y estado. La solicitud cuenta como «publicada» apenas sale en el primer canal, y el resto queda visible como pendiente.
+
+━━━━━━━━━━━━━━━━━━
+👥 *GRUPOS Y ROLES*
+
+• *Varios coordinadores por grupo (co-líderes).* Un grupo ya no depende de una sola persona: desde el detalle del grupo se pueden nombrar *varios coordinadores* para repartir la carga y que nunca quede acéfalo.
+
+• *Cambiar el rol de área de un miembro.* El líder o coordinador de un grupo ahora puede *ascender a sus voluntarios al rol de su área* (por ejemplo, pasar un voluntario a Recopilador) directamente desde el grupo, sin depender de un admin general para cada cambio.
+
+━━━━━━━━━━━━━━━━━━
+💛 *DONACIÓN-OFRECIMIENTO*
+
+• *Puente Captación → Ofrecimiento.* Cuando Captación consigue un donante, el ofrecimiento se crea *con un clic y sin volver a escribir los datos*, y queda enlazado a su origen para no perder la trazabilidad de dónde salió.
+
+• *Semáforo de vida del ofrecimiento.* El tablero avisa cuando un ofrecimiento *cambia de manos* (pasa a Logística), muestra *cuántos días lleva* («⌛ hace N días») y marca en rojo los *compromisos vencidos* (más de 7 días sin concretar). Nada se queda olvidado en un rincón.
+
+• *Verificación campo por campo.* El ofrecimiento se verifica *dato por dato* (quién dona, qué, cantidad, cómo y dónde se entrega…), igual que las solicitudes. Y mientras no esté verificado, *no puede avanzar de etapa*: un candado que impide mover cosas sin confirmar.
+
+━━━━━━━━━━━━━━━━━━
+📊 *COORDINACIÓN Y REPORTES* _(nuevo)_
+
+• *Tablero de Coordinación.* Una pantalla nueva (solo para Coordinación) con la *foto agregada de toda la respuesta*: una matriz de derivaciones por *área × estado*, cuántas personas hay detrás de cada una y los indicadores clave. Justo lo que ni el Panel («lo mío») ni el Seguimiento (caso a caso) mostraban de un vistazo.
+
+• *SitRep (Reporte de Situación).* El clásico reporte humanitario, listo para *imprimir (PDF) o descargar (CSV)* y compartir con quien haga falta: solicitudes por estado y por urgencia, derivaciones por área, pulso de Logística y de Difusión, y total de personas afectadas.
+
+• *Analítica de difusión.* Para Redacción y Redes: cuánto se publica *por canal*, cuánto tarda una solicitud *desde que se confirma hasta que se publica* (promedio y mediana) y cuántas confirmadas *siguen en cola* sin publicar. Por fin se puede medir el embudo de difusión, no solo intuirlo.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Estas novedades traen cambios de base de datos. Aplica las migraciones nuevas en Supabase con *pnpm db:reset* y regenera los tipos con *pnpm db:types* (van de la *0187 a la 0197*). Todo es a prueba de fallos: mientras no las apliques, las pantallas nuevas muestran «aún no disponible» en lugar de romperse y el resto de la app sigue igual. Y no olvides *configurar el link del grupo de WhatsApp* en Ajustes para estrenar el botón de difusión.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Ahora la app mide *cuánto tardamos desde que algo se confirma hasta que se publica*. Corrimos la métrica sobre estas mismas notas del parche y… digamos que el _«plazo desde confirmación»_ salió un pelín alto. Pero tranquilos: lo importante es que ya lo medimos. 📊🐢
+
+_Apoyo por Venezuela · Notas del parche · Julio 2026_
