@@ -18,6 +18,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.gestionCasos || flags.verificacion) {
     d.push({ href: '/casos', etiqueta: 'Solicitudes', icono: 'documento' });
   }
+  // Bandeja «Mi área» (0201/0202): las derivaciones que el operador puede trabajar
+  // (tomar/avanzar/cerrar) sin abrir el detalle del caso. Para todo operador de área.
+  if (flags.miArea) d.push({ href: '/mi-area', etiqueta: 'Mi área', icono: 'flecha' });
   // Seguimiento cross-área (Paso 5): recorrido de cualquier solicitud, para todas las áreas.
   if (flags.seguimiento) d.push({ href: '/seguimiento', etiqueta: 'Seguimiento', icono: 'ubicacion' });
   // Tablero de Coordinación cross-área (0195): foto agregada, solo Coordinación (admin).
