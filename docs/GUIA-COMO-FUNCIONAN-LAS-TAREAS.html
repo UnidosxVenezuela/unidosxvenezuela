@@ -1,0 +1,172 @@
+<meta charset="utf-8">
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.4; font-size:11pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:11px 0 3px; gap:12px; }
+  .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.06; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 12px; font-size:9pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 6px; font-size:10.5pt; }
+  .sec-h{ font-size:12.5pt; color:var(--azul); margin:12px 0 5px; display:flex; align-items:center; gap:8px; font-weight:800; break-after:avoid; page-break-after:avoid; }
+  .sec-h .em{ font-size:14pt; }
+  .card{ border:1px solid var(--borde); border-radius:12px; padding:9px 13px; background:#fff; break-inside:avoid; page-break-inside:avoid; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:9px 13px; margin-top:11px; font-size:9.8pt; break-inside:avoid; page-break-inside:avoid; }
+  .rec b{ color:var(--azul-osc); }
+  .pie{ margin-top:11px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  /* ── Insignias de estado (colores reales de la app) ── */
+  .est{ display:inline-flex; align-items:center; gap:5px; font-size:8.7pt; font-weight:700; border-radius:999px; padding:2px 9px; white-space:nowrap; }
+  .est .d{ width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .est-pend{ background:#eef2f7; color:#334155; } .est-pend .d{ background:#64748b; }
+  .est-asig{ background:#eef2f7; color:#334155; } .est-asig .d{ background:#64748b; }
+  .est-prog{ background:#fef9c3; color:#854d0e; } .est-prog .d{ background:#ca8a04; }
+  .est-bloq{ background:#fee2e2; color:#b91c1c; } .est-bloq .d{ background:#dc2626; }
+  .est-comp{ background:#d1fae5; color:#065f46; } .est-comp .d{ background:#059669; }
+  .est-canc{ background:#fee2e2; color:#b91c1c; } .est-canc .d{ background:#dc2626; }
+  .pri{ display:inline-block; font-size:8.2pt; font-weight:700; border-radius:999px; padding:1px 8px; }
+  .pri-alta{ background:#ffedd5; color:#c2410c; } .pri-crit{ background:#fee2e2; color:#b91c1c; }
+  .badge-cat{ display:inline-block; font-size:8pt; font-weight:700; border-radius:6px; padding:1px 8px; background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff; }
+  /* leyenda de estados */
+  .leyenda{ border:1px solid var(--borde); border-radius:12px; overflow:hidden; break-inside:avoid; page-break-inside:avoid; }
+  .leyenda .row{ display:flex; align-items:center; gap:11px; padding:7px 12px; border-bottom:1px solid #f1f5f9; font-size:9.7pt; }
+  .leyenda .row:last-child{ border-bottom:0; }
+  .leyenda .row .lbl{ flex:0 0 96px; }
+  .leyenda .row .txt b{ color:var(--azul-osc); }
+  /* ciclo */
+  .flujo{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin:2px 0; }
+  .flujo .arw{ color:#94a3b8; font-weight:800; font-size:11pt; }
+  .quien{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .quien .q{ border:1px solid var(--borde); border-radius:9px; padding:7px 10px; font-size:9.3pt; background:#f9fafb; }
+  .quien .q b{ color:var(--azul-osc); }
+  /* posibilidades */
+  .props{ display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:2px; }
+  .props .p{ border:1px solid var(--borde); border-radius:9px; padding:7px 10px; font-size:9.4pt; break-inside:avoid; }
+  .props .p b{ color:var(--azul-osc); }
+  .props .p .ic{ font-size:11pt; margin-right:3px; }
+  /* ── Mockup del panel ── */
+  .mock{ border:1px solid #d7deea; border-radius:12px; overflow:hidden; margin:6px 0 2px; box-shadow:0 3px 12px rgba(15,23,42,.08); break-inside:avoid; page-break-inside:avoid; }
+  .mock .bar{ background:#eef2f8; border-bottom:1px solid #e2e8f0; padding:6px 10px; display:flex; align-items:center; gap:5px; }
+  .mock .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .mock .url{ margin-left:8px; font-size:8pt; color:#64748b; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:2px 9px; }
+  .mock .body{ padding:10px 13px; background:#fff; }
+  .mock .mtit{ font-size:12pt; font-weight:800; color:var(--azul); margin:0; }
+  .mock .toprow{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .mock .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:3px 14px; margin-top:7px; font-size:8.9pt; color:#334155; }
+  .mock .grid2 b{ color:#0f172a; }
+  .mock .hr{ border:0; border-top:1px solid #eef2f6; margin:8px 0; }
+  .mock .selbox{ display:flex; align-items:center; gap:7px; }
+  .mock .sel{ display:inline-block; border:1px solid #cbd5e1; border-radius:8px; padding:4px 10px; font-size:8.7pt; color:#0f172a; background:#fff; font-weight:700; }
+  .mock .btn{ display:inline-block; background:var(--azul); color:#fff; font-weight:800; font-size:8.5pt; border-radius:8px; padding:5px 12px; }
+  .mock .hi{ box-shadow:0 0 0 3px #FFCE00, 0 0 0 5px rgba(255,206,0,.4); }
+  .mock .sec{ font-size:9.3pt; font-weight:800; color:var(--azul-osc); margin:9px 0 5px; }
+  .mock table{ width:100%; border-collapse:collapse; font-size:8.7pt; }
+  .mock th{ text-align:left; font-size:7.3pt; color:#64748b; text-transform:uppercase; letter-spacing:.02em; border-bottom:1px solid #e2e8f0; padding:3px 6px; }
+  .mock td{ border-bottom:1px solid #f1f5f9; padding:5px 6px; color:#334155; }
+  .mock td a{ color:var(--azul); text-decoration:none; font-weight:600; }
+  .mock .av{ width:16px; height:16px; border-radius:50%; background:#c7d2fe; color:#3730a3; font-size:7pt; font-weight:800; display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; }
+  .mockcap{ font-size:8pt; color:var(--suave); text-align:center; margin:2px 0 0; }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Cómo funcionan las tareas</h1>
+  <span class="rp">GRUPOS · Tareas</span>
+</div>
+<p class="sub">Qué tiene una tarea, <b>cómo cambia de estado</b>, cómo se ve en tu grupo mientras avanza y qué pasa <b>cuando se completa</b>. Las tareas viven en <b>«Tareas»</b> del menú y dentro de <b>cada grupo</b>.</p>
+
+<div class="sec-h"><span class="em">🧩</span> Anatomía de una tarea</div>
+<div class="mock">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">Tareas › Detalle</span></div>
+  <div class="body">
+    <div class="toprow">
+      <div class="mtit">Reconfirmar 8 solicitudes con +48 h</div>
+      <span class="est est-prog"><span class="d"></span> En progreso</span>
+    </div>
+    <div style="font-size:8.9pt;color:#334155;margin-top:5px">Revisar y reconfirmar con la fuente los reportes con más de 48 h antes de enviarlos a Verificación.</div>
+    <div class="grid2">
+      <div><b>Categoría:</b> <span class="badge-cat">Datos</span></div>
+      <div><b>Prioridad:</b> <span class="pri pri-alta">Alta</span></div>
+      <div><b>Grupo:</b> Recopilación · Caracas</div>
+      <div><b>Responsable:</b> <span class="av">MP</span> María Pérez</div>
+      <div><b>Personas:</b> 2 / 3 &nbsp;<span style="color:#94a3b8">(cupo)</span></div>
+      <div><b>Vence:</b> 12/07/2026 6:00 pm</div>
+    </div>
+    <hr class="hr">
+    <div class="selbox"><b style="font-size:8.7pt">Estado:</b> <span class="sel hi">En progreso ▾</span> <span class="btn">Guardar estado</span></div>
+    <div style="font-size:8pt;color:#94a3b8;margin-top:6px">Abajo, en «Ver tarea completa»: comentarios, material y entregables.</div>
+  </div>
+</div>
+<p class="mockcap">Cada tarea tiene <b>título, descripción, categoría, prioridad, grupo, responsable, cupo de personas y fecha de vencimiento</b>. Su <b>estado</b> es la insignia de color arriba a la derecha.</p>
+
+<div class="sec-h"><span class="em">🎨</span> Los 6 estados y cómo se ven</div>
+<div class="leyenda">
+  <div class="row"><span class="lbl"><span class="est est-pend"><span class="d"></span> Pendiente</span></span><span class="txt">Recién creada: <b>aún sin dueño ni arranque</b>. Se ve en gris.</span></div>
+  <div class="row"><span class="lbl"><span class="est est-asig"><span class="d"></span> Asignada</span></span><span class="txt">Ya tiene <b>responsable</b>; lista para empezar. También en gris.</span></div>
+  <div class="row"><span class="lbl"><span class="est est-prog"><span class="d"></span> En progreso</span></span><span class="txt">Alguien está <b>trabajando en ella ahora</b>. Se pone <b>amarilla</b>.</span></div>
+  <div class="row"><span class="lbl"><span class="est est-bloq"><span class="d"></span> Bloqueada</span></span><span class="txt">Detenida por algo (falta un dato, un permiso…). Se pone <b>roja</b>.</span></div>
+  <div class="row"><span class="lbl"><span class="est est-comp"><span class="d"></span> Completada</span></span><span class="txt"><b>Terminada.</b> Se pone <b>verde</b> ✓ y sale de la lista activa del grupo.</span></div>
+  <div class="row"><span class="lbl"><span class="est est-canc"><span class="d"></span> Cancelada</span></span><span class="txt">Descartada; ya no se hará. En rojo, también sale de la lista activa.</span></div>
+</div>
+
+<div class="sec-h"><span class="em">🔄</span> El ciclo: cómo cambia de estado</div>
+<div class="card">
+  <div class="flujo">
+    <span class="est est-pend"><span class="d"></span> Pendiente</span><span class="arw">→</span>
+    <span class="est est-asig"><span class="d"></span> Asignada</span><span class="arw">→</span>
+    <span class="est est-prog"><span class="d"></span> En progreso</span><span class="arw">→</span>
+    <span class="est est-comp"><span class="d"></span> Completada</span>
+  </div>
+  <div style="font-size:9.3pt;color:#556074;margin-top:5px">En el camino, una tarea puede quedar <span class="est est-bloq"><span class="d"></span> Bloqueada</span> si algo la detiene, o <span class="est est-canc"><span class="d"></span> Cancelada</span> si se descarta. Se cambia desde el <b>detalle</b> de la tarea: menú <b>«Estado»</b> → elige → <b>«Guardar estado»</b>.</div>
+  <div class="quien">
+    <div class="q"><b>¿Quién puede cambiarlo?</b> El <b>responsable</b> de la tarea, quien la <b>creó</b>, y la <b>coordinación o el líder</b> del grupo.</div>
+    <div class="q"><b>Marcar «Completada»</b> queda reservado a la <b>coordinación o el líder</b> del grupo — así el cierre siempre lo confirma un mando.</div>
+  </div>
+</div>
+
+<div class="sec-h"><span class="em">👥</span> Cómo se ven en tu grupo</div>
+<div class="mock">
+  <div class="bar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="url">Grupos › Recopilación · Caracas</span></div>
+  <div class="body">
+    <div class="sec">✅ Tareas del grupo</div>
+    <table>
+      <thead><tr><th>Tarea</th><th>Prioridad</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td><a>Reconfirmar 8 solicitudes con +48 h</a></td><td><span class="pri pri-crit">Crítica</span></td><td><span class="est est-prog"><span class="d"></span> En progreso</span></td></tr>
+        <tr><td><a>Marcar albergues de la zona Este</a></td><td><span class="pri pri-alta">Alta</span></td><td><span class="est est-asig"><span class="d"></span> Asignada</span></td></tr>
+        <tr><td><a>Conseguir contacto del centro de acopio</a></td><td><span class="pri pri-alta">Alta</span></td><td><span class="est est-pend"><span class="d"></span> Pendiente</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:8px;font-size:8.5pt"><a style="color:var(--azul);font-weight:600">Ver todas →</a> &nbsp;·&nbsp; <span style="color:#94a3b8">Solo las activas; las completadas salen de esta lista.</span></div>
+  </div>
+</div>
+<p class="mockcap">En <b>«Grupos» → tu grupo → Tareas del grupo</b> ves las tareas <b>activas</b>, ordenadas por prioridad, con su insignia de estado. Se actualiza <b>en vivo</b> cuando alguien cambia algo.</p>
+
+<div class="sec-h"><span class="em">🏁</span> Cuando ya está completada</div>
+<div class="card">
+  <p style="margin:0 0 4px;font-size:9.7pt">Al marcarla <span class="est est-comp"><span class="d"></span> Completada</span>:</p>
+  <ul style="margin:0;padding-left:18px;font-size:9.6pt">
+    <li>Se pone <b>verde</b> y, si subieron el resultado, aparece la insignia <span class="est est-comp"><span class="d"></span> Entregado</span>.</li>
+    <li><b>Sale de la lista activa</b> de tu grupo (para no saturar), pero <b>no se borra</b>.</li>
+    <li>Sigue visible en <b>«Tareas» → «Mis tareas»</b> y, para la coordinación, en <b>«Todas las tareas»</b> filtrando por estado <b>Completada</b>.</li>
+    <li>Suma en el contador <b>«Completadas»</b> del panel de tareas.</li>
+  </ul>
+</div>
+
+<div class="sec-h"><span class="em">✨</span> Otras posibilidades</div>
+<div class="props">
+  <div class="p"><b>Cupo de personas</b> — una tarea puede aceptar a <b>varios</b> (2/3). Si está abierta, cualquiera pulsa <b>«Unirme»</b> o <b>«Tomar tarea»</b>.</div>
+  <div class="p"><b>Responsable</b> — la persona asignada aparece marcada como <b>«Responsable»</b>.</div>
+  <div class="p"><b>Entregables y material</b> — se suben archivos; al haber entregable aparece <b>«Entregado»</b>.</div>
+  <div class="p"><b>Comentarios</b> — se conversa dentro de la tarea, en «Ver tarea completa».</div>
+  <div class="p"><b>Prioridad y categoría</b> — <span class="pri pri-crit">Crítica</span>…<span class="pri pri-alta">Alta</span> ordenan la lista; la categoría dice el <b>tipo de trabajo</b>.</div>
+  <div class="p"><b>Vencimiento y ubicación</b> — fecha límite y, si aplica, un punto en el <b>mapa</b>.</div>
+</div>
+
+<div class="rec"><b>Recuerda:</b> las tareas las <b>crea y asigna</b> el líder o coordinador (<b>«Nueva tarea»</b>), pero el <b>avance</b> lo mueve quien trabaja en ella. Cuando te asignan una o cambia algo, te llega por la <b>campana</b> 🔔 (y por <b>Telegram</b> si lo vinculaste). El <b>cierre</b> («Completada») lo confirma un mando del grupo.</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Tareas</span>
+  <span>Guía · Julio 2026</span>
+</div>
