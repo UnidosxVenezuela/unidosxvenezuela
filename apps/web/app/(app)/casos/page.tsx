@@ -28,7 +28,7 @@ import { nombreMostrado } from '@/lib/nombre';
 type SP = { q?: string; estado?: string; categoria?: string; caso?: string; orden?: string };
 // req_urgencia/sigue_vigente/creado_en/es_requerimiento (columnas antiguas, seguras) alimentan
 // el score de prioridad; personas_afectadas (0182) se lee aparte por si aún no está aplicada.
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, req_urgencia, sigue_vigente, creado_en, es_requerimiento';
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, req_urgencia, sigue_vigente, creado_en, es_requerimiento, publicado_en';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -93,21 +93,22 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         ? { t: 'Buscar y verificar desaparecidos', c: <>Toma los casos de <strong>personas desaparecidas</strong> y <strong>confírmalos o descártalos</strong>. Esta información la gestiona el Grupo de Búsqueda.</> }
         : { t: 'Reportar y seguir solicitudes', c: <>Reporta con <strong>«Nueva solicitud»</strong> lo que llega para verificar; el equipo correspondiente lo confirmará o descartará. Toca una solicitud para seguir su estado.</> };
 
-  // Conteos por GRUPO de estado. Cada caso cae en exactamente un grupo, así que los
-  // tres grupos suman el total. Antes solo se contaban 'en_proceso', 'confirmado' y
-  // 'falso'; los 'pendiente' (reportes recién llegados, sin tomar), 'enviado_redaccion'
-  // y 'resuelto' no aparecían en ninguna tarjeta y "se perdían" respecto al total.
+  // Conteos por estado. Cada caso cae en exactamente UNA tarjeta, así que las tarjetas
+  // suman el total: Pendientes · En proceso · Confirmados (confirmado+enviado_redaccion)
+  // · Falsos · Resueltos. 'Falsos' y 'Resueltos' van SEPARADOS a propósito: 'resuelto'
+  // es un caso ATENDIDO (ciclo cerrado), no un descarte, y agruparlos confundía.
   const cnt = (estados?: string[]) => {
     let q = supabase.from('casos').select('*', { count: 'exact', head: true });
     if (estados && estados.length) q = q.in('estado', estados);
     return q;
   };
-  const [total, pendientes, enProceso, conf, cerrados, confirmados, perfilesRes] = await Promise.all([
+  const [total, pendientes, enProceso, conf, falsos, resueltos, confirmados, perfilesRes] = await Promise.all([
     cnt(),
     cnt(['pendiente']),
     cnt(['en_proceso']),
     cnt(['confirmado', 'enviado_redaccion']),
-    cnt(['falso', 'resuelto']),
+    cnt(['falso']),
+    cnt(['resuelto']),
     cnt(['confirmado']),
     supabase.from('perfiles').select('id, nombre_completo, avatar_url'),
   ]);
@@ -265,7 +266,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         <Kpi etiqueta="Pendientes" valor={pendientes.count ?? 0} sub="Recién llegados, sin tomar" color="#475569" icono="reloj" tinte="#f1f5f9" href={kpiHref('pendiente')} />
         <Kpi etiqueta="En proceso" valor={enProceso.count ?? 0} sub="Ya tomados, en verificación" color="#a16207" icono="reloj" tinte="#fef9c3" href={kpiHref('en_proceso')} />
         <Kpi etiqueta="Confirmados y activos" valor={conf.count ?? 0} sub={soloBusqueda ? 'Verificados' : 'Confirmados y en redacción'} color="#16a34a" icono="ok" tinte="#d1fae5" href={kpiHref('confirmado,enviado_redaccion')} />
-        <Kpi etiqueta="Falsos / resueltos" valor={cerrados.count ?? 0} sub="No continúan" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href={kpiHref('falso,resuelto')} />
+        <Kpi etiqueta="Falsos" valor={falsos.count ?? 0} sub="Descartados" color="#b91c1c" icono="cerrar" tinte="#fee2e2" href={kpiHref('falso')} />
+        <Kpi etiqueta="Resueltos" valor={resueltos.count ?? 0} sub="Atendidos y cerrados" color="#0f766e" icono="ok" tinte="#ccfbf1" href={kpiHref('resuelto')} />
       </div>
 
       {/* Tira del flujo: para todos menos quien solo ve Desaparecidos (esos tienen su
@@ -368,7 +370,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                   <td>
                     <EstadoCaso estado={c.estado} />
                     {c.info_requerida && <div style={{ marginTop: 4 }}><Pill tono="aviso" punto={false}>Requiere info</Pill></div>}
-                    {(() => { const p = pasoDeCaso(c.estado); return <FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} compacto />; })()}
+                    {(() => { const p = pasoDeCaso(c); return <FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} completo={p.completo} compacto />; })()}
                     {puedeVerif && (() => { const pv = pctVerif.get(c.id) ?? 0; return (
                       <div style={{ marginTop: 5 }} title={'Datos verificados: ' + pv + '%'}>
                         <div style={{ height: 5, borderRadius: 3, background: 'var(--borde)', overflow: 'hidden', maxWidth: 120 }}>

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { fechaHora } from '@/lib/fechas';
 import { pasoRedaccion } from '@/lib/flujo';
 import Icono from '@/components/Icono';
@@ -85,10 +84,7 @@ export default function DetalleRedaccion(
       <div style={{ marginTop: 12 }}>
         <FormEditarCaso caso={caso} volver={volver} />
       </div>
-
-      <div style={{ marginTop: 12 }}>
-        <Link href={'/casos?caso=' + caso.id} className="muted" style={{ fontSize: '.85rem' }}>Ver historial completo en Solicitudes ↗</Link>
-      </div>
+      {/* Sin enlace «Ver historial en Solicitudes»: Redacción no tiene acceso a ese panel. */}
     </div>
   );
 }

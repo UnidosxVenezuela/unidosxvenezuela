@@ -132,7 +132,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div className="muted" style={{ fontSize: '.8rem' }}>Solicitud #{String(caso.numero).padStart(5, '0')}</div>
           <h2 style={{ margin: '2px 0' }}>{caso.titulo}</h2>
           <EstadoCaso estado={caso.estado} />
-          {(() => { const p = pasoDeCaso(caso.estado); return <div style={{ maxWidth: 240, marginTop: 8 }}><FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} /></div>; })()}
+          {(() => { const p = pasoDeCaso(caso); return <div style={{ maxWidth: 240, marginTop: 8 }}><FlujoProgreso paso={p.paso} total={p.total} etiqueta={p.etiqueta} fuera={p.fuera} completo={p.completo} /></div>; })()}
           {caso.publicado_en && (
             <div className="fila" style={{ gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
               <Pill tono="ok" punto={false}>📣 Publicada · {fechaCorta(caso.publicado_en)}</Pill>

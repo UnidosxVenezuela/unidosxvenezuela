@@ -52,6 +52,7 @@ export default function LineaTiempoCaso({ caso, derivaciones = [], casoValidado 
             <div style={{ paddingBottom: i < pasos.length - 1 ? 12 : 0, flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: '.9rem' }}>{p.titulo}</div>
               {p.derivaciones && derivado ? (
+                <>
                 <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                   {derivs.map((d) => (
                     <span key={d.id} className="insignia" style={{ fontSize: '.74rem', display: 'inline-flex', gap: 4, alignItems: 'center' }}>
@@ -63,6 +64,14 @@ export default function LineaTiempoCaso({ caso, derivaciones = [], casoValidado 
                     </span>
                   ))}
                 </div>
+                {/* Observaciones/acción de cada derivación (visibles para todas las áreas). */}
+                {derivs.filter((d) => d.accion || d.observaciones || d.motivo_cierre).map((d) => (
+                  <div key={d.id + '-obs'} className="muted" style={{ fontSize: '.8rem', marginTop: 3 }}>
+                    <strong>{ETIQUETA_AREA_DESTINO[d.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? d.area}:</strong>{' '}
+                    {[d.accion, d.observaciones, d.motivo_cierre ? 'Cierre: ' + d.motivo_cierre : null].filter(Boolean).join(' · ')}
+                  </div>
+                ))}
+                </>
               ) : (
                 p.detalle && <div className="muted" style={{ fontSize: '.82rem', marginTop: 1 }}>{p.detalle}</div>
               )}

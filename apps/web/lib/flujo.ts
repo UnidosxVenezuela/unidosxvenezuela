@@ -24,16 +24,21 @@ export function pasosFlujo(f: ConteoFlujo): PasoFlujo[] {
 
 /**
  * Camino feliz de una solicitud en 5 pasos, para la barra de progreso «Paso N de 5».
- * `falso` sale del flujo (no es un paso). Devuelve el paso, el total y una etiqueta.
+ * `falso` sale del flujo (no es un paso). Una solicitud PUBLICADA (0166) o RESUELTA
+ * cuenta como el Paso 5 (flujo terminado), aunque su estado siga en «enviado_redaccion»:
+ * así los casos «solo redes» no se quedan clavados en el Paso 4 al publicarse.
  */
 export const PASOS_CASO: EstadoCaso[] = ['pendiente', 'en_proceso', 'confirmado', 'enviado_redaccion', 'resuelto'];
 
-export function pasoDeCaso(estado: EstadoCaso): { paso: number; total: number; fuera: boolean; etiqueta: string } {
+export function pasoDeCaso(caso: { estado?: EstadoCaso | string | null; publicado_en?: string | null }): { paso: number; total: number; fuera: boolean; completo: boolean; etiqueta: string } {
   const total = PASOS_CASO.length;
-  if (estado === 'falso') return { paso: 0, total, fuera: true, etiqueta: 'Salió del flujo' };
+  const estado = (caso?.estado ?? 'pendiente') as EstadoCaso;
+  if (estado === 'falso') return { paso: 0, total, fuera: true, completo: false, etiqueta: 'Salió del flujo' };
+  // Publicada (hecho ortogonal al estado, 0166) o resuelta = flujo terminado (Paso 5).
+  if (estado === 'resuelto' || caso?.publicado_en) return { paso: total, total, fuera: false, completo: true, etiqueta: 'Finalizada' };
   const i = PASOS_CASO.indexOf(estado);
   const paso = i >= 0 ? i + 1 : 1;
-  return { paso, total, fuera: false, etiqueta: `Paso ${paso} de ${total}` };
+  return { paso, total, fuera: false, completo: false, etiqueta: `Paso ${paso} de ${total}` };
 }
 
 /**
