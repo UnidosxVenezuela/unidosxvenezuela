@@ -26,6 +26,21 @@ enable_signup = true
 [auth.email]
 enable_confirmations = false  # true en producción
 
+# SMTP propio para PRODUCCIÓN (recuperación/confirmación por Resend). Sin esto, Supabase
+# usa su servicio por defecto (limitado a unos pocos correos/hora → no llegan). El stack
+# LOCAL usa Inbucket, por eso este bloque va COMENTADO (para no enviar correos reales en
+# desarrollo). Para versionar la config de producción: descoméntalo, exporta
+# RESEND_SMTP_PASSWORD (= tu API key de Resend) y aplica con `supabase config push`.
+# Alternativa recomendada: configurarlo en el Dashboard. Ver docs/08-CORREO-RESEND.md.
+# [auth.email.smtp]
+# enabled = true
+# host = "smtp.resend.com"
+# port = 465
+# user = "resend"
+# pass = "env(RESEND_SMTP_PASSWORD)"
+# admin_email = "no-reply@TU-DOMINIO"
+# sender_name = "Apoyo por Venezuela"
+
 # Plantillas de correo en español (mismas que se pegan en el Dashboard →
 # Authentication → Emails → Templates). content_path es relativo a la raíz del repo.
 [auth.email.template.recovery]

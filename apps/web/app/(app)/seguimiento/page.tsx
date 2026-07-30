@@ -84,6 +84,7 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                   {ubic && <span className="muted" style={{ fontSize: '.82rem' }}><Icono nombre="ubicacion" size={13} /> {ubic}</span>}
                 </div>
                 {derivs.length > 0 && (
+                  <>
                   <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                     <span className="muted" style={{ fontSize: '.8rem' }}>Derivado a:</span>
                     {derivs.map((d) => (
@@ -96,6 +97,15 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                       </span>
                     ))}
                   </div>
+                  {/* Observaciones/acción de cada derivación: visibles en TODAS las áreas
+                      (son notas internas de coordinación, no datos de contacto). */}
+                  {derivs.filter((d) => d.accion || d.observaciones || d.motivo_cierre).map((d) => (
+                    <div key={d.id + '-obs'} className="muted" style={{ fontSize: '.8rem', marginTop: 4 }}>
+                      <strong>{ETIQUETA_AREA_DESTINO[d.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? d.area}:</strong>{' '}
+                      {[d.accion, d.observaciones, d.motivo_cierre ? 'Cierre: ' + d.motivo_cierre : null].filter(Boolean).join(' · ')}
+                    </div>
+                  ))}
+                  </>
                 )}
                 <div className="muted" style={{ fontSize: '.76rem', marginTop: 8 }}>Última actualización: {fechaHora(c.actualizado_en)}</div>
               </div>

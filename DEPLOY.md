@@ -54,6 +54,13 @@ Te pedirá autenticación de GitHub (usuario + token personal/PAT, o GitHub CLI 
 4. **Auth:** en **Authentication → URL Configuration** añade la URL de tu sitio de Vercel
    (y `http://localhost:3000` para desarrollo) en *Site URL* y *Redirect URLs*.
 5. En producción, activa la confirmación de correo en **Authentication → Providers → Email**.
+6. **Correo (Resend) — imprescindible para que lleguen recuperación de contraseña y
+   confirmaciones.** Estos correos los envía **Supabase**, no la app: sin un **SMTP propio**
+   Supabase usa su servicio por defecto (limitado a unos pocos por hora → no llegan).
+   Configúralo en **Authentication → Emails → SMTP Settings**: host `smtp.resend.com`,
+   puerto `465`, usuario `resend`, contraseña = **API key de Resend**, remitente de un
+   **dominio verificado** en Resend. Sube también el *rate limit* de correos en
+   **Authentication → Rate Limits**. Guía paso a paso: **[`docs/08-CORREO-RESEND.md`](docs/08-CORREO-RESEND.md)**.
 
 ---
 
