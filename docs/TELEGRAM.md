@@ -82,6 +82,45 @@ Database Webhook de push **ya existe**; no cambia.
 
 Desde la app, la persona también puede **Desvincular** en su perfil.
 
+## Si algo no funciona (diagnóstico)
+
+El envío por Telegram es **independiente del web-push**: aunque las claves VAPID no
+estén configuradas, o el push falle, el aviso por Telegram **igual sale**. (Antes no
+era así: `/api/push` devolvía 500 cuando faltaba VAPID y Telegram no se enviaba nunca.)
+
+`POST /api/push` responde con un resumen que dice exactamente qué pasó:
+
+```json
+{ "ok": true, "enviadas": 2, "push": "ok", "telegram": "enviado" }
+```
+
+- `push`: `ok` · `sin-vapid` (faltan `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`).
+- `telegram`: `enviado` · `sin-vincular` (esa persona no vinculó su Telegram) ·
+  `fallo` (Telegram rechazó el envío) · `omitido`.
+
+Cuando Telegram rechaza algo, el motivo que devuelve la Bot API queda en los **logs del
+servidor** (Vercel → Deployments → Functions), con el prefijo `[telegram]`. Los fallos
+más comunes:
+
+| Motivo en el log | Qué pasa | Cómo se arregla |
+| --- | --- | --- |
+| `bot was blocked by the user` | La persona bloqueó al bot | Que lo desbloquee y vuelva a `/start` |
+| `chat not found` | El `telegram_chat_id` ya no vale | Desvincular y volver a vincular desde el perfil |
+| `falta TELEGRAM_BOT_TOKEN` | Variable sin configurar | Rellenarla en Vercel (Production) |
+| `wrong file identifier / HTTP URL specified` | La imagen del aviso no es pública | No hay que hacer nada: el aviso **se reenvía como texto** |
+
+Otras comprobaciones útiles:
+
+- `curl "https://api.telegram.org/bot<TOKEN>/getWebhookInfo"` — debe apuntar a
+  `<APP_URL>/api/telegram/webhook` y traer `pending_update_count` bajo. Si sale
+  `last_error_message: Wrong response from the webhook: 401`, el
+  `TELEGRAM_WEBHOOK_SECRET` de Vercel no coincide con el del `setWebhook`.
+- La vinculación **solo funciona en un chat privado** con el bot: si escribes `/start`
+  en un grupo, el bot te pide que le escribas en privado (así los avisos personales no
+  acaban en un grupo).
+- `/stop` ahora distingue entre «desvinculado» y «este chat no estaba vinculado»,
+  para no confundir al diagnosticar.
+
 ## Fuera de alcance (por ahora)
 
 - Comandos ricos (consultar tareas, responder desde Telegram).
