@@ -631,6 +631,26 @@ export async function soltarCasoRedaccion(formData: FormData) {
   redirigirOk(volver, 'La soltaste.');
 }
 
+// Regresar a verificación (petición #4b): Redacción devuelve un caso confirmado/enviado
+// a 'en_proceso' para que Verificación lo retome. El permiso, el estado, el aviso y el
+// registro los hace la RPC (SECURITY DEFINER); Redacción no toca `casos` directo.
+export async function regresarCasoVerificacion(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/envio-redaccion?caso=' + id);
+  const motivo = opt(formData.get('motivo'))?.slice(0, 500) || null;
+  const { error } = await supabase.rpc('regresar_caso_verificacion', { p_caso: id, p_motivo: motivo });
+  if (error) {
+    return redirigirError(volver, rpcNoExiste(error)
+      ? 'Falta aplicar la migración 0209 para regresar a verificación.'
+      : 'No se pudo regresar la solicitud a verificación: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos'); revalidatePath('/seguimiento');
+  redirigirOk('/envio-redaccion', 'Solicitud regresada a verificación. Ya no está en la cola de Redacción.');
+}
+
 export async function quitarCasoPublicado(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
