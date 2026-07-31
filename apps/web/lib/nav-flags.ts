@@ -39,16 +39,20 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   let clavesLidero = new Set<string>();  // grupos que LIDERO (grupos.lider_id = yo)
   let identidadOK = false;               // 2ª verificación (identidad) aprobada
   let mandoRecopilacion = false;         // líder/coordinador de «gestion_casos» (0143/0207)
+  let mandoLogistica = false;            // líder/coordinador de «gestion_acopio» (0214)
   if (!admin) {
-    const [{ data: lid }, { data: vi }, { data: mr }] = await Promise.all([
+    const [{ data: lid }, { data: vi }, { data: mr }, { data: ml }] = await Promise.all([
       supabase.from('grupos').select('clave').eq('lider_id', userId),
       supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', userId).maybeSingle(),
       // Mando de Recopilación: la RPC (0143) ya exige su 2ª verificación aprobada.
       supabase.rpc('es_mando_recopilacion'),
+      // Mando de Logística: la RPC (0214) también exige la identidad aprobada.
+      supabase.rpc('es_mando_logistica'),
     ]);
     clavesLidero = new Set(((lid ?? []) as any[]).map((g) => g.clave).filter(Boolean));
     identidadOK = (vi as any)?.estado === 'aprobada';
     mandoRecopilacion = mr === true;
+    mandoLogistica = ml === true;
   }
   // Recopilación y Búsqueda EXIGEN 2ª verificación: sin ella se ocultan Casos y
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
@@ -88,7 +92,9 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     envioRedaccion: admin || supRedes || roles.includes('redaccion'),
     // El área de Contenido queda solo para el ADMIN y los LÍDERES de sus grupos.
     contenido: admin || supRedes || CONTENIDO.some((c) => clavesLidero.has(c)),
-    acopio: admin || supLogistica || roles.includes('logistica'),
+    // El líder y los coordinadores del grupo de Logística ven su área aunque no tengan el
+    // rol operativo (0214): si no, no podían ni entrar a desestimar una solicitud.
+    acopio: admin || supLogistica || roles.includes('logistica') || mandoLogistica,
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
     // Departamento de Alianzas Estratégicas (0198): Captación (0129) + Prospección +

@@ -2389,4 +2389,89 @@ begin;
   reset role;
 rollback;
 
+-- ══ El mando de Logística ejerce sus funciones (0214) ══
+
+\echo '== Test 79: 0214 — el LÍDER y los COORDINADORES de Logística (sin el rol operativo) pueden desestimar; el mando de otra área no =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000214a1', 'coordlog@test.local'),
+    ('00000000-0000-0000-0000-0000000214a2', 'liderlog@test.local'),
+    ('00000000-0000-0000-0000-0000000214a3', 'coordotro@test.local'),
+    ('00000000-0000-0000-0000-0000000214a4', 'operlog@test.local') on conflict do nothing;
+
+  -- Mando del grupo de Logística (gestion_acopio) y mando de OTRO grupo, para contrastar.
+  update public.grupos set lider_id = '00000000-0000-0000-0000-0000000214a2' where clave = 'gestion_acopio';
+  insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+    select id, '00000000-0000-0000-0000-0000000214a1', 'coordinador' from public.grupos where clave = 'gestion_acopio';
+  insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
+    select id, '00000000-0000-0000-0000-0000000214a3', 'coordinador' from public.grupos where clave = 'redaccion';
+
+  -- El estado REPORTADO: mando del grupo SIN el rol operativo de su área. (Se fija después
+  -- de la membresía para neutralizar el rol que otorga sincronizar_rol_grupo, 0154.)
+  update public.perfiles set rol = 'coordinador',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000214a1';
+  update public.perfiles set rol = 'lider_grupo',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000214a2';
+  update public.perfiles set rol = 'coordinador',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000214a3';
+  update public.perfiles set rol = 'logistica',    roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000214a4';
+  insert into public.verificaciones_identidad (perfil_id, estado, selfie_path, documento_path, consentimiento) values
+    ('00000000-0000-0000-0000-0000000214a1','aprobada','s','d',true),
+    ('00000000-0000-0000-0000-0000000214a2','aprobada','s','d',true),
+    ('00000000-0000-0000-0000-0000000214a3','aprobada','s','d',true),
+    ('00000000-0000-0000-0000-0000000214a4','aprobada','s','d',true);
+
+  insert into public.casos (id, titulo, categoria, estado, creado_por) values
+    ('00000000-0000-0000-0000-0000000214c1', '_TEST_0214_a', 'Otras informaciones', 'confirmado', null),
+    ('00000000-0000-0000-0000-0000000214c2', '_TEST_0214_b', 'Otras informaciones', 'confirmado', null),
+    ('00000000-0000-0000-0000-0000000214c3', '_TEST_0214_c', 'Otras informaciones', 'en_proceso', null);
+
+  -- (a) La COORDINADORA de Logística desestima.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000214a1')::text, true);
+  do $$ begin
+    if not public.puede_logistica() then raise exception 'FALLO 79a: la coordinadora de Logística no pasa puede_logistica()'; end if;
+  end $$;
+  select public.desestimar_caso('00000000-0000-0000-0000-0000000214c1', 'no procede');
+  reset role;
+
+  -- (b) El LÍDER de Logística también.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000214a2')::text, true);
+  select public.desestimar_caso('00000000-0000-0000-0000-0000000214c2', 'duplicada');
+  reset role;
+
+  do $$ declare e1 text; e2 text; begin
+    select estado::text into e1 from public.casos where id = '00000000-0000-0000-0000-0000000214c1';
+    select estado::text into e2 from public.casos where id = '00000000-0000-0000-0000-0000000214c2';
+    if e1 <> 'desestimado' then raise exception 'FALLO 79b: la coordinadora no pudo desestimar (estado=%)', e1; end if;
+    if e2 <> 'desestimado' then raise exception 'FALLO 79c: el líder no pudo desestimar (estado=%)', e2; end if;
+  end $$;
+
+  -- (c) El mando de OTRA área no gana los permisos de Logística.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000214a3')::text, true);
+  do $$ begin
+    if public.puede_logistica() then raise exception 'FALLO 79d: el mando de otra área pasa puede_logistica()'; end if;
+  end $$;
+  reset role;
+
+  -- (d) Con el permiso correcto pero el ESTADO equivocado, el mensaje explica el motivo
+  --     real (antes decía «No tienes permiso», que despistaba).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000214a4')::text, true);
+  do $$ declare msg text; begin
+    begin
+      perform public.desestimar_caso('00000000-0000-0000-0000-0000000214c3', 'x');
+      raise exception 'FALLO 79e: se desestimó una solicitud en un estado no permitido';
+    exception when insufficient_privilege then
+      get stacked diagnostics msg = message_text;
+      if msg like '%No tienes permiso%' then
+        raise exception 'FALLO 79f: el mensaje sigue culpando al permiso en vez de al estado (%)', msg;
+      end if;
+      if msg not like '%en_proceso%' then
+        raise exception 'FALLO 79g: el mensaje no dice en qué estado está la solicitud (%)', msg;
+      end if;
+    end;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
