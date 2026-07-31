@@ -14,7 +14,27 @@ export async function getUsuarioYPerfil() {
     .eq('id', user.id)
     .single();
 
-  return { user, perfil: (perfil as Perfil) ?? null };
+  const p = (perfil as Perfil) ?? null;
+
+  // MANDO DE ÁREA (0214): quien LIDERA o COORDINA un grupo suele tener el rol principal
+  // «coordinador»/«lider_grupo» pero NO el rol operativo de su área, así que las pantallas
+  // (que miran los roles) lo dejaban fuera de su propia área. La RLS ya lo reconoce
+  // —`puede_logistica()` incluye a `es_mando_logistica()`—; aquí se refleja lo mismo en la
+  // app. No se INVENTA un rol (eso confundiría a Administración): se anota aparte, en
+  // `mandos`, y las funciones de permiso lo consultan.
+  // La RPC solo se llama cuando PUEDE cambiar algo: si ya tiene el rol operativo, o no es
+  // coordinación/liderazgo de grupo, no hace falta ir a la base de datos.
+  if (p) {
+    const roles = rolesDe(p as EntradaRoles);
+    const yaOpera = roles.some((r) => ['admin', 'logistica', 'admin_logistica'].includes(r));
+    const puedeSerMando = !yaOpera && (p.rol === 'coordinador' || p.rol === 'lider_grupo');
+    if (puedeSerMando) {
+      const { data: mandoLog } = await supabase.rpc('es_mando_logistica');
+      if (mandoLog === true) (p as PerfilConMandos).mandos = ['logistica'];
+    }
+  }
+
+  return { user, perfil: p };
 }
 
 /** Exige sesión; redirige a /login si no la hay. */
@@ -33,7 +53,18 @@ const COORDINACION: Rol[] = ['admin'];
  * completo (para considerar también los roles adicionales, roles_extra). Un
  * usuario puede tener más de un rol: se evalúa el CONJUNTO de roles.
  */
-type EntradaRoles = Rol | { rol?: Rol | null; roles_extra?: Rol[] | null } | null | undefined;
+// `mandos`: áreas que la persona LIDERA o COORDINA sin tener su rol operativo (0214).
+// Lo rellena getUsuarioYPerfil; no viene de la tabla `perfiles`.
+export type PerfilConMandos = Perfil & { mandos?: string[] };
+type EntradaRoles =
+  | Rol
+  | { rol?: Rol | null; roles_extra?: Rol[] | null; mandos?: string[] | null }
+  | null
+  | undefined;
+/** ¿La persona es MANDO (líder/coordinador) de esta área, aunque no tenga su rol? */
+export function esMandoDe(e: EntradaRoles, area: string): boolean {
+  return typeof e === 'object' && e !== null && Array.isArray(e.mandos) && e.mandos.includes(area);
+}
 export function rolesDe(e: EntradaRoles): Rol[] {
   if (!e) return [];
   if (typeof e === 'string') return [e];
@@ -226,7 +257,9 @@ export function puedePipeline(e?: EntradaRoles) {
 // Módulo de insumos / logística: coordinación, rol logística o el admin del área
 // Logística y Acopio gestionan el flujo.
 export function puedeLogistica(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']);
+  // El líder y los coordinadores del grupo de Logística operan su área (0214), igual que
+  // ya los reconoce la RLS con `puede_logistica()`.
+  return tieneAlguno(e, ['admin', 'logistica', 'admin_logistica']) || esMandoDe(e, 'logistica');
 }
 
 // ¿Puede REGISTRAR (crear) un «Donación-Ofrecimiento»? SOLO Recopilación (que CAPTA las
