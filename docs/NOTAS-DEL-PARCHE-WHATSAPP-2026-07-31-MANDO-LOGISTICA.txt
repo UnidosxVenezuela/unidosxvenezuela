@@ -1,0 +1,24 @@
+🇻🇪 *NOTAS DEL PARCHE — 31 jul 2026 · corrección*
+_Apoyo por Venezuela_
+
+Corrección rápida a un problema que reportó *Logística*: sus *coordinadores y líderes* no lograban usar la opción *«Desestimar»*.
+
+✅ *2 correcciones*  ·  🚚 *1 área*  ·  🛠️ *1 cambio de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🚚 *LOGÍSTICA*
+
+• *El mando del grupo ya puede ejercer sus funciones.* Quien *lidera* o *coordina* el grupo de Logística suele tener el rol de _coordinador_ o _líder_, pero no el rol operativo de *Logística*. Como toda el área se controla con ese rol, el mando quedaba fuera: no podía *desestimar* una solicitud y —el problema de fondo— *ni siquiera veía la sección de Logística* en el menú. Corregido: el líder y los coordinadores del grupo ahora operan su área completa (solicitudes, insumos, proveedores, envíos y acopio), no solo el botón que faltaba. Es el mismo arreglo que ya se le había hecho a *Recopilación*.
+
+• *La app ahora dice POR QUÉ dice que no.* Antes respondía _«No tienes permiso»_ incluso cuando el permiso estaba bien y lo que fallaba era otra cosa —por ejemplo, que la solicitud aún no estaba *confirmada*—. Ahora el mensaje indica el *motivo real* y a quién acudir, así nadie pierde tiempo pensando que le faltan permisos.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Un cambio de base de datos: la migración *0214*. Se aplica en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. Importante: el arreglo vive en la base de datos, así que hasta aplicarla el mando sigue bloqueado. Requisito para el mando: tener su *2ª verificación de identidad aprobada* (como en las demás áreas).
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Resulta que las únicas personas que no podían entrar a *Logística* eran… *quienes dirigen Logística*. La app se tomó lo de _«el que manda no se mete en el trabajo del equipo»_ de una forma bastante literal. 🚪🔑
+Ya tienen llave de su propia casa. Y de paso le enseñamos a la app a *explicar sus negativas*, que antes contestaba «no tienes permiso» hasta cuando el permiso estaba impecable.
+
+_Apoyo por Venezuela · Notas del parche · Julio 2026_
