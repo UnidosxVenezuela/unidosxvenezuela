@@ -651,6 +651,29 @@ export async function regresarCasoVerificacion(formData: FormData) {
   redirigirOk('/envio-redaccion', 'Solicitud regresada a verificación. Ya no está en la cola de Redacción.');
 }
 
+// Desestimar una solicitud con motivo (petición #2, decisión 3): estado «desestimado»
+// APARTE de «falso» (no ensucia la métrica de Verificación). La usan Redacción y Logística
+// (solo en los estados que ven) y Verificación. El permiso, el sello del motivo, la
+// cancelación de la solicitud de Logística ligada y la auditoría los hace la RPC.
+export async function desestimarCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const id = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/envio-redaccion?caso=' + id);
+  const motivo = opt(formData.get('motivo'))?.slice(0, 500) || null;
+  if (!motivo) return redirigirError(volver, 'Indica el motivo para desestimar la solicitud.');
+  const { error } = await supabase.rpc('desestimar_caso', { p_caso: id, p_motivo: motivo });
+  if (error) {
+    return redirigirError(volver, rpcNoExiste(error)
+      ? 'Falta aplicar la migración 0210 para desestimar solicitudes.'
+      : 'No se pudo desestimar la solicitud: ' + error.message);
+  }
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath('/seguimiento');
+  // Logística se queda en su solicitud (ya cancelada); Redacción vuelve a la cola (el caso salió).
+  redirigirOk(volver.includes('/insumos') ? volver : '/envio-redaccion', 'Solicitud desestimada. Quedó registrado el motivo.');
+}
+
 export async function quitarCasoPublicado(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

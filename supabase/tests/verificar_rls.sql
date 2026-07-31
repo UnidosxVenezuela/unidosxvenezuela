@@ -2086,4 +2086,77 @@ begin;
   reset role;
 rollback;
 
+-- ══ Desestimar (con motivo, estado aparte) + devolver una entrega (0210) ══
+
+\echo '== Test 75: 0210 — desestimar desde Redacción/Logística (estado «desestimado» aparte); devolver un «entregado» =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000210a1', 'redac210@test.local'),
+    ('00000000-0000-0000-0000-0000000210a2', 'logi210@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000210a1';
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000210a2';
+
+  insert into public.casos (id, titulo, categoria, estado, creado_por) values
+    ('00000000-0000-0000-0000-0000000210c1', '_TEST_0210_red',  'Otras informaciones', 'enviado_redaccion', null),
+    ('00000000-0000-0000-0000-0000000210c2', '_TEST_0210_proc', 'Otras informaciones', 'en_proceso',        null),
+    ('00000000-0000-0000-0000-0000000210c3', '_TEST_0210_logi', 'Otras informaciones', 'confirmado',        null),
+    ('00000000-0000-0000-0000-0000000210c4', '_TEST_0210_ent',  'Otras informaciones', 'resuelto',          null);
+  -- Solicitud ligada al caso de Logística (se debe cancelar al desestimar).
+  insert into public.solicitudes_insumo (id, titulo, tipo, estado, caso_id) values
+    ('00000000-0000-0000-0000-000000210053', 'ins_logi', 'otro'::public.tipo_insumo, 'solicitado'::public.estado_insumo, '00000000-0000-0000-0000-0000000210c3');
+  -- Solicitud ENTREGADA ligada al caso resuelto (se debe poder devolver).
+  insert into public.solicitudes_insumo (id, titulo, tipo, estado, caso_id) values
+    ('00000000-0000-0000-0000-000000210054', 'ins_ent', 'otro'::public.tipo_insumo, 'entregado'::public.estado_insumo, '00000000-0000-0000-0000-0000000210c4');
+  -- El caso resuelto estaba VALIDADO (como todo confirmado): así el devolver pasa el candado
+  -- gate_confirmacion_caso al revertir resuelto→confirmado.
+  insert into public.casos_verificacion_campo (caso_id, campo, estado)
+  select '00000000-0000-0000-0000-0000000210c4'::uuid, unnest(array['referente','descripcion','fuente','vigencia','evidencia']), 'verificado';
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000210a1')::text, true);
+  -- (c-pre) desestimar SIN motivo debe fallar (c1 aún en enviado_redaccion → pasa el permiso).
+  do $$ begin
+    begin
+      perform public.desestimar_caso('00000000-0000-0000-0000-0000000210c1', null);
+      raise exception 'FALLO 75c-pre: desestimar sin motivo no falló';
+    exception when data_exception then null;  -- 22023 esperado
+    end;
+  end $$;
+  -- (a) Redacción desestima un caso que SÍ ve (enviado_redaccion).
+  select public.desestimar_caso('00000000-0000-0000-0000-0000000210c1', 'no procede difundir');
+  -- (b) Redacción NO puede desestimar un caso en_proceso (estado que no ve).
+  do $$ begin
+    begin
+      perform public.desestimar_caso('00000000-0000-0000-0000-0000000210c2', 'x');
+      raise exception 'FALLO 75b: Redacción desestimó un caso en_proceso (no debía)';
+    exception when insufficient_privilege then null;  -- 42501 esperado
+    end;
+  end $$;
+  reset role;
+
+  -- (d) Logística desestima su caso confirmado → cancela la solicitud ligada.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000210a2')::text, true);
+  select public.desestimar_caso('00000000-0000-0000-0000-0000000210c3', 'duplicado');
+  -- (e) Logística devuelve la entrega → solicitud en_ruta, caso confirmado.
+  select public.devolver_entrega_insumo('00000000-0000-0000-0000-000000210054');
+  reset role;
+
+  do $$ declare e1 text; e3 text; e4 text; s3 text; s4 text; nt text; begin
+    select estado::text, notas into e1, nt from public.casos where id = '00000000-0000-0000-0000-0000000210c1';
+    if e1 <> 'desestimado' then raise exception 'FALLO 75a: Redacción no dejó el caso en «desestimado» (estado=%)', e1; end if;
+    if nt not ilike '%Desestimado%' then raise exception 'FALLO 75a2: no se selló el motivo en notas (notas=%)', nt; end if;
+
+    select estado::text into e3 from public.casos where id = '00000000-0000-0000-0000-0000000210c3';
+    select estado::text into s3 from public.solicitudes_insumo where id = '00000000-0000-0000-0000-000000210053';
+    if e3 <> 'desestimado' then raise exception 'FALLO 75d: Logística no desestimó su caso (estado=%)', e3; end if;
+    if s3 <> 'cancelado'   then raise exception 'FALLO 75d2: desestimar no canceló la solicitud ligada (estado=%)', s3; end if;
+
+    select estado::text into e4 from public.casos where id = '00000000-0000-0000-0000-0000000210c4';
+    select estado::text into s4 from public.solicitudes_insumo where id = '00000000-0000-0000-0000-000000210054';
+    if s4 <> 'en_ruta'    then raise exception 'FALLO 75e: devolver no revirtió la solicitud a en_ruta (estado=%)', s4; end if;
+    if e4 <> 'confirmado' then raise exception 'FALLO 75e2: devolver no revirtió el caso a confirmado (estado=%)', e4; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

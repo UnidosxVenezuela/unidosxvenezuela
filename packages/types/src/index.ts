@@ -177,7 +177,7 @@ export interface AdjuntoTarea {
   creado_en: string;
 }
 
-export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion' | 'resuelto';
+export type EstadoCaso = 'pendiente' | 'en_proceso' | 'confirmado' | 'falso' | 'enviado_redaccion' | 'resuelto' | 'desestimado';
 
 /** Estado de revisión de un listado digitalizado (paso de Verificación de Digitalización, 0125). */
 export type EstadoListado = 'por_verificar' | 'verificado' | 'observado';

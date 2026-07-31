@@ -467,9 +467,9 @@ export const ROLES_CADENA_CONTENIDO: Rol[] = ['recopilacion', 'verificador', 're
 
 export const ETIQUETA_ESTADO_CASO: Record<EstadoCaso, string> = {
   pendiente: 'Pendiente', en_proceso: 'En proceso', confirmado: 'Confirmado y activo', falso: 'Falso / descartado',
-  enviado_redaccion: 'Enviado a Redacción', resuelto: 'Resuelto / atendido',
+  enviado_redaccion: 'Enviado a Redacción', resuelto: 'Resuelto / atendido', desestimado: 'Desestimado',
 };
-export const ESTADOS_CASO: EstadoCaso[] = ['pendiente', 'en_proceso', 'confirmado', 'falso', 'enviado_redaccion', 'resuelto'];
+export const ESTADOS_CASO: EstadoCaso[] = ['pendiente', 'en_proceso', 'confirmado', 'falso', 'enviado_redaccion', 'resuelto', 'desestimado'];
 // Categorías vigentes al crear/verificar (los casos viejos conservan la suya).
 export const CATEGORIAS_CASO = ['Desaparecidos', 'Otras informaciones'];
 

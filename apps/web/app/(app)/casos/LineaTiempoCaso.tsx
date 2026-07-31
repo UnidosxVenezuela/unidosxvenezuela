@@ -22,7 +22,7 @@ export default function LineaTiempoCaso({ caso, derivaciones = [], casoValidado 
 }) {
   const estado = caso.estado;
   const cerrado = estado === 'resuelto';
-  const fuera = estado === 'falso';
+  const fuera = estado === 'falso' || estado === 'desestimado';  // descartada / desestimada = fuera del flujo
   const derivs = (derivaciones ?? []) as any[];
   const derivado = derivs.length > 0;
 

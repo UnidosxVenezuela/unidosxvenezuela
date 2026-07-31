@@ -34,6 +34,7 @@ export function pasoDeCaso(caso: { estado?: EstadoCaso | string | null; publicad
   const total = PASOS_CASO.length;
   const estado = (caso?.estado ?? 'pendiente') as EstadoCaso;
   if (estado === 'falso') return { paso: 0, total, fuera: true, completo: false, etiqueta: 'Salió del flujo' };
+  if (estado === 'desestimado') return { paso: 0, total, fuera: true, completo: false, etiqueta: 'Desestimada' };
   // Publicada (hecho ortogonal al estado, 0166) o resuelta = flujo terminado (Paso 5).
   if (estado === 'resuelto' || caso?.publicado_en) return { paso: total, total, fuera: false, completo: true, etiqueta: 'Finalizada' };
   const i = PASOS_CASO.indexOf(estado);
