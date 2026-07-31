@@ -157,22 +157,27 @@ begin;
   end $$;
 rollback;
 
-\echo '== Test 8: Redacción ve confirmados por la VISTA CURADA, no en_proceso; y ya NO lee casos directo (0180) =='
+\echo '== Test 8: Redacción ve por la VISTA CURADA lo ENVIADO a redacción; NO un confirmado sin derivar ni en_proceso; y ya NO lee casos directo (0180/0208) =='
 begin;
+  insert into public.casos (titulo, estado, creado_por) values ('_TEST_env',  'enviado_redaccion', null);
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_conf', 'confirmado', null);
   insert into public.casos (titulo, estado, creado_por) values ('_TEST_proc', 'en_proceso', null);
   update public.perfiles set rol = 'voluntario', roles_extra = '{redaccion}' where id = :'admin';
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', :'admin')::text, true);
   do $$
-  declare n_casos int; n_conf int; n_proc int;
+  declare n_casos int; n_env int; n_conf int; n_proc int;
   begin
     -- Fase 2b (0180): Redacción ya NO lee `casos` directo; lo hace por `casos_difusion`.
     select count(*) into n_casos from public.casos;
     if n_casos <> 0 then raise exception 'FALLO: Redacción todavía lee casos directamente (n=%)', n_casos; end if;
+    select count(*) into n_env  from public.casos_difusion where titulo = '_TEST_env';
     select count(*) into n_conf from public.casos_difusion where titulo = '_TEST_conf';
     select count(*) into n_proc from public.casos_difusion where titulo = '_TEST_proc';
-    if n_conf <> 1 then raise exception 'FALLO: envío no ve un caso confirmado (vía vista curada)'; end if;
+    -- Ruteo EXPLÍCITO (0208): la vista curada muestra lo enviado a redacción (o derivado a
+    -- redes / requiere_difusion / publicado), NO un simple 'confirmado' sin derivar.
+    if n_env  <> 1 then raise exception 'FALLO: envío no ve un caso enviado a redacción (vía vista curada)'; end if;
+    if n_conf <> 0 then raise exception 'FALLO 0208: envío ve un confirmado SIN derivar a redes'; end if;
     if n_proc <> 0 then raise exception 'FALLO: envío ve casos en proceso ajenos'; end if;
   end $$;
 rollback;
@@ -1821,8 +1826,11 @@ begin;
     ('00000000-0000-0000-0000-0000000094a2', 'verif94@test.local') on conflict do nothing;
   update public.perfiles set rol = 'redaccion',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000094a1';
   update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000094a2';
+  -- 0208 (ruteo explícito): para ser visible en la vista curada, el caso debe estar
+  -- enviado a redacción (o derivado a redes / requiere_difusion / publicado), no un
+  -- simple 'confirmado'.
   insert into public.casos (id, titulo, categoria, estado, contacto, creado_por)
-    values ('00000000-0000-0000-0000-0000000094ac', '_TEST_red_priv', 'Otras informaciones', 'confirmado', 'TELEFONO_SECRETO', null);
+    values ('00000000-0000-0000-0000-0000000094ac', '_TEST_red_priv', 'Otras informaciones', 'enviado_redaccion', 'TELEFONO_SECRETO', null);
 
   -- Redacción ya NO lee filas de `casos` (ni el contacto interno), pero SÍ la vista curada.
   set local role authenticated;
@@ -1943,6 +1951,93 @@ begin;
     select estado into v_fuente from public.casos_verificacion_campo where caso_id = '00000000-0000-0000-0000-0000000183aa' and campo = 'fuente';
     if v_fuente <> 'verificado' then raise exception 'FALLO 71e: renombrar el titulo reseteó un campo del semáforo (estado=%)', v_fuente; end if;
   end $$;
+rollback;
+
+-- ══ Ruteo EXPLÍCITO de la derivación (0208) ══
+
+\echo '== Test 72: ruteo EXPLÍCITO (0208) — derivar a logística crea su solicitud; a redes la hace visible; confirmar SOLO no deriva a logística =='
+begin;
+  -- Tres casos VALIDADOS. L (requerimiento → logística), R (redes), M (confirmar manual).
+  insert into public.casos (id, titulo, estado, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, creado_por) values
+    ('00000000-0000-0000-0000-0000000208a1', '_TEST_0208_log', 'pendiente', true, 10, -66, 'alimentos', '10', 'alta', null),
+    ('00000000-0000-0000-0000-0000000208a3', '_TEST_0208_man', 'pendiente', true, 10, -66, 'higiene',   '3',  'baja', null);
+  insert into public.casos (id, titulo, estado, es_requerimiento, creado_por) values
+    ('00000000-0000-0000-0000-0000000208a2', '_TEST_0208_red', 'pendiente', false, null);
+
+  -- Validar (semáforo en verde): requerimiento suma ubicacion+cantidad.
+  insert into public.casos_verificacion_campo (caso_id, campo, estado)
+  select c.id, x.campo, 'verificado'
+  from (values ('00000000-0000-0000-0000-0000000208a1'::uuid, true),
+               ('00000000-0000-0000-0000-0000000208a2'::uuid, false),
+               ('00000000-0000-0000-0000-0000000208a3'::uuid, true)) c(id, req)
+  cross join lateral (
+    select unnest(case when c.req
+      then array['referente','descripcion','fuente','vigencia','evidencia','ubicacion','cantidad']
+      else array['referente','descripcion','fuente','vigencia','evidencia'] end) as campo
+  ) x;
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000aa')::text, true);
+
+  select public.derivar_caso('00000000-0000-0000-0000-0000000208a1', array['logistica']);
+  select public.derivar_caso('00000000-0000-0000-0000-0000000208a2', array['redes']);
+  update public.casos set estado = 'confirmado' where id = '00000000-0000-0000-0000-0000000208a3';
+
+  do $$
+  declare n_log int; n_red int; n_man int; v_log int; v_red int; v_man int; e_man text; e_log text;
+  begin
+    -- (a) Solicitud de Logística: SOLO para el derivado a logística.
+    select count(*) into n_log from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-0000000208a1';
+    select count(*) into n_red from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-0000000208a2';
+    select count(*) into n_man from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-0000000208a3';
+    if n_log <> 1 then raise exception 'FALLO 72a: derivar a logística no creó su solicitud (n=%)', n_log; end if;
+    if n_red <> 0 then raise exception 'FALLO 72b: derivar SOLO a redes creó una solicitud de logística (n=%)', n_red; end if;
+
+    -- (b) La confirmación manual debe reflejarse (si RLS la bloqueara, 72c no probaría nada).
+    select estado::text into e_man from public.casos where id = '00000000-0000-0000-0000-0000000208a3';
+    if e_man <> 'confirmado' then raise exception 'FALLO 72c-pre: no se pudo confirmar manualmente (estado=%)', e_man; end if;
+    -- …y NO debe crear tarea de logística: autoderivar_caso_confirmado quedó neutralizado.
+    if n_man <> 0 then raise exception 'FALLO 72c: confirmar sin derivar creó una solicitud de logística (autoderivar no neutralizado, n=%)', n_man; end if;
+
+    -- (c) Derivar auto-confirma (excepto Desaparecidos): el caso logística quedó confirmado.
+    select estado::text into e_log from public.casos where id = '00000000-0000-0000-0000-0000000208a1';
+    if e_log <> 'confirmado' then raise exception 'FALLO 72d: derivar no auto-confirmó el caso (estado=%)', e_log; end if;
+
+    -- (d) Vista curada (Redes): ve lo derivado a redes; NO lo derivado solo a logística ni el confirmado sin derivar.
+    select count(*) into v_log from public.casos_difusion where id = '00000000-0000-0000-0000-0000000208a1';
+    select count(*) into v_red from public.casos_difusion where id = '00000000-0000-0000-0000-0000000208a2';
+    select count(*) into v_man from public.casos_difusion where id = '00000000-0000-0000-0000-0000000208a3';
+    if v_red <> 1 then raise exception 'FALLO 72e: Redes no ve el caso derivado a redes (n=%)', v_red; end if;
+    if v_log <> 0 then raise exception 'FALLO 72f: Redes ve un caso derivado SOLO a logística (n=%)', v_log; end if;
+    if v_man <> 0 then raise exception 'FALLO 72g: Redes ve un caso confirmado sin derivar (n=%)', v_man; end if;
+  end $$;
+  reset role;
+rollback;
+
+-- ══ Desaparecidos: derivar NO auto-confirma ni crea logística; queda fuera de la vista (0208) ══
+
+\echo '== Test 73: Desaparecidos — derivar NO auto-confirma, NO crea logística, y no aparece en la vista curada (0208) =='
+begin;
+  insert into public.casos (id, titulo, categoria, estado, es_requerimiento, creado_por) values
+    ('00000000-0000-0000-0000-0000000208b1', '_TEST_0208_desap', 'Desaparecidos', 'pendiente', false, null);
+  insert into public.casos_verificacion_campo (caso_id, campo, estado)
+  select '00000000-0000-0000-0000-0000000208b1'::uuid, unnest(array['referente','descripcion','fuente','vigencia','evidencia']), 'verificado';
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000aa')::text, true);
+  select public.derivar_caso('00000000-0000-0000-0000-0000000208b1', array['logistica','redes']);
+
+  do $$
+  declare e text; n_sol int; n_vis int;
+  begin
+    select estado::text into e from public.casos where id = '00000000-0000-0000-0000-0000000208b1';
+    if e <> 'pendiente' then raise exception 'FALLO 73a: un Desaparecidos se auto-confirmó al derivar (estado=%)', e; end if;
+    select count(*) into n_sol from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-0000000208b1';
+    if n_sol <> 0 then raise exception 'FALLO 73b: un Desaparecidos derivado a logística creó una solicitud (n=%)', n_sol; end if;
+    select count(*) into n_vis from public.casos_difusion where id = '00000000-0000-0000-0000-0000000208b1';
+    if n_vis <> 0 then raise exception 'FALLO 73c: un Desaparecidos aparece en la vista curada de difusión (n=%)', n_vis; end if;
+  end $$;
+  reset role;
 rollback;
 
 \echo '== TODOS LOS TESTS DE RLS PASARON =='
