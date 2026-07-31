@@ -2159,4 +2159,81 @@ begin;
   end $$;
 rollback;
 
+-- ══ Logística pide a Redacción lo que no pudo cubrir (cobertura parcial, 0211) ══
+
+\echo '== Test 76: 0211 — Logística crea la solicitud por cobertura parcial: hereda verificación, va a Redes, no vuelve a Logística =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000211a1', 'logi211@test.local'),
+    ('00000000-0000-0000-0000-0000000211a2', 'redac211@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000211a1';
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000211a2';
+
+  -- Caso padre VALIDADO y confirmado, con ubicación y contacto (los datos a reutilizar).
+  insert into public.casos (id, titulo, descripcion, categoria, estado, es_requerimiento, lat, lng,
+                            req_tipo, req_cantidad, req_urgencia, contacto, ubicacion_estado, creado_por)
+  values ('00000000-0000-0000-0000-0000000211c1', '_TEST_0211_padre', 'desc padre', 'Otras informaciones',
+          'confirmado', true, 10.5, -66.9, 'alimentos', '100 kg', 'critica', 'TELEFONO_PADRE', 'Miranda', null);
+  insert into public.casos_verificacion_campo (caso_id, campo, estado)
+  select '00000000-0000-0000-0000-0000000211c1'::uuid,
+         unnest(array['referente','descripcion','fuente','vigencia','evidencia','ubicacion','cantidad']), 'verificado';
+  -- Tarea de Logística ligada (ya entregada en parte).
+  insert into public.solicitudes_insumo (id, titulo, tipo, urgencia, estado, caso_id) values
+    ('00000000-0000-0000-0000-000000211051', 'ins_padre', 'alimentos'::public.tipo_insumo, 'critica'::public.prioridad,
+     'en_ruta'::public.estado_insumo, '00000000-0000-0000-0000-0000000211c1');
+
+  -- (a) Redacción NO puede pedir la cobertura parcial (es acción de Logística).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000211a2')::text, true);
+  do $$ begin
+    begin
+      perform public.solicitar_cobertura_parcial('00000000-0000-0000-0000-000000211051', 'agua');
+      raise exception 'FALLO 76a: Redacción pudo pedir la cobertura parcial (no debía)';
+    exception when insufficient_privilege then null;  -- 42501 esperado
+    end;
+  end $$;
+  reset role;
+
+  -- (b) Logística la pide: crea el caso hijo.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000211a1')::text, true);
+  do $$
+  declare v_hijo uuid; h record; n_der int; n_sol int; v_val boolean;
+  begin
+    v_hijo := public.solicitar_cobertura_parcial('00000000-0000-0000-0000-000000211051', '40 kg de arroz', '40 kg', 'solo se cubrió el 60%');
+    if v_hijo is null then raise exception 'FALLO 76b: no se creó la solicitud de cobertura parcial'; end if;
+
+    select * into h from public.casos where id = v_hijo;
+    -- Marcado como solicitud de Logística por cobertura parcial.
+    if h.origen_area is distinct from 'logistica' then raise exception 'FALLO 76c: el caso hijo no quedó marcado como origen logistica (v=%)', h.origen_area; end if;
+    if h.caso_padre_id is distinct from '00000000-0000-0000-0000-0000000211c1'::uuid then raise exception 'FALLO 76d: el caso hijo no apunta al padre'; end if;
+    -- Nace confirmado (no vuelve a Verificación) y reutiliza los datos del padre.
+    if h.estado::text <> 'confirmado' then raise exception 'FALLO 76e: el caso hijo no nació confirmado (estado=%)', h.estado; end if;
+    if h.contacto is distinct from 'TELEFONO_PADRE' then raise exception 'FALLO 76f: no reutilizó el contacto del padre'; end if;
+    if h.descripcion not like '%FALTA POR CUBRIR: 40 kg de arroz%' then raise exception 'FALLO 76g: la descripción no dice qué falta'; end if;
+    -- Hereda la verificación: queda Validado sin pasar por Verificación.
+    v_val := public.caso_esta_validado(v_hijo);
+    if not v_val then raise exception 'FALLO 76h: el caso hijo no heredó la verificación del padre'; end if;
+
+    -- Se deriva a REDES (y «crítica» entra como «alta» en la derivación).
+    select count(*) into n_der from public.casos_derivaciones where caso_id = v_hijo and area = 'redes';
+    if n_der <> 1 then raise exception 'FALLO 76i: no se derivó a redes (n=%)', n_der; end if;
+    -- …y NO se crea otra tarea de Logística (sin bucle).
+    select count(*) into n_sol from public.solicitudes_insumo where caso_id = v_hijo;
+    if n_sol <> 0 then raise exception 'FALLO 76j: la cobertura parcial creó otra tarea de Logística (n=%)', n_sol; end if;
+  end $$;
+  reset role;
+
+  -- (c) Redacción lo ve en su vista curada, con la procedencia para distinguirlo.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000211a2')::text, true);
+  do $$ declare v_org text; v_pad bigint; n int; begin
+    select count(*) into n from public.casos_difusion where origen_area = 'logistica';
+    if n <> 1 then raise exception 'FALLO 76k: Redacción no ve la solicitud de cobertura parcial (n=%)', n; end if;
+    select origen_area, caso_padre_numero into v_org, v_pad from public.casos_difusion where origen_area = 'logistica';
+    if v_pad is null then raise exception 'FALLO 76l: la vista no expone el número de la solicitud original'; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

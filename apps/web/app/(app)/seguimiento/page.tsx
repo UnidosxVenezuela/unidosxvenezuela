@@ -82,6 +82,12 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                     : <Pill tono="aviso" punto={false}>En verificación</Pill>}
                   {/* #4c: al publicar, el recorrido lo refleja (la difusión ya terminó su parte). */}
                   {c.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
+                  {/* 0211: solicitud creada por Logística con lo que no pudo cubrir. */}
+                  {c.origen_area === 'logistica' && (
+                    <Pill tono="info" punto={false}>
+                      🚚 Cobertura parcial{c.caso_padre_numero ? ' de #' + String(c.caso_padre_numero).padStart(5, '0') : ''}
+                    </Pill>
+                  )}
                   {c.es_requerimiento && c.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[c.req_tipo as keyof typeof ETIQUETA_TIPO_INSUMO] ?? c.req_tipo}</Pill>}
                   {ubic && <span className="muted" style={{ fontSize: '.82rem' }}><Icono nombre="ubicacion" size={13} /> {ubic}</span>}
                 </div>
