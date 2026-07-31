@@ -1,9 +1,9 @@
 🇻🇪 *NOTAS DEL PARCHE — 31 jul 2026*
 _Apoyo por Venezuela_
 
-Esta tanda es, sobre todo, *lo que ustedes pidieron*. Le pusimos orden al *flujo de las solicitudes*: cada área recibe *solo lo suyo* (se acabó el caso que caía en Redes y en Logística a la vez), derivar ya *confirma sola*, se puede *desestimar dejando el motivo* desde cualquier departamento y —por fin— *devolver una entrega*. Redacción trabaja con el *material completo*, Logística puede pedir *lo que no logró cubrir* y *adjuntar imágenes* a la solicitud, y arreglamos los *avisos de Telegram*, que no estaban saliendo.
+Esta tanda es, sobre todo, *lo que ustedes pidieron*. Le pusimos orden al *flujo de las solicitudes*: cada área recibe *solo lo suyo* (se acabó el caso que caía en Redes y en Logística a la vez), derivar ya *confirma sola*, se puede *desestimar dejando el motivo* desde cualquier departamento y —por fin— *devolver una entrega*. Redacción trabaja con el *material completo*, Logística puede pedir *lo que no logró cubrir*, y arreglamos los *avisos de Telegram*, que no estaban saliendo.
 
-✅ *21 mejoras*  ·  🗂️ *7 áreas*  ·  🛠️ *13 cambios de base de datos*
+✅ *19 mejoras*  ·  🗂️ *7 áreas*  ·  🛠️ *11 cambios de base de datos*
 
 ━━━━━━━━━━━━━━━━━━
 🔀 *EL FLUJO DE LAS SOLICITUDES*
@@ -33,10 +33,6 @@ Esta tanda es, sobre todo, *lo que ustedes pidieron*. Le pusimos orden al *flujo
 🚚 *LOGÍSTICA*
 
 • *Pedir a Redacción lo que NO se pudo cubrir (cobertura parcial).* Cuando una solicitud se cubre *a medias*, ya no hay que elegir entre darla por cerrada o marcarla como no cubierta. Con la tarjeta *«Cobertura parcial»* se envía a Redacción una solicitud *solo por lo que falta* (qué falta, cuánto y una nota). *Reutiliza los datos* de la original —así que *no vuelve a pasar por Verificación*— y llega marcada como *🚚 Cobertura parcial*, con el número de la solicitud de la que viene, para que Redacción sepa exactamente qué es.
-
-• *Adjuntar imágenes a la solicitud.* Hasta ahora Logística solo podía subir *una* foto y *solo al final* (la evidencia de entrega). Ahora puede adjuntar *varias, en cualquier momento* de la gestión —el insumo recibido, la guía de despacho, el punto de entrega, el estado de la carga— y, sobre todo, *a la solicitud misma*: quedan *visibles para todas las áreas* (Verificación, Recopilación y Redacción), no encerradas en Logística. Cada quien puede *quitar lo que subió*.
-
-• *Y al revés también.* Las imágenes que Logística ya tenía de su gestión dejaron de ser privadas: ahora *Verificación y Redacción también las ven*. Nada de fotos útiles guardadas en un cajón al que nadie más entra.
 
 ━━━━━━━━━━━━━━━━━━
 👀 *QUE NADIE TRABAJE A CIEGAS*
@@ -70,12 +66,10 @@ Esta tanda es, sobre todo, *lo que ustedes pidieron*. Le pusimos orden al *flujo
 
 ━━━━━━━━━━━━━━━━━━
 🔧 *PARA EL ADMINISTRADOR*
-Esta tanda trae cambios de base de datos: van de la *0201 a la 0213*. Se aplican en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types* (esta vez el `db:types` *importa*: hay un estado nuevo, «Desestimado»). Como siempre, es a prueba de fallos: mientras no se apliquen, lo nuevo muestra «aún no disponible» en vez de romperse. Para los avisos, revisa las variables de *Telegram* y el *SMTP de Resend* (ver `docs/TELEGRAM.md` y `docs/08-CORREO-RESEND.md`, que ahora traen su sección de diagnóstico).
+Esta tanda trae cambios de base de datos: van de la *0201 a la 0211*. Se aplican en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types* (esta vez el `db:types` *importa*: hay un estado nuevo, «Desestimado»). Como siempre, es a prueba de fallos: mientras no se apliquen, lo nuevo muestra «aún no disponible» en vez de romperse. Para los avisos, revisa las variables de *Telegram* y el *SMTP de Resend* (ver `docs/TELEGRAM.md` y `docs/08-CORREO-RESEND.md`, que ahora traen su sección de diagnóstico).
 
 ━━━━━━━━━━━━━━━━━━
 😅 *Y lo más importante del parche…*
-Estrenamos que Logística pueda *adjuntar imágenes a la solicitud* y que las vean *todas las áreas*. Para probarlo subimos una foto cualquiera… y resultó ser la *captura del error* que jurábamos haber arreglado la semana pasada.
-La buena noticia: la función *sirve*, y quedó demostrado. La otra noticia: *ya la vieron los siete departamentos*. 📸🙈
-Menos mal que también programamos lo de *«cada quien puede quitar lo que subió»*. Fue, con diferencia, la línea de código *mejor invertida* de esta tanda.
+Estrenamos la *cobertura parcial*: cuando algo se cubre a medias, se le pide a Redacción *lo que falta*. Aplicamos la idea a estas notas del parche —cubrimos el *60%* a tiempo y el *40%* restante lo derivamos… a nosotros mismos—. Eso sí, todo quedó impecable: marcado como _«🚚 cobertura parcial»_, con su *motivo por escrito* y visible en *todas las áreas*, que era justo lo que habían pedido. 📦✍️
 
 _Apoyo por Venezuela · Notas del parche · Julio 2026_
