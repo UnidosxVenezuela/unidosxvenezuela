@@ -2236,4 +2236,78 @@ begin;
   reset role;
 rollback;
 
+-- ══ Imágenes adjuntas de una solicitud de Logística (0212) ══
+
+\echo '== Test 77: 0212 — Logística adjunta imágenes a su solicitud; otras áreas no las leen; solo quien subió (o admin) las quita =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000212a1', 'logi212@test.local'),
+    ('00000000-0000-0000-0000-0000000212a2', 'logi212b@test.local'),
+    ('00000000-0000-0000-0000-0000000212a3', 'redac212@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000212a1';
+  update public.perfiles set rol = 'admin_logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000212a2';
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000212a3';
+
+  insert into public.solicitudes_insumo (id, titulo, tipo, estado) values
+    ('00000000-0000-0000-0000-000000212001', 'ins_adj', 'otro'::public.tipo_insumo, 'en_gestion'::public.estado_insumo);
+
+  -- (a) Logística adjunta una imagen a su solicitud.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a1')::text, true);
+  insert into public.insumos_adjuntos (id, solicitud_id, url, nombre, mime, creado_por) values
+    ('00000000-0000-0000-0000-0000002120a1', '00000000-0000-0000-0000-000000212001',
+     '00000000-0000-0000-0000-000000212001/foto.jpg', 'foto.jpg', 'image/jpeg', '00000000-0000-0000-0000-0000000212a1');
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos where solicitud_id = '00000000-0000-0000-0000-000000212001';
+    if n <> 1 then raise exception 'FALLO 77a: Logística no pudo adjuntar/leer su imagen (n=%)', n; end if;
+  end $$;
+  -- No se puede subir a nombre de otra persona (trazabilidad).
+  do $$ begin
+    begin
+      insert into public.insumos_adjuntos (solicitud_id, url, nombre, creado_por) values
+        ('00000000-0000-0000-0000-000000212001', 'x/otro.jpg', 'otro.jpg', '00000000-0000-0000-0000-0000000212a3');
+      raise exception 'FALLO 77b: se pudo adjuntar a nombre de otra persona';
+    exception when insufficient_privilege then null;  -- 42501 esperado (RLS)
+    end;
+  end $$;
+  reset role;
+
+  -- (b) El admin de Logística TAMBIÉN las ve (puede_logistica incluye admin_logistica).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos;
+    if n <> 1 then raise exception 'FALLO 77c: el admin de Logística no ve las imágenes (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- (c) Redacción NO las ve (son fotos operativas de Logística).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a3')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos;
+    if n <> 0 then raise exception 'FALLO 77d: otra área lee las imágenes de Logística (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- (d) Otro miembro de Logística que NO la subió no puede borrarla; quien la subió, sí.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a2')::text, true);
+  delete from public.insumos_adjuntos where id = '00000000-0000-0000-0000-0000002120a1';
+  reset role;
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos where id = '00000000-0000-0000-0000-0000002120a1';
+    if n <> 1 then raise exception 'FALLO 77e: un tercero de Logística borró una imagen ajena'; end if;
+  end $$;
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a1')::text, true);
+  delete from public.insumos_adjuntos where id = '00000000-0000-0000-0000-0000002120a1';
+  reset role;
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos where id = '00000000-0000-0000-0000-0000002120a1';
+    if n <> 0 then raise exception 'FALLO 77f: quien subió la imagen no pudo quitarla'; end if;
+  end $$;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

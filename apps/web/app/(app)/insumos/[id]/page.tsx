@@ -12,7 +12,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial, subirAdjuntosInsumo, eliminarAdjuntoInsumo } from '../actions';
 import { desestimarCaso } from '../../casos/actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
@@ -89,6 +89,17 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   ]);
   const sig = siguienteEstadoInsumo(s.estado);
   const evidenciaUrl = s.entrega_evidencia_path ? await urlFirmada(supabase, 'entregas', s.entrega_evidencia_path, 3600) : null;
+
+  // Imágenes adjuntas de la solicitud (0212), con URL firmada. Best-effort: si la
+  // migración aún no está aplicada, la consulta vuelve vacía y la tarjeta no se rompe.
+  let adjuntos: any[] = [];
+  {
+    const { data: adjIns } = await supabase.from('insumos_adjuntos')
+      .select('id, url, nombre, mime, creado_por, creado_en').eq('solicitud_id', id).order('creado_en');
+    adjuntos = await Promise.all(((adjIns as any[]) ?? []).map(async (a) => ({
+      ...a, href: await urlFirmada(supabase, 'entregas', a.url, 3600),
+    })));
+  }
 
   // Sugerencia de centros de acopio cercanos CON existencias (Fase 3), solo para
   // solicitudes derivadas de un caso y aún abiertas. RPC curada por haversine.
@@ -272,6 +283,46 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 <div className="campo"><label>Nota de entrega</label><input name="nota" className="input" defaultValue={s.entrega_nota ?? ''} placeholder="Quién recibió, hora, observaciones…" /></div>
                 <div className="campo"><label>Foto (opcional)</label><input name="evidencia" type="file" accept="image/*" className="input" /></div>
                 <button className="btn btn-primario" type="submit">Guardar evidencia</button>
+              </form>
+            </div>
+          )}
+
+          {/* Imágenes de la solicitud (0212): galería propia de Logística, disponible en
+              CUALQUIER momento de la gestión (la «evidencia de entrega» sigue aparte,
+              como comprobante del cierre). */}
+          {gestor && (
+            <div className="tarjeta">
+              <h3 className="aside-titulo"><Icono nombre="imagen" size={16} /> Imágenes de la solicitud</h3>
+              {adjuntos.length > 0 ? (
+                <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                  {adjuntos.map((a) => (
+                    <div key={a.id} style={{ position: 'relative' }}>
+                      <a href={a.href} target="_blank" rel="noopener noreferrer" title={a.nombre}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={a.href} alt={a.nombre} loading="lazy"
+                          style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--borde)', display: 'block' }} />
+                      </a>
+                      <form action={eliminarAdjuntoInsumo} style={{ position: 'absolute', top: 2, right: 2 }}>
+                        <input type="hidden" name="id" value={id} />
+                        <input type="hidden" name="adjunto_id" value={a.id} />
+                        <BotonConfirmar mensaje={'¿Quitar «' + a.nombre + '»?'} className="btn btn-peligro"
+                          style={{ minHeight: 22, padding: '0 6px', fontSize: '.7rem', lineHeight: '20px' }}>✕</BotonConfirmar>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
+                  Sin imágenes todavía. Adjunta fotos del insumo, la guía de despacho o el punto de entrega — quedan solo para Logística.
+                </p>
+              )}
+              <form action={subirAdjuntosInsumo}>
+                <input type="hidden" name="id" value={id} />
+                <div className="campo">
+                  <label htmlFor="ins-imgs">Añadir imágenes (hasta 10, máx. 8 MB cada una)</label>
+                  <input id="ins-imgs" name="imagenes" type="file" accept="image/*" multiple className="input" required />
+                </div>
+                <button className="btn btn-primario" type="submit"><Icono nombre="imagen" size={15} /> Adjuntar</button>
               </form>
             </div>
           )}

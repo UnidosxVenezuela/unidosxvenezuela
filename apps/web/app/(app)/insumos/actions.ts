@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { subirArchivo } from '@/lib/storage';
+import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 
 async function usuario() {
@@ -40,6 +40,55 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/insumos'); revalidatePath('/insumos/' + id);
   redirigirOk('/insumos/' + id, 'Estado actualizado');
+}
+
+// Imágenes de la solicitud (0212): galería propia de Logística, en cualquier momento de
+// la gestión (no solo al entregar). Van al bucket privado 'entregas'. Mismo patrón que
+// los adjuntos de un caso: un archivo fallido no bloquea al resto.
+export async function subirAdjuntosInsumo(formData: FormData) {
+  const { supabase, userId } = await usuario();
+  const id = String(formData.get('id'));
+  const archivos = formData.getAll('imagenes').filter((f): f is File => f instanceof File && f.size > 0);
+  if (archivos.length === 0) return redirigirError('/insumos/' + id, 'Elige al menos una imagen.');
+
+  let subidas = 0;
+  let ultimoError = '';
+  for (const file of archivos.slice(0, 10)) {
+    if (file.size > 8 * 1024 * 1024) { ultimoError = 'cada imagen debe pesar menos de 8 MB'; continue; }
+    if (!file.type.startsWith('image/')) { ultimoError = 'solo se admiten imágenes'; continue; }
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    const ruta = `${id}/${Date.now()}-${safe}`;
+    try {
+      await subirArchivo(supabase, 'entregas', ruta, file, { publico: false, upsert: false });
+      const { error } = await supabase.from('insumos_adjuntos').insert({
+        solicitud_id: id, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
+      });
+      if (error) { await borrarArchivo(supabase, 'entregas', [ruta]); ultimoError = error.message; continue; }
+      subidas++;
+    } catch (e) { ultimoError = (e as Error)?.message ?? 'error al subir'; }
+  }
+
+  revalidatePath('/insumos/' + id);
+  if (subidas === 0) {
+    return redirigirError('/insumos/' + id, /insumos_adjuntos|does not exist|no existe/i.test(ultimoError)
+      ? 'Aún no disponible (falta aplicar la migración 0212).'
+      : 'No se pudo subir la imagen' + (ultimoError ? ': ' + ultimoError : '.'));
+  }
+  redirigirOk('/insumos/' + id, subidas === 1 ? 'Imagen adjuntada' : subidas + ' imágenes adjuntadas');
+}
+
+export async function eliminarAdjuntoInsumo(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const adjuntoId = String(formData.get('adjunto_id'));
+  const { data: adj } = await supabase.from('insumos_adjuntos').select('url').eq('id', adjuntoId).maybeSingle();
+  const { error } = await supabase.from('insumos_adjuntos').delete().eq('id', adjuntoId);
+  if (error) return redirigirError('/insumos/' + id, 'No se pudo quitar la imagen: ' + error.message);
+  // El objeto se borra DESPUÉS de que la RLS aceptó el borrado de la fila.
+  const ruta = (adj as { url?: string } | null)?.url;
+  if (ruta) { try { await borrarArchivo(supabase, 'entregas', [ruta]); } catch { /* la fila ya no está */ } }
+  revalidatePath('/insumos/' + id);
+  redirigirOk('/insumos/' + id, 'Imagen quitada');
 }
 
 // Cobertura parcial (0211): cuando Logística solo cubre una parte, pide a Redacción que
