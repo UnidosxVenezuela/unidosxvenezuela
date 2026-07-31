@@ -74,9 +74,9 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     casoFull = cf ?? null;
     if (casoFull) {
       const { data: adjRaw } = await supabase.from('casos_adjuntos')
-        .select('id, nombre, mime, url, creado_en').eq('caso_id', s.caso_id).order('creado_en');
+        .select('id, nombre, mime, url, creado_en, creado_por').eq('caso_id', s.caso_id).order('creado_en');
       casoFull.adjuntos = await Promise.all(((adjRaw as any[]) ?? []).map(async (a) => ({
-        id: a.id, nombre: a.nombre, mime: a.mime,
+        id: a.id, nombre: a.nombre, mime: a.mime, creado_por: a.creado_por,
         href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
       })));
     }
@@ -165,6 +165,41 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               </h3>
               <p className="muted" style={{ margin: '0 0 4px', fontSize: '.82rem' }}>Todo lo verificado (observaciones, fuente, contacto e imágenes) para coordinar bien la entrega.</p>
               <InfoSolicitud caso={casoFull} />
+
+              {/* Adjuntar imágenes A LA PROPIA SOLICITUD (0213): quedan en el caso, así que
+                  las ven TODAS las áreas (Verificación, Recopilación y Redacción), no solo
+                  Logística. Se pueden quitar solo las que subió uno mismo. */}
+              {gestor && (
+                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--borde)' }}>
+                  <form action={subirAdjuntosInsumo}>
+                    <input type="hidden" name="id" value={id} />
+                    <div className="campo">
+                      <label htmlFor="caso-imgs">Adjuntar imágenes a esta solicitud</label>
+                      <input id="caso-imgs" name="imagenes" type="file" accept="image/*" multiple className="input" required />
+                      <span className="muted" style={{ fontSize: '.78rem' }}>Hasta 10, máx. 8 MB cada una. Quedan en la solicitud, así que <strong>las ven todas las áreas</strong>.</span>
+                    </div>
+                    <button className="btn btn-primario" type="submit"><Icono nombre="imagen" size={15} /> Adjuntar a la solicitud</button>
+                  </form>
+
+                  {(casoFull.adjuntos ?? []).some((a: any) => a.creado_por === user!.id) && (
+                    <div style={{ marginTop: 10 }}>
+                      <span className="muted" style={{ fontSize: '.78rem' }}>Imágenes que subiste:</span>
+                      <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                        {(casoFull.adjuntos ?? []).filter((a: any) => a.creado_por === user!.id).map((a: any) => (
+                          <form key={a.id} action={eliminarAdjuntoInsumo} className="fila" style={{ gap: 4, alignItems: 'center' }}>
+                            <input type="hidden" name="id" value={id} />
+                            <input type="hidden" name="adjunto_id" value={a.id} />
+                            <input type="hidden" name="origen" value="caso" />
+                            <span className="insignia" style={{ fontSize: '.74rem' }}>{a.nombre}</span>
+                            <BotonConfirmar mensaje={'¿Quitar «' + a.nombre + '» de la solicitud?'} className="btn btn-peligro"
+                              style={{ minHeight: 22, padding: '0 6px', fontSize: '.7rem' }}>✕</BotonConfirmar>
+                          </form>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -290,9 +325,17 @@ export default async function SolicitudPage({ params }: { params: { id: string }
           {/* Imágenes de la solicitud (0212): galería propia de Logística, disponible en
               CUALQUIER momento de la gestión (la «evidencia de entrega» sigue aparte,
               como comprobante del cierre). */}
-          {gestor && (
+          {/* Tarea suelta de Logística (sin solicitud de origen): su galería propia. Cuando
+              SÍ viene de una solicitud, las imágenes se adjuntan al caso —arriba— para que
+              las vean todas las áreas. */}
+          {gestor && (!s.caso_id || adjuntos.length > 0) && (
             <div className="tarjeta">
-              <h3 className="aside-titulo"><Icono nombre="imagen" size={16} /> Imágenes de la solicitud</h3>
+              <h3 className="aside-titulo"><Icono nombre="imagen" size={16} /> Imágenes de la tarea</h3>
+              {s.caso_id && (
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.8rem' }}>
+                  Imágenes de la gestión. Para que una imagen la vean <strong>todas las áreas</strong>, adjúntala arriba, en la información de la solicitud.
+                </p>
+              )}
               {adjuntos.length > 0 ? (
                 <div className="fila" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
                   {adjuntos.map((a) => (
@@ -313,17 +356,21 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 </div>
               ) : (
                 <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
-                  Sin imágenes todavía. Adjunta fotos del insumo, la guía de despacho o el punto de entrega — quedan solo para Logística.
+                  Sin imágenes todavía. Adjunta fotos del insumo, la guía de despacho o el punto de entrega.
                 </p>
               )}
-              <form action={subirAdjuntosInsumo}>
-                <input type="hidden" name="id" value={id} />
-                <div className="campo">
-                  <label htmlFor="ins-imgs">Añadir imágenes (hasta 10, máx. 8 MB cada una)</label>
-                  <input id="ins-imgs" name="imagenes" type="file" accept="image/*" multiple className="input" required />
-                </div>
-                <button className="btn btn-primario" type="submit"><Icono nombre="imagen" size={15} /> Adjuntar</button>
-              </form>
+              {/* La subida vive aquí solo para las tareas SIN solicitud de origen; si hay
+                  solicitud, se adjunta arriba (al caso) para que lo vean todas las áreas. */}
+              {!s.caso_id && (
+                <form action={subirAdjuntosInsumo}>
+                  <input type="hidden" name="id" value={id} />
+                  <div className="campo">
+                    <label htmlFor="ins-imgs">Añadir imágenes (hasta 10, máx. 8 MB cada una)</label>
+                    <input id="ins-imgs" name="imagenes" type="file" accept="image/*" multiple className="input" required />
+                  </div>
+                  <button className="btn btn-primario" type="submit"><Icono nombre="imagen" size={15} /> Adjuntar</button>
+                </form>
+              )}
             </div>
           )}
 
