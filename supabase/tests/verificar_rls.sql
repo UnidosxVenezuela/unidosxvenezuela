@@ -2238,7 +2238,7 @@ rollback;
 
 -- ══ Imágenes adjuntas de una solicitud de Logística (0212) ══
 
-\echo '== Test 77: 0212 — Logística adjunta imágenes a su solicitud; otras áreas no las leen; solo quien subió (o admin) las quita =='
+\echo '== Test 77: 0212/0213 — Logística adjunta imágenes a su tarea; otras áreas las LEEN pero no escriben; solo quien subió (o admin) las quita =='
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-0000000212a1', 'logi212@test.local'),
@@ -2281,12 +2281,19 @@ begin;
   end $$;
   reset role;
 
-  -- (c) Redacción NO las ve (son fotos operativas de Logística).
+  -- (c) Desde 0213, Redacción TAMBIÉN las lee (decisión del equipo: que no queden
+  -- encerradas en Logística). El alta y la baja siguen siendo solo de Logística.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000212a3')::text, true);
   do $$ declare n int; begin
     select count(*) into n from public.insumos_adjuntos;
-    if n <> 0 then raise exception 'FALLO 77d: otra área lee las imágenes de Logística (n=%)', n; end if;
+    if n <> 1 then raise exception 'FALLO 77d: Redacción no lee las imágenes de la tarea (0213 debía abrirlas, n=%)', n; end if;
+    begin
+      insert into public.insumos_adjuntos (solicitud_id, url, nombre, creado_por) values
+        ('00000000-0000-0000-0000-000000212001', 'x/redac.jpg', 'redac.jpg', '00000000-0000-0000-0000-0000000212a3');
+      raise exception 'FALLO 77d2: Redacción pudo ADJUNTAR a la galería de Logística';
+    exception when insufficient_privilege then null;  -- 42501 esperado
+    end;
   end $$;
   reset role;
 
@@ -2308,6 +2315,78 @@ begin;
     select count(*) into n from public.insumos_adjuntos where id = '00000000-0000-0000-0000-0000002120a1';
     if n <> 0 then raise exception 'FALLO 77f: quien subió la imagen no pudo quitarla'; end if;
   end $$;
+rollback;
+
+-- ══ Logística adjunta A LA PROPIA SOLICITUD y lo ve todo el mundo (0213) ══
+
+\echo '== Test 78: 0213 — Logística adjunta al CASO (lo ven Verificación y Redacción); no en Desaparecidos; su galería de tarea también se lee =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000213a1', 'logi213@test.local'),
+    ('00000000-0000-0000-0000-0000000213a2', 'verif213@test.local'),
+    ('00000000-0000-0000-0000-0000000213a3', 'redac213@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000213a1';
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000213a2';
+  update public.perfiles set rol = 'redaccion',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000213a3';
+
+  insert into public.casos (id, titulo, categoria, estado, creado_por) values
+    ('00000000-0000-0000-0000-0000000213c1', '_TEST_0213_caso', 'Otras informaciones', 'enviado_redaccion', null),
+    ('00000000-0000-0000-0000-0000000213c2', '_TEST_0213_desap', 'Desaparecidos', 'confirmado', null);
+
+  -- (a) Logística adjunta una imagen AL CASO.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000213a1')::text, true);
+  insert into public.casos_adjuntos (id, caso_id, url, nombre, mime, creado_por) values
+    ('00000000-0000-0000-0000-0000002130a1', '00000000-0000-0000-0000-0000000213c1',
+     'casos/00000000-0000-0000-0000-0000000213c1/foto.jpg', 'foto.jpg', 'image/jpeg',
+     '00000000-0000-0000-0000-0000000213a1');
+  -- …pero NO a un caso de «Desaparecidos» (ese flujo no pasa por Logística).
+  do $$ begin
+    begin
+      insert into public.casos_adjuntos (caso_id, url, nombre, creado_por) values
+        ('00000000-0000-0000-0000-0000000213c2', 'casos/x/desap.jpg', 'desap.jpg', '00000000-0000-0000-0000-0000000213a1');
+      raise exception 'FALLO 78b: Logística adjuntó a un caso de Desaparecidos';
+    exception when insufficient_privilege then null;  -- 42501 esperado (RLS)
+    end;
+  end $$;
+  reset role;
+
+  -- (b) VERIFICACIÓN ve esa imagen en la solicitud (cadj_select: quien ve el caso, la ve).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000213a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_adjuntos where id = '00000000-0000-0000-0000-0000002130a1';
+    if n <> 1 then raise exception 'FALLO 78c: Verificación no ve la imagen que adjuntó Logística (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- (c) REDACCIÓN también la ve, por su vista curada de adjuntos (0209).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000213a3')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_adjuntos_difusion where caso_id = '00000000-0000-0000-0000-0000000213c1';
+    if n <> 1 then raise exception 'FALLO 78d: Redacción no ve la imagen que adjuntó Logística (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  -- (d) La galería de la TAREA (0212) ya no es solo de Logística: Verificación la lee.
+  insert into public.solicitudes_insumo (id, titulo, tipo, estado, caso_id) values
+    ('00000000-0000-0000-0000-000000213001', 'ins_0213', 'otro'::public.tipo_insumo,
+     'en_gestion'::public.estado_insumo, '00000000-0000-0000-0000-0000000213c1');
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000213a1')::text, true);
+  insert into public.insumos_adjuntos (solicitud_id, url, nombre, creado_por) values
+    ('00000000-0000-0000-0000-000000213001', '00000000-0000-0000-0000-000000213001/op.jpg', 'op.jpg',
+     '00000000-0000-0000-0000-0000000213a1');
+  reset role;
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000213a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.insumos_adjuntos where solicitud_id = '00000000-0000-0000-0000-000000213001';
+    if n <> 1 then raise exception 'FALLO 78e: Verificación no lee la galería de la tarea de Logística (n=%)', n; end if;
+  end $$;
+  reset role;
 rollback;
 
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

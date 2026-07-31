@@ -42,14 +42,21 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
   redirigirOk('/insumos/' + id, 'Estado actualizado');
 }
 
-// Imágenes de la solicitud (0212): galería propia de Logística, en cualquier momento de
-// la gestión (no solo al entregar). Van al bucket privado 'entregas'. Mismo patrón que
-// los adjuntos de un caso: un archivo fallido no bloquea al resto.
+// Imágenes de la solicitud (0212/0213). Logística adjunta en cualquier momento de la
+// gestión, no solo al entregar. El DESTINO depende de la solicitud:
+//   · si viene de una solicitud del flujo (caso), va AL CASO → la ven TODAS las áreas
+//     (Verificación, Recopilación y Redacción), que es lo que pidió Logística;
+//   · si es una tarea suelta de Logística (sin caso), va a su galería propia.
+// Mismo patrón que los adjuntos de un caso: un archivo fallido no bloquea al resto.
 export async function subirAdjuntosInsumo(formData: FormData) {
   const { supabase, userId } = await usuario();
   const id = String(formData.get('id'));
   const archivos = formData.getAll('imagenes').filter((f): f is File => f instanceof File && f.size > 0);
   if (archivos.length === 0) return redirigirError('/insumos/' + id, 'Elige al menos una imagen.');
+
+  const { data: sol } = await supabase.from('solicitudes_insumo').select('caso_id').eq('id', id).maybeSingle();
+  const casoId = (sol as { caso_id?: string | null } | null)?.caso_id ?? null;
+  const bucket = casoId ? 'adjuntos' : 'entregas';
 
   let subidas = 0;
   let ultimoError = '';
@@ -57,37 +64,48 @@ export async function subirAdjuntosInsumo(formData: FormData) {
     if (file.size > 8 * 1024 * 1024) { ultimoError = 'cada imagen debe pesar menos de 8 MB'; continue; }
     if (!file.type.startsWith('image/')) { ultimoError = 'solo se admiten imágenes'; continue; }
     const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
-    const ruta = `${id}/${Date.now()}-${safe}`;
+    const ruta = casoId ? `casos/${casoId}/${Date.now()}-${safe}` : `${id}/${Date.now()}-${safe}`;
     try {
-      await subirArchivo(supabase, 'entregas', ruta, file, { publico: false, upsert: false });
-      const { error } = await supabase.from('insumos_adjuntos').insert({
-        solicitud_id: id, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
-      });
-      if (error) { await borrarArchivo(supabase, 'entregas', [ruta]); ultimoError = error.message; continue; }
+      await subirArchivo(supabase, bucket, ruta, file, { publico: false, upsert: false });
+      const { error } = casoId
+        ? await supabase.from('casos_adjuntos').insert({
+            caso_id: casoId, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
+          })
+        : await supabase.from('insumos_adjuntos').insert({
+            solicitud_id: id, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
+          });
+      if (error) { await borrarArchivo(supabase, bucket, [ruta]); ultimoError = error.message; continue; }
       subidas++;
     } catch (e) { ultimoError = (e as Error)?.message ?? 'error al subir'; }
   }
 
-  revalidatePath('/insumos/' + id);
+  revalidatePath('/insumos/' + id); revalidatePath('/casos'); revalidatePath('/envio-redaccion');
   if (subidas === 0) {
-    return redirigirError('/insumos/' + id, /insumos_adjuntos|does not exist|no existe/i.test(ultimoError)
-      ? 'Aún no disponible (falta aplicar la migración 0212).'
+    return redirigirError('/insumos/' + id, /insumos_adjuntos|row-level security|violates|does not exist|no existe/i.test(ultimoError)
+      ? 'No se pudo adjuntar. Puede faltar aplicar las migraciones 0212/0213.'
       : 'No se pudo subir la imagen' + (ultimoError ? ': ' + ultimoError : '.'));
   }
-  redirigirOk('/insumos/' + id, subidas === 1 ? 'Imagen adjuntada' : subidas + ' imágenes adjuntadas');
+  const dondeSeVe = casoId ? ' Las ven todas las áreas en la solicitud.' : '';
+  redirigirOk('/insumos/' + id, (subidas === 1 ? 'Imagen adjuntada.' : subidas + ' imágenes adjuntadas.') + dondeSeVe);
 }
 
+// Quita una imagen. `origen` dice de dónde: 'caso' (adjunto de la solicitud, visible para
+// todas las áreas) o 'insumo' (galería de la tarea de Logística).
 export async function eliminarAdjuntoInsumo(formData: FormData) {
   const { supabase } = await usuario();
   const id = String(formData.get('id'));
   const adjuntoId = String(formData.get('adjunto_id'));
-  const { data: adj } = await supabase.from('insumos_adjuntos').select('url').eq('id', adjuntoId).maybeSingle();
-  const { error } = await supabase.from('insumos_adjuntos').delete().eq('id', adjuntoId);
+  const esCaso = String(formData.get('origen') ?? 'insumo') === 'caso';
+  const tabla = esCaso ? 'casos_adjuntos' : 'insumos_adjuntos';
+  const bucket = esCaso ? 'adjuntos' : 'entregas';
+
+  const { data: adj } = await supabase.from(tabla).select('url').eq('id', adjuntoId).maybeSingle();
+  const { error } = await supabase.from(tabla).delete().eq('id', adjuntoId);
   if (error) return redirigirError('/insumos/' + id, 'No se pudo quitar la imagen: ' + error.message);
   // El objeto se borra DESPUÉS de que la RLS aceptó el borrado de la fila.
   const ruta = (adj as { url?: string } | null)?.url;
-  if (ruta) { try { await borrarArchivo(supabase, 'entregas', [ruta]); } catch { /* la fila ya no está */ } }
-  revalidatePath('/insumos/' + id);
+  if (ruta) { try { await borrarArchivo(supabase, bucket, [ruta]); } catch { /* la fila ya no está */ } }
+  revalidatePath('/insumos/' + id); revalidatePath('/casos');
   redirigirOk('/insumos/' + id, 'Imagen quitada');
 }
 
