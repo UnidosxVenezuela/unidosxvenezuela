@@ -1,0 +1,25 @@
+🇻🇪 *NOTAS DEL PARCHE — 31 jul 2026 · complemento*
+_Apoyo por Venezuela_
+
+Tanda corta y muy concreta, pedida por *Logística*: ya se pueden *adjuntar imágenes a las solicitudes*. Y lo importante — no se quedan en el escritorio de Logística: *las ven todas las áreas*.
+
+✅ *2 mejoras*  ·  🚚 *1 área*  ·  🛠️ *2 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🚚 *LOGÍSTICA*
+
+• *Adjuntar imágenes a la solicitud.* Hasta ahora Logística solo podía subir *una* foto y *solo al final*: la evidencia de entrega. Ahora puede adjuntar *varias imágenes en cualquier momento* de la gestión —el insumo recibido, la guía de despacho, el punto de entrega, el estado de la carga— y, sobre todo, *a la solicitud misma*. Quedan *visibles para todas las áreas*: Verificación, Recopilación y Redacción las ven sin pedir nada. El botón está en la ficha de *«Información completa de la solicitud»*, y *cada quien puede quitar lo que subió*. _(Los casos de «Desaparecidos» quedan fuera: ese flujo es de Búsqueda.)_
+
+• *Y las que ya tenían, también se abren.* Las imágenes de la gestión de Logística dejaron de ser privadas: ahora *Verificación y Redacción también las ven*. Se acabaron las fotos útiles guardadas en un cajón al que nadie más entra. _(Ojo: eso alcanza también a la foto de evidencia de entrega.)_
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Dos cambios de base de datos: las migraciones *0212* y *0213*. Se aplican en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. A prueba de fallos, como siempre: mientras no se apliquen, la tarjeta de imágenes simplemente no aparece y el resto de la app sigue igual.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Estrenamos que Logística pueda *adjuntar imágenes a la solicitud* y que las vean *todas las áreas*. Para probarlo subimos una foto cualquiera… y resultó ser la *captura del error* que jurábamos haber arreglado la semana pasada.
+La buena noticia: la función *sirve*, y quedó demostrado. La otra noticia: *ya la vieron todos los departamentos*. 📸🙈
+Menos mal que también programamos lo de *«cada quien puede quitar lo que subió»*. Fue, con diferencia, la línea de código *mejor invertida* de esta tanda.
+
+_Apoyo por Venezuela · Notas del parche · Julio 2026_
