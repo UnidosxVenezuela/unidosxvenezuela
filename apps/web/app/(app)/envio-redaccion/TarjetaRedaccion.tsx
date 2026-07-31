@@ -23,6 +23,8 @@ export default function TarjetaRedaccion({ caso, href, redactorNombre }: { caso:
       <strong style={{ display: 'block', margin: '6px 0 2px' }}>{caso.titulo}</strong>
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
         {caso.categoria && <BadgeCategoria>{caso.categoria}</BadgeCategoria>}
+        {/* Solicitud creada por Logística porque solo cubrió una parte (0211). */}
+        {caso.origen_area === 'logistica' && <Pill tono="info" punto={false}>🚚 Cobertura parcial</Pill>}
       </div>
       {redactorNombre && (
         <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 2, color: 'var(--t-teal-fg)' }}>

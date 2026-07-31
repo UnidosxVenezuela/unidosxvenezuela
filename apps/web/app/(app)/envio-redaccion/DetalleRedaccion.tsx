@@ -33,7 +33,22 @@ export default function DetalleRedaccion(
         {caso.categoria && <BadgeCategoria>{caso.categoria}</BadgeCategoria>}
         {caso.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
         {!caso.publicado_en && caso.requiere_difusion && <Pill tono="alta" punto={false}>⚠ Prioriza · Logística no pudo cubrir</Pill>}
+        {caso.origen_area === 'logistica' && <Pill tono="info" punto={false}>🚚 Cobertura parcial</Pill>}
       </div>
+
+      {/* Procedencia (0211): esta solicitud la creó Logística por lo que NO pudo cubrir de
+          otra. Reutiliza los datos de la original (por eso no pasó de nuevo por Verificación). */}
+      {caso.origen_area === 'logistica' && (
+        <div className="tarjeta" style={{ marginTop: 8, padding: 10, background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)' }}>
+          <div className="fila" style={{ gap: 6, fontSize: '.86rem' }}>
+            <Icono nombre="cohete" size={15} />
+            <span>
+              <strong>Solicitud de Logística por cobertura parcial.</strong>{' '}
+              Se cubrió una parte{caso.caso_padre_numero ? <> de la solicitud <strong>#{String(caso.caso_padre_numero).padStart(5, '0')}</strong></> : null} y esto es <strong>lo que falta</strong>. Reutiliza los datos ya verificados de la original.
+            </span>
+          </div>
+        </div>
+      )}
       <FlujoProgreso paso={p.paso} total={p.total} completo={p.completo} etiqueta={p.etiqueta} />
 
       {/* Redactor asignado (0169): tomar / soltar la difusión */}

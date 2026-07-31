@@ -11,13 +11,14 @@ import { enviarTelegram } from '@/lib/telegram';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type TgUpdate = {
-  message?: {
-    text?: string;
-    from?: { id?: number; username?: string };
-    chat?: { id?: number };
-  };
+type TgMensaje = {
+  text?: string;
+  from?: { id?: number; username?: string };
+  chat?: { id?: number; type?: string };
 };
+// Telegram entrega el texto en `message` o, si la persona lo corrige, en `edited_message`.
+// Antes solo se miraba `message`: un mensaje editado se ignoraba en silencio.
+type TgUpdate = { message?: TgMensaje; edited_message?: TgMensaje };
 
 const ok = () => NextResponse.json({ ok: true });
 
@@ -31,11 +32,21 @@ export async function POST(req: Request) {
   let update: TgUpdate | null = null;
   try { update = await req.json(); } catch { return ok(); }
 
-  const msg = update?.message;
+  const msg = update?.message ?? update?.edited_message;
   const chatId = msg?.chat?.id;
   const texto = (msg?.text ?? '').trim();
-  // Ignora updates que no sean un mensaje de texto (edición, callback, etc.).
+  // Ignora updates que no traigan texto (callback, entrada/salida de chat, etc.).
   if (chatId == null || !texto) return ok();
+  // Solo chats PRIVADOS: vincular desde un grupo ataría la cuenta al chat del grupo y
+  // los avisos (personales) acabarían en él.
+  const tipoChat = msg?.chat?.type ?? 'private';
+  if (tipoChat !== 'private') {
+    if (texto.startsWith('/start') || texto.startsWith('/stop')) {
+      await enviarTelegram(String(chatId), 'Escríbeme en privado',
+        'La vinculación es personal: abre un chat directo conmigo y repite el enlace desde tu perfil en la app.');
+    }
+    return ok();
+  }
   const chat = String(chatId);
 
   // Comando y argumento: «/start<@bot> <token>».
@@ -61,10 +72,13 @@ export async function POST(req: Request) {
       return ok();
     }
     const username = msg?.from?.username ? '@' + msg.from.username : null;
-    const { error: upErr } = await admin
+    // `.select()` para CONFIRMAR que la fila se actualizó: sin él, un update que no toca
+    // ninguna fila respondía «✅ Vinculado» y luego no llegaba ningún aviso.
+    const { data: filas, error: upErr } = await admin
       .from('perfiles')
       .update({ telegram_chat_id: chat, telegram_username: username })
-      .eq('id', e.perfil_id);
+      .eq('id', e.perfil_id)
+      .select('id');
     if (upErr) {
       // Índice único parcial: este chat ya está en otra cuenta.
       if ((upErr as { code?: string }).code === '23505') {
@@ -72,7 +86,14 @@ export async function POST(req: Request) {
           'Escribe /stop para desvincularlo y vuelve a intentarlo.');
         return ok();
       }
+      console.error('[telegram] no se pudo vincular el chat:', upErr.message);
       await enviarTelegram(chat, 'No se pudo vincular', 'Inténtalo de nuevo en un momento.');
+      return ok();
+    }
+    if (!filas || filas.length === 0) {
+      console.error('[telegram] token válido pero sin perfil que actualizar:', e.perfil_id);
+      await enviarTelegram(chat, 'No se pudo vincular',
+        'No encontramos tu cuenta. Genera un enlace nuevo desde tu perfil en la app.');
       return ok();
     }
     // Marca el token usado (un solo uso).
@@ -93,11 +114,19 @@ export async function POST(req: Request) {
 
   // ── Desvincular ──
   if (cmd === '/stop' || cmd === '/desvincular') {
-    await admin.from('perfiles')
+    const { data: filas } = await admin.from('perfiles')
       .update({ telegram_chat_id: null, telegram_username: null })
-      .eq('telegram_chat_id', chat);
-    await enviarTelegram(chat, 'Desvinculado',
-      'Ya no recibirás avisos por Telegram. Puedes volver a vincular desde tu perfil.');
+      .eq('telegram_chat_id', chat)
+      .select('id');
+    // Informa según lo que realmente pasó (antes decía «Desvinculado» aunque este chat
+    // no estuviera vinculado a ninguna cuenta, lo que despistaba al diagnosticar).
+    if (filas && filas.length > 0) {
+      await enviarTelegram(chat, 'Desvinculado',
+        'Ya no recibirás avisos por Telegram. Puedes volver a vincular desde tu perfil.');
+    } else {
+      await enviarTelegram(chat, 'Este chat no estaba vinculado',
+        'No había ninguna cuenta enlazada aquí. Para recibir avisos: entra a la app → tu perfil → «Avisos por Telegram».');
+    }
     return ok();
   }
 

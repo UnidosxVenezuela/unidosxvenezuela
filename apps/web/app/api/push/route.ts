@@ -26,16 +26,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'no autorizado' }, { status: 401 });
   }
 
+  // VAPID solo condiciona el CANAL WEB-PUSH. Antes se devolvía 500 aquí y, con ello,
+  // Telegram (que es un canal independiente) no se enviaba NUNCA si faltaban las claves.
   const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
-  if (!pub || !priv) {
-    return NextResponse.json({ error: 'VAPID sin configurar' }, { status: 500 });
+  const hayVapid = !!(pub && priv);
+  if (hayVapid) {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:soporte@unidosxvnezuela.com',
+      pub!,
+      priv!,
+    );
+  } else {
+    console.error('[push] VAPID sin configurar: se omite el web-push (Telegram sigue saliendo)');
   }
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:soporte@unidosxvnezuela.com',
-    pub,
-    priv,
-  );
 
   let payload: { record?: FilaNotificacion } | null = null;
   try {
@@ -50,42 +54,49 @@ export async function POST(req: Request) {
 
   const admin = createAdminClient();
 
-  // ── Canal 1: web-push (VAPID → service worker) ──
+  // ── Canal 1: web-push (VAPID → service worker) ── Aislado en su propio try/catch: un
+  // fallo suyo NO debe impedir el envío por Telegram, y tampoco debe devolver 500 (eso
+  // haría que Supabase reintentara el webhook y duplicara los avisos ya entregados).
   let enviadas = 0;
-  const { data: subs, error } = await admin
-    .from('push_suscripciones')
-    .select('endpoint, p256dh, auth')
-    .eq('perfil_id', registro.destinatario_id);
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  if (subs && subs.length > 0) {
-    const carga = JSON.stringify({
-      title: registro.titulo || 'Apoyo por Venezuela',
-      body: registro.cuerpo || '',
-      url: registro.enlace || '/notificaciones',
-      tag: registro.tipo || 'aviso',
-      image: registro.imagen_url || undefined,   // avisos con imagen (0170)
-    });
+  if (hayVapid) {
+    try {
+      const { data: subs, error } = await admin
+        .from('push_suscripciones')
+        .select('endpoint, p256dh, auth')
+        .eq('perfil_id', registro.destinatario_id);
+      if (error) throw new Error(error.message);
 
-    const caducadas: string[] = [];
-    await Promise.all(
-      (subs as Array<{ endpoint: string; p256dh: string; auth: string }>).map(async (s) => {
-        try {
-          await webpush.sendNotification(
-            { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-            carga,
-          );
-          enviadas++;
-        } catch (e) {
-          const cod = (e as { statusCode?: number })?.statusCode;
-          if (cod === 404 || cod === 410) caducadas.push(s.endpoint);
+      if (subs && subs.length > 0) {
+        const carga = JSON.stringify({
+          title: registro.titulo || 'Apoyo por Venezuela',
+          body: registro.cuerpo || '',
+          url: registro.enlace || '/notificaciones',
+          tag: registro.tipo || 'aviso',
+          image: registro.imagen_url || undefined,   // avisos con imagen (0170)
+        });
+
+        const caducadas: string[] = [];
+        await Promise.all(
+          (subs as Array<{ endpoint: string; p256dh: string; auth: string }>).map(async (s) => {
+            try {
+              await webpush.sendNotification(
+                { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                carga,
+              );
+              enviadas++;
+            } catch (e) {
+              const cod = (e as { statusCode?: number })?.statusCode;
+              if (cod === 404 || cod === 410) caducadas.push(s.endpoint);
+            }
+          }),
+        );
+
+        if (caducadas.length) {
+          await admin.from('push_suscripciones').delete().in('endpoint', caducadas);
         }
-      }),
-    );
-
-    if (caducadas.length) {
-      await admin.from('push_suscripciones').delete().in('endpoint', caducadas);
+      }
+    } catch (e) {
+      console.error('[push] fallo el canal web-push:', (e as Error)?.message ?? e);
     }
   }
 
@@ -93,20 +104,29 @@ export async function POST(req: Request) {
   // no haya suscripción push. El try/catch es OBLIGATORIO: si Telegram fallara y
   // devolviéramos 500, Supabase reintentaría el webhook → push duplicado. El
   // push es la garantía; Telegram es adicional.
+  let telegram: 'enviado' | 'sin-vincular' | 'fallo' | 'omitido' = 'omitido';
   try {
-    const { data: p } = await admin
+    const { data: p, error: eP } = await admin
       .from('perfiles')
       .select('telegram_chat_id')
       .eq('id', registro.destinatario_id)
       .maybeSingle();
+    if (eP) throw new Error(eP.message);
     const chatId = (p as { telegram_chat_id?: string | null } | null)?.telegram_chat_id;
-    if (chatId) {
+    if (!chatId) {
+      telegram = 'sin-vincular';
+    } else {
       const base = process.env.NEXT_PUBLIC_APP_URL ?? '';
       const enlace = registro.enlace || '/notificaciones';
       const url = base ? base.replace(/\/$/, '') + enlace : undefined;
-      await enviarTelegram(chatId, registro.titulo || 'Apoyo por Venezuela', registro.cuerpo ?? '', url, registro.imagen_url ?? null);
+      const r = await enviarTelegram(chatId, registro.titulo || 'Apoyo por Venezuela', registro.cuerpo ?? '', url, registro.imagen_url ?? null);
+      telegram = r.ok ? 'enviado' : 'fallo';
     }
-  } catch { /* Telegram nunca debe romper el push ni forzar reintento del webhook */ }
+  } catch (e) {
+    // Telegram nunca debe romper el push ni forzar reintento del webhook.
+    telegram = 'fallo';
+    console.error('[telegram] no se pudo enviar el aviso:', (e as Error)?.message ?? e);
+  }
 
-  return NextResponse.json({ ok: true, enviadas });
+  return NextResponse.json({ ok: true, enviadas, push: hayVapid ? 'ok' : 'sin-vapid', telegram });
 }

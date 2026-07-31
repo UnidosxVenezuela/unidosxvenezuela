@@ -12,7 +12,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial } from '../actions';
 import { desestimarCaso } from '../../casos/actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
@@ -379,6 +379,30 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 </form>
               )}
             </div>
+
+            {/* Cobertura parcial (0211): se cubrió una parte y falta el resto → pedir a
+                Redacción que difunda EL REMANENTE. Reutiliza los datos (y la verificación)
+                de la solicitud original, así que no vuelve a pasar por Verificación. */}
+            {s.caso_id && s.estado !== 'cancelado' && (
+              <div className="tarjeta">
+                <h3 className="aside-titulo"><Icono nombre="cohete" size={16} /> Cobertura parcial</h3>
+                <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
+                  ¿Cubriste solo una parte? Pide a <strong>Redacción</strong> que difunda <strong>lo que falta</strong>. Se crea una solicitud aparte que <strong>reutiliza los datos</strong> de esta (no pasa de nuevo por Verificación) y queda marcada como <strong>cobertura parcial de Logística</strong>.
+                </p>
+                <form action={solicitarCoberturaParcial}>
+                  <input type="hidden" name="id" value={id} />
+                  <div className="campo"><label htmlFor="cp-faltante">Qué falta por cubrir</label>
+                    <input id="cp-faltante" name="faltante" className="input" maxLength={300} required placeholder="Ej.: arroz y aceite" /></div>
+                  <div className="campo"><label htmlFor="cp-cantidad">Cantidad que falta (opcional)</label>
+                    <input id="cp-cantidad" name="cantidad" className="input" maxLength={100} placeholder="Ej.: 40 kg" /></div>
+                  <div className="campo"><label htmlFor="cp-nota">Nota para Redacción (opcional)</label>
+                    <input id="cp-nota" name="nota" className="input" maxLength={500} placeholder="Ej.: se cubrió el 60% con el centro Petare" /></div>
+                  <BotonConfirmar mensaje="¿Enviar a Redacción una solicitud por lo que falta? Se creará aparte, marcada como cobertura parcial de Logística." className="btn btn-primario" confirmar="Sí, enviar" style={{ width: '100%' }}>
+                    <Icono nombre="cohete" size={15} /> Pedir difusión de lo que falta
+                  </BotonConfirmar>
+                </form>
+              </div>
+            )}
 
             {/* Escalar a Alianzas Estratégicas (0200): cuando no se cubre con inventario/proveedores. */}
             {s.estado !== 'cancelado' && s.estado !== 'entregado' && (

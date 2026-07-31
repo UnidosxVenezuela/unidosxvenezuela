@@ -95,6 +95,13 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       const m = new Map((ext as any[]).map((r) => [r.id, r]));
       for (const c of lista) { const e: any = m.get(c.id); if (e) { c.redactor_id = e.redactor_id; c.canales_publicacion = e.canales_publicacion ?? []; } }
     }
+    // Procedencia (0211) en consulta APARTE best-effort: distingue las solicitudes que
+    // creó Logística por cobertura parcial. Si la migración no está, no rompe la carga.
+    const { data: org } = await supabase.from('casos_difusion').select('id, origen_area, caso_padre_numero').in('id', ids);
+    if (org) {
+      const m = new Map((org as any[]).map((r) => [r.id, r]));
+      for (const c of lista) { const o: any = m.get(c.id); if (o) { c.origen_area = o.origen_area; c.caso_padre_numero = o.caso_padre_numero; } }
+    }
   }
 
   // Filtros en memoria (incluye canal, que depende de la columna 0169).
@@ -147,6 +154,9 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       // aún no se aplicó, no rompe la carga del redactor/canales de arriba.
       const { data: dtipo } = await supabase.from('casos_difusion').select('tipo_difusion, url_original').eq('id', dCaso.id).maybeSingle();
       if (dtipo) { dCaso.tipo_difusion = (dtipo as any).tipo_difusion ?? null; dCaso.url_original = (dtipo as any).url_original ?? null; }
+      // Procedencia (0211), también best-effort.
+      const { data: dorg } = await supabase.from('casos_difusion').select('origen_area, caso_padre_numero').eq('id', dCaso.id).maybeSingle();
+      if (dorg) { dCaso.origen_area = (dorg as any).origen_area ?? null; dCaso.caso_padre_numero = (dorg as any).caso_padre_numero ?? null; }
       // Link del grupo de WhatsApp (0188) + publicaciones por canal (0190), best-effort.
       { const { data: aj } = await supabase.from('ajustes_app').select('valor').eq('clave', 'whatsapp_grupo_difusion').maybeSingle(); dWhatsappGrupo = (aj as any)?.valor ?? null; }
       { const { data: pubs } = await supabase.from('casos_publicaciones').select('id, canal, url, estado_canal, publicado_en').eq('caso_id', dCaso.id).eq('estado_canal', 'publicado').order('publicado_en'); dPublicaciones = (pubs as any[]) ?? []; }

@@ -42,6 +42,32 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
   redirigirOk('/insumos/' + id, 'Estado actualizado');
 }
 
+// Cobertura parcial (0211): cuando Logística solo cubre una parte, pide a Redacción que
+// difunda EL REMANENTE. La RPC crea un caso hijo que reutiliza los datos (y la
+// verificación) del caso original, así que no vuelve a pasar por Verificación, y queda
+// marcado como solicitud del área de Logística por cobertura parcial.
+export async function solicitarCoberturaParcial(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const faltante = String(formData.get('faltante') ?? '').trim().slice(0, 300);
+  const cantidad = String(formData.get('cantidad') ?? '').trim().slice(0, 100) || null;
+  const nota = String(formData.get('nota') ?? '').trim().slice(0, 500) || null;
+  if (!faltante) return redirigirError('/insumos/' + id, 'Indica qué falta por cubrir.');
+  const { error } = await supabase.rpc('solicitar_cobertura_parcial', {
+    p_solicitud: id, p_faltante: faltante, p_cantidad: cantidad, p_nota: nota,
+  });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (/could not find the function|function .* does not exist|no existe la función/.test(m)) {
+      return redirigirError('/insumos/' + id, 'Aún no disponible (falta aplicar la migración 0211).');
+    }
+    return redirigirError('/insumos/' + id, 'No se pudo enviar a Redacción: ' + error.message);
+  }
+  revalidatePath('/insumos'); revalidatePath('/insumos/' + id);
+  revalidatePath('/envio-redaccion'); revalidatePath('/casos'); revalidatePath('/seguimiento');
+  redirigirOk('/insumos/' + id, 'Enviada a Redacción: se creó una solicitud por lo que falta, marcada como cobertura parcial de Logística.');
+}
+
 // Devolver una entrega (petición #2b, decisión 4): deshace un «entregado» — la solicitud
 // vuelve a «en ruta» y el caso ligado de resuelto→confirmado (vía RPC SECURITY DEFINER, que
 // además pasa el guard 0116). El reabastecimiento de inventario es MANUAL.
