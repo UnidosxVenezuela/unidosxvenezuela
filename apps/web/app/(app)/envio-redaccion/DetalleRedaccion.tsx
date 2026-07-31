@@ -7,7 +7,7 @@ import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion, regresarCasoVerificacion } from '../casos/actions';
+import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion, regresarCasoVerificacion, desestimarCaso } from '../casos/actions';
 import { ETIQUETA_AREA_DESTINO } from '@/lib/constantes';
 import AccionesRedaccionCaso from './AccionesRedaccionCaso';
 import FormEditarCaso from '../casos/FormEditarCaso';
@@ -107,6 +107,20 @@ export default function DetalleRedaccion(
           <input id="motivo-regresar" name="motivo" className="input" maxLength={500} placeholder="Motivo (opcional): qué debe revisar Verificación…" style={{ marginTop: 6 }} />
           <BotonConfirmar mensaje="¿Regresar esta solicitud a verificación? Saldrá de la cola de Redacción hasta que Verificación la reenvíe." className="btn" confirmar="Sí, regresar" style={{ marginTop: 8 }}>
             Regresar a verificación
+          </BotonConfirmar>
+        </form>
+      )}
+
+      {/* Desestimar (#2): descartar la solicitud con un motivo (estado «desestimado», aparte
+          de «falso»). Disponible en los estados que ve Redacción y aún sin publicar. */}
+      {puedeOperar && (caso.estado === 'confirmado' || caso.estado === 'enviado_redaccion') && !caso.publicado_en && (
+        <form action={desestimarCaso} className="tarjeta" style={{ marginTop: 10, padding: 12 }}>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <input type="hidden" name="volver" value={volver} />
+          <label htmlFor="motivo-desestimar" className="fila" style={{ gap: 6, fontSize: '.86rem', fontWeight: 600 }}><Icono nombre="cerrar" size={14} /> ¿No procede difundir?</label>
+          <input id="motivo-desestimar" name="motivo" className="input" maxLength={500} required placeholder="Motivo para desestimar (queda registrado en todas las áreas)…" style={{ marginTop: 6 }} />
+          <BotonConfirmar mensaje="¿Desestimar esta solicitud? Saldrá del flujo (queda registrado el motivo) y se cancelará su solicitud de Logística si la tuviera." className="btn btn-peligro" confirmar="Sí, desestimar" style={{ marginTop: 8 }}>
+            Desestimar solicitud
           </BotonConfirmar>
         </form>
       )}

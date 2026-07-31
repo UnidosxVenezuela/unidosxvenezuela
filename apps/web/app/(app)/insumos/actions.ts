@@ -42,6 +42,18 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
   redirigirOk('/insumos/' + id, 'Estado actualizado');
 }
 
+// Devolver una entrega (petición #2b, decisión 4): deshace un «entregado» — la solicitud
+// vuelve a «en ruta» y el caso ligado de resuelto→confirmado (vía RPC SECURITY DEFINER, que
+// además pasa el guard 0116). El reabastecimiento de inventario es MANUAL.
+export async function devolverEntregaInsumo(formData: FormData) {
+  const { supabase } = await usuario();
+  const id = String(formData.get('id'));
+  const { error } = await supabase.rpc('devolver_entrega_insumo', { p_solicitud: id });
+  if (error) return redirigirError('/insumos/' + id, 'No se pudo devolver la entrega: ' + error.message);
+  revalidatePath('/insumos'); revalidatePath('/insumos/' + id); revalidatePath('/casos'); revalidatePath('/seguimiento');
+  redirigirOk('/insumos/' + id, 'Entrega devuelta: la solicitud volvió a «en ruta» y el caso a «confirmado». Ajusta el inventario manualmente si hace falta.');
+}
+
 // Escalar una solicitud al departamento de Alianzas Estratégicas (0200): cuando Logística
 // no puede cubrirla con inventario/proveedores, la envía a Alianzas (que busque una
 // empresa/aliado) y/o pide «Voluntariado Profesional». Se marca en la propia solicitud

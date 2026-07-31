@@ -12,7 +12,8 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud } from '../actions';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo } from '../actions';
+import { desestimarCaso } from '../../casos/actions';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
 function waLink(contacto: string | null): string | null {
@@ -327,7 +328,15 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <button className="btn btn-primario" style={{ width: '100%' }}>Avanzar a «{ETIQUETA_ESTADO_INSUMO[sig] ?? sig}»</button>
                 </form>
               ) : s.estado === 'entregado' ? (
-                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud entregada ✅</p>
+                <>
+                  <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud entregada ✅</p>
+                  {/* Devolver la entrega (#2b, decisión 4): revierte a «en ruta» y el caso a
+                      «confirmado». El inventario se ajusta manualmente. */}
+                  <form action={devolverEntregaInsumo} style={{ marginTop: 8 }}>
+                    <input type="hidden" name="id" value={id} />
+                    <BotonConfirmar mensaje="¿Devolver esta entrega? La solicitud volverá a «en ruta» y el caso ligado a «confirmado». Ajusta el inventario manualmente si hace falta." className="btn" confirmar="Sí, devolver" style={{ width: '100%' }}>Devolver entrega</BotonConfirmar>
+                  </form>
+                </>
               ) : s.estado === 'cancelado' ? (
                 <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud cancelada.</p>
               ) : null}
@@ -356,6 +365,17 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value="cancelado" />
                   <BotonConfirmar mensaje="¿Cancelar esta solicitud?" className="btn" style={{ width: '100%' }}>Cancelar solicitud</BotonConfirmar>
+                </form>
+              )}
+
+              {/* Desestimar la solicitud de ORIGEN (#2): la descarta en TODAS las áreas con un
+                  motivo (estado «desestimado»), no solo esta tarea de Logística. */}
+              {s.caso_id && s.estado !== 'cancelado' && s.estado !== 'entregado' && (
+                <form action={desestimarCaso} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="caso_id" value={s.caso_id} />
+                  <input type="hidden" name="volver" value={'/insumos/' + id} />
+                  <input name="motivo" className="input" maxLength={500} required placeholder="Motivo para desestimar…" style={{ marginBottom: 6 }} />
+                  <BotonConfirmar mensaje="¿Desestimar la solicitud de origen? Saldrá del flujo en TODAS las áreas (queda el motivo) y esta tarea de Logística se cancelará." className="btn btn-peligro" confirmar="Sí, desestimar" style={{ width: '100%' }}>Desestimar (no procede)</BotonConfirmar>
                 </form>
               )}
             </div>

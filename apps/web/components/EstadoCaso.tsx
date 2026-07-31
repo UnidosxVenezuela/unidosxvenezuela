@@ -14,6 +14,7 @@ const TONO: Record<TEstadoCaso, TonoPill> = {
   falso: 'critica',
   enviado_redaccion: 'info',
   resuelto: 'ok',        // atendido / entregado — ciclo cerrado
+  desestimado: 'neutra', // descartada con motivo desde un área (aparte de «falso»)
 };
 
 /** Insignia de estado de caso. Hace un "pop" sutil cuando el estado CAMBIA (por una
