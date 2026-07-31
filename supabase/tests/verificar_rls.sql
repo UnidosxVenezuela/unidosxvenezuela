@@ -1819,7 +1819,7 @@ begin;
   reset role;
 rollback;
 
-\echo '== Test 69: Redacción NO lee casos directo (Paso 10, 0180); lee la vista curada; el contacto no se expone =='
+\echo '== Test 69: Redacción NO lee casos directo (Paso 10, 0180); lee la vista curada; y AHORA sí ve el contacto interno (0209, decisión 1) =='
 begin;
   insert into auth.users (id, email) values
     ('00000000-0000-0000-0000-0000000094a1', 'redac-b@test.local'),
@@ -1832,25 +1832,21 @@ begin;
   insert into public.casos (id, titulo, categoria, estado, contacto, creado_por)
     values ('00000000-0000-0000-0000-0000000094ac', '_TEST_red_priv', 'Otras informaciones', 'enviado_redaccion', 'TELEFONO_SECRETO', null);
 
-  -- Redacción ya NO lee filas de `casos` (ni el contacto interno), pero SÍ la vista curada.
+  -- Redacción ya NO lee filas de `casos` directamente, pero SÍ la vista curada.
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000094a1')::text, true);
-  do $$ declare n int; begin
+  do $$ declare n int; v_contacto text; begin
     select count(*) into n from public.casos;
     if n <> 0 then raise exception 'FALLO 69a: Redacción todavía lee filas de casos (n=%)', n; end if;
     select count(*) into n from public.casos_difusion;
     if n <> 1 then raise exception 'FALLO 69b: Redacción no ve la vista curada casos_difusion (n=%)', n; end if;
+    -- 0209 (decisión 1): la vista AHORA expone el contacto interno a Redacción.
+    select contacto into v_contacto from public.casos_difusion where id = '00000000-0000-0000-0000-0000000094ac';
+    if v_contacto is distinct from 'TELEFONO_SECRETO' then
+      raise exception 'FALLO 69c: casos_difusion ya no muestra el contacto interno a Redacción (0209 debía abrirlo, v=%)', v_contacto;
+    end if;
   end $$;
   reset role;
-
-  -- La vista NO expone la columna de contacto interno.
-  do $$ begin
-    begin
-      perform contacto from public.casos_difusion limit 1;
-      raise exception 'FALLO 69c: casos_difusion expone la columna contacto';
-    exception when undefined_column then null;  -- esperado: la columna no existe en la vista
-    end;
-  end $$;
 
   -- Verificación SIGUE leyendo casos (su rama de casos_select quedó intacta).
   set local role authenticated;
@@ -2036,6 +2032,56 @@ begin;
     if n_sol <> 0 then raise exception 'FALLO 73b: un Desaparecidos derivado a logística creó una solicitud (n=%)', n_sol; end if;
     select count(*) into n_vis from public.casos_difusion where id = '00000000-0000-0000-0000-0000000208b1';
     if n_vis <> 0 then raise exception 'FALLO 73c: un Desaparecidos aparece en la vista curada de difusión (n=%)', n_vis; end if;
+  end $$;
+  reset role;
+rollback;
+
+-- ══ Abrir datos a Redacción + regresar a verificación + publicado en seguimiento (0209) ══
+
+\echo '== Test 74: 0209 — Redacción regresa a verificación; ve TODOS los adjuntos; seguimiento suma publicado_en y notas =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000209a1', 'redac209@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000209a1';
+
+  -- Caso en el pipeline de Redacción, con redactor asignado y notas vacías.
+  insert into public.casos (id, titulo, categoria, estado, redactor_id, creado_por) values
+    ('00000000-0000-0000-0000-0000000209c1', '_TEST_0209_regresar', 'Otras informaciones', 'enviado_redaccion', '00000000-0000-0000-0000-0000000209a1', null);
+  -- Caso publicado con notas de verificación (para el seguimiento).
+  insert into public.casos (id, titulo, categoria, estado, publicado_en, notas, creado_por) values
+    ('00000000-0000-0000-0000-0000000209c2', '_TEST_0209_pub', 'Otras informaciones', 'enviado_redaccion', now(), 'NOTA_VERIF_209', null);
+  -- Caso con DOS adjuntos: uno apto_difusion, otro NO.
+  insert into public.casos (id, titulo, categoria, estado, creado_por) values
+    ('00000000-0000-0000-0000-0000000209c3', '_TEST_0209_adj', 'Otras informaciones', 'enviado_redaccion', null);
+  insert into public.casos_adjuntos (caso_id, url, nombre, mime, apto_difusion) values
+    ('00000000-0000-0000-0000-0000000209c3', 'casos/209/apto.jpg',   'apto.jpg',   'image/jpeg', true),
+    ('00000000-0000-0000-0000-0000000209c3', 'casos/209/noapto.jpg', 'noapto.jpg', 'image/jpeg', false);
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000209a1')::text, true);
+
+  -- (a) Redacción regresa el caso a verificación.
+  select public.regresar_caso_verificacion('00000000-0000-0000-0000-0000000209c1', 'faltan datos');
+  reset role;
+
+  do $$ declare e text; r uuid; nt text; begin
+    select estado::text, redactor_id, notas into e, r, nt from public.casos where id = '00000000-0000-0000-0000-0000000209c1';
+    if e <> 'en_proceso' then raise exception 'FALLO 74a: regresar_caso_verificacion no dejó el caso en_proceso (estado=%)', e; end if;
+    if r is not null then raise exception 'FALLO 74b: regresar_caso_verificacion no liberó al redactor'; end if;
+    if nt not ilike '%Regresado a verificación%' then raise exception 'FALLO 74c: no se anexó el sello del motivo a notas (notas=%)', nt; end if;
+  end $$;
+
+  -- (b) Redacción ve TODOS los adjuntos (apto y no apto), no solo los curados.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000209a1')::text, true);
+  do $$ declare n int; n_pub int; v_notas text; v_pub timestamptz; begin
+    select count(*) into n from public.casos_adjuntos_difusion where caso_id = '00000000-0000-0000-0000-0000000209c3';
+    if n <> 2 then raise exception 'FALLO 74d: Redacción no ve TODOS los adjuntos (n=%, esperado 2)', n; end if;
+
+    -- (c) seguimiento_casos ahora devuelve publicado_en y notas.
+    select publicado_en, notas into v_pub, v_notas from public.seguimiento_casos(null) where id = '00000000-0000-0000-0000-0000000209c2';
+    if v_pub is null then raise exception 'FALLO 74e: seguimiento_casos no refleja publicado_en'; end if;
+    if v_notas is distinct from 'NOTA_VERIF_209' then raise exception 'FALLO 74f: seguimiento_casos no devuelve las notas (v=%)', v_notas; end if;
   end $$;
   reset role;
 rollback;

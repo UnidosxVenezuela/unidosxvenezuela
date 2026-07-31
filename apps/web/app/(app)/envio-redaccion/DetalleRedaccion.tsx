@@ -7,16 +7,18 @@ import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion } from '../casos/actions';
+import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion, regresarCasoVerificacion } from '../casos/actions';
+import { ETIQUETA_AREA_DESTINO } from '@/lib/constantes';
 import AccionesRedaccionCaso from './AccionesRedaccionCaso';
 import FormEditarCaso from '../casos/FormEditarCaso';
 
 /** Panel lateral (drawer) de una solicitud en «Envío a Redacción»: información
  *  completa + todas las herramientas (tomar/soltar, enviar, copiar/descargar,
- *  marcar publicada con canales, editar). `volver` mantiene el panel abierto. */
+ *  marcar publicada con canales, editar, regresar a verificación). `volver` mantiene
+ *  el panel abierto. */
 export default function DetalleRedaccion(
-  { caso, puedeOperar, esAdmin, redactorNombre, miId, volver, whatsappGrupo = null, publicaciones = [] }:
-  { caso: any; puedeOperar: boolean; esAdmin: boolean; redactorNombre?: string | null; miId: string; volver: string; whatsappGrupo?: string | null; publicaciones?: any[] },
+  { caso, puedeOperar, esAdmin, redactorNombre, miId, volver, whatsappGrupo = null, publicaciones = [], derivaciones = [] }:
+  { caso: any; puedeOperar: boolean; esAdmin: boolean; redactorNombre?: string | null; miId: string; volver: string; whatsappGrupo?: string | null; publicaciones?: any[]; derivaciones?: any[] },
 ) {
   const p = pasoRedaccion(caso);
   const esMiRedaccion = caso.redactor_id && caso.redactor_id === miId;
@@ -66,6 +68,24 @@ export default function DetalleRedaccion(
       {/* Información completa para difundir */}
       <InfoSolicitud caso={caso} />
 
+      {/* Notas de coordinación por área, incl. Logística (#4a): así Redacción ve el
+          contexto de las otras áreas sin salir del panel. */}
+      {(() => {
+        const conNota = (derivaciones ?? []).filter((d: any) => d.accion || d.observaciones || d.motivo_cierre);
+        if (conNota.length === 0) return null;
+        return (
+          <div className="tarjeta" style={{ marginTop: 10, padding: 12 }}>
+            <div className="fila" style={{ gap: 6, marginBottom: 6 }}><Icono nombre="documento" size={15} /> <strong style={{ fontSize: '.88rem' }}>Notas de coordinación (Logística y otras áreas)</strong></div>
+            {conNota.map((d: any) => (
+              <div key={d.id} className="muted" style={{ fontSize: '.84rem', marginTop: 4 }}>
+                <strong>{ETIQUETA_AREA_DESTINO[d.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? d.area}:</strong>{' '}
+                {[d.accion, d.observaciones, d.motivo_cierre ? 'Cierre: ' + d.motivo_cierre : null].filter(Boolean).join(' · ')}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Enviar a Redacción (mueve al estado del pipeline) — solo confirmadas */}
       {puedeOperar && caso.estado === 'confirmado' && (
         <form action={enviarCasoRedaccion} style={{ marginTop: 10 }}>
@@ -73,6 +93,20 @@ export default function DetalleRedaccion(
           <input type="hidden" name="volver" value={volver} />
           <BotonConfirmar mensaje={'¿Marcar «' + caso.titulo + '» como enviada a Redacción?'} className="btn btn-primario" confirmar="Sí, enviar">
             <Icono nombre="cohete" size={16} /> Enviar a Redacción
+          </BotonConfirmar>
+        </form>
+      )}
+
+      {/* Regresar a verificación (#4b): si algo no cuadra, Redacción la devuelve a
+          Verificación (sale de la cola). Solo en el pipeline y aún sin publicar. */}
+      {puedeOperar && (caso.estado === 'confirmado' || caso.estado === 'enviado_redaccion') && !caso.publicado_en && (
+        <form action={regresarCasoVerificacion} className="tarjeta" style={{ marginTop: 10, padding: 12 }}>
+          <input type="hidden" name="caso_id" value={caso.id} />
+          <input type="hidden" name="volver" value={volver} />
+          <label htmlFor="motivo-regresar" className="fila" style={{ gap: 6, fontSize: '.86rem', fontWeight: 600 }}><Icono nombre="flecha" size={14} /> ¿Falta revisar algo?</label>
+          <input id="motivo-regresar" name="motivo" className="input" maxLength={500} placeholder="Motivo (opcional): qué debe revisar Verificación…" style={{ marginTop: 6 }} />
+          <BotonConfirmar mensaje="¿Regresar esta solicitud a verificación? Saldrá de la cola de Redacción hasta que Verificación la reenvíe." className="btn" confirmar="Sí, regresar" style={{ marginTop: 8 }}>
+            Regresar a verificación
           </BotonConfirmar>
         </form>
       )}

@@ -31,12 +31,12 @@ import DetalleRedaccion from './DetalleRedaccion';
 
 type SP = { q?: string; categoria?: string; etapa?: string; canal?: string; prioridad?: string; vista?: string; caso?: string };
 
-// Paso 10 (Fase 2b, 0180): Redacción lee de la VISTA CURADA `casos_difusion`, no de
-// `casos` (a la que ya NO tiene acceso por RLS). La vista solo expone columnas seguras
-// —nunca `contacto`/`referente`/`contacto_whatsapp`/`contacto_instagram`— y sí el
-// `contacto_difusion` autorizado. Las evidencias tampoco se bajan aquí. redactor_id/
-// canales (0169) se traen aparte, best-effort, por si esa migración aún no está aplicada.
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, creado_por, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, estado, publicado_en, publicacion_url';
+// Redacción lee de la VISTA CURADA `casos_difusion`, no de `casos` (a la que ya NO tiene
+// acceso directo por RLS). Desde 0209 (decisión del equipo) la vista SÍ expone el contacto
+// interno (contacto/referente/contacto_whatsapp/contacto_instagram) para que Redacción
+// trabaje con el material completo; las evidencias van por `casos_adjuntos_difusion` (todos
+// los adjuntos, 0209). redactor_id/canales (0169) se traen aparte, best-effort.
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto_difusion, autoriza_difusion, notas, creado_por, actualizado_en, requiere_difusion, es_requerimiento, req_tipo, req_cantidad, req_urgencia, lat, lng, estado, publicado_en, publicacion_url, contacto, referente, contacto_whatsapp, contacto_instagram, referente_rol';
 
 export default async function EnvioRedaccionPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -150,15 +150,21 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       // Link del grupo de WhatsApp (0188) + publicaciones por canal (0190), best-effort.
       { const { data: aj } = await supabase.from('ajustes_app').select('valor').eq('clave', 'whatsapp_grupo_difusion').maybeSingle(); dWhatsappGrupo = (aj as any)?.valor ?? null; }
       { const { data: pubs } = await supabase.from('casos_publicaciones').select('id, canal, url, estado_canal, publicado_en').eq('caso_id', dCaso.id).eq('estado_canal', 'publicado').order('publicado_en'); dPublicaciones = (pubs as any[]) ?? []; }
-      // Fotos aptas para difusión (0187): SOLO los adjuntos que Verificación curó
-      // (vista `casos_adjuntos_difusion` + política de storage aparte). Best-effort:
-      // si la migración aún no se aplicó, la consulta vuelve vacía y no se rompe.
+      // Evidencias (0209): TODOS los adjuntos del caso (vista `casos_adjuntos_difusion`
+      // + política de storage), no solo los curados. Best-effort: si la migración aún no
+      // se aplicó, la consulta vuelve vacía y no se rompe.
       const { urlFirmada } = await import('@/lib/storage');
       const { data: adjAptos } = await supabase.from('casos_adjuntos_difusion')
         .select('id, url, nombre, mime').eq('caso_id', dCaso.id).order('creado_en');
       dCaso.adjuntos = await Promise.all(((adjAptos ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
       })));
+      // Notas de coordinación por área, incl. Logística (#4a): casos_derivaciones tiene
+      // lectura amplia (0177), así que Redacción ve el contexto de las otras áreas.
+      const { data: derivs } = await supabase.from('casos_derivaciones')
+        .select('id, area, estado, accion, observaciones, motivo_cierre, derivado_en')
+        .eq('caso_id', dCaso.id).order('derivado_en');
+      dCaso.derivaciones = (derivs as any[]) ?? [];
       if (dCaso.redactor_id && !nombreRed.has(dCaso.redactor_id)) {
         const { data: rp } = await supabase.from('perfiles').select('nombre_completo').eq('id', dCaso.redactor_id).maybeSingle();
         if (rp) nombreRed.set(dCaso.redactor_id, nombreMostrado((rp as any).nombre_completo, esAdmin));
@@ -176,7 +182,7 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       <RealtimeRefrescar tabla="casos_difusion_senal" />
       <Consejo id="envio-redaccion" titulo="Difundir las solicitudes confirmadas">
         Toda solicitud <strong>confirmada</strong> llega aquí para difundirse en redes, en paralelo a Logística; la bandeja se <strong>actualiza sola</strong>.
-        <strong> Tómala</strong> para redactarla, <strong>copia</strong> su información, publícala y <strong>márcala publicada</strong> con sus canales. Las de <strong>prioridad</strong> son las que Logística no pudo cubrir. <strong>Privacidad:</strong> solo ves lo <strong>difundible</strong>, nunca el contacto interno.
+        <strong> Tómala</strong> para redactarla, <strong>copia</strong> su información, publícala y <strong>márcala publicada</strong> con sus canales. Las de <strong>prioridad</strong> son las que Logística no pudo cubrir. Si algo no cuadra, puedes <strong>regresarla a verificación</strong>. <strong>Trata el contacto y las evidencias con cuidado:</strong> son datos sensibles, úsalos solo para coordinar la difusión.
       </Consejo>
 
       <div className="pagina-cab">
@@ -314,7 +320,7 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
         <>
           <Link href={cerrarHref} className="drawer-backdrop" aria-label="Cerrar detalle" />
           <DrawerModal cerrarHref={cerrarHref} etiqueta={'Detalle de la solicitud ' + dCaso.titulo}>
-            <DetalleRedaccion caso={dCaso} puedeOperar={puedeOperar} esAdmin={esAdmin} redactorNombre={dCaso.redactor_id ? nombreRed.get(dCaso.redactor_id) : null} miId={user!.id} volver={hrefCaso(dCaso.id)} whatsappGrupo={dWhatsappGrupo} publicaciones={dPublicaciones} />
+            <DetalleRedaccion caso={dCaso} puedeOperar={puedeOperar} esAdmin={esAdmin} redactorNombre={dCaso.redactor_id ? nombreRed.get(dCaso.redactor_id) : null} miId={user!.id} volver={hrefCaso(dCaso.id)} whatsappGrupo={dWhatsappGrupo} publicaciones={dPublicaciones} derivaciones={dCaso.derivaciones ?? []} />
           </DrawerModal>
         </>
       )}

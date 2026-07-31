@@ -80,6 +80,8 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                   {c.validado
                     ? <Pill tono="ok" punto={false}>✔ Validado</Pill>
                     : <Pill tono="aviso" punto={false}>En verificación</Pill>}
+                  {/* #4c: al publicar, el recorrido lo refleja (la difusión ya terminó su parte). */}
+                  {c.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
                   {c.es_requerimiento && c.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[c.req_tipo as keyof typeof ETIQUETA_TIPO_INSUMO] ?? c.req_tipo}</Pill>}
                   {ubic && <span className="muted" style={{ fontSize: '.82rem' }}><Icono nombre="ubicacion" size={13} /> {ubic}</span>}
                 </div>
@@ -106,6 +108,13 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                     </div>
                   ))}
                   </>
+                )}
+                {/* Notas de verificación (decisión 5): visibles en el recorrido para todo el equipo. */}
+                {c.notas && (
+                  <div style={{ marginTop: 8, padding: '6px 10px', background: 'var(--sup2)', border: '1px solid var(--borde)', borderRadius: 8 }}>
+                    <span className="muted" style={{ fontSize: '.76rem' }}>Observaciones de verificación</span>
+                    <p style={{ whiteSpace: 'pre-wrap', margin: '2px 0 0', fontSize: '.84rem' }}>{c.notas}</p>
+                  </div>
                 )}
                 <div className="muted" style={{ fontSize: '.76rem', marginTop: 8 }}>Última actualización: {fechaHora(c.actualizado_en)}</div>
               </div>
