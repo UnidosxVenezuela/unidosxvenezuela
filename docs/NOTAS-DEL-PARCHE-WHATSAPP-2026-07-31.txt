@@ -1,0 +1,75 @@
+🇻🇪 *NOTAS DEL PARCHE — 31 jul 2026*
+_Apoyo por Venezuela_
+
+Esta tanda es, sobre todo, *lo que ustedes pidieron*. Le pusimos orden al *flujo de las solicitudes*: cada área recibe *solo lo suyo* (se acabó el caso que caía en Redes y en Logística a la vez), derivar ya *confirma sola*, se puede *desestimar dejando el motivo* desde cualquier departamento y —por fin— *devolver una entrega*. Redacción trabaja con el *material completo*, Logística puede pedir *lo que no logró cubrir*, y arreglamos los *avisos de Telegram*, que no estaban saliendo.
+
+✅ *19 mejoras*  ·  🗂️ *7 áreas*  ·  🛠️ *11 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🔀 *EL FLUJO DE LAS SOLICITUDES*
+
+• *Derivar ya confirma sola.* Al marcar *todos los checks en verde* y derivar a otra área, la solicitud pasa sola de _«en proceso»_ a *«confirmado y activo»*. Antes había que acordarse de moverla a mano y, si no, *no aparecía en las otras áreas*. El traslado manual *sigue estando* para los casos particulares que haya que reubicar. (Los *Desaparecidos* mantienen su propio circuito con Búsqueda.)
+
+• *Cada área recibe SOLO lo suyo.* Este era el del *caso 00117*: todo lo que se confirmaba caía *a la vez* en Logística y en Redes, aunque no se le hubiera enviado a ese departamento. Ahora el ruteo es *explícito*: Logística recibe la tarea *solo si se deriva a Logística*, y Redes ve la solicitud *solo si se deriva a Redes* (o se envía a Redacción, o Logística no pudo cubrirla, o ya está publicada). Nada de bandejas con trabajo ajeno.
+
+• *Desestimar dejando el motivo, desde cualquier departamento.* *Redacción* y *Logística* ya pueden descartar una solicitud que no procede, *escribiendo el motivo* —que queda registrado y visible para todos—. Usa un estado *nuevo y aparte*, _«Desestimado»_, para *no ensuciar* el indicador de «Falsos» de Verificación: no es lo mismo un reporte falso que uno que simplemente ya no aplica. Si tenía tarea en Logística, se *cancela sola*.
+
+• *Devolver una entrega.* Antes, poner una solicitud en *«entregado»* era un punto sin retorno: si había un error, ahí se quedaba. Ahora hay un botón *«Devolver entrega»*: la tarea vuelve a *«en ruta»* y la solicitud a *«confirmado y activo»*. Ojo: el *inventario se ajusta a mano* (la app no repone existencias sola).
+
+• *Las solicitudes «solo redes» ya llegan al final.* Las que *no pasan por Logística* y se resuelven con una publicación se quedaban trabadas en el *Paso 4*, y Verificación y Recopilación nunca sabían si aquello había terminado. Ahora, cuando se marca *publicada* (o resuelta), el recorrido llega al *Paso 5 · Finalizada*.
+
+• *«Falso» y «Resuelto», separados.* Eran un solo indicador y se leía raro. Ahora son *dos tarjetas distintas* en el tablero de solicitudes.
+
+━━━━━━━━━━━━━━━━━━
+📣 *REDACCIÓN Y REDES*
+
+• *Por fin ven el material completo.* Redacción ya no trabaja a ciegas: ahora ve el *dato de contacto*, el *enlace directo a la fuente*, *todas las evidencias* de la solicitud y las *notas de coordinación de Logística* y las demás áreas. Son *datos sensibles*: úsenlos solo para coordinar la difusión.
+
+• *Botón «Regresar a verificación».* Si algo no cuadra, Redacción *devuelve la solicitud* a Verificación con el motivo: sale de su cola, se libera el redactor y Verificación recibe el aviso.
+
+• *Lo publicado se ve en Seguimiento.* Al marcar una solicitud como *publicada*, queda con su insignia *📣 Publicada* en el panel de *Seguimiento* y en el de *Solicitudes*. Además, el recorrido ahora muestra las *observaciones de verificación*. (Quitamos el enlace _«Ver historial completo en Solicitudes»_: Redacción no tiene acceso a ese panel y solo llevaba a una puerta cerrada.)
+
+━━━━━━━━━━━━━━━━━━
+🚚 *LOGÍSTICA*
+
+• *Pedir a Redacción lo que NO se pudo cubrir (cobertura parcial).* Cuando una solicitud se cubre *a medias*, ya no hay que elegir entre darla por cerrada o marcarla como no cubierta. Con la tarjeta *«Cobertura parcial»* se envía a Redacción una solicitud *solo por lo que falta* (qué falta, cuánto y una nota). *Reutiliza los datos* de la original —así que *no vuelve a pasar por Verificación*— y llega marcada como *🚚 Cobertura parcial*, con el número de la solicitud de la que viene, para que Redacción sepa exactamente qué es.
+
+━━━━━━━━━━━━━━━━━━
+👀 *QUE NADIE TRABAJE A CIEGAS*
+
+• *Las observaciones se ven en todas las áreas.* Lo que cada departamento escribe al tomar, avanzar o cerrar su derivación (acción, observaciones y motivo de cierre) aparece ahora en *Seguimiento* y en la *línea de tiempo* de la solicitud. Antes se quedaba encerrado en su área.
+
+• *Bandeja «Mi área».* Quien es *operador de un área* (Logística, Redes, Donaciones, Alianzas…) ya tiene *dónde ver y trabajar sus derivaciones*: tomarlas, avanzarlas y cerrarlas desde su propia pantalla, sin depender del detalle del caso —que no todos pueden abrir—.
+
+• *El mapa, para todas las áreas.* El panorama geográfico (centros de acopio, necesidades, *capa de calor* y filtro de *albergues con cupo*) dejó de ser exclusivo de Logística: ahora es una *foto compartida de solo lectura* para todos. Y el *relevo entre áreas* —quién tomó, avanzó o cerró cada derivación— ya aparece en el *historial de cambios* de la solicitud.
+
+━━━━━━━━━━━━━━━━━━
+✅ *TAREAS*
+
+• *Aviso de vencimiento.* La app avisa sola a la persona asignada cuando una tarea *está por vencer* (24 h antes) y cuando *ya venció*. Sin agendarlo a mano y sin spam: máximo un recordatorio por tarea cada 11 horas.
+
+• *Historial de cambios de la tarea.* Igual que en las solicitudes: cada cambio de *estado, prioridad, responsable, vencimiento o cupo* queda guardado (de qué a qué, quién y cuándo). Nada se borra.
+
+━━━━━━━━━━━━━━━━━━
+🔑 *CUENTAS Y PERMISOS*
+
+• *Líderes y coordinadores de Recopilación ya pueden crear solicitudes.* Una coordinadora no lograba crear desde la web: el botón no hacía nada. Resulta que el *mando del grupo* tenía permiso para *supervisar* las solicitudes del equipo, pero no para *crearlas*. Corregido: líderes y coordinadores ejercen sus funciones completas.
+
+• *Aprobar la 2ª verificación ya activa la cuenta.* Otro caso de _«no logro subir solicitudes»_: al aprobar la verificación de identidad, la cuenta *no quedaba marcada como verificada*, así que el formulario se veía pero *no dejaba guardar*. Ahora aprobar la identidad *activa la cuenta* en el mismo paso.
+
+━━━━━━━━━━━━━━━━━━
+🔔 *AVISOS (Telegram y correo)*
+
+• *Telegram ya envía los avisos.* El bot vinculaba bien… y después *no llegaba nada*. La causa: el envío de Telegram *dependía* de la configuración de las notificaciones del navegador, y si esa faltaba, *se cancelaba todo* antes de llegar a Telegram. Ahora *cada canal va por su lado*. De paso: si la foto de un aviso no se puede descargar, *se reenvía como texto* en vez de perderse; los fallos *quedan registrados* para poder diagnosticarlos; vincular *solo funciona en chat privado* (antes, un `/start` en un grupo mandaba tus avisos personales al grupo); y `/stop` ahora dice la verdad.
+
+• *Correo de recuperación de contraseña.* Quedó documentado el *runbook* para dejar Resend conectado como servidor de correo de la app: los correos no salían porque *faltaba esa configuración*, no por un fallo del código.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Esta tanda trae cambios de base de datos: van de la *0201 a la 0211*. Se aplican en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types* (esta vez el `db:types` *importa*: hay un estado nuevo, «Desestimado»). Como siempre, es a prueba de fallos: mientras no se apliquen, lo nuevo muestra «aún no disponible» en vez de romperse. Para los avisos, revisa las variables de *Telegram* y el *SMTP de Resend* (ver `docs/TELEGRAM.md` y `docs/08-CORREO-RESEND.md`, que ahora traen su sección de diagnóstico).
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Estrenamos la *cobertura parcial*: cuando algo se cubre a medias, se le pide a Redacción *lo que falta*. Aplicamos la idea a estas notas del parche —cubrimos el *60%* a tiempo y el *40%* restante lo derivamos… a nosotros mismos—. Eso sí, todo quedó impecable: marcado como _«🚚 cobertura parcial»_, con su *motivo por escrito* y visible en *todas las áreas*, que era justo lo que habían pedido. 📦✍️
+
+_Apoyo por Venezuela · Notas del parche · Julio 2026_
