@@ -1,6 +1,4 @@
 import Link from 'next/link';
-import fs from 'node:fs';
-import path from 'node:path';
 import { requireUsuario, esCoordinacion } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import BotonImprimir from '@/components/BotonImprimir';
@@ -8,15 +6,41 @@ import Pill from '@/components/Pill';
 import { anularCertificado } from '../../actions';
 import BotonConfirmar from '@/components/BotonConfirmar';
 
-// El logotipo se sirve desde /public/marca. Si está el archivo OFICIAL (png o svg) se usa
-// ese; si no, el emblema vectorial de respaldo. Así se sustituye dejando el fichero, sin
-// tocar código.
-function logoMarca(): string {
-  const dir = path.join(process.cwd(), 'public', 'marca');
-  for (const f of ['apoyo-por-venezuela.png', 'apoyo-por-venezuela.svg', 'logo-apoyo.png']) {
-    try { if (fs.existsSync(path.join(dir, f))) return '/marca/' + f; } catch { /* fs no disponible */ }
-  }
-  return '/marca/corazon-apoyo.svg';
+// Emblema oficial de la marca (corazón con las manos). El logotipo completo —con el
+// wordmark y los valores— está junto a él como `apoyo-por-venezuela-completo.jpg`.
+const EMBLEMA = '/marca/apoyo-por-venezuela.png';
+
+/** Sello del certificado: aro festoneado, «CERTIFICADO OFICIAL» en curva y la marca al
+ *  centro. Va en línea (no como <img>) para que herede la tipografía de la página y
+ *  salga nítido a cualquier tamaño al imprimir. */
+function Sello() {
+  // Borde festoneado: círculos pequeños repartidos por el perímetro que, al compartir
+  // relleno con el disco, se funden en un solo contorno ondulado.
+  const lobulos = Array.from({ length: 32 }, (_, i) => {
+    const a = (i / 32) * 2 * Math.PI;
+    return { cx: 50 + 44 * Math.cos(a), cy: 50 + 44 * Math.sin(a) };
+  });
+  return (
+    <svg className="cert-sello" viewBox="0 0 100 100" role="img" aria-label="Sello: certificado oficial">
+      <defs>
+        {/* Arco para el texto en curva; empieza arriba y da la vuelta completa. */}
+        <path id="cert-sello-arco" fill="none" d="M50,50 m0,-36.5 a36.5,36.5 0 1,1 -0.1,0" />
+      </defs>
+      {lobulos.map((l, i) => <circle key={i} cx={l.cx} cy={l.cy} r="2.5" fill="#7C1330" />)}
+      <circle cx="50" cy="50" r="44" fill="#7C1330" />
+      <circle cx="50" cy="50" r="40" fill="#fff" />
+      <circle cx="50" cy="50" r="27.5" fill="none" stroke="#7C1330" strokeWidth="1" />
+      <text className="cert-sello-curva" fill="#7C1330">
+        <textPath href="#cert-sello-arco" startOffset="50%" textAnchor="middle">
+          CERTIFICADO OFICIAL · APOYO POR VENEZUELA ·
+        </textPath>
+      </text>
+      <text className="cert-sello-marca" fill="#7C1330" textAnchor="middle">
+        <tspan x="50" y="48.5">APOYO POR</tspan>
+        <tspan x="50" y="57.5">VENEZUELA</tspan>
+      </text>
+    </svg>
+  );
 }
 
 /** «128,5 horas» / «1 hora» — el texto del certificado va con la palabra completa,
@@ -66,7 +90,6 @@ export default async function CertificadoImprimirPage({ params }: { params: { id
   }
   const c = cert as any;
   const admin = esCoordinacion(perfil);
-  const logo = logoMarca();
 
   return (
     <div>
@@ -99,11 +122,19 @@ export default async function CertificadoImprimirPage({ params }: { params: { id
         <div className="cert-marco" />
         <div className="cert-tri"><i /><i /><i /><i /></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="cert-agua" src={logo} alt="" />
+        <img className="cert-agua" src={EMBLEMA} alt="" />
 
         <div className="cert-cont">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="cert-logo" src={logo} alt="Apoyo por Venezuela" />
+          {/* Lockup de marca: emblema + «Apoyo / Por / Venezuela». */}
+          <div className="cert-marca">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="cert-marca-em" src={EMBLEMA} alt="Apoyo por Venezuela" />
+            <div className="cert-marca-txt" aria-hidden="true">
+              <span className="cert-marca-1">Apoyo</span>
+              <span className="cert-marca-2"><i /><em>Por</em><i /></span>
+              <span className="cert-marca-3">Venezuela</span>
+            </div>
+          </div>
           <h1 className="cert-titulo">CERTIFICADO DE RECONOCIMIENTO</h1>
           <div className="cert-filete" />
           <div className="cert-otorga">Apoyo por Venezuela otorga el presente certificado a:</div>
@@ -136,7 +167,7 @@ export default async function CertificadoImprimirPage({ params }: { params: { id
 
         <div className="cert-abajo">
           <div className="cert-lema"><u>APOYO POR VENEZUELA</u>«Juntos hacemos posible la esperanza.»</div>
-          <div className="cert-sello"><b>APOYO POR</b><b>VENEZUELA</b><i>Certificado oficial</i></div>
+          <Sello />
           <div className="cert-folio">Folio {c.folio}<br />apoyoporvenezuela.org/certificados</div>
         </div>
 
