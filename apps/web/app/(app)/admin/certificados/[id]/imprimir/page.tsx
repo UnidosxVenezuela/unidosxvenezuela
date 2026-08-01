@@ -168,7 +168,7 @@ export default async function CertificadoImprimirPage({ params }: { params: { id
         <div className="cert-abajo">
           <div className="cert-lema"><u>APOYO POR VENEZUELA</u>«Juntos hacemos posible la esperanza.»</div>
           <Sello />
-          <div className="cert-folio">Folio {c.folio}<br />apoyoporvenezuela.org/certificados</div>
+          <div className="cert-folio">Folio {c.folio}</div>
         </div>
 
         {c.anulado_en && <div className="cert-anulado">ANULADO</div>}
