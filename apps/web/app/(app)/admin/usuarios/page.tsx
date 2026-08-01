@@ -200,6 +200,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
             <>
               <Link className="btn btn-primario" href="/admin/usuarios/nuevo"><Icono nombre="mas" /> Crear usuario</Link>
               <Link className="btn" href="/admin/usuarios/importar"><Icono nombre="grupos" size={16} /> Importar por lote</Link>
+              <Link className="btn" href="/admin/certificados"><Icono nombre="ok" size={16} /> Certificados</Link>
               <Link className="btn" href="/admin/areas">Áreas</Link>
             </>
           )}
