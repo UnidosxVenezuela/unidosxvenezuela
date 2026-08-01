@@ -2474,4 +2474,129 @@ begin;
   reset role;
 rollback;
 
+-- ══ Certificados de voluntariado y ajuste de horas (0215) ══
+
+\echo '== Test 80: 0215 — el total es automáticas + ajustes; solo la administración ajusta y emite; el certificado congela nombre y horas =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000215a1', 'volun215@test.local'),
+    ('00000000-0000-0000-0000-0000000215a2', 'otro215@test.local') on conflict do nothing;
+  update public.perfiles set nombre_completo = 'María Fernanda Rodríguez', rol = 'voluntario',
+         roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000215a1';
+  update public.perfiles set nombre_completo = 'Otra Persona', rol = 'voluntario',
+         roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000215a2';
+
+  -- Horas AUTOMÁTICAS (las inserta la RPC de sesión; aquí se siembran directamente).
+  insert into public.registro_horas (perfil_id, horas, fuente, fecha) values
+    ('00000000-0000-0000-0000-0000000215a1', 10, 'auto', current_date - 20),
+    ('00000000-0000-0000-0000-0000000215a1',  6.5, 'auto', current_date - 5);
+
+  -- (a) Un voluntario NO puede ajustar horas (ni las suyas).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000215a1')::text, true);
+  do $$ begin
+    begin
+      perform public.ajustar_horas('00000000-0000-0000-0000-0000000215a1', 20, 'me pongo horas');
+      raise exception 'FALLO 80a: un voluntario pudo ajustarse las horas';
+    exception when insufficient_privilege then null;  -- 42501 esperado
+    end;
+  end $$;
+  -- …y su total propio es solo el automático.
+  do $$ declare t numeric; begin
+    t := public.horas_totales_perfil('00000000-0000-0000-0000-0000000215a1');
+    if t <> 16.5 then raise exception 'FALLO 80b: total propio incorrecto (t=%)', t; end if;
+  end $$;
+  -- Tampoco puede consultar las horas de otra persona.
+  do $$ begin
+    begin
+      perform public.horas_totales_perfil('00000000-0000-0000-0000-0000000215a2');
+      raise exception 'FALLO 80c: un voluntario consultó las horas de otra persona';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (b) La administración ajusta con motivo y el total lo refleja.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000aa')::text, true);
+  do $$ begin
+    begin
+      perform public.ajustar_horas('00000000-0000-0000-0000-0000000215a1', 12, 'x');
+      raise exception 'FALLO 80d: se aceptó un motivo demasiado corto';
+    exception when data_exception then null;  -- 22023 esperado
+    end;
+  end $$;
+  select public.ajustar_horas('00000000-0000-0000-0000-0000000215a1', 12, 'jornada de acopio del 20/7');
+
+  do $$ declare t numeric; a numeric; j numeric; begin
+    t := public.horas_totales_perfil('00000000-0000-0000-0000-0000000215a1');
+    if t <> 28.5 then raise exception 'FALLO 80e: el ajuste no se sumó al total (t=%)', t; end if;
+    select d.automaticas, d.ajustes into a, j from public.horas_desglose_perfil('00000000-0000-0000-0000-0000000215a1') d;
+    if a <> 16.5 then raise exception 'FALLO 80f: automáticas mal calculadas (a=%)', a; end if;
+    if j <> 12   then raise exception 'FALLO 80g: ajustes mal calculados (j=%)', j; end if;
+  end $$;
+
+  -- El registro AUTOMÁTICO no se tocó: sigue teniendo sus 2 filas y 16,5 h (0164 intacto).
+  do $$ declare n int; s numeric; begin
+    select count(*), coalesce(sum(horas),0) into n, s from public.registro_horas
+     where perfil_id = '00000000-0000-0000-0000-0000000215a1';
+    if n <> 2 or s <> 16.5 then raise exception 'FALLO 80h: el ajuste alteró registro_horas (n=%, s=%)', n, s; end if;
+  end $$;
+
+  -- (c) Emitir el certificado: congela nombre y horas, y genera folio.
+  do $$
+  declare v_id uuid; c record; begin
+    v_id := public.emitir_certificado('00000000-0000-0000-0000-0000000215a1');
+    select * into c from public.certificados where id = v_id;
+    if c.horas <> 28.5 then raise exception 'FALLO 80i: el certificado no tomó el total (h=%)', c.horas; end if;
+    if c.nombre <> 'María Fernanda Rodríguez' then raise exception 'FALLO 80j: no congeló el nombre (%)', c.nombre; end if;
+    if c.folio not like 'APV-%' then raise exception 'FALLO 80k: folio con formato inesperado (%)', c.folio; end if;
+    if c.periodo_inicio is null or c.periodo_fin is null then raise exception 'FALLO 80l: no dedujo el período'; end if;
+
+    -- Cambiar las horas DESPUÉS no altera el certificado ya emitido.
+    perform public.ajustar_horas('00000000-0000-0000-0000-0000000215a1', 5, 'horas posteriores');
+    select * into c from public.certificados where id = v_id;
+    if c.horas <> 28.5 then raise exception 'FALLO 80m: el certificado cambió al sumar horas nuevas (h=%)', c.horas; end if;
+  end $$;
+  reset role;
+
+  -- (d) Cada quien ve SUS certificados; los de otra persona no.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000215a1')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.certificados;
+    if n <> 1 then raise exception 'FALLO 80n: la persona no ve su propio certificado (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000215a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.certificados;
+    if n <> 0 then raise exception 'FALLO 80o: se ven certificados ajenos (n=%)', n; end if;
+    begin
+      perform public.emitir_certificado('00000000-0000-0000-0000-0000000215a2');
+      raise exception 'FALLO 80p: un voluntario se emitió un certificado';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (e) Anular exige motivo y marca el certificado.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000aa')::text, true);
+  do $$ declare v_id uuid; n int; begin
+    select id into v_id from public.certificados limit 1;
+    begin
+      perform public.anular_certificado(v_id, '  ');
+      raise exception 'FALLO 80q: se anuló sin motivo';
+    exception when data_exception then null;
+    end;
+    perform public.anular_certificado(v_id, 'emitido por error');
+    select count(*) into n from public.certificados where id = v_id and anulado_en is not null;
+    if n <> 1 then raise exception 'FALLO 80r: la anulación no quedó registrada'; end if;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

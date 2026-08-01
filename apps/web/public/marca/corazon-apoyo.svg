@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 165" role="img" aria-label="Apoyo por Venezuela">
+  <title>Apoyo por Venezuela</title>
+  <desc>Emblema (corazón tricolor con manos entrelazadas). Reconstrucción aproximada: sustituible por el archivo oficial en esta misma ruta.</desc>
+  <defs>
+    <clipPath id="c-heart">
+      <path d="M75,150 C34,118 14,88 14,61 A30,30 0 0,1 75,43 A30,30 0 0,1 136,61 C136,88 116,118 75,150 Z"/>
+    </clipPath>
+    <path id="c-star" d="M0,-5.6 L1.6,-1.7 L5.6,-1.7 L2.5,0.7 L3.5,4.5 L0,2.2 L-3.5,4.5 L-2.5,0.7 L-5.6,-1.7 L-1.6,-1.7 Z"/>
+  </defs>
+
+  <g clip-path="url(#c-heart)">
+    <rect x="0" y="0" width="150" height="165" fill="#F5B301"/>
+    <polygon points="72,0 150,0 150,84 92,64 72,24" fill="#12379B"/>
+    <polygon points="150,74 150,165 48,165 54,128 92,82" fill="#7C1330"/>
+
+    <!-- manos entrelazadas -->
+    <path fill="#7C1330" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"
+          d="M140,165 C120,150 100,132 86,114 C78,104 74,94 80,88
+             C86,82 96,86 104,94 C114,104 126,114 136,120 C146,126 150,138 150,165 Z"/>
+    <path fill="#FFFFFF" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"
+          d="M46,74 C46,64 56,60 64,66 C74,73 82,84 90,94
+             C97,102 104,108 106,116 C108,124 100,130 92,126
+             C82,121 70,108 60,96 C51,86 46,80 46,74 Z"/>
+    <g fill="none" stroke="#D9DEE6" stroke-width="2.4" stroke-linecap="round">
+      <path d="M60,68 C70,78 79,90 87,100"/>
+      <path d="M52,76 C62,86 71,98 79,108"/>
+      <path d="M47,86 C56,95 65,105 72,114"/>
+    </g>
+  </g>
+
+  <g fill="#FFFFFF">
+    <use href="#c-star" transform="translate(92,38)"/>
+    <use href="#c-star" transform="translate(104,34)"/>
+    <use href="#c-star" transform="translate(116,35)"/>
+    <use href="#c-star" transform="translate(126,41)"/>
+    <use href="#c-star" transform="translate(133,51)"/>
+    <use href="#c-star" transform="translate(136,63)"/>
+  </g>
+</svg>

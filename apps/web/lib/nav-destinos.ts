@@ -64,6 +64,7 @@ export function destinosNav(flags: NavFlags): Destino[] {
   }
   if (flags.admin) {
     d.push({ href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'video' });
+    d.push({ href: '/admin/certificados', etiqueta: 'Certificados', icono: 'ok' });
     d.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
     d.push({ href: '/admin/ajustes', etiqueta: 'Ajustes', icono: 'puntos' });
   }
