@@ -691,7 +691,17 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
   .no-print { display: none !important; }
   .solo-impresion { display: block; }
   body { background: #fff; }
-  .app-shell, .barra-superior, .sidebar, nav, aside.grupo-aside { display: none !important; }
+  /* OJO: se oculta el MARCO de la app, nunca su contenedor. `.app-shell` envuelve
+     también el contenido, así que ponerlo en display:none dejaba TODAS las páginas
+     de impresión en blanco. Aquí solo se aplana para que la hoja ocupe el papel. */
+  .app-shell, .contenido { display: block !important; min-height: 0 !important; }
+  /* El pie del Shell (Términos · Privacidad) va DESPUÉS de <main>: si se imprime,
+     empuja el contenido y saca una segunda hoja. */
+  .sidebar, .topbar, nav, aside.grupo-aside,
+  .skip-link, .contenido > footer { display: none !important; }
+  /* Nada flotante encima del papel: avisos, consejos, cajones y modales. */
+  .toast, .consejo, .backdrop, .cajon, .drawer,
+  .celeb-overlay, .comparador-overlay, .paleta-overlay { display: none !important; }
   main { margin: 0 !important; padding: 0 !important; max-width: none !important; }
   .tarjeta { border: none !important; box-shadow: none !important; padding: 0 !important; }
   table { width: 100%; border-collapse: collapse; }
@@ -1018,11 +1028,18 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 @media (max-width: 980px)  { .cert-hoja { transform: scale(.62); margin-bottom: -300px; } }
 @media (max-width: 700px)  { .cert-hoja { transform: scale(.42); margin-bottom: -460px; } }
 
+/* Página CON NOMBRE: el apaisado es SOLO del certificado. Un `@page` suelto es
+   global y dejaría apaisadas también las demás páginas de impresión (listados,
+   fichas de acopio…), que son verticales. */
+@page cert-a4 { size: A4 landscape; margin: 0; }
+
 @media print {
-  @page { size: A4 landscape; margin: 0; }
+  /* Medio milímetro menos que la página: a tamaño exacto, el redondeo de mm a
+     píxeles desborda por una fracción y Chrome saca una segunda hoja en blanco. */
   .cert-hoja {
-    width: 297mm; height: 210mm; box-shadow: none; margin: 0; transform: none;
-    break-inside: avoid; page-break-inside: avoid;
+    page: cert-a4;
+    width: 296.5mm; height: 209.5mm; box-shadow: none; margin: 0; transform: none;
+    overflow: hidden; break-inside: avoid; page-break-inside: avoid; break-after: avoid;
   }
   /* El certificado se imprime SOLO: nada de cabeceras, avisos ni el marco de la app. */
   .pagina-cab, .toolbar { display: none !important; }
