@@ -1,0 +1,27 @@
+🇻🇪 *NOTAS DEL PARCHE — 1 ago 2026*
+_Apoyo por Venezuela_
+
+Novedad grande y muy pedida: ya se pueden *emitir certificados de voluntariado*. Cada persona puede recibir su *certificado de reconocimiento* con sus *horas*, listo para imprimir o guardar en PDF.
+
+✅ *3 novedades*  ·  🏛️ *Administración*  ·  🛠️ *1 cambio de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🏅 *CERTIFICADOS DE VOLUNTARIADO*
+
+• *Emitir el certificado de una persona.* En *Administración → Certificados* está la lista del equipo con sus horas acumuladas. Se elige a la persona, se revisan las horas y se emite: el certificado se abre solo, en *hoja horizontal*, listo para *imprimir o guardar en PDF*. Lleva el *logotipo* de la organización, su *sello* y un *folio único* (APV-2026-000001) para poder identificarlo. Si se emitió por error, se puede *anular* indicando el motivo.
+
+• *Las horas se pueden corregir — sin borrar nada.* La plataforma cuenta las horas *sola*, mientras se trabaja en ella. Pero hay actividades que pasan *fuera*: jornadas, acopio en calle, reuniones. Para esas se puede *añadir un ajuste* de horas —sumar o restar— *con su motivo*. Lo importante: el conteo automático *no se toca nunca*. El ajuste va *aparte*, queda *firmado con el nombre de quien lo hizo* y *se puede deshacer* — si alguien se equivoca, se quita el ajuste y el total vuelve solo a su valor anterior. El total del certificado es la suma de los dos.
+
+• *Lo que se imprime, queda.* Al emitir, el certificado *congela* el nombre y las horas. Si esa persona después suma más horas, o se le corrige el nombre en el perfil, *el certificado ya entregado no cambia*. Cada quien puede ver *los suyos*; la administración, todos.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+Un cambio de base de datos: la migración *0215*. Se aplica en Supabase con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. A prueba de fallos, como siempre: mientras no se aplique, la sección avisa y el resto de la app sigue igual. Un detalle: para emitir, la persona debe tener *nombre completo* en su perfil — es exactamente lo que se imprime.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+Al programar lo de *ajustar las horas a mano*, el primer pensamiento fue, con toda honestidad: _«ojo, que aquí uno podría regalarse unas horitas»_.
+Por eso el ajuste *exige un motivo* y queda *firmado con el nombre* de quien lo hace. No es desconfianza: es *autoconocimiento*. 🕐✍️
+Y sí, el primer certificado de prueba salió con una cifra *sospechosamente alta* — resulta que la plataforma llevaba semanas contando el tiempo que pasamos… *arreglando la plataforma*. Ese, por razones obvias, no se emitió. 🙈
+
+_Apoyo por Venezuela · Notas del parche · Agosto 2026_
