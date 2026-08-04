@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { requireUsuario, puedeLogistica } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeAlianzas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { fechaHora } from '@/lib/fechas';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ESTADOS_INSUMO, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
@@ -16,11 +16,14 @@ import ResaltarNuevos from '@/components/ResaltarNuevos';
 
 export default async function InsumosPage() {
   const { perfil } = await requireUsuario();
-  const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  const esLog = rolesG.includes('admin') || rolesG.includes('logistica') || rolesG.includes('admin_logistica');
-  // Captación entra en modo CONSULTA (0163): revisa las solicitudes y deja en su
-  // bitácora referencias de aliados; no gestiona ni avanza nada (eso es de Logística).
-  const esCapt = !esLog && rolesG.includes('captacion');
+  // Gates con los HELPERS, nunca con rolesDe().includes(): `puedeLogistica` incluye al
+  // MANDO del grupo de Logística (líder/coordinador sin rol operativo, 0214), que la RLS
+  // sí reconoce; escribirlo a mano lo dejaba fuera de su propia área.
+  const esLog = puedeLogistica(perfil);
+  // Alianzas Estratégicas entra en modo CONSULTA (0163): revisa las solicitudes y deja en
+  // su bitácora referencias de empresas y aliados; no gestiona ni avanza nada (eso es de
+  // Logística). Mismo criterio que /insumos/[id] (0216: un solo rol de departamento).
+  const esCapt = !esLog && puedeAlianzas(perfil);
   if (!esLog && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
@@ -62,7 +65,7 @@ export default async function InsumosPage() {
 
       {esCapt && (
         <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
-          <Icono nombre="ojo" size={15} /> Vista de <strong>consulta para Captación</strong>: abre una solicitud y deja en su <strong>bitácora</strong> las empresas o alianzas que puedan ayudar a completarla. La gestión y el avance son de Logística.
+          <Icono nombre="ojo" size={15} /> Vista de <strong>consulta para Alianzas Estratégicas</strong>: abre una solicitud y deja en su <strong>bitácora</strong> las empresas o alianzas que puedan ayudar a completarla. La gestión y el avance son de Logística.
         </p>
       )}
 

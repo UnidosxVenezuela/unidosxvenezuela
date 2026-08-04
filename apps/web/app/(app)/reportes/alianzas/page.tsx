@@ -62,7 +62,7 @@ export default async function ReporteAlianzasPage() {
           <p className="muted sub">Respaldo del registro «Captado» para presentar a las empresas.</p>
         </div>
         <div className="fila" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <Link href="/captacion" className="btn btn-sm"><Icono nombre="enlace" size={15} /> Captación</Link>
+          <Link href="/captacion" className="btn btn-sm"><Icono nombre="enlace" size={15} /> Empresas y aliados</Link>
           <a className="btn btn-sm" href="/reportes/alianzas/export"><Icono nombre="documento" size={15} /> Descargar CSV</a>
           <BotonImprimir label="Imprimir / PDF" />
         </div>

@@ -210,7 +210,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
   }
 
-  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = [];
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = []; let drawerItems: any[] = []; let drawerGestionaItems = false;
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -241,6 +241,13 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       // Historial de correcciones (0178, Paso 12) best-effort.
       const { data: dcorr } = await supabase.from('casos_historial_cambios').select('*').eq('caso_id', searchParams.caso).order('creado_en', { ascending: false });
       drawerCorr = (dcorr ?? []) as any[];
+      // Desglose por ítem (0218) best-effort: sin la tabla, el bloque degrada al texto libre.
+      const { data: ditems } = await supabase.from('casos_items')
+        .select('id, orden, tipo, descripcion, cantidad, unidad, cantidad_texto, notas')
+        .eq('caso_id', searchParams.caso).order('orden');
+      drawerItems = (ditems ?? []) as any[];
+      const { data: dgest } = await supabase.rpc('puede_gestionar_items_caso');
+      drawerGestionaItems = dgest === true;
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
@@ -395,7 +402,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
               <DetalleCaso caso={drawerCaso} perfiles={perfilesRes.data ?? []} historial={drawerHist} volver={hrefCaso(drawerCaso.id)} cerrarHref={cerrarHref} puedeEditar={verifica} solicitud={drawerSol}
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
-                derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr} />
+                derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr}
+                items={drawerItems} puedeGestionarItems={drawerGestionaItems} />
             </DrawerModal>
           </>
         )}

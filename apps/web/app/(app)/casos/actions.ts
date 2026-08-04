@@ -412,6 +412,78 @@ export async function marcarCampoVerificacion(formData: FormData) {
   redirigirOk(volver, 'Verificación del campo actualizada');
 }
 
+// ── Desglose por ÍTEM de la solicitud (0218) ──
+// Recopilación (quien reporta), Verificación (quien corrige) y Logística (quien la
+// gestiona) mantienen la lista de lo que se necesita, con cantidad numérica + unidad.
+// El permiso lo aplica la RPC (SECURITY DEFINER, `puede_gestionar_items_caso`): aquí NO
+// se usa `exigirCasos()`, cuya lista de roles es más ESTRECHA que la de la base y dejaría
+// fuera a Logística y a los mandos. La RLS sigue siendo la fuente de verdad.
+export async function guardarItemCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const item = opt(formData.get('item_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const descripcion = txt(formData.get('descripcion'));
+  if (!descripcion) return redirigirError(volver, 'Describe qué se necesita en este ítem.');
+  const tipo = opt(formData.get('tipo')) || 'otro';
+  if (!TIPOS_INSUMO_VAL.includes(tipo)) return redirigirError(volver, 'Elige un tipo de ayuda válido.');
+  const cantidad = numOpt(formData.get('cantidad'));
+  if (cantidad !== null && cantidad <= 0) return redirigirError(volver, 'La cantidad debe ser mayor que cero.');
+  const { error } = await supabase.rpc('guardar_item_caso', {
+    p_caso: caso,
+    p_descripcion: descripcion,
+    p_tipo: tipo,
+    p_cantidad: cantidad,
+    p_unidad: opt(formData.get('unidad')),
+    p_notas: opt(formData.get('notas')),
+    p_item: item,
+  });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo guardar el ítem: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath(volver);
+  redirigirOk(volver, item ? 'Ítem actualizado' : 'Ítem añadido al desglose');
+}
+
+export async function eliminarItemCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const item = txt(formData.get('item_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  if (!item) return redirigirError(volver, 'Falta el ítem.');
+  const { error } = await supabase.rpc('eliminar_item_caso', { p_item: item });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo eliminar el ítem: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath(volver);
+  redirigirOk(volver, 'Ítem eliminado del desglose');
+}
+
+// Reordenar: el formulario manda la lista completa de ids YA en el orden deseado
+// (separada por comas), calculada en el servidor al pintar las flechas ↑/↓.
+export async function reordenarItemsCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const items = txt(formData.get('items')).split(',').map((s) => s.trim()).filter(Boolean);
+  if (!caso || items.length === 0) return redirigirError(volver, 'Falta el orden de los ítems.');
+  const { error } = await supabase.rpc('reordenar_items_caso', { p_caso: caso, p_items: items });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo reordenar el desglose: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath(volver);
+  redirigirOk(volver, 'Desglose reordenado');
+}
+
 // Fotos aptas para difusión (0187): Verificación marca qué adjunto puede usar
 // Redacción para difundir. La RPC reaplica la frontera por categoría
 // (Verificación↔Otras, Búsqueda↔Desaparecidos) y audita el cambio.

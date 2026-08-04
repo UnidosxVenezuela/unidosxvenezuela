@@ -27,11 +27,14 @@ export type Rol =
   | 'apoyo_psicosocial'        // Profesional/voluntario que acompaña en salud mental
   | 'lider_psicosocial'        // Líder del grupo Psicosocial (gestiona el grupo, no ve casos)
   | 'coordinador_psicosocial'  // Coordina el área psicosocial (ve todo, asigna)
-  // Captación de Oportunidades: registra contactos estratégicos; ve SOLO esa sección.
-  | 'captacion'                // Captación de Oportunidades (0129)
-  // Departamento de Alianzas Estratégicas (0198): prospección de empresas + afiliación.
-  | 'prospeccion'              // Prospección de grandes/medianas empresas, organizaciones, fundaciones e iglesias
-  | 'afiliacion'               // Afiliación y clasificación de profesionales y voluntarios
+  // Departamento de Alianzas Estratégicas: ROL ÚNICO del departamento desde 0216
+  // (empresas y aliados + captación de recursos + afiliación de profesionales).
+  | 'captacion'                // «Alianzas Estratégicas» — clave histórica del enum (0129)
+  // RETIRADOS por 0216 (unificados en 'captacion'). Un valor de enum no se puede borrar:
+  // se conservan aquí para poder MOSTRAR y filtrar lo existente, pero ya no se asignan
+  // (ver ROLES_INACTIVOS en apps/web/lib/constantes.ts).
+  | 'prospeccion'              // (inerte) Prospección de empresas, organizaciones, fundaciones e iglesias
+  | 'afiliacion'               // (inerte) Afiliación y clasificación de profesionales y voluntarios
   // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
   | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
   | 'admin_redes'              // Admin · Redes Sociales (grupos de contenido/marketing)
@@ -57,7 +60,8 @@ export type AreaClave =
   | 'programacion'
   | 'diseno'
   | 'marketing'
-  | 'transcripcion';
+  | 'transcripcion'
+  | 'alianzas_estrategicas';  // Departamento de Alianzas Estratégicas (área sembrada en 0198)
 
 // Departamento de Alianzas Estratégicas — base de Afiliación (0198).
 export type TipoAfiliado = 'profesional' | 'voluntario';

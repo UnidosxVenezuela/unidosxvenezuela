@@ -45,21 +45,23 @@ export default async function AlianzasPage() {
   if (!esc.error) escaladas = (esc.data ?? []) as any[];
 
   const SUBS = [
-    { href: '/captacion', icono: 'enlace', titulo: 'Captación y Prospección', texto: 'Registro de empresas y aliados (el «Captado»), con la Ficha de Prospección y la 2ª verificación.' },
+    { href: '/captacion', icono: 'enlace', titulo: 'Empresas y aliados', texto: 'Registro de empresas y aliados (el «Captado»), con la Ficha de Prospección y la 2ª verificación.' },
     { href: '/afiliacion', icono: 'usuario', titulo: 'Afiliación', texto: 'Profesionales y voluntarios clasificados por cargo, en tablero.' },
+    // Correo institucional (0217): plantillas aprobadas + registro de lo que se escribió.
+    { href: '/alianzas/correo', icono: 'documento', titulo: 'Correo institucional', texto: 'Escribe con las plantillas del departamento; cada envío queda registrado con su folio y su resultado.' },
     { href: '/reportes/alianzas', icono: 'documento', titulo: 'Reportería', texto: 'Respaldo descargable para presentar a las empresas (CSV / PDF).' },
   ];
 
   return (
     <AnimarEntrada>
       <Consejo id="alianzas" titulo="Alianzas Estratégicas">
-        El departamento reúne <strong>Prospección</strong> (empresas), <strong>Captación</strong> y <strong>Afiliación</strong> (profesionales y voluntarios). Desde aquí entras a cada frente y ves las <strong>solicitudes que Logística escala</strong> para buscarles una empresa o un voluntario.
+        Un solo departamento y un solo equipo: <strong>empresas y aliados</strong>, <strong>captación de recursos</strong> y <strong>afiliación</strong> de profesionales y voluntarios. Desde aquí entras a cada frente y ves las <strong>solicitudes que Logística escala</strong> para buscarles una empresa o un voluntario.
       </Consejo>
 
       <div className="pagina-cab">
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="enlace" size={24} /> Alianzas Estratégicas</h1>
-          <p className="muted sub">Prospección · Captación · Afiliación — consecución de empresas, aliados y voluntariado profesional.</p>
+          <p className="muted sub">Empresas y aliados · Captación de recursos · Afiliación — consecución de aliados y voluntariado profesional.</p>
         </div>
       </div>
 

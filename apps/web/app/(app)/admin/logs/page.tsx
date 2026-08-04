@@ -20,7 +20,7 @@ const ENTIDADES: Record<string, string> = {
   endpoints_aliados: 'un contacto aliado', casos: 'una solicitud', casos_adjuntos: 'un adjunto de solicitud',
   acopio_responsables: 'un responsable de acopio', perfiles: 'un perfil', piezas_contenido: 'una pieza de contenido',
   // Nuevas entidades auditadas (0130) + otras que faltaban en el mapa.
-  oportunidades: 'una oportunidad (Captación)', listados_digitalizados: 'un listado digitalizado',
+  oportunidades: 'una oportunidad (Alianzas Estratégicas)', listados_digitalizados: 'un listado digitalizado',
   lugares: 'un lugar', movimientos_acopio: 'un movimiento de inventario', solicitudes_traspaso: 'una solicitud de traspaso',
   busqueda_casos: 'una ficha de desaparecido', bitacora_busqueda: 'una gestión de búsqueda',
   solicitudes_alta_usuario: 'una solicitud de alta', solicitudes_insumo: 'una solicitud de insumo',
@@ -33,6 +33,17 @@ const SEMANTICAS: Record<string, string> = {
   verificacion_rechazada: 'rechazó una verificación de identidad', alta_delegada: 'creó una cuenta (alta delegada)',
   exportar_csv: 'descargó un listado en CSV', exportar_pdf: 'abrió una versión imprimible (PDF)',
   verificacion_campo: 'marcó la verificación de un campo',
+  // Correo institucional (0217). El registro real vive en `correo_envios`; estas trazas
+  // son el complemento fino (la auditoría, 0130, retorna en silencio si no hay verificación).
+  correo_registrado: 'preparó un correo institucional', correo_enviado: 'envió un correo institucional',
+  correo_fallido: 'intentó enviar un correo y falló', correo_no_configurado: 'no pudo enviar un correo (Resend sin configurar)',
+  plantilla_correo_guardada: 'guardó una plantilla de correo',
+  // Desglose por ítem de una solicitud (0218). Las tres RPC auditan con entidad='casos'
+  // para que el movimiento salga también en el «Historial de cambios» del detalle.
+  item_agregado: 'añadió un ítem al desglose de una solicitud',
+  item_editado: 'editó un ítem del desglose de una solicitud',
+  item_eliminado: 'quitó un ítem del desglose de una solicitud',
+  items_reordenados: 'reordenó el desglose de una solicitud',
 };
 // Columna → nombre corto legible, para describir QUÉ campos cambiaron (metadata.cambios,
 // disponible en toda tabla auditada desde 0134). Cubre perfiles y campos comunes de otras
@@ -85,9 +96,9 @@ function describir(accion: string, entidad: string, meta?: any, actorId?: string
         default: return 'actualizó una solicitud';
       }
     }
-    // Captación de Oportunidades: describir por el movimiento de estado.
+    // Alianzas Estratégicas · registro «Captado»: describir por el movimiento de estado.
     if (tabla === 'oportunidades') {
-      if (op === 'insert') return 'creó una oportunidad (Captación)';
+      if (op === 'insert') return 'creó una oportunidad (Alianzas Estratégicas)';
       if (op === 'delete') return 'eliminó una oportunidad';
       const et: Record<string, string> = { investigacion: 'Investigación', verificado: 'Verificado', enviado: 'Enviado' };
       return et[meta?.estado as string] ? `movió una oportunidad a ${et[meta?.estado as string]}` : 'editó una oportunidad';

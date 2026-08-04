@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeCaptacion, puedeAlianzas, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeAlianzas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
@@ -23,14 +23,14 @@ function waLink(contacto: string | null): string | null {
 
 export default async function SolicitudPage({ params }: { params: { id: string } }) {
   const { user, perfil } = await requireUsuario();
-  // Logística gestiona. Captación entra en modo CONSULTA (0163): ve la solicitud y deja
-  // en la bitácora las empresas/alianzas que puedan ayudar, sin editar ni avanzar nada.
+  // Logística gestiona. Alianzas Estratégicas entra en modo CONSULTA (0163): ve la
+  // solicitud —incluidas las que Logística le escala (0200)— y deja en la bitácora las
+  // empresas o aliados que puedan ayudar, sin editar ni avanzar nada. Desde 0216 el
+  // departamento tiene un solo rol y `bitsol_insert` lo acepta entero, así que ya no hay
+  // dos modos de consulta distintos (antes Prospección/Afiliación no podían anotar).
   const gestor = puedeLogistica(perfil);
-  const esCapt = !gestor && puedeCaptacion(perfil);
-  // Alianzas (prospección/afiliación) entra en modo CONSULTA a las escaladas: recibe el
-  // aviso y abre la solicitud para verla, sin editar ni avanzar (como Captación, 0163).
-  const esAliado = !gestor && !esCapt && puedeAlianzas(perfil);
-  if (!gestor && !esCapt && !esAliado) redirect('/dashboard');
+  const esCapt = !gestor && puedeAlianzas(perfil);
+  if (!gestor && !esCapt) redirect('/dashboard');
   const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
@@ -374,12 +374,12 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             </div>
           )}
 
-          {/* Bitácora y referencias (0163): notas de Logística + aliados sugeridos por Captación */}
+          {/* Bitácora y referencias (0163): notas de Logística + aliados sugeridos por Alianzas Estratégicas */}
           <div className="tarjeta">
             <h3 className="aside-titulo"><Icono nombre="documento" size={16} /> Bitácora y referencias</h3>
             {esCapt && (
               <p className="muted" style={{ fontSize: '.82rem', margin: '0 0 8px' }}>
-                Deja aquí las <strong>empresas, organizaciones o alianzas de Captación</strong> que puedan ayudar a completar esta solicitud; Logística las verá como referencia.
+                Deja aquí las <strong>empresas, organizaciones o aliados</strong> que puedan ayudar a completar esta solicitud; Logística las verá como referencia.
               </p>
             )}
             {(gestor || esCapt) && (
@@ -387,7 +387,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                 <input type="hidden" name="solicitud_id" value={id} />
                 <div className="campo">
                   <textarea name="contenido" className="input" rows={2} required maxLength={2000}
-                    placeholder={esCapt ? 'Ej.: «Alimentos del Centro» (enviada por Captación) puede donar agua · contacto: …' : 'Nota de gestión…'} />
+                    placeholder={esCapt ? 'Ej.: «Alimentos del Centro» (aliado captado) puede donar agua · contacto: …' : 'Nota de gestión…'} />
                 </div>
                 <BotonEnviar className="btn btn-primario"><Icono nombre="mas" size={15} /> Agregar nota</BotonEnviar>
               </form>
@@ -588,7 +588,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="ojo" size={16} /> Vista de consulta</h3>
               <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
-                El estado, los envíos y la gestión son de <strong>Logística</strong>. Tu aporte desde Captación es la <strong>bitácora</strong>: referencias de aliados que puedan cubrir esta solicitud.
+                El estado, los envíos y la gestión son de <strong>Logística</strong>. Tu aporte desde Alianzas Estratégicas es la <strong>bitácora</strong>: referencias de empresas y aliados que puedan cubrir esta solicitud.
               </p>
             </div>
           </aside>

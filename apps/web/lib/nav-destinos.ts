@@ -44,12 +44,15 @@ export function destinosNav(flags: NavFlags): Destino[] {
   }
   if (flags.aliados) d.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'whatsapp' });
   if (flags.contenido) d.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
-  // Departamento de Alianzas Estratégicas (0198-0200): su puerta de entrada (hub) más el
-  // registro «Captado» (Captación + Prospección de empresas, con Ficha de Prospección) y
-  // Afiliación. Captación ya NO cuelga del menú de «Logística»: vive bajo su departamento.
+  // Departamento de Alianzas Estratégicas (0198-0200, unificado en 0216): su puerta de
+  // entrada (hub) más el registro «Captado» (empresas y aliados, con Ficha de Prospección)
+  // y Afiliación. Con un solo rol para el departamento, las tres secciones se abren con la
+  // MISMA bandera: quien pertenece a Alianzas entra a todas.
   if (flags.alianzas) d.push({ href: '/alianzas', etiqueta: 'Alianzas Estratégicas', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
-  if (flags.captacion || flags.prospeccion) d.push({ href: '/captacion', etiqueta: 'Captación y Prospección', icono: 'buscar', grupo: 'Alianzas Estratégicas' });
-  if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
+  if (flags.alianzas) d.push({ href: '/captacion', etiqueta: 'Empresas y aliados', icono: 'buscar', grupo: 'Alianzas Estratégicas' });
+  if (flags.alianzas) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
+  // Correo institucional con plantillas y registro de envíos (0217).
+  if (flags.alianzas) d.push({ href: '/alianzas/correo', etiqueta: 'Correo institucional', icono: 'documento', grupo: 'Alianzas Estratégicas' });
   // Reportería del departamento (0200): respaldo descargable para presentar a empresas.
   if (flags.alianzas) d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas', grupo: 'Alianzas Estratégicas' });
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });

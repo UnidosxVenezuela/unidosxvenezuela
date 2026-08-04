@@ -65,6 +65,9 @@ export const ETIQUETA_AREA: Record<AreaClave, string> = {
   diseno: 'Diseño',
   marketing: 'Marketing',
   transcripcion: 'Transcripción',
+  // Área del departamento de Alianzas Estratégicas (sembrada en 0198). Sin esta entrada
+  // `etiquetaArea()` mostraba la clave cruda en /grupos.
+  alianzas_estrategicas: 'Alianzas Estratégicas',
 };
 
 /** Etiqueta de un área por su clave (tolera áreas creadas por admin). */
@@ -94,9 +97,12 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   apoyo_psicosocial: 'Apoyo Psicosocial',
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
-  captacion: 'Captación de Oportunidades',
-  prospeccion: 'Prospección',
-  afiliacion: 'Afiliación',
+  // Rol ÚNICO del departamento desde 0216 (clave histórica del enum: 'captacion').
+  captacion: 'Alianzas Estratégicas',
+  // Retirados por 0216 (unificados en 'captacion'). Se conservan para poder MOSTRAR y
+  // filtrar lo existente; no se ofrecen para asignar (ver ROLES_INACTIVOS).
+  prospeccion: 'Prospección (retirado)',
+  afiliacion: 'Afiliación (retirado)',
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
   admin_logistica: 'Administración · Logística y Acopio',
@@ -181,8 +187,12 @@ export const GRUPOS_REGISTRO: {
   { seccion: 'Logística y acopio', area: 'logistica', opciones: [
     { grupo: 'gestion_acopio', etiqueta: 'Logística' },
   ] },
+  // Departamento propio (0198, unificado en 0216): un solo grupo para todo el
+  // departamento. La clave de sistema sigue siendo la histórica 'captacion'.
+  { seccion: 'Alianzas Estratégicas', area: 'general', opciones: [
+    { grupo: 'captacion', etiqueta: 'Alianzas Estratégicas' },
+  ] },
   { seccion: 'Otras áreas', area: 'general', opciones: [
-    { grupo: 'captacion',         etiqueta: 'Captación de Oportunidades' },
     { grupo: 'apoyo_psicosocial', etiqueta: 'Apoyo Psicosocial' },
     { grupo: 'general',           etiqueta: 'Voluntariado general / otra área' },
   ] },
@@ -357,6 +367,20 @@ export function claseEstadoDonacion(e: string): string {
 }
 export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón', 'Otro'];
 
+// ── Desglose por ítem de una solicitud (0218) ──
+// Unidades sugeridas para la cantidad de un ítem (el campo admite texto libre: esta
+// lista solo alimenta el `datalist` para escribir siempre igual y poder sumar después).
+export const UNIDADES_ITEM = [
+  'unidades', 'cajas', 'bultos', 'paquetes', 'bolsas', 'sacos', 'kits',
+  'litros', 'kg', 'toneladas', 'raciones', 'personas', 'metros', 'rollos', 'pares',
+];
+/** Cantidad numérica del ítem → texto corto («50», «200,5»), sin ceros de relleno. */
+export function cantidadItem(v: number | string | null | undefined): string {
+  if (v === null || v === undefined || v === '') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? String(n) : String(v);
+}
+
 // ── Oportunidades de donación (la OFERTA, 0141) ──
 // Un lead con pipeline de contacto: empresa/proyecto/persona que ofrece ayudar.
 export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {
@@ -449,6 +473,24 @@ export function claseResultadoOferta(e: string): string {
   if (e === 'negativo') return 'critica';
   return '';
 }
+// Correo institucional (0217): estado de cada fila del registro `correo_envios`.
+// La fila nace 'pendiente' ANTES de intentar el envío y se cierra con el resultado;
+// 'no_configurado' es «no hay RESEND_API_KEY», que antes se daba por bueno en silencio.
+export const ETIQUETA_ESTADO_CORREO: Record<string, string> = {
+  pendiente: 'Pendiente', enviado: 'Enviado', fallido: 'Falló', no_configurado: 'Correo sin configurar',
+};
+export const ESTADOS_CORREO = Object.keys(ETIQUETA_ESTADO_CORREO);
+export function claseEstadoCorreo(e: string): string {
+  if (e === 'enviado') return 'ok';
+  if (e === 'fallido') return 'critica';
+  if (e === 'no_configurado') return 'aviso';
+  return ''; // 'pendiente' → neutra
+}
+// A qué se le cuelga un correo (columna `entidad` de correo_envios).
+export const ETIQUETA_ENTIDAD_CORREO: Record<string, string> = {
+  caso: 'Solicitud', oportunidad: 'Empresa o aliado', proveedor: 'Proveedor',
+  afiliado: 'Afiliado', solicitud: 'Solicitud de insumo', perfil: 'Persona', otra: 'Otra',
+};
 // Resultado de verificación de una oferta (lo fija el equipo de Verificación, 0144).
 export const ETIQUETA_ESTADO_VERIF: Record<string, string> = {
   pendiente: 'Pendiente de verificar', verificada: 'Verificada', observada: 'Observada',
@@ -720,10 +762,14 @@ export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
 // para asignar. Es reversible: quien ya tenga el rol lo conserva (inerte) y basta quitar
 // las claves/roles de estas listas (y poner grupos.activa=true, migración 0138) para
 // reactivarlos. `ETIQUETA_ROL`/`ROLES` se conservan completos para mostrar y filtrar lo existente.
-export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion'];
+// 'prospeccion' y 'afiliacion' se suman con 0216: sus grupos quedaron absorbidos por el
+// grupo unificado 'captacion' («Alianzas Estratégicas») y desactivados (activa=false).
+export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion', 'prospeccion', 'afiliacion'];
 // Incluye `admin_digitalizacion`: su área quedó vacía con 0138 (sin grupos/roles que
 // administrar), así que no debe ofrecerse para asignar mientras siga desactivada.
-export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador', 'admin_digitalizacion'];
+// Incluye `prospeccion`/`afiliacion` (0216): unificados en el rol 'captacion'. Un valor
+// de enum no se puede borrar, así que quedan inertes y fuera de ROLES_ASIGNABLES.
+export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador', 'admin_digitalizacion', 'prospeccion', 'afiliacion'];
 /** Roles que un admin puede asignar (excluye los retirados y el aliado, que va por su flujo). */
 export const ROLES_ASIGNABLES: Rol[] = ROLES.filter((r) => !ROLES_INACTIVOS.includes(r) && r !== 'lider_plataforma_aliada');
 
@@ -921,12 +967,13 @@ export const ETIQUETA_ESTADO_DERIVACION: Record<EstadoDerivacion, string> = {
   sin_tomar: 'Sin tomar', tomada: 'Tomada', en_proceso: 'En proceso', cerrada: 'Cerrada',
 };
 // Roles operativos por área (toman / avanzan / cierran). Espejo exacto de
-// puede_operar_area_derivacion() en 0177. Coordinación y «otra» solo admin.
+// puede_operar_area_derivacion() en 0177 → 0198 → 0216. Coordinación y «otra» solo admin.
+// `alianzas` es un solo rol desde 0216 ('captacion' = «Alianzas Estratégicas»).
 export const ROLES_POR_AREA_DESTINO: Record<AreaDestino, readonly string[]> = {
   logistica: ['logistica', 'admin_logistica'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers', 'admin_redes'],
   donaciones: ['logistica', 'admin_logistica', 'captacion'],
-  alianzas: ['captacion', 'prospeccion', 'afiliacion'],
+  alianzas: ['captacion'],
   coordinacion: [],
   otra: [],
 };

@@ -18,10 +18,12 @@ export type NavFlags = {
   acopio: boolean;         // mapa + centros de acopio + insumos
   psicosocial: boolean;    // área confidencial (o supervisión si admin)
   aliados: boolean;        // base de datos de plataformas aliadas
-  captacion: boolean;      // Captación de Oportunidades (contactos estratégicos)
-  prospeccion: boolean;    // Prospección de empresas (Alianzas Estratégicas)
-  afiliacion: boolean;     // Afiliación de profesionales/voluntarios (Alianzas Estratégicas)
   alianzas: boolean;       // pertenece al departamento de Alianzas Estratégicas (o admin)
+  // Alias de `alianzas` (0216): el departamento tiene un solo rol. Se conservan una
+  // release para no romper a quien todavía lea la bandera antigua.
+  captacion: boolean;      // = alianzas
+  prospeccion: boolean;    // = alianzas
+  afiliacion: boolean;     // = alianzas
   miArea: boolean;         // opera alguna área de derivación → bandeja «Mi área» (0201/0202)
   seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
 };
@@ -73,6 +75,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   const supRedes = areaAdmin === 'redes';
   const supLogistica = areaAdmin === 'logistica';
   const supDigit = areaAdmin === 'digitalizacion';
+  // Departamento de Alianzas Estratégicas (0216): UN solo rol operativo, 'captacion'
+  // (clave histórica del enum). Se siguen mirando los tres literales porque
+  // 'prospeccion'/'afiliacion' no se pueden borrar del enum y podría quedar algún residuo.
+  const esAlianzas = admin || roles.includes('captacion') || roles.includes('prospeccion') || roles.includes('afiliacion');
   return {
     admin,
     panelAdmin: admin || esSuperadmin(perfil) || !!areaAdmin,
@@ -97,12 +103,12 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     acopio: admin || supLogistica || roles.includes('logistica') || mandoLogistica,
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
-    // Departamento de Alianzas Estratégicas (0198): Captación (0129) + Prospección +
-    // Afiliación. Roles propios (ven solo su sección) o el admin general. Sin 2ª verif.
-    captacion: admin || roles.includes('captacion'),
-    prospeccion: admin || roles.includes('prospeccion'),
-    afiliacion: admin || roles.includes('afiliacion'),
-    alianzas: admin || roles.includes('captacion') || roles.includes('prospeccion') || roles.includes('afiliacion'),
+    // Departamento de Alianzas Estratégicas (0198 → 0216): un solo rol para todo el
+    // departamento (empresas y aliados, captación de recursos y afiliación). Sin 2ª verif.
+    alianzas: esAlianzas,
+    captacion: esAlianzas,
+    prospeccion: esAlianzas,
+    afiliacion: esAlianzas,
     // Bandeja «Mi área» (0201/0202): quien opera al menos un área de derivación
     // (logistica/redes/donaciones/alianzas…) puede tomar/avanzar/cerrar SUS derivaciones
     // sin abrir el detalle del caso (que está cerrado para el operador puro de área).

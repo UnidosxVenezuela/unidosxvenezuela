@@ -12,6 +12,7 @@ import { pasoDeCaso } from '@/lib/flujo';
 import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCaso, derivarCasoLogistica, requerirInfoCaso, enviarCasoRedaccion, reubicarCasoOfrecimiento, marcarAdjuntoDifusion } from './actions';
 import FormEditarCaso from './FormEditarCaso';
 import VerificacionPorCampo from './VerificacionPorCampo';
+import BloqueItemsCaso, { type ItemCaso } from './BloqueItemsCaso';
 import Derivaciones from './Derivaciones';
 import LineaTiempoCaso from './LineaTiempoCaso';
 import { nombreMostrado } from '@/lib/nombre';
@@ -29,8 +30,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [] }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[];
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [], items = [], puedeGestionarItems = false }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[]; items?: ItemCaso[]; puedeGestionarItems?: boolean;
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -82,6 +83,12 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         default: return meta?.estado ? `Actualizado · estado: ${etiquetaEstado(meta.estado)}` : 'Notas / datos actualizados';
       }
     }
+    // Desglose por ítem (0218): las RPC auditan con entidad='casos' para que el cambio
+    // se vea aquí (este historial filtra por entidad='casos').
+    if (accion === 'item_agregado') return `Ítem añadido al desglose${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
+    if (accion === 'item_editado') return `Ítem del desglose editado${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
+    if (accion === 'item_eliminado') return `Ítem quitado del desglose${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
+    if (accion === 'items_reordenados') return 'Desglose reordenado';
     // Relevo entre áreas (0201): las RPC de derivación auditan también con entidad='casos',
     // así el «Historial de cambios» muestra quién tomó/avanzó/cerró cada derivación por área.
     const areaRelevo = ETIQUETA_AREA_DESTINO[meta?.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? meta?.area ?? 'un área';
@@ -108,6 +115,10 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
         default: return 'Actualizó';
       }
     }
+    if (accion === 'item_agregado') return 'Añadió un ítem al desglose';
+    if (accion === 'item_editado') return 'Editó un ítem del desglose';
+    if (accion === 'item_eliminado') return 'Quitó un ítem del desglose';
+    if (accion === 'items_reordenados') return 'Reordenó el desglose';
     if (accion === 'tomar_derivacion') return 'Tomó un relevo de área';
     if (accion === 'avanzar_derivacion') return 'Avanzó un relevo de área';
     if (accion === 'cerrar_derivacion') return 'Cerró un relevo de área';
@@ -255,6 +266,14 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         )}
       </div>
+
+      {/* Desglose por ítem (0218): qué se necesita, línea por línea, con cantidad
+          numérica. Los casos anteriores no tienen ítems: el bloque degrada mostrando el
+          texto libre de `req_cantidad` como referencia. */}
+      {(caso.es_requerimiento || (items ?? []).length > 0) && (
+        <BloqueItemsCaso casoId={caso.id} items={items ?? []} reqCantidad={caso.req_cantidad}
+          reqTipo={caso.req_tipo} volver={volver} puedeGestionar={puedeGestionarItems} />
+      )}
 
       {/* Verificación por campo (0172): semáforo por dato. La marca el equipo de
           Verificación; el resto la ve (transparencia) una vez iniciada. */}
