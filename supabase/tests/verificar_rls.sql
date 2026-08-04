@@ -1704,7 +1704,11 @@ begin;
   set local role authenticated;
   select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000091a1')::text, true);
   do $$ declare v_n int; begin
-    v_n := public.derivar_caso('00000000-0000-0000-0000-0000000091ac', array['logistica','donaciones'], null, 'Coordinar entrega', 'alta', null);
+    -- Argumentos con NOMBRE: desde 0222 la firma lleva `p_items uuid[]` en tercera
+    -- posición y una llamada posicional de 6 argumentos ya no encaja.
+    v_n := public.derivar_caso(p_caso := '00000000-0000-0000-0000-0000000091ac',
+                               p_areas := array['logistica','donaciones'],
+                               p_accion := 'Coordinar entrega', p_prioridad := 'alta');
     if v_n <> 2 then raise exception 'FALLO: derivar_caso devolvió % (esperado 2)', v_n; end if;
   end $$;
   reset role;
@@ -2595,6 +2599,132 @@ begin;
     perform public.anular_certificado(v_id, 'emitido por error');
     select count(*) into n from public.certificados where id = v_id and anulado_en is not null;
     if n <> 1 then raise exception 'FALLO 80r: la anulación no quedó registrada'; end if;
+  end $$;
+  reset role;
+rollback;
+
+\echo '== Test 81: 0222 — derivación por ÍTEM: cada área ve SOLO lo suyo; el puente vacío = solicitud completa =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000222a1', 'verif-222@test.local'),
+    ('00000000-0000-0000-0000-0000000222a2', 'logi-222@test.local'),
+    ('00000000-0000-0000-0000-0000000222a3', 'redac-222@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'verificador', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000222a1';
+  update public.perfiles set rol = 'logistica',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000222a2';
+  update public.perfiles set rol = 'redaccion',   roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000222a3';
+
+  insert into public.casos (id, titulo, categoria, estado, creado_por, es_requerimiento, lat, lng)
+    values ('00000000-0000-0000-0000-000000022201', '_TEST_deriv_items', 'Otras informaciones', 'en_proceso', null, true, 10.4, -66.9);
+  select pg_temp.marcar_caso_validado('00000000-0000-0000-0000-000000022201');
+
+  -- Desglose de 3 ítems (RPC de 0218; el admin de la semilla puede gestionarlos).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000000aa')::text, true);
+  do $$ begin
+    perform public.guardar_item_caso('00000000-0000-0000-0000-000000022201', 'agua 5 L',   'agua',         40, 'cajas');
+    perform public.guardar_item_caso('00000000-0000-0000-0000-000000022201', 'colchones',  'refugio',      12, 'unidades');
+    perform public.guardar_item_caso('00000000-0000-0000-0000-000000022201', 'antibiótico','medicamentos', 30, 'cajas');
+  end $$;
+  reset role;
+
+  -- (a) Verificación deriva: agua+colchones a Logística, el antibiótico a Redes.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000222a1')::text, true);
+  do $$ declare v_agua uuid; v_col uuid; v_med uuid; begin
+    select id into v_agua from public.casos_items where caso_id = '00000000-0000-0000-0000-000000022201' and descripcion = 'agua 5 L';
+    select id into v_col  from public.casos_items where caso_id = '00000000-0000-0000-0000-000000022201' and descripcion = 'colchones';
+    select id into v_med  from public.casos_items where caso_id = '00000000-0000-0000-0000-000000022201' and descripcion = 'antibiótico';
+    perform public.derivar_caso(p_caso := '00000000-0000-0000-0000-000000022201',
+                                p_areas := array['logistica'], p_items := array[v_agua, v_col]);
+    perform public.derivar_caso(p_caso := '00000000-0000-0000-0000-000000022201',
+                                p_areas := array['redes'], p_items := array[v_med]);
+    -- Un ítem que no es de este caso NO se puede derivar.
+    begin
+      perform public.derivar_caso(p_caso := '00000000-0000-0000-0000-000000022201',
+                                  p_areas := array['logistica'],
+                                  p_items := array['00000000-0000-0000-0000-0000000222ff']::uuid[]);
+      raise exception 'FALLO 81a: se derivó un ítem ajeno a la solicitud';
+    exception when data_exception then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (b) El puente guarda 2 ítems para Logística y 1 para Redes, sin tocar el UNIQUE(caso,area).
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_derivaciones where caso_id = '00000000-0000-0000-0000-000000022201';
+    if n <> 2 then raise exception 'FALLO 81b: hay % derivaciones (esperado 2, una por área)', n; end if;
+    select count(*) into n from public.casos_derivacion_items x
+      join public.casos_derivaciones d on d.id = x.derivacion_id
+     where d.caso_id = '00000000-0000-0000-0000-000000022201' and d.area = 'logistica';
+    if n <> 2 then raise exception 'FALLO 81c: Logística tiene % ítems (esperado 2)', n; end if;
+  end $$;
+
+  -- (c) La solicitud de insumo proyecta SOLO lo derivado a Logística (sin el antibiótico).
+  do $$ declare v_cant text; begin
+    select cantidad into v_cant from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-000000022201';
+    if v_cant is null then raise exception 'FALLO 81d: no se creó la solicitud de Logística'; end if;
+    if v_cant like '%antibiótico%' then raise exception 'FALLO 81e: la proyección incluye un ítem NO derivado (%)', v_cant; end if;
+    if v_cant not like '%agua 5 L%' or v_cant not like '%colchones%' then
+      raise exception 'FALLO 81f: la proyección no trae los ítems derivados (%)', v_cant; end if;
+  end $$;
+
+  -- (d) Logística ve 2 ítems; Redacción ve 1 en la vista curada… y NADA de `casos`.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000222a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.items_de_caso_area('00000000-0000-0000-0000-000000022201', 'logistica');
+    if n <> 2 then raise exception 'FALLO 81g: Logística ve % ítems (esperado 2)', n; end if;
+    select count(*) into n from public.casos_items_difusion;
+    if n <> 0 then raise exception 'FALLO 81h: Logística lee la vista de difusión por ítem (n=%)', n; end if;
+  end $$;
+  reset role;
+
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000222a3')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos where id = '00000000-0000-0000-0000-000000022201';
+    if n <> 0 then raise exception 'FALLO 81i: Redacción leyó `casos` (0180)'; end if;
+    select count(*) into n from public.casos_items_difusion where caso_id = '00000000-0000-0000-0000-000000022201';
+    if n <> 1 then raise exception 'FALLO 81j: Redacción ve % ítems (esperado 1, el derivado a redes)', n; end if;
+    -- El puente SÍ se lee (policy es_verificado, nunca un exists() sobre `casos`).
+    select count(*) into n from public.casos_derivacion_items;
+    if n < 3 then raise exception 'FALLO 81k: Redacción no lee el puente de derivación (n=%)', n; end if;
+    -- …pero no lo escribe.
+    begin
+      insert into public.casos_derivacion_items (derivacion_id, item_id)
+      select d.id, i.id from public.casos_derivaciones d, public.casos_items i
+       where d.caso_id = '00000000-0000-0000-0000-000000022201' and d.area = 'redes'
+         and i.caso_id = '00000000-0000-0000-0000-000000022201' and i.descripcion = 'agua 5 L';
+      raise exception 'FALLO 81l: se pudo escribir el puente desde el cliente';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (e) Re-derivar AÑADIENDO un ítem sí se proyecta (el trigger era AFTER INSERT).
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000222a1')::text, true);
+  do $$ declare v_ids uuid[]; begin
+    select array_agg(id) into v_ids from public.casos_items where caso_id = '00000000-0000-0000-0000-000000022201';
+    perform public.derivar_caso(p_caso := '00000000-0000-0000-0000-000000022201',
+                                p_areas := array['logistica'], p_items := v_ids);
+  end $$;
+  reset role;
+  do $$ declare v_cant text; begin
+    select cantidad into v_cant from public.solicitudes_insumo where caso_id = '00000000-0000-0000-0000-000000022201';
+    if v_cant not like '%antibiótico%' then
+      raise exception 'FALLO 81m: re-derivar no reproyectó el ítem añadido (%)', v_cant; end if;
+  end $$;
+
+  -- (f) DEGRADACIÓN: una derivación SIN puente (lo ya derivado antes de 0222) = solicitud
+  --     completa. El área nunca se queda a cero filas en silencio.
+  insert into public.casos_derivaciones (caso_id, area, estado, derivado_en, actualizado_en)
+    values ('00000000-0000-0000-0000-000000022201', 'alianzas', 'sin_tomar', now(), now());
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000222a2')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.items_de_caso_area('00000000-0000-0000-0000-000000022201', 'alianzas');
+    if n <> 3 then raise exception 'FALLO 81n: sin selección explícita el área debe ver TODO el desglose (n=%)', n; end if;
   end $$;
   reset role;
 rollback;

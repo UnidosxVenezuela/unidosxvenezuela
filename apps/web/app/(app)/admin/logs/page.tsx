@@ -44,6 +44,21 @@ const SEMANTICAS: Record<string, string> = {
   item_editado: 'editó un ítem del desglose de una solicitud',
   item_eliminado: 'quitó un ítem del desglose de una solicitud',
   items_reordenados: 'reordenó el desglose de una solicitud',
+  // Cumplimiento por ítem (0221). El registro duradero es la fila de `casos_item_aportes`;
+  // estas trazas son el complemento fino, con doble asiento (casos + solicitudes_insumo).
+  aporte_registrado: 'registró cuánto se cubrió de un ítem',
+  aporte_eliminado: 'corrigió (quitó) un aporte de un ítem',
+  item_cubierto_tercero: 'marcó un ítem como cubierto por un TERCERO (deja de gestionarse)',
+  entrega_completa: 'cerró una entrega con el desglose cubierto al 100 %',
+  entrega_parcial: 'cerró una entrega PARCIAL (quedaron ítems sin cubrir)',
+  'casos:entrega_parcial': 'entregó parcialmente: la solicitud sigue en el flujo',
+  // Derivación por ítem (0222). El metadata lleva las áreas y cuántos ítems del desglose
+  // se enviaron (`items`: 0 = la solicitud completa).
+  derivar_caso: 'derivó una solicitud a una o varias áreas',
+  tomar_derivacion: 'tomó la derivación de su área',
+  avanzar_derivacion: 'marcó su derivación en proceso',
+  cerrar_derivacion: 'cerró la derivación de su área',
+  'casos:derivado_logistica': 'creó la tarea de Logística de una solicitud derivada',
 };
 // Columna → nombre corto legible, para describir QUÉ campos cambiaron (metadata.cambios,
 // disponible en toda tabla auditada desde 0134). Cubre perfiles y campos comunes de otras

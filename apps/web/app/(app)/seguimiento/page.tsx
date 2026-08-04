@@ -33,6 +33,11 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
   // Derivaciones (0177, lectura amplia) y nombres para completar el recorrido.
   const derivPorCaso: Record<string, any[]> = {};
   const nombres = new Map<string, string>();
+  // Reparto por ÍTEM (0222): a qué áreas fue cada cosa del desglose. Es la lectura que
+  // faltaba para que nadie trabaje a ciegas: «el agua fue a Logística, las medicinas a
+  // Alianzas». Best-effort: sin las migraciones 0218/0222 las consultas vuelven vacías.
+  const itemsPorCaso: Record<string, any[]> = {};
+  const areasPorItem: Record<string, string[]> = {};
   const ids = lista.map((c) => c.id);
   if (ids.length) {
     const { data: derivs } = await supabase.from('casos_derivaciones').select('*').in('caso_id', ids).order('derivado_en');
@@ -42,7 +47,30 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
       const { data: ps } = await supabase.from('perfiles').select('id, nombre_completo').in('id', pids);
       for (const p of ((ps ?? []) as any[])) nombres.set(p.id, p.nombre_completo);
     }
+
+    const { data: its } = await supabase.from('casos_items')
+      .select('id, caso_id, orden, descripcion, cantidad, unidad, cantidad_texto, estado')
+      .in('caso_id', ids).order('orden');
+    for (const i of ((its ?? []) as any[])) (itemsPorCaso[i.caso_id] ||= []).push(i);
+
+    const idsDeriv = ((derivs ?? []) as any[]).map((d) => d.id);
+    if (idsDeriv.length) {
+      const areaDe = new Map<string, string>(((derivs ?? []) as any[]).map((d) => [d.id, d.area]));
+      const { data: puente } = await supabase.from('casos_derivacion_items')
+        .select('derivacion_id, item_id').in('derivacion_id', idsDeriv);
+      for (const r of ((puente ?? []) as any[])) {
+        const a = areaDe.get(r.derivacion_id);
+        if (!a) continue;
+        const arr = (areasPorItem[r.item_id] ||= []);
+        if (!arr.includes(a)) arr.push(a);
+      }
+    }
   }
+  const etiquetaItem = (i: any) => {
+    const n = i.cantidad != null && i.cantidad !== '' ? String(Number(i.cantidad)) : '';
+    const cant = n ? n + (i.unidad ? ' ' + i.unidad : '') : String(i.cantidad_texto ?? '').trim();
+    return (cant ? cant + ' · ' : '') + i.descripcion;
+  };
 
   return (
     <AnimarEntrada>
@@ -114,6 +142,31 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                     </div>
                   ))}
                   </>
+                )}
+                {/* Reparto del desglose por ítem (0222): qué cosa fue a qué área. Un ítem
+                    sin área todavía no se derivó — que es justo lo que hay que ver aquí. */}
+                {(itemsPorCaso[c.id]?.length ?? 0) > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <span className="muted" style={{ fontSize: '.8rem' }}>Qué se necesita y a qué área fue:</span>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0', display: 'grid', gap: 3 }}>
+                      {(itemsPorCaso[c.id] ?? []).map((i: any) => {
+                        const areas = areasPorItem[i.id] ?? [];
+                        return (
+                          <li key={i.id} className="fila" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center', fontSize: '.8rem' }}>
+                            <span style={{ fontWeight: 600 }}>{etiquetaItem(i)}</span>
+                            <span className="muted">→</span>
+                            {areas.length > 0
+                              ? areas.map((a) => (
+                                  <span key={a} className="insignia" style={{ fontSize: '.72rem' }}>
+                                    {ETIQUETA_AREA_DESTINO[a as keyof typeof ETIQUETA_AREA_DESTINO] ?? a}
+                                  </span>
+                                ))
+                              : <span className="muted">{derivs.length > 0 ? 'toda la solicitud (sin reparto por ítem)' : 'sin derivar'}</span>}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
                 {/* Notas de verificación (decisión 5): visibles en el recorrido para todo el equipo. */}
                 {c.notas && (

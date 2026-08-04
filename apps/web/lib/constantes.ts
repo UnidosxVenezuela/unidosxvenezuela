@@ -381,6 +381,77 @@ export function cantidadItem(v: number | string | null | undefined): string {
   return Number.isFinite(n) ? String(n) : String(v);
 }
 
+// ── Semáforo de PASOS por ítem (0220) ──
+// Ojo: NO es el semáforo de verificación por campo (🟢🟡🔴, `casos_verificacion_campo`,
+// 0172/0173). Ese sigue siendo por CASO y no se toca. Este es el de PASOS, el que pinta
+// `FlujoProgreso`: dónde va cada cosa que hace falta.
+//
+// Los SEIS estados son el espejo EXACTO del CHECK de `casos_items.estado` (0218) y de
+// `public.estados_item()` (0220). Deliberadamente NO se reutiliza `ESTADOS_INSUMO`: ese
+// array solo lista cuatro de los seis estados del enum `estado_insumo`, y por eso las
+// tarjetas «no se pudo cubrir» desaparecen del tablero de /insumos (se filtran como
+// activas pero ninguna columna las pinta). Heredar ese array aquí replicaría el bug.
+export const ETIQUETA_ESTADO_ITEM: Record<string, string> = {
+  pendiente: 'Pendiente',
+  en_gestion: 'En gestión',
+  en_ruta: 'En ruta',
+  cumplido: 'Cubierto',
+  no_disponible: 'No se pudo cubrir',
+  cancelado: 'Cancelado',
+};
+/** Los SEIS estados posibles de un ítem. Espejo de `public.estados_item()`. */
+export const ESTADOS_ITEM = Object.keys(ETIQUETA_ESTADO_ITEM);
+/** Los estados que SALEN del flujo: no son un paso de la barra, son un desenlace. */
+export const ESTADOS_ITEM_FUERA = ['no_disponible', 'cancelado'];
+export function claseEstadoItem(e?: string | null): string {
+  if (e === 'cumplido') return 'ok';
+  if (e === 'en_ruta') return 'info';
+  if (e === 'en_gestion') return 'aviso';
+  if (e === 'no_disponible') return 'critica';
+  return '';   // 'pendiente' y 'cancelado': neutro
+}
+/**
+ * A dónde puede moverse un ítem desde donde está. ESPEJO de `public.transiciones_item()`
+ * (0220), que es la fuente de verdad: esto solo decide qué botones se pintan; la RPC
+ * `avanzar_item` revalida siempre. 'cumplido' y 'cancelado' son terminales (solo admin).
+ */
+export const TRANSICIONES_ITEM: Record<string, string[]> = {
+  pendiente: ['en_gestion', 'en_ruta', 'cumplido', 'no_disponible', 'cancelado'],
+  en_gestion: ['en_ruta', 'cumplido', 'pendiente', 'no_disponible', 'cancelado'],
+  en_ruta: ['cumplido', 'en_gestion', 'no_disponible', 'cancelado'],
+  no_disponible: ['pendiente', 'en_gestion', 'cancelado'],
+  cumplido: [],
+  cancelado: [],
+};
+/** El avance natural del ítem (el botón grande: «Avanzar a …»). Null si ya está cerrado. */
+export function siguienteEstadoItem(e?: string | null): string | null {
+  const orden = ['pendiente', 'en_gestion', 'en_ruta', 'cumplido'];
+  const i = orden.indexOf(e ?? 'pendiente');
+  return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
+}
+
+// ── Cumplimiento por ítem: de dónde salió cada aporte (0221) ──
+// Espejo EXACTO del CHECK `chk_aporte_origen` de `public.casos_item_aportes`. TEXT +
+// CHECK en la base (nunca un enum nuevo): añadir un origen es drop/add constraint aquí
+// y una línea aquí.
+export const ETIQUETA_ORIGEN_APORTE: Record<string, string> = {
+  inventario: 'Centro de acopio',
+  proveedor: 'Proveedor',
+  donacion: 'Donación',
+  tercero: 'Otra organización o persona',
+  miembro: 'Equipo',
+};
+export const ORIGENES_APORTE = Object.keys(ETIQUETA_ORIGEN_APORTE);
+/**
+ * La distinción que se pidió explícitamente: lo que cubrió LA ORGANIZACIÓN frente a lo
+ * que cubrió UN TERCERO (otra ONG o una persona ajena). No es un matiz estético: un ítem
+ * cubierto por un tercero deja de requerir gestión nuestra, y en la reportería no puede
+ * contar como capacidad propia.
+ */
+export function esAporteDeTercero(origen?: string | null): boolean {
+  return origen === 'tercero';
+}
+
 // ── Oportunidades de donación (la OFERTA, 0141) ──
 // Un lead con pipeline de contacto: empresa/proyecto/persona que ofrece ayudar.
 export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {

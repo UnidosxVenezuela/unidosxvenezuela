@@ -1,8 +1,13 @@
 import Icono from '@/components/Icono';
-import Pill from '@/components/Pill';
+import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
-import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, UNIDADES_ITEM, cantidadItem } from '@/lib/constantes';
+import FlujoProgreso from '@/components/FlujoProgreso';
+import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, UNIDADES_ITEM, cantidadItem, ETIQUETA_ESTADO_ITEM, claseEstadoItem } from '@/lib/constantes';
+import { pasoDeItem } from '@/lib/flujo';
+import AportesItem, { BarraCobertura, pctTerceros, type AporteItem } from '@/components/AportesItem';
+import { resumenCobertura } from '@/lib/flujo';
 import { guardarItemCaso, eliminarItemCaso, reordenarItemsCaso } from './actions';
+import HistorialItem, { type CambioItem } from './HistorialItem';
 
 export type ItemCaso = {
   id: string;
@@ -13,6 +18,8 @@ export type ItemCaso = {
   unidad?: string | null;
   cantidad_texto?: string | null;
   notas?: string | null;
+  /** Paso del ítem (0220). Si no viene, la barra de avance no se pinta. */
+  estado?: string | null;
 };
 
 /**
@@ -27,16 +34,43 @@ export type ItemCaso = {
  *
  * La escritura va por las RPC (`guardar_item_caso` / `eliminar_item_caso` /
  * `reordenar_items_caso`); `puedeGestionar` solo decide si se pinta el editor.
+ *
+ * Cada ítem muestra además su HISTORIAL de cambios (0219): como el desglose lo mantienen
+ * Recopilación, Verificación y Logística a la vez, y lo que se necesita cambia con el
+ * tiempo, cada modificación queda registrada (valor anterior → nuevo, quién y cuándo).
+ * El historial lo ve todo el equipo, no solo quien puede editar.
+ *
+ * Y su CUMPLIMIENTO (0221), de solo lectura: cuánto se cubrió de cuánto, quién lo aportó y
+ * si lo cubrió un tercero. Registrarlo es trabajo de Logística y se hace en /insumos; aquí
+ * se VE, que es lo que necesitan Verificación y Recopilación para saber qué sigue faltando
+ * de verdad —y para no volver a pedir lo que ya cubrió otra organización—.
  */
-export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTipo, volver, puedeGestionar = false }: {
+export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTipo, volver, puedeGestionar = false, cambios = [], nombres, aportes = [], verFull = false }: {
   casoId: string;
   items?: ItemCaso[];
   reqCantidad?: string | null;
   reqTipo?: string | null;
   volver: string;
   puedeGestionar?: boolean;
+  cambios?: CambioItem[];
+  nombres?: Map<string, string>;
+  aportes?: AporteItem[];
+  verFull?: boolean;
 }) {
+  // Historial agrupado por ítem, más reciente primero (la consulta ya llega ordenada).
+  const cambiosPorItem = new Map<string, CambioItem[]>();
+  for (const c of (cambios ?? [])) {
+    const arr = cambiosPorItem.get(c.item_id);
+    if (arr) arr.push(c); else cambiosPorItem.set(c.item_id, [c]);
+  }
+  // Aportes agrupados por ítem (0221): cuánto se cubrió y quién lo puso.
+  const aportesPorItem = new Map<string, AporteItem[]>();
+  for (const a of (aportes ?? [])) {
+    const arr = aportesPorItem.get(a.item_id);
+    if (arr) arr.push(a); else aportesPorItem.set(a.item_id, [a]);
+  }
   const lista = [...items].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+  const cob = resumenCobertura(lista, aportes ?? []);
   const ids = lista.map((i) => i.id);
   // Orden resultante de mover el ítem `k` una posición arriba/abajo (lo calcula el
   // servidor y viaja en un campo oculto: sin JavaScript de por medio).
@@ -62,6 +96,12 @@ export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTi
       <p className="muted" style={{ fontSize: '.82rem', margin: '4px 0 0' }}>
         Una línea por cada cosa que hace falta, con su cantidad. Así Logística puede cubrir lo que consiga y queda claro qué sigue faltando.
       </p>
+      {/* Cobertura agregada por cantidad (0221). El tramo en teal es lo que cubrió un
+          tercero: no lo pusimos nosotros y ya no hay que gestionarlo. */}
+      {cob.pct !== null && (
+        <BarraCobertura pct={cob.pct} pctTercero={pctTerceros(cob.cubiertoTercero, cob.pedido)}
+          etiqueta={cob.etiqueta} aria="Cobertura del desglose por cantidad" />
+      )}
 
       {lista.length === 0 && (
         (reqCantidad || reqTipo) ? (
@@ -93,6 +133,9 @@ export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTi
                     <strong style={{ fontSize: '.95rem' }}>{cant ? cant + ' · ' : ''}{i.descripcion}</strong>
                     <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
                       <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[i.tipo ?? 'otro'] ?? i.tipo}</Pill>
+                      {/* Paso del ítem (0220). Lo mueve Logística desde /insumos; aquí se
+                          VE, para saber qué se consiguió ya y qué sigue faltando. */}
+                      {i.estado && <Pill tono={tonoDeClase(claseEstadoItem(i.estado))}>{ETIQUETA_ESTADO_ITEM[i.estado] ?? i.estado}</Pill>}
                       {!cant && <span className="muted" style={{ fontSize: '.8rem' }}>sin cantidad</span>}
                     </div>
                     {i.notas && <div className="muted" style={{ fontSize: '.82rem', marginTop: 2 }}>{i.notas}</div>}
@@ -129,12 +172,32 @@ export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTi
                   )}
                 </div>
 
+                {/* Semáforo de PASOS del ítem (0220): la misma barra que usa el resto de
+                    la plataforma, para que el avance se lea igual desde Verificación, desde
+                    Logística y desde Redacción. */}
+                {i.estado && (() => {
+                  const p = pasoDeItem(i);
+                  return (
+                    <div style={{ marginTop: 6 }}>
+                      <FlujoProgreso paso={p.paso} total={p.total} fuera={p.fuera} completo={p.completo} etiqueta={p.etiqueta} />
+                    </div>
+                  );
+                })()}
+
+                {/* Cumplimiento del ítem (0221), de solo lectura: cuánto se cubrió, quién
+                    lo puso y si lo cubrió un tercero. Lo registra Logística en /insumos. */}
+                <AportesItem item={i} aportes={aportesPorItem.get(i.id) ?? []} verFull={verFull} soloLectura />
+
                 {puedeGestionar && (
                   <details style={{ marginTop: 6 }}>
                     <summary className="muted" style={{ cursor: 'pointer', fontSize: '.82rem' }}>Editar este ítem</summary>
                     <FormItem casoId={casoId} volver={volver} item={i} />
                   </details>
                 )}
+
+                {/* Qué se cambió en este ítem y quién lo cambió (0219). Solo aparece si
+                    hubo cambios: un ítem recién creado no tiene nada que mostrar. */}
+                <HistorialItem cambios={cambiosPorItem.get(i.id) ?? []} nombres={nombres} />
               </li>
             );
           })}

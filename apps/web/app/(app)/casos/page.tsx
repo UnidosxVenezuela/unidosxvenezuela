@@ -210,7 +210,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     if (ultimo) ultimo.href = kpiHref('enviado_redaccion');
   }
 
-  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = []; let drawerItems: any[] = []; let drawerGestionaItems = false;
+  let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = []; let drawerItems: any[] = []; let drawerGestionaItems = false; let drawerCambiosItems: any[] = []; let drawerAportesItems: any[] = []; let drawerDerivItems: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -238,16 +238,34 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       // Derivaciones multi-área (0177) best-effort: si la tabla aún no existe, se omite.
       const { data: dder } = await supabase.from('casos_derivaciones').select('*').eq('caso_id', searchParams.caso).order('derivado_en', { ascending: true });
       drawerDeriv = (dder ?? []) as any[];
+      // Qué ítems se enviaron en cada derivación (puente 0222) best-effort: sin la tabla
+      // la consulta vuelve vacía y cada derivación se lee como «la solicitud completa».
+      if (drawerDeriv.length > 0) {
+        const { data: ddit } = await supabase.from('casos_derivacion_items')
+          .select('derivacion_id, item_id').in('derivacion_id', drawerDeriv.map((d) => d.id));
+        drawerDerivItems = (ddit ?? []) as any[];
+      }
       // Historial de correcciones (0178, Paso 12) best-effort.
       const { data: dcorr } = await supabase.from('casos_historial_cambios').select('*').eq('caso_id', searchParams.caso).order('creado_en', { ascending: false });
       drawerCorr = (dcorr ?? []) as any[];
       // Desglose por ítem (0218) best-effort: sin la tabla, el bloque degrada al texto libre.
       const { data: ditems } = await supabase.from('casos_items')
-        .select('id, orden, tipo, descripcion, cantidad, unidad, cantidad_texto, notas')
+        .select('id, orden, tipo, descripcion, cantidad, unidad, cantidad_texto, notas, estado')
         .eq('caso_id', searchParams.caso).order('orden');
       drawerItems = (ditems ?? []) as any[];
       const { data: dgest } = await supabase.rpc('puede_gestionar_items_caso');
       drawerGestionaItems = dgest === true;
+      // Historial de cambios de cada ítem (0219) best-effort: quién cambió qué y cuándo.
+      const idsDItems = drawerItems.map((i) => i.id);
+      if (idsDItems.length > 0) {
+        const { data: dci } = await supabase.from('casos_items_historial')
+          .select('id, item_id, campo, valor_anterior, valor_nuevo, actor_id, creado_en')
+          .in('item_id', idsDItems).order('creado_en', { ascending: false });
+        drawerCambiosItems = (dci ?? []) as any[];
+        // Cumplimiento por ítem (0221) best-effort: cuánto se cubrió y quién lo puso.
+        const { data: dap } = await supabase.rpc('aportes_de_caso', { p_caso: searchParams.caso });
+        drawerAportesItems = (dap as any[]) ?? [];
+      }
       const { urlFirmada } = await import('@/lib/storage');
       drawerCaso.adjuntos = await Promise.all(((dAdj ?? []) as any[]).map(async (a) => ({
         ...a, href: await urlFirmada(supabase, 'adjuntos', a.url, 3600),
@@ -403,7 +421,8 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
                 derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr}
-                items={drawerItems} puedeGestionarItems={drawerGestionaItems} />
+                items={drawerItems} puedeGestionarItems={drawerGestionaItems} cambiosItems={drawerCambiosItems}
+                aportesItems={drawerAportesItems} derivacionItems={drawerDerivItems} />
             </DrawerModal>
           </>
         )}

@@ -12,8 +12,10 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
-import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial, subirAdjuntosInsumo, eliminarAdjuntoInsumo } from '../actions';
+import ItemsSemaforo from '@/components/ItemsSemaforo';
+import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial, subirAdjuntosInsumo, eliminarAdjuntoInsumo, avanzarItem, registrarAporteItem, marcarItemPorTercero, quitarAporteItem } from '../actions';
 import { desestimarCaso } from '../../casos/actions';
+import { resumenItems, resumenCobertura } from '@/lib/flujo';
 
 // WhatsApp: si el contacto trae suficientes dígitos, arma un enlace wa.me.
 function waLink(contacto: string | null): string | null {
@@ -82,6 +84,38 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     }
   }
 
+  // Desglose por ítem con su semáforo de PASOS (0218 + 0220). Se pide por la RPC CURADA
+  // —forma estable, sin contacto ni PII— y desde 0222 por la variante ACOTADA AL ÁREA:
+  // Logística ve SOLO los ítems que Verificación le derivó, no todo el desglose (las
+  // medicinas pueden haber ido a Alianzas y solo el agua a Logística). Si la derivación
+  // no trae selección —o es anterior a 0222— la RPC devuelve el desglose completo, así
+  // que nadie se queda sin ver su trabajo. Best-effort: sin la migración 0222 se cae a
+  // `items_de_caso` (0220/0221) y la pantalla se comporta como antes.
+  let items: any[] = [];
+  let aportes: any[] = [];
+  let nDesglose = 0;
+  if (s.caso_id) {
+    const { data: itA, error: eItA } = await supabase.rpc('items_de_caso_area', { p_caso: s.caso_id, p_area: 'logistica' });
+    if (!eItA) {
+      items = (itA as any[]) ?? [];
+      nDesglose = Number((items[0] as any)?.n_desglose ?? items.length) || items.length;
+    } else {
+      const { data: it } = await supabase.rpc('items_de_caso', { p_caso: s.caso_id });
+      items = (it as any[]) ?? [];
+      nDesglose = items.length;
+    }
+    // Quién aportó cuánto a cada ítem (0221), por la RPC curada: resuelve el nombre del
+    // tercero / proveedor / afiliado / centro y devuelve `perfil_id` para que el nombre
+    // de un compañero se muestre con la regla de privacidad de siempre.
+    const { data: ap } = await supabase.rpc('aportes_de_caso', { p_caso: s.caso_id });
+    aportes = (ap as any[]) ?? [];
+  }
+  // Regla de cierre (0221): «entregado» solo con el desglose cubierto, o forzado a
+  // sabiendas como entrega parcial. Se calcula aquí para pintar el botón que toca.
+  const rItems = resumenItems(items);
+  const rCob = resumenCobertura(items, aportes);
+  const desgloseIncompleto = rItems.total > 0 && rItems.cumplidos < rItems.total;
+
   const [{ data: envios }, { data: proveedores }, { data: transportistas }] = await Promise.all([
     supabase.from('envios').select('id, tipo_vehiculo, flete, origen, destino, notas, transportistas_logistica(nombre), perfiles!envios_voluntario_id_fkey(nombre_completo)').eq('solicitud_id', id).order('creado_en'),
     supabase.from('proveedores').select('id, nombre').order('nombre'),
@@ -121,6 +155,13 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   return (
     <div>
       <RealtimeRefrescar tabla="envios" filtro={'solicitud_id=eq.' + id} />
+      {/* El desglose lo mantienen tres áreas a la vez (Recopilación, Verificación y
+          Logística): el avance por ítem se refresca en vivo (0218 publica casos_items en
+          realtime; la fila no lleva contacto ni PII). */}
+      {s.caso_id && <RealtimeRefrescar tabla="casos_items" filtro={'caso_id=eq.' + s.caso_id} />}
+      {/* Un aporte que NO cierra el ítem (4 de 5) no cambia `casos_items`: sin esta
+          suscripción el avance parcial no llegaría en vivo (0221). */}
+      {s.caso_id && <RealtimeRefrescar tabla="casos_item_aportes" />}
       <Link href="/insumos" className="muted">← Logística</Link>
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{s.titulo}</h1>
@@ -156,6 +197,32 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               <div>Solicitado por {nombreMostrado(s.perfiles?.nombre_completo, verFull) || '—'} · {fechaHora(s.creado_en)}</div>
             </div>
           </div>
+
+          {/* Semáforo de PASOS por ítem (0220): el estado de la tarjeta es uno solo, pero
+              lo que hace falta son varias cosas y cada una avanza por su cuenta. Logística
+              lo mueve aquí; las demás áreas lo ven (misma barra, misma lectura).
+              Desde 0222 la lista está acotada a lo DERIVADO A LOGÍSTICA: si Verificación
+              repartió el desglose, lo que se ve aquí es solo la parte que le tocó a esta
+              área (el resto está en Alianzas, Redes…). */}
+          <ItemsSemaforo
+            items={items}
+            titulo={nDesglose > items.length
+              ? 'Lo que le toca a Logística · ' + items.length + ' de ' + nDesglose + ' ítems'
+              : 'Qué se necesita · avance y cumplimiento por ítem'}
+            nota={(nDesglose > items.length
+                ? 'Verificación derivó a Logística solo estos ' + items.length + ' ítems del desglose (de ' + nDesglose + '): el resto se envió a otras áreas. '
+                : '')
+              + (gestor
+              ? 'Cada línea avanza por su cuenta: mueve solo lo que ya conseguiste y anota CUÁNTO se cubrió y quién lo puso. Si lo cubrió otra organización, márcalo como cubierto por un tercero: deja de gestionarse y queda registrado que no lo cubrimos nosotros.'
+              : 'Avance y cobertura de cada cosa que hace falta. Lo registra Logística.')}
+            alAvanzar={gestor ? avanzarItem : undefined}
+            aportes={aportes}
+            verFull={verFull}
+            alAportar={gestor ? registrarAporteItem : undefined}
+            alTercero={gestor ? marcarItemPorTercero : undefined}
+            alQuitarAporte={gestor ? quitarAporteItem : undefined}
+            volver={'/insumos/' + id}
+          />
 
           {casoFull && (
             <div className="tarjeta">
@@ -300,9 +367,35 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                     </div>
                     <div className="campo"><label>Cantidad a surtir</label><input name="cantidad" type="number" min={0} step="any" className="input" required /></div>
                   </div>
+                  {/* A QUÉ ÍTEM del desglose corresponde (0221). Con esto, la salida de
+                      inventario y el aporte se escriben juntos y quedan enlazados por el
+                      asiento del movimiento: se acabó el «(sol. 1a2b3c4d)» como único
+                      vínculo. Además el ítem se cierra solo al llegar al 100 %. */}
+                  {items.length > 0 && (
+                    <div className="campo">
+                      <label htmlFor="surtir-item">¿Qué ítem del desglose cubre?</label>
+                      <select id="surtir-item" name="caso_item_id" className="input" defaultValue="">
+                        <option value="">— Sin anotarlo en un ítem —</option>
+                        {items.map((it: any) => (
+                          <option key={it.id} value={it.id} disabled={it.estado === 'cumplido' || it.estado === 'cancelado'}>
+                            {it.descripcion}
+                            {it.cantidad != null ? ` · ${it.cubierto ?? 0} de ${it.cantidad}${it.unidad ? ' ' + it.unidad : ''}` : ''}
+                            {it.estado === 'cumplido' ? ' (ya cubierto)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="muted" style={{ fontSize: '.78rem' }}>Así queda registrado <strong>cuánto se cubrió de qué</strong> y el aporte se enlaza con el asiento del inventario.</span>
+                    </div>
+                  )}
                   <label className="fila" style={{ gap: 6, fontSize: '.85rem', cursor: 'pointer', margin: '2px 0 8px' }}>
                     <input type="checkbox" name="marcar_entregada" value="1" defaultChecked style={{ width: 'auto', minHeight: 0 }} /> Marcar la solicitud como entregada
                   </label>
+                  {desgloseIncompleto && (
+                    <label className="fila" style={{ gap: 6, fontSize: '.85rem', cursor: 'pointer', margin: '0 0 8px' }}>
+                      <input type="checkbox" name="forzar" value="1" style={{ width: 'auto', minHeight: 0 }} />
+                      Entregar aunque falten ítems <span className="muted">(queda registrada como entrega parcial)</span>
+                    </label>
+                  )}
                   <button className="btn btn-primario" type="submit"><Icono nombre="salida" size={16} /> Surtir y descontar</button>
                 </form>
               )}
@@ -419,7 +512,28 @@ export default async function SolicitudPage({ params }: { params: { id: string }
           <aside className="grupo-aside">
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="flecha" size={16} /> Estado</h3>
-              {sig ? (
+              {/* Regla de cierre (0221): «entregado» ya no es un paso más. Con ítems sin
+                  cubrir hay que decirlo a sabiendas: la entrega se registra como PARCIAL,
+                  el caso NO se da por resuelto y Redacción sigue difundiendo lo que falta.
+                  Quien decide de verdad es la RPC; esto solo evita el 22023 a ciegas. */}
+              {sig === 'entregado' && desgloseIncompleto ? (
+                <>
+                  <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
+                    Faltan por cubrir <strong style={{ color: 'var(--texto)' }}>{rItems.total - rItems.cumplidos} de {rItems.total} ítems</strong>
+                    {rCob.pct !== null ? <> ({rCob.pct}% de lo pedido)</> : null}. Regístralo arriba, o cierra la entrega dejando constancia de que fue parcial.
+                  </p>
+                  <form action={cambiarEstadoSolicitud}>
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="estado" value="entregado" />
+                    <input type="hidden" name="forzar" value="1" />
+                    <BotonConfirmar
+                      mensaje={'Faltan ' + (rItems.total - rItems.cumplidos) + ' de ' + rItems.total + ' ítems por cubrir. Se registrará como ENTREGA PARCIAL: el caso NO se dará por resuelto y seguirá en el flujo para difundir lo que falta.'}
+                      className="btn" confirmar="Sí, entrega parcial" style={{ width: '100%' }}>
+                      Entregar lo conseguido (parcial)
+                    </BotonConfirmar>
+                  </form>
+                </>
+              ) : sig ? (
                 <form action={cambiarEstadoSolicitud}>
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value={sig} />

@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, centroideEstado } from '@/lib/constantes';
+import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado } from '@/lib/constantes';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -537,10 +537,16 @@ export async function reubicarCasoOfrecimiento(formData: FormData) {
   redirigirOk('/insumos/oportunidades/' + data, 'Solicitud reubicada como Donación-Ofrecimiento. Complétala o afínala aquí.');
 }
 
-// ── Derivación multi-área (0177, Requerimiento Paso 9) ──
+// ── Derivación multi-área (0177, Requerimiento Paso 9) + por ÍTEM (0222) ──
 // Verificación deriva una solicitud VALIDADA a una o varias áreas de destino, con
 // responsable/acción/prioridad/observaciones. El gate «solo Validado», el permiso
 // y el aviso a cada área los hace el RPC derivar_caso (SECURITY DEFINER).
+//
+// Desde 0222 se elige ADEMÁS qué ítems del desglose van a cada área: el formulario manda
+// una casilla `items_<area>` por cada ítem marcado. La RPC recibe UNA lista de ítems por
+// llamada (`p_items uuid[]`), así que aquí se agrupan las áreas que comparten exactamente
+// la misma selección y se hace una llamada por grupo — normalmente una sola, porque lo
+// habitual es mandar lo mismo a todas.
 export async function derivarCaso(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -554,16 +560,57 @@ export async function derivarCaso(formData: FormData) {
   const observaciones = opt(formData.get('observaciones'));
   if (!id) return redirigirError(volver, 'Falta la solicitud');
   if (areas.length === 0) return redirigirError(volver, 'Elegí al menos un área de destino');
-  const { error } = await supabase.rpc('derivar_caso', {
-    p_caso: id, p_areas: areas, p_responsable: responsable,
-    p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
-  });
-  if (error) {
-    if (rpcNoExiste(error)) return redirigirError(volver, 'La derivación multi-área todavía no está disponible (falta aplicar la migración 0177).');
+
+  // ¿El formulario pintó casillas de ítems? (campo oculto con el desglose disponible).
+  // Si el caso tiene desglose, cada área elegida necesita al menos un ítem: derivar un
+  // área «vacía» dejaría al equipo receptor sin saber qué le tocó.
+  const hayDesglose = txt(formData.get('hay_items')) === '1';
+  const porArea = new Map<string, string[]>();
+  for (const a of areas) {
+    const its = formData.getAll('items_' + a).map(String).map((s) => s.trim()).filter(Boolean);
+    if (hayDesglose && its.length === 0) {
+      return redirigirError(volver, 'Elegí al menos un ítem para «' + (ETIQUETA_AREA_DESTINO[a as keyof typeof ETIQUETA_AREA_DESTINO] ?? a) + '».');
+    }
+    porArea.set(a, its);
+  }
+
+  // Áreas con la MISMA selección → una sola llamada (la RPC aplica p_items a todas las
+  // áreas del array).
+  const grupos = new Map<string, { areas: string[]; items: string[] }>();
+  for (const a of areas) {
+    const items = porArea.get(a) ?? [];
+    const clave = [...items].sort().join('|');
+    const g = grupos.get(clave);
+    if (g) g.areas.push(a); else grupos.set(clave, { areas: [a], items });
+  }
+
+  for (const g of grupos.values()) {
+    const { error } = await supabase.rpc('derivar_caso', {
+      p_caso: id, p_areas: g.areas, p_items: g.items.length > 0 ? g.items : null,
+      p_responsable: responsable, p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
+    });
+    if (!error) continue;
+    // Sin la migración 0222 la función no tiene `p_items`: se deriva la solicitud completa
+    // (comportamiento de 0177/0208) en vez de dejar al equipo sin poder derivar.
+    if (rpcNoExiste(error)) {
+      const { error: e2 } = await supabase.rpc('derivar_caso', {
+        p_caso: id, p_areas: g.areas, p_responsable: responsable,
+        p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
+      });
+      if (e2) {
+        if (rpcNoExiste(e2)) return redirigirError(volver, 'La derivación multi-área todavía no está disponible (falta aplicar la migración 0177).');
+        return redirigirError(volver, 'No se pudo derivar: ' + e2.message);
+      }
+      continue;
+    }
     return redirigirError(volver, 'No se pudo derivar: ' + error.message);
   }
-  revalidatePath('/casos'); revalidatePath(volver);
-  redirigirOk(volver, 'Solicitud derivada a las áreas seleccionadas');
+
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath('/envio-redaccion');
+  revalidatePath('/mi-area'); revalidatePath('/seguimiento'); revalidatePath(volver);
+  redirigirOk(volver, hayDesglose
+    ? 'Solicitud derivada: cada área recibió los ítems que le marcaste'
+    : 'Solicitud derivada a las áreas seleccionadas');
 }
 
 // Acciones de estado de una derivación (tomar / en proceso / cerrar). El RPC

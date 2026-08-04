@@ -13,7 +13,9 @@ import { cambiarEstadoCaso, descartarCaso, actualizarCaso, eliminarCaso, tomarCa
 import FormEditarCaso from './FormEditarCaso';
 import VerificacionPorCampo from './VerificacionPorCampo';
 import BloqueItemsCaso, { type ItemCaso } from './BloqueItemsCaso';
-import Derivaciones from './Derivaciones';
+import { type AporteItem } from '@/components/AportesItem';
+import { type CambioItem } from './HistorialItem';
+import Derivaciones, { type DerivacionItem } from './Derivaciones';
 import LineaTiempoCaso from './LineaTiempoCaso';
 import { nombreMostrado } from '@/lib/nombre';
 
@@ -30,8 +32,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [], items = [], puedeGestionarItems = false }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[]; items?: ItemCaso[]; puedeGestionarItems?: boolean;
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [], items = [], puedeGestionarItems = false, cambiosItems = [], aportesItems = [], derivacionItems = [] }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[]; items?: ItemCaso[]; puedeGestionarItems?: boolean; cambiosItems?: CambioItem[]; aportesItems?: AporteItem[]; derivacionItems?: DerivacionItem[];
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -86,9 +88,28 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     // Desglose por ítem (0218): las RPC auditan con entidad='casos' para que el cambio
     // se vea aquí (este historial filtra por entidad='casos').
     if (accion === 'item_agregado') return `Ítem añadido al desglose${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
-    if (accion === 'item_editado') return `Ítem del desglose editado${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
+    // La edición la audita el trigger de 0219, que además dice QUÉ campos cambiaron
+    // (el valor anterior → nuevo se ve en el historial de cada ítem, arriba).
+    if (accion === 'item_editado') {
+      const campos = Array.isArray(meta?.campos) ? (meta.campos as string[]).join(', ') : '';
+      return `Ítem del desglose editado${meta?.descripcion ? ' · ' + meta.descripcion : ''}${campos ? ' (' + campos + ')' : ''}`;
+    }
     if (accion === 'item_eliminado') return `Ítem quitado del desglose${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
     if (accion === 'items_reordenados') return 'Desglose reordenado';
+    // Cumplimiento por ítem (0221). Se distingue SIEMPRE si lo cubrió un tercero: es la
+    // diferencia entre «lo entregamos» y «lo entregó otro».
+    if (accion === 'aporte_registrado') {
+      const cuanto = meta?.cantidad != null ? `${meta.cantidad}${meta?.unidad ? ' ' + meta.unidad : ''} de ` : '';
+      const quien = meta?.tercero ? ` · lo puso ${meta.tercero}` : '';
+      return `Cobertura registrada · ${cuanto}${meta?.descripcion ?? 'un ítem'}${quien}`;
+    }
+    if (accion === 'aporte_eliminado') return `Aporte corregido (quitado)${meta?.descripcion ? ' · ' + meta.descripcion : ''}`;
+    if (accion === 'item_cubierto_tercero') return `Ítem cubierto por un TERCERO${meta?.tercero ? ' · ' + meta.tercero : ''}${meta?.descripcion ? ' (' + meta.descripcion + ')' : ''} — deja de gestionarse`;
+    if (accion === 'entrega_completa') return 'Entrega cerrada · desglose cubierto al 100 %';
+    if (accion === 'entrega_parcial' || accion === 'casos:entrega_parcial') {
+      const n = meta?.items != null ? ` · ${meta?.cubiertos ?? 0} de ${meta.items} ítems` : '';
+      return `Entrega PARCIAL${n}${meta?.pct != null ? ` (${meta.pct}% de lo pedido)` : ''} — la solicitud sigue en el flujo`;
+    }
     // Relevo entre áreas (0201): las RPC de derivación auditan también con entidad='casos',
     // así el «Historial de cambios» muestra quién tomó/avanzó/cerró cada derivación por área.
     const areaRelevo = ETIQUETA_AREA_DESTINO[meta?.area as keyof typeof ETIQUETA_AREA_DESTINO] ?? meta?.area ?? 'un área';
@@ -119,6 +140,11 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
     if (accion === 'item_editado') return 'Editó un ítem del desglose';
     if (accion === 'item_eliminado') return 'Quitó un ítem del desglose';
     if (accion === 'items_reordenados') return 'Reordenó el desglose';
+    if (accion === 'aporte_registrado') return meta?.origen === 'tercero' ? 'Registró que lo cubrió un tercero' : 'Registró cobertura de un ítem';
+    if (accion === 'aporte_eliminado') return 'Corrigió la cobertura de un ítem';
+    if (accion === 'item_cubierto_tercero') return 'Marcó un ítem como cubierto por un tercero';
+    if (accion === 'entrega_completa') return 'Cerró la entrega (completa)';
+    if (accion === 'entrega_parcial' || accion === 'casos:entrega_parcial') return 'Cerró la entrega (parcial)';
     if (accion === 'tomar_derivacion') return 'Tomó un relevo de área';
     if (accion === 'avanzar_derivacion') return 'Avanzó un relevo de área';
     if (accion === 'cerrar_derivacion') return 'Cerró un relevo de área';
@@ -272,7 +298,9 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           texto libre de `req_cantidad` como referencia. */}
       {(caso.es_requerimiento || (items ?? []).length > 0) && (
         <BloqueItemsCaso casoId={caso.id} items={items ?? []} reqCantidad={caso.req_cantidad}
-          reqTipo={caso.req_tipo} volver={volver} puedeGestionar={puedeGestionarItems} />
+          reqTipo={caso.req_tipo} volver={volver} puedeGestionar={puedeGestionarItems}
+          cambios={cambiosItems ?? []} nombres={nombres}
+          aportes={aportesItems ?? []} verFull={esAdmin} />
       )}
 
       {/* Verificación por campo (0172): semáforo por dato. La marca el equipo de
@@ -362,7 +390,8 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           de destino, con seguimiento por área visible para todas. No aplica a «Desaparecidos». */}
       <Derivaciones caso={caso} derivaciones={derivaciones} perfiles={perfiles} volver={volver}
         puedeDerivar={(puedeEditar || esAdmin) && caso.categoria !== 'Desaparecidos'}
-        casoValidado={casoValidado} areasOperables={areasOperables} esAdmin={esAdmin} />
+        casoValidado={casoValidado} areasOperables={areasOperables} esAdmin={esAdmin}
+        items={items} derivacionItems={derivacionItems} />
 
       {puedeEditarDatos && <FormEditarCaso caso={caso} volver={volver} />}
 

@@ -5,6 +5,7 @@ import Pill from '@/components/Pill';
 import EstadoCaso from '@/components/EstadoCaso';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
+import ItemsSemaforo from '@/components/ItemsSemaforo';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
 import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion, regresarCasoVerificacion, desestimarCaso } from '../casos/actions';
@@ -50,6 +51,20 @@ export default function DetalleRedaccion(
         </div>
       )}
       <FlujoProgreso paso={p.paso} total={p.total} completo={p.completo} etiqueta={p.etiqueta} />
+
+      {/* Avance por ítem (0220), de SOLO LECTURA. Es lo que permite redactar con precisión
+          —«el agua ya va en camino, faltan las medicinas»— y priorizar la difusión de lo
+          que sigue sin cubrirse. Desde 0222 llega por la vista curada `casos_items_difusion`
+          y trae SOLO los ítems que Verificación derivó a Redes (si no repartió el desglose,
+          llegan todos). Sin contacto ni PII, porque Redacción no lee `casos` desde 0180. Se
+          actualiza en vivo por `casos_difusion_senal` (0181), la tabla-señal, nunca por `casos`. */}
+      <ItemsSemaforo
+        items={caso.items ?? []}
+        aportes={caso.aportes ?? []}
+        verFull={esAdmin}
+        titulo="Qué hay que difundir · avance y cumplimiento por ítem"
+        nota="Solo lo que Verificación envió a esta área. Lo registra Logística; aquí se ve para redactar con precisión: cuánto falta de cada cosa y qué ya cubrió otra organización (eso no hace falta difundirlo)."
+      />
 
       {/* Redactor asignado (0169): tomar / soltar la difusión */}
       <div className="tarjeta" style={{ marginTop: 12, padding: 12 }}>
