@@ -51,6 +51,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.alianzas) d.push({ href: '/alianzas', etiqueta: 'Alianzas Estratégicas', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
   if (flags.alianzas) d.push({ href: '/captacion', etiqueta: 'Empresas y aliados', icono: 'buscar', grupo: 'Alianzas Estratégicas' });
   if (flags.alianzas) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
+  // Capacidad ofertada por los aliados concretados (0224): qué puede cubrir cada uno,
+  // cuánto y cada cuánto. Es lo que Logística lee como capacidad de respuesta disponible.
+  if (flags.alianzas) d.push({ href: '/alianzas/proveedores', etiqueta: 'Aliados y capacidad', icono: 'caja', grupo: 'Alianzas Estratégicas' });
   // Correo institucional con plantillas y registro de envíos (0217).
   if (flags.alianzas) d.push({ href: '/alianzas/correo', etiqueta: 'Correo institucional', icono: 'documento', grupo: 'Alianzas Estratégicas' });
   // Reportería del departamento (0200): respaldo descargable para presentar a empresas.

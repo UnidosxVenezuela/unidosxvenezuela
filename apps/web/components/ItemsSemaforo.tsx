@@ -2,7 +2,7 @@ import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
 import FlujoProgreso from './FlujoProgreso';
 import BotonConfirmar from './BotonConfirmar';
-import AportesItem, { BarraCobertura, pctTerceros, type AporteItem } from './AportesItem';
+import AportesItem, { BarraCobertura, pctTerceros, type AporteItem, type OpcionCapacidad } from './AportesItem';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_ITEM, claseEstadoItem, cantidadItem, TRANSICIONES_ITEM, siguienteEstadoItem } from '@/lib/constantes';
 import { pasoDeItem, resumenItems, resumenCobertura } from '@/lib/flujo';
 
@@ -39,7 +39,7 @@ export type ItemSemaforo = {
  */
 export default function ItemsSemaforo({
   items = [], titulo = 'Avance por ítem', nota, alAvanzar, volver = '', compacto = false,
-  aportes = [], verFull = false, alAportar, alTercero, alQuitarAporte,
+  aportes = [], verFull = false, alAportar, alTercero, alQuitarAporte, capacidades = [],
 }: {
   items?: ItemSemaforo[];
   titulo?: string;
@@ -52,6 +52,8 @@ export default function ItemsSemaforo({
   alAportar?: (formData: FormData) => void | Promise<void>;
   alTercero?: (formData: FormData) => void | Promise<void>;
   alQuitarAporte?: (formData: FormData) => void | Promise<void>;
+  /** Capacidad comprometida con margen HOY (0224), para descontarla al registrar el aporte. */
+  capacidades?: OpcionCapacidad[];
 }) {
   if (items.length === 0) return null;
   const lista = [...items].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
@@ -121,7 +123,8 @@ export default function ItemsSemaforo({
                   cubrió un tercero. Se ve desde todas las áreas; escribir es de Logística. */}
               <AportesItem
                 item={i} aportes={porItem.get(i.id) ?? []} verFull={verFull} volver={volver}
-                alAportar={alAportar} alTercero={alTercero} alQuitar={alQuitarAporte} />
+                alAportar={alAportar} alTercero={alTercero} alQuitar={alQuitarAporte}
+                capacidades={capacidades} />
 
 
               {alAvanzar && permitidas.length > 0 && (

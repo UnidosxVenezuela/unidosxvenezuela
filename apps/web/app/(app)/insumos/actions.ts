@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
+import { validarArchivo } from '@/lib/validaciones';
 
 async function usuario() {
   const supabase = await createClient();
@@ -12,23 +13,124 @@ async function usuario() {
   return { supabase, userId: user.id };
 }
 
+function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
+function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
+
 // ── Solicitudes ──
+// ALTA de Logística (0223). Antes esto insertaba SEIS campos sueltos en
+// `solicitudes_insumo` y —lo grave— SIN `caso_id`. Una tarea sin caso es una tarea
+// mutilada: sin contacto ni referente (viven en `casos`, 0171), sin coordenadas ni
+// dirección (0112/0173), sin adjuntos que vean las demás áreas (0212/0213 los manda a
+// `casos_adjuntos` solo si hay caso), sin centros cercanos (`centros_cercanos_para_solicitud`
+// hace join con `casos`), sin cobertura parcial (0211 exige caso_id), sin cierre del caso
+// al entregar y —desde 0218— sin desglose por ítem, porque los ítems cuelgan del caso.
+//
+// Ahora se llama a `crear_solicitud_logistica`, que crea el CASO completo, lo deja
+// confirmado con su verificación sembrada, lo deriva a Logística con la selección de
+// ítems (0222) y deja que `solicitud_logistica_de_caso` proyecte la tarea del área. La
+// autorización vive en la RPC (gate `puede_logistica()`); aquí solo se recogen los campos.
 export async function crearSolicitud(formData: FormData) {
   const { supabase, userId } = await usuario();
-  const titulo = String(formData.get('titulo') ?? '').trim();
-  if (!titulo) throw new Error('El título es obligatorio.');
-  const { data, error } = await supabase.from('solicitudes_insumo').insert({
-    titulo,
-    tipo: String(formData.get('tipo') ?? 'otro'),
-    descripcion: String(formData.get('descripcion') ?? '').trim() || null,
-    cantidad: String(formData.get('cantidad') ?? '').trim() || null,
-    urgencia: String(formData.get('urgencia') ?? 'media'),
-    punto_id: String(formData.get('punto_id') ?? '').trim() || null,
-    solicitado_por: userId,
-  }).select('id').single();
-  if (error) throw new Error('No se pudo crear la solicitud: ' + error.message);
-  revalidatePath('/insumos');
-  redirigirOk('/insumos/' + data!.id, 'Solicitud creada');
+  const volver = '/insumos/nueva';
+  const titulo = txt(formData.get('titulo'));
+  if (!titulo) return redirigirError(volver, 'Ponle un título a la solicitud.');
+  const descripcion = txt(formData.get('descripcion'));
+  if (!descripcion) return redirigirError(volver, 'Describe qué se necesita y para quién.');
+
+  // Desglose por ítem: cinco campos repetidos por fila, que el navegador entrega en el
+  // orden del DOM. Se recomponen posición a posición; las filas sin descripción se caen.
+  const dsc = formData.getAll('item_descripcion').map((v) => txt(v));
+  const cnt = formData.getAll('item_cantidad').map((v) => txt(v));
+  const uni = formData.getAll('item_unidad').map((v) => txt(v));
+  const tip = formData.getAll('item_tipo').map((v) => txt(v));
+  const not = formData.getAll('item_notas').map((v) => txt(v));
+  const items = dsc.map((d, i) => ({
+    descripcion: d.slice(0, 300),
+    cantidad: (cnt[i] ?? '').slice(0, 100),
+    unidad: (uni[i] ?? '').slice(0, 40),
+    tipo: tip[i] ?? 'otro',
+    notas: (not[i] ?? '').slice(0, 500),
+  })).filter((i) => i.descripcion !== '');
+  if (items.length === 0) {
+    return redirigirError(volver, 'Añade al menos un ítem al desglose: qué hace falta, cuánto y en qué unidad.');
+  }
+
+  // Los archivos se validan ANTES de crear nada (mismo criterio que crearCaso).
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of archivos.slice(0, 10)) {
+    const v = validarArchivo(file.name, file.size, 10);
+    if (!v.ok) return redirigirError(volver, v.motivo || 'Archivo no admitido.');
+  }
+
+  const personas = Number(txt(formData.get('personas_afectadas')));
+  const lat = Number(txt(formData.get('lat')));
+  const lng = Number(txt(formData.get('lng')));
+  const args = {
+    p_titulo: titulo.slice(0, 200),
+    p_descripcion: descripcion,
+    p_items: items,
+    p_referente: opt(formData.get('referente')),
+    p_referente_rol: opt(formData.get('referente_rol')),
+    p_whatsapp: opt(formData.get('contacto_whatsapp')),
+    p_instagram: opt(formData.get('contacto_instagram')),
+    p_ubi_estado: opt(formData.get('ubicacion_estado')),
+    p_ubi_municipio: opt(formData.get('ubicacion_municipio')),
+    p_ubi_parroquia: opt(formData.get('ubicacion_parroquia')),
+    p_ubi_sector: opt(formData.get('ubicacion_sector')),
+    p_ubi_direccion: opt(formData.get('ubicacion_direccion')),
+    p_lat: Number.isFinite(lat) && txt(formData.get('lat')) !== '' ? lat : null,
+    p_lng: Number.isFinite(lng) && txt(formData.get('lng')) !== '' ? lng : null,
+    p_urgencia: txt(formData.get('urgencia')) || 'media',
+    p_personas: Number.isFinite(personas) && txt(formData.get('personas_afectadas')) !== '' ? Math.max(0, Math.trunc(personas)) : null,
+    p_fuente: opt(formData.get('fuente')),
+    p_punto: opt(formData.get('punto_id')),
+    p_notas: opt(formData.get('notas')),
+  };
+
+  const { data, error } = await supabase.rpc('crear_solicitud_logistica', args);
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (/could not find the function|function .* does not exist|no existe la funci|schema cache/.test(m)) {
+      // Sin 0223 aplicada, el camino de siempre: la tarea suelta (mutilada, pero mejor que
+      // bloquear el alta). Se dice con todas las letras para que no pase inadvertido.
+      const { data: legado, error: e2 } = await supabase.from('solicitudes_insumo').insert({
+        titulo: titulo.slice(0, 200),
+        tipo: items[0]!.tipo || 'otro',
+        descripcion,
+        cantidad: items.map((i) => [i.cantidad, i.unidad, i.descripcion].filter(Boolean).join(' ')).join(' · ').slice(0, 500),
+        urgencia: args.p_urgencia,
+        punto_id: args.p_punto,
+        solicitado_por: userId,
+      }).select('id').single();
+      if (e2) return redirigirError(volver, 'No se pudo crear la solicitud: ' + e2.message);
+      revalidatePath('/insumos');
+      return redirigirOk('/insumos/' + legado!.id,
+        'Solicitud creada en modo básico: falta aplicar la migración 0223, así que no lleva contacto, ubicación ni desglose.');
+    }
+    return redirigirError(volver, 'No se pudo crear la solicitud: ' + error.message);
+  }
+
+  const casoId = data as unknown as string;
+
+  // Adjuntos AL CASO (bucket privado «adjuntos», carpeta casos/<id>): así los ven todas
+  // las áreas, no solo Logística (0213). Un archivo fallido no tumba el alta.
+  for (const file of archivos.slice(0, 10)) {
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    const ruta = `casos/${casoId}/${Date.now()}-${safe}`;
+    try {
+      await subirArchivo(supabase, 'adjuntos', ruta, file, { publico: false, upsert: false });
+      const { error: eAdj } = await supabase.from('casos_adjuntos').insert({
+        caso_id: casoId, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
+      });
+      if (eAdj) await borrarArchivo(supabase, 'adjuntos', [ruta]);
+    } catch { /* un adjunto fallido no bloquea la solicitud */ }
+  }
+
+  // La tarea del área la proyecta la RPC (solicitud_logistica_de_caso); se busca por caso.
+  const { data: sol } = await supabase.from('solicitudes_insumo').select('id').eq('caso_id', casoId).maybeSingle();
+  revalidatePath('/insumos'); revalidatePath('/casos'); revalidatePath('/seguimiento'); revalidatePath('/mapa');
+  const destino = (sol as { id?: string } | null)?.id ? '/insumos/' + (sol as { id: string }).id : '/insumos';
+  redirigirOk(destino, 'Solicitud creada con su desglose. Queda marcada como solicitud del área de Logística.');
 }
 
 export async function cambiarEstadoSolicitud(formData: FormData) {
@@ -552,6 +654,31 @@ export async function registrarAporteItem(formData: FormData) {
   if (origen === 'tercero' && !tercero) {
     return redirigirError(volver, 'Indica qué organización o persona lo cubrió.');
   }
+
+  // (0224) Si el aporte sale de una CAPACIDAD COMPROMETIDA por un aliado, va por su RPC:
+  // registra el aporte a nombre de ese proveedor Y deja el `capacidad_id`, que es lo que
+  // hace que «cuánto le queda» se calcule de lo realmente aportado. El origen y el nombre
+  // de tercero sobran ahí: los fija la propia RPC.
+  const capacidad = String(formData.get('capacidad_id') ?? '').trim();
+  if (capacidad) {
+    const { error: eCap } = await supabase.rpc('aportar_desde_capacidad', {
+      p_item: item,
+      p_capacidad: capacidad,
+      p_cantidad: cantidad,
+      p_nota: String(formData.get('nota') ?? '').trim().slice(0, 500) || null,
+    });
+    if (eCap) {
+      if (faltaMigracion0221(eCap) || /aportar_desde_capacidad|proveedor_capacidades/.test((eCap.message || '').toLowerCase())) {
+        return redirigirError(volver, 'La capacidad por proveedor aún no está disponible (falta aplicar la migración 0224).');
+      }
+      return redirigirError(volver, 'No se pudo registrar el aporte: ' + eCap.message);
+    }
+    revalidarCobertura(volver);
+    revalidatePath('/insumos/proveedores');
+    revalidatePath('/alianzas/proveedores');
+    return redirigirOk(volver, 'Aporte registrado y descontado de la capacidad comprometida del aliado.');
+  }
+
   const { error } = await supabase.rpc('registrar_aporte_item', {
     p_item: item,
     p_cantidad: cantidad,

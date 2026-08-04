@@ -2729,4 +2729,308 @@ begin;
   reset role;
 rollback;
 
+\echo '== Test 82: 0223 — el alta de Logística crea un CASO completo; el tablero deja de estar abierto a cualquier verificado =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000223a1', 'logi-223@test.local'),
+    ('00000000-0000-0000-0000-0000000223a2', 'volu-223@test.local'),
+    ('00000000-0000-0000-0000-0000000223a3', 'redac-223@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000223a1';
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000223a2';
+  update public.perfiles set rol = 'redaccion',  roles_extra = '{}', verificado = true where id = '00000000-0000-0000-0000-0000000223a3';
+
+  -- (a) La RPC NO queda expuesta a `anon` por el EXECUTE por defecto de PUBLIC.
+  set local role anon;
+  do $$ begin
+    begin
+      perform public.crear_solicitud_logistica('x', 'y', '[]'::jsonb);
+      raise exception 'FALLO 82a: anon puede ejecutar crear_solicitud_logistica';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (b) Un verificado SIN Logística no crea la solicitud… ni siembra el tablero a mano.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000223a2')::text, true);
+  do $$ begin
+    begin
+      perform public.crear_solicitud_logistica('x', 'y', '[{"descripcion":"agua"}]'::jsonb,
+              'Ref', null, '04141112233', null, 'Miranda');
+      raise exception 'FALLO 82b: un verificado sin Logística creó una solicitud del área';
+    exception when insufficient_privilege then null;
+    end;
+    begin
+      insert into public.solicitudes_insumo (titulo, tipo, urgencia, estado, solicitado_por)
+        values ('_TEST_cuela', 'otro', 'media', 'solicitado', '00000000-0000-0000-0000-0000000223a2');
+      raise exception 'FALLO 82c: solins_insert sigue abierta a cualquier cuenta verificada';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (c) Logística sí: nace un CASO completo, validado, derivado y con su tarea proyectada.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000223a1')::text, true);
+  do $$
+  declare v_caso uuid; n int; c record; s record;
+  begin
+    v_caso := public.crear_solicitud_logistica(
+      p_titulo       => '_TEST_alta_logistica',
+      p_descripcion  => 'Faltan insumos en el ambulatorio',
+      p_items        => '[{"descripcion":"agua 5 L","tipo":"agua","cantidad":"40","unidad":"cajas"},
+                          {"descripcion":"colchones","tipo":"refugio","cantidad":"un camión"},
+                          {"descripcion":"   "}]'::jsonb,
+      p_referente    => 'Dra. Pérez',
+      p_whatsapp     => '(0412) 123-4567',
+      p_ubi_estado   => 'Miranda',
+      p_lat          => 10.4, p_lng => -66.9,
+      p_urgencia     => 'critica');
+
+    select * into c from public.casos where id = v_caso;
+    if c.estado::text <> 'confirmado' then raise exception 'FALLO 82d: el caso no nació confirmado (%)', c.estado; end if;
+    if c.origen_area is distinct from 'logistica' then raise exception 'FALLO 82e: falta origen_area=logistica'; end if;
+    if c.referente is null or c.contacto_whatsapp is null or c.contacto is null then
+      raise exception 'FALLO 82f: la solicitud nació sin contacto estructurado'; end if;
+    if not c.es_requerimiento or c.lat is null then raise exception 'FALLO 82g: la solicitud nació sin ubicación'; end if;
+    if not public.caso_esta_validado(v_caso) then raise exception 'FALLO 82h: el semáforo no quedó sembrado (no sería derivable)'; end if;
+
+    -- Dos ítems: la fila vacía del formulario no es un ítem; «un camión» va a cantidad_texto.
+    select count(*) into n from public.casos_items where caso_id = v_caso;
+    if n <> 2 then raise exception 'FALLO 82i: hay % ítems (esperado 2)', n; end if;
+    select count(*) into n from public.casos_items where caso_id = v_caso and cantidad_texto = 'un camión' and cantidad is null;
+    if n <> 1 then raise exception 'FALLO 82j: la cantidad no numérica no fue a cantidad_texto'; end if;
+
+    -- Derivación a Logística CON puente de ítems (proyección acotada desde el minuto uno).
+    select count(*) into n from public.casos_derivaciones where caso_id = v_caso and area = 'logistica';
+    if n <> 1 then raise exception 'FALLO 82k: no se derivó a Logística (n=%)', n; end if;
+    select count(*) into n from public.casos_derivacion_items x
+      join public.casos_derivaciones d on d.id = x.derivacion_id
+     where d.caso_id = v_caso and d.area = 'logistica';
+    if n <> 2 then raise exception 'FALLO 82l: el puente de ítems tiene % filas (esperado 2)', n; end if;
+    -- «crítica» no existe en chk_derivacion_prioridad: entra como «alta».
+    select count(*) into n from public.casos_derivaciones where caso_id = v_caso and area = 'logistica' and prioridad = 'alta';
+    if n <> 1 then raise exception 'FALLO 82m: la urgencia crítica no bajó a prioridad alta'; end if;
+
+    -- La tarea de Logística existe y está LIGADA al caso (lo que faltaba antes de 0223).
+    select * into s from public.solicitudes_insumo where caso_id = v_caso;
+    if s.id is null then raise exception 'FALLO 82n: no se proyectó la tarea de Logística'; end if;
+    if s.cantidad not like '%agua 5 L%' then raise exception 'FALLO 82o: la tarea no trae el desglose (%)', s.cantidad; end if;
+
+    -- El alta escribiéndose no es una «corrección» del caso.
+    select count(*) into n from public.casos_historial_cambios where caso_id = v_caso;
+    if n <> 0 then raise exception 'FALLO 82p: el alta dejó % asientos de corrección', n; end if;
+
+    -- Sin desglose no hay solicitud: es lo que la hace completa.
+    begin
+      perform public.crear_solicitud_logistica('_TEST_sin_items', 'd', null,
+              'Ref', null, '04141112233', null, 'Miranda');
+      raise exception 'FALLO 82q: se creó una solicitud sin desglose';
+    exception when data_exception then null;
+    end;
+    -- Y sin contacto tampoco (misma exigencia que el alta de Recopilación).
+    begin
+      perform public.crear_solicitud_logistica('_TEST_sin_contacto', 'd', '[{"descripcion":"agua"}]'::jsonb,
+              'Ref', null, null, null, 'Miranda');
+      raise exception 'FALLO 82r: se creó una solicitud sin ningún contacto';
+    exception when data_exception then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (d) No se cuela en la cola de Redacción: no está derivada a «redes» ni requiere difusión.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000223a3')::text, true);
+  do $$ declare n int; begin
+    select count(*) into n from public.casos_difusion where titulo = '_TEST_alta_logistica';
+    if n <> 0 then raise exception 'FALLO 82s: la solicitud de Logística apareció en la cola de Redacción'; end if;
+  end $$;
+  reset role;
+rollback;
+
+-- ══ Capacidad ofertada por proveedor (0224) ══
+
+\echo '== Test 83: capacidad de proveedor (0224) — ventana vigente, restante, vigencia y RLS =='
+begin;
+  insert into auth.users (id, email) values
+    ('00000000-0000-0000-0000-0000000224a1', 'logi-224@test.local'),
+    ('00000000-0000-0000-0000-0000000224a2', 'alian-224@test.local'),
+    ('00000000-0000-0000-0000-0000000224a3', 'redac-224@test.local'),
+    ('00000000-0000-0000-0000-0000000224a4', 'novrf-224@test.local') on conflict do nothing;
+  update public.perfiles set rol = 'logistica', roles_extra = '{}', verificado = true  where id = '00000000-0000-0000-0000-0000000224a1';
+  update public.perfiles set rol = 'captacion', roles_extra = '{}', verificado = true  where id = '00000000-0000-0000-0000-0000000224a2';
+  update public.perfiles set rol = 'redaccion', roles_extra = '{}', verificado = true  where id = '00000000-0000-0000-0000-0000000224a3';
+  update public.perfiles set rol = 'voluntario', roles_extra = '{}', verificado = false where id = '00000000-0000-0000-0000-0000000224a4';
+
+  insert into public.proveedores (id, nombre) values
+    ('00000000-0000-0000-0000-00000022b001', '_TEST_aliado_224');
+
+  -- (a) El EXECUTE por defecto de PUBLIC no deja ninguna puerta abierta a `anon`.
+  set local role anon;
+  do $$
+  declare f text;
+  begin
+    for f in
+      select p.oid::regprocedure::text
+        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public'
+         and p.proname in ('capacidad_restante', 'capacidades_de_proveedor', 'ventana_capacidad',
+                           'guardar_capacidad_proveedor', 'eliminar_capacidad_proveedor',
+                           'guardar_proveedor', 'crear_proveedor_desde_oportunidad',
+                           'aportar_desde_capacidad')
+    loop
+      if has_function_privilege('public', f, 'execute') then
+        raise exception 'FALLO 83a: % es ejecutable por PUBLIC (→ anon vía PostgREST)', f;
+      end if;
+    end loop;
+  end $$;
+  reset role;
+
+  -- (b) Redacción está VERIFICADA pero no es Logística ni Alianzas: lee, no escribe.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000224a3')::text, true);
+  do $$ begin
+    begin
+      perform public.guardar_capacidad_proveedor(
+        p_proveedor := '00000000-0000-0000-0000-00000022b001', p_descripcion := 'x', p_cantidad := 1);
+      raise exception 'FALLO 83b: Redacción declaró capacidad de un proveedor';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+
+  -- (c) Alianzas declara «50 raciones POR SEMANA» y Logística consume 30.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000224a2')::text, true);
+  do $$
+  declare v_cap uuid; v_hoy date := (now() at time zone 'America/Caracas')::date;
+  begin
+    v_cap := public.guardar_capacidad_proveedor(
+      p_proveedor := '00000000-0000-0000-0000-00000022b001',
+      p_tipo := 'alimentos', p_descripcion := '_TEST_comidas', p_cantidad := 50,
+      p_unidad := 'raciones', p_periodicidad := 'semanal', p_vigencia_desde := v_hoy);
+    if (select puntual from public.proveedor_capacidades where id = v_cap) then
+      raise exception 'FALLO 83c: una capacidad semanal quedó marcada como puntual';
+    end if;
+    if public.capacidad_restante(v_cap) <> 50 then
+      raise exception 'FALLO 83d: la capacidad recién declarada no ofrece 50 (%)', public.capacidad_restante(v_cap);
+    end if;
+  end $$;
+  reset role;
+
+  -- (d) La ventana RENUEVA: lo pedido la semana pasada no descuenta esta semana.
+  do $$
+  declare v_caso uuid; v_item uuid; v_cap uuid;
+  begin
+    select id into v_cap from public.proveedor_capacidades where descripcion = '_TEST_comidas';
+
+    insert into public.casos (titulo, descripcion, estado, creado_por)
+    values ('_TEST_224_caso', 'x', 'confirmado', null) returning id into v_caso;
+    insert into public.casos_items (caso_id, tipo, descripcion, cantidad, unidad)
+    values (v_caso, 'alimentos', '_TEST_comidas', 200, 'raciones') returning id into v_item;
+
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', '00000000-0000-0000-0000-0000000224a1')::text, true);
+    perform public.aportar_desde_capacidad(v_item, v_cap, 30, null);
+    if public.capacidad_restante(v_cap) <> 20 then
+      raise exception 'FALLO 83e: tras pedirle 30 de 50 quedan % (esperado 20)', public.capacidad_restante(v_cap);
+    end if;
+    -- El aporte quedó ligado a la capacidad Y al proveedor (es lo que hace real el cálculo).
+    if not exists (select 1 from public.casos_item_aportes
+                    where capacidad_id = v_cap and origen = 'proveedor'
+                      and proveedor_id = '00000000-0000-0000-0000-00000022b001') then
+      raise exception 'FALLO 83f: el aporte no quedó enlazado a la capacidad y su proveedor';
+    end if;
+
+    -- Se mueve el aporte a la semana pasada: la ventana en curso vuelve a estar llena.
+    update public.casos_item_aportes set creado_en = creado_en - interval '8 days' where capacidad_id = v_cap;
+    if public.capacidad_restante(v_cap) <> 50 then
+      raise exception 'FALLO 83g: la ventana semanal no renovó (quedan %)', public.capacidad_restante(v_cap);
+    end if;
+
+    -- Pero el histórico NO se pierde.
+    if (select usado_total from public.capacidades_de_proveedor('00000000-0000-0000-0000-00000022b001')) <> 30 then
+      raise exception 'FALLO 83h: se perdió el histórico de lo aportado';
+    end if;
+  end $$;
+  reset role;
+
+  -- (e) «Una sola vez» NO renueva: la cantidad es un pozo que se agota.
+  do $$
+  declare v_cap uuid; v_item uuid; v_caso uuid;
+  begin
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', '00000000-0000-0000-0000-0000000224a2')::text, true);
+    v_cap := public.guardar_capacidad_proveedor(
+      p_proveedor := '00000000-0000-0000-0000-00000022b001',
+      p_tipo := 'refugio', p_descripcion := '_TEST_colchones', p_cantidad := 100,
+      p_periodicidad := 'unica');
+    if not (select puntual from public.proveedor_capacidades where id = v_cap) then
+      raise exception 'FALLO 83i: una capacidad «de una sola vez» no quedó marcada como puntual';
+    end if;
+
+    select i.id, i.caso_id into v_item, v_caso from public.casos_items i
+      where i.descripcion = '_TEST_comidas' limit 1;
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', '00000000-0000-0000-0000-0000000224a1')::text, true);
+    perform public.aportar_desde_capacidad(v_item, v_cap, 40, null);
+    update public.casos_item_aportes set creado_en = now() - interval '400 days' where capacidad_id = v_cap;
+    if public.capacidad_restante(v_cap) <> 60 then
+      raise exception 'FALLO 83j: una capacidad puntual se renovó con el tiempo (quedan %)', public.capacidad_restante(v_cap);
+    end if;
+  end $$;
+  reset role;
+
+  -- (f) Caducada / pendiente → 0, con el MOTIVO en estado_vigencia.
+  do $$
+  declare v_hoy date := (now() at time zone 'America/Caracas')::date; c_cad uuid; c_pen uuid; r record;
+  begin
+    perform set_config('request.jwt.claims',
+      json_build_object('sub', '00000000-0000-0000-0000-0000000224a2')::text, true);
+    c_cad := public.guardar_capacidad_proveedor(
+      p_proveedor := '00000000-0000-0000-0000-00000022b001', p_descripcion := '_TEST_caducada',
+      p_cantidad := 10, p_periodicidad := 'semanal',
+      p_vigencia_desde := v_hoy - 60, p_vigencia_hasta := v_hoy - 1);
+    c_pen := public.guardar_capacidad_proveedor(
+      p_proveedor := '00000000-0000-0000-0000-00000022b001', p_descripcion := '_TEST_pendiente',
+      p_cantidad := 10, p_periodicidad := 'mensual', p_vigencia_desde := v_hoy + 30);
+
+    if public.capacidad_restante(c_cad) <> 0 then raise exception 'FALLO 83k: una capacidad caducada sigue ofreciendo capacidad'; end if;
+    if public.capacidad_restante(c_pen) <> 0 then raise exception 'FALLO 83l: una capacidad que aún no empieza ya ofrece capacidad'; end if;
+
+    select * into r from public.capacidades_de_proveedor('00000000-0000-0000-0000-00000022b001') x where x.id = c_cad;
+    if r.estado_vigencia <> 'caducada' then raise exception 'FALLO 83m: estado_vigencia = % (esperado caducada)', r.estado_vigencia; end if;
+    select * into r from public.capacidades_de_proveedor('00000000-0000-0000-0000-00000022b001') x where x.id = c_pen;
+    if r.estado_vigencia <> 'pendiente' then raise exception 'FALLO 83n: estado_vigencia = % (esperado pendiente)', r.estado_vigencia; end if;
+  end $$;
+  reset role;
+
+  -- (g) Un NO verificado no ve nada, ni por la tabla ni por las RPC.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000224a4')::text, true);
+  do $$
+  declare n int;
+  begin
+    select count(*) into n from public.proveedor_capacidades;
+    if n <> 0 then raise exception 'FALLO 83o: un no verificado ve % capacidades', n; end if;
+    if exists (select 1 from public.capacidades_de_proveedor()) then
+      raise exception 'FALLO 83p: un no verificado listó capacidades por la RPC';
+    end if;
+  end $$;
+  reset role;
+
+  -- (h) Ni siquiera Logística escribe la tabla a mano: la puerta es la RPC.
+  set local role authenticated;
+  select set_config('request.jwt.claims', json_build_object('sub', '00000000-0000-0000-0000-0000000224a1')::text, true);
+  do $$ begin
+    begin
+      insert into public.proveedor_capacidades (proveedor_id, descripcion, cantidad)
+      values ('00000000-0000-0000-0000-00000022b001', '_TEST_directo', 1);
+      raise exception 'FALLO 83q: se insertó una capacidad SIN pasar por la RPC';
+    exception when insufficient_privilege then null;
+    end;
+  end $$;
+  reset role;
+rollback;
+
 \echo '== TODOS LOS TESTS DE RLS PASARON =='

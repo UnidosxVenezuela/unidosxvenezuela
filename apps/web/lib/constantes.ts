@@ -452,6 +452,55 @@ export function esAporteDeTercero(origen?: string | null): boolean {
   return origen === 'tercero';
 }
 
+// ── Capacidad ofertada por un proveedor o aliado (0224) ──
+// Espejo EXACTO del CHECK `chk_capacidad_periodicidad` de `public.proveedor_capacidades`.
+// TEXT + CHECK en la base (nunca un enum nuevo): añadir una periodicidad es drop/add
+// constraint allá y una línea aquí.
+//
+// Las tres formas del compromiso que hay que distinguir a simple vista:
+//   · «una sola vez» (`unica`)  → la cantidad NO se renueva: es un pozo que se agota.
+//   · «por un tiempo limitado»  → recurrente CON `vigencia_hasta`.
+//   · «cada semana / mes / …»   → recurrente sin fecha de fin.
+export const ETIQUETA_PERIODICIDAD: Record<string, string> = {
+  unica: 'Una sola vez',
+  semanal: 'Cada semana',
+  quincenal: 'Cada quincena',
+  mensual: 'Cada mes',
+  trimestral: 'Cada trimestre',
+};
+export const PERIODICIDADES = Object.keys(ETIQUETA_PERIODICIDAD);
+/** Sufijo corto para leer la cantidad de corrido: «50 raciones por semana». */
+export const SUFIJO_PERIODICIDAD: Record<string, string> = {
+  unica: 'en total',
+  semanal: 'por semana',
+  quincenal: 'por quincena',
+  mensual: 'por mes',
+  trimestral: 'por trimestre',
+};
+/** Qué significa cada opción (bajo el selector, para que Alianzas elija bien). */
+export const EXPLICA_PERIODICIDAD: Record<string, string> = {
+  unica: 'Se entrega una vez y se acaba. La cantidad es un total que se va agotando y no vuelve a llenarse.',
+  semanal: 'La cantidad vuelve a estar disponible cada semana, contando desde la fecha de inicio del acuerdo.',
+  quincenal: 'La cantidad vuelve a estar disponible cada 14 días, contando desde la fecha de inicio del acuerdo.',
+  mensual: 'La cantidad vuelve a estar disponible cada mes, contando desde la fecha de inicio del acuerdo.',
+  trimestral: 'La cantidad vuelve a estar disponible cada tres meses, contando desde la fecha de inicio del acuerdo.',
+};
+
+/** Espejo del `estado_vigencia` que devuelve `public.capacidades_de_proveedor()` (0224). */
+export const ETIQUETA_VIGENCIA_CAPACIDAD: Record<string, string> = {
+  vigente: 'Vigente',
+  pendiente: 'Aún no empieza',
+  caducada: 'Caducada',
+  retirada: 'Retirada',
+  proveedor_inactivo: 'Proveedor dado de baja',
+};
+export function claseVigenciaCapacidad(e?: string | null): string {
+  if (e === 'vigente') return 'ok';
+  if (e === 'pendiente') return 'info';
+  if (e === 'caducada') return 'critica';
+  return '';   // 'retirada' y 'proveedor_inactivo': neutro (son decisiones nuestras)
+}
+
 // ── Oportunidades de donación (la OFERTA, 0141) ──
 // Un lead con pipeline de contacto: empresa/proyecto/persona que ofrece ayudar.
 export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {

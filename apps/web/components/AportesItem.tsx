@@ -35,6 +35,19 @@ export function pctTerceros(cubiertoTercero: number, pedido: number): number {
 }
 
 /**
+ * Una capacidad COMPROMETIDA por un aliado que hoy tiene margen (0224). Registrar el
+ * aporte contra ella es lo que hace que «cuánto le queda» sea un dato real y no una
+ * estimación: se descuenta de la ventana en curso de ese compromiso.
+ */
+export type OpcionCapacidad = {
+  id: string;
+  proveedor?: string | null;
+  descripcion: string;
+  restante?: number | string | null;
+  unidad?: string | null;
+};
+
+/**
  * CUMPLIMIENTO de un ítem del desglose (0221): cuánto se cubrió de cuánto, quién aportó
  * y cuánto puso cada uno, y —lo que se pidió de forma explícita— si lo cubrió UN TERCERO.
  *
@@ -54,6 +67,7 @@ export function pctTerceros(cubiertoTercero: number, pedido: number): number {
  */
 export default function AportesItem({
   item, aportes = [], verFull = false, alAportar, alTercero, alQuitar, volver = '', soloLectura = false,
+  capacidades = [],
 }: {
   item: { id: string; descripcion?: string | null; cantidad?: number | string | null; unidad?: string | null; estado?: string | null };
   aportes?: AporteItem[];
@@ -63,6 +77,8 @@ export default function AportesItem({
   alQuitar?: (formData: FormData) => void | Promise<void>;
   volver?: string;
   soloLectura?: boolean;
+  /** Capacidad comprometida DISPONIBLE hoy (0224). Vacío = el selector ni se pinta. */
+  capacidades?: OpcionCapacidad[];
 }) {
   const c = cumplimientoItem(item, aportes);
   const puedeEscribir = !soloLectura && (alAportar || alTercero);
@@ -141,6 +157,27 @@ export default function AportesItem({
                   </select>
                 </div>
               </div>
+              {/* Consumir capacidad COMPROMETIDA (0224). Al elegir un aliado, el aporte
+                  se registra a su nombre y se descuenta de su ventana en curso, que es lo
+                  que mantiene honesto el «cuánto le queda» del directorio de proveedores.
+                  Si no hay ningún compromiso con margen hoy, el selector no se pinta. */}
+              {capacidades.length > 0 && (
+                <div className="campo">
+                  <label htmlFor={item.id + '-apk'}>¿Sale de un aliado con capacidad comprometida?</label>
+                  <select id={item.id + '-apk'} name="capacidad_id" className="input" defaultValue="">
+                    <option value="">No — registrar el aporte sin descontar capacidad</option>
+                    {capacidades.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {(k.proveedor ?? '—') + ' · ' + k.descripcion +
+                          ' (quedan ' + cantidadItem(k.restante) + (k.unidad ? ' ' + k.unidad : '') + ')'}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="muted" style={{ fontSize: '.76rem' }}>
+                    Al elegirlo, el aporte queda a nombre de ese aliado y se descuenta de lo que se comprometió a dar en este periodo.
+                  </span>
+                </div>
+              )}
               <div className="campo">
                 <label htmlFor={item.id + '-apq'}>Quién lo puso (si es de fuera)</label>
                 <input id={item.id + '-apq'} name="tercero" className="input" maxLength={160}

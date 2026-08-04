@@ -110,10 +110,13 @@ export default async function SeguimientoPage({ searchParams }: { searchParams: 
                     : <Pill tono="aviso" punto={false}>En verificación</Pill>}
                   {/* #4c: al publicar, el recorrido lo refleja (la difusión ya terminó su parte). */}
                   {c.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
-                  {/* 0211: solicitud creada por Logística con lo que no pudo cubrir. */}
+                  {/* Solicitud creada por Logística: CON caso padre es lo que no pudo cubrir
+                      de otra (0211); SIN padre, la levantó el área por su cuenta (0223). */}
                   {c.origen_area === 'logistica' && (
                     <Pill tono="info" punto={false}>
-                      🚚 Cobertura parcial{c.caso_padre_numero ? ' de #' + String(c.caso_padre_numero).padStart(5, '0') : ''}
+                      {c.caso_padre_numero
+                        ? '🚚 Cobertura parcial de #' + String(c.caso_padre_numero).padStart(5, '0')
+                        : '🚚 Solicitud de Logística'}
                     </Pill>
                   )}
                   {c.es_requerimiento && c.req_tipo && <Pill tono="info" punto={false}>{ETIQUETA_TIPO_INSUMO[c.req_tipo as keyof typeof ETIQUETA_TIPO_INSUMO] ?? c.req_tipo}</Pill>}

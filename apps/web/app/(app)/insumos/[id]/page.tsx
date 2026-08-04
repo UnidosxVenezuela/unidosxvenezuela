@@ -110,6 +110,15 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     const { data: ap } = await supabase.rpc('aportes_de_caso', { p_caso: s.caso_id });
     aportes = (ap as any[]) ?? [];
   }
+  // Capacidad COMPROMETIDA por los aliados que hoy tiene margen (0224): es lo que permite
+  // registrar el aporte «a cuenta» de un aliado y descontarlo de su ventana en curso, en
+  // vez de anotar un proveedor suelto que no descuenta nada. Best-effort: sin la migración
+  // el selector no se pinta y el formulario de aportes queda exactamente como antes.
+  let capacidades: any[] = [];
+  {
+    const { data: cp, error: eCp } = await supabase.rpc('capacidades_de_proveedor', { p_proveedor: null, p_solo_vigentes: true });
+    if (!eCp) capacidades = ((cp as any[]) ?? []).filter((c) => Number(c.restante ?? 0) > 0);
+  }
   // Regla de cierre (0221): «entregado» solo con el desglose cubierto, o forzado a
   // sabiendas como entrega parcial. Se calcula aquí para pintar el botón que toca.
   const rItems = resumenItems(items);
@@ -221,6 +230,7 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             alAportar={gestor ? registrarAporteItem : undefined}
             alTercero={gestor ? marcarItemPorTercero : undefined}
             alQuitarAporte={gestor ? quitarAporteItem : undefined}
+            capacidades={gestor ? capacidades : []}
             volver={'/insumos/' + id}
           />
 

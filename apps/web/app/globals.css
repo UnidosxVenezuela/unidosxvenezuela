@@ -879,6 +879,21 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 .cob-item .cob-txt { font-size: .78rem; color: var(--texto2); white-space: nowrap; font-weight: 600; }
 .cob-item .cob-txt.falta { color: var(--critica); }
 
+/* CAPACIDAD RESTANTE de un proveedor (0224). El número grande es el dato por el que
+   existe la pantalla: Logística no necesita un porcentaje, necesita «quedan 20 raciones
+   esta semana». Por eso el restante manda y la barra —que muestra lo YA CONSUMIDO de la
+   ventana en curso— queda debajo, fina y secundaria.
+   Un compromiso fuera de vigencia (caducado, aún no empezado, retirado) se pinta apagado
+   y con el MOTIVO: «se agotó» y «se acabó el trato» no piden lo mismo. */
+.cap-hero { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.cap-hero .cap-num { font-size: 1.7rem; font-weight: 800; line-height: 1; color: var(--ok); letter-spacing: -.02em; }
+.cap-hero .cap-txt { font-size: .85rem; color: var(--texto2); font-weight: 600; }
+.cap-hero.cap-hero-cero .cap-num { color: var(--critica); }
+.cap-hero.cap-hero-off .cap-num { color: var(--texto2); opacity: .6; }
+.cap-hero.cap-hero-off .cap-txt { font-weight: 500; }
+.cobertura-fill.capacidad { background: linear-gradient(90deg, var(--t-teal-fg), var(--amarillo)); }
+.cap-tarjeta.cap-off { opacity: .68; }
+
 /* Barra de progreso hacia la próxima insignia (vitrina de Insignias). */
 .medalla-prog { width: 100%; }
 .medalla-prog-barra { height: 6px; border-radius: 999px; background: var(--sup3); overflow: hidden; }

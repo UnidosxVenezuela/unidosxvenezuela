@@ -47,6 +47,10 @@ export default async function AlianzasPage() {
   const SUBS = [
     { href: '/captacion', icono: 'enlace', titulo: 'Empresas y aliados', texto: 'Registro de empresas y aliados (el «Captado»), con la Ficha de Prospección y la 2ª verificación.' },
     { href: '/afiliacion', icono: 'usuario', titulo: 'Afiliación', texto: 'Profesionales y voluntarios clasificados por cargo, en tablero.' },
+    // Capacidad ofertada por los aliados concretados (0224): la mitad del acuerdo que
+    // faltaba —qué puede cubrir cada uno, cuánto y cada cuánto— y que Logística lee como
+    // capacidad de respuesta disponible.
+    { href: '/alianzas/proveedores', icono: 'caja', titulo: 'Aliados y su capacidad', texto: 'Con qué puede colaborar cada aliado concretado: cuánto, cada cuánto y hasta cuándo. Logística ve en todo momento lo que le queda.' },
     // Correo institucional (0217): plantillas aprobadas + registro de lo que se escribió.
     { href: '/alianzas/correo', icono: 'documento', titulo: 'Correo institucional', texto: 'Escribe con las plantillas del departamento; cada envío queda registrado con su folio y su resultado.' },
     { href: '/reportes/alianzas', icono: 'documento', titulo: 'Reportería', texto: 'Respaldo descargable para presentar a las empresas (CSV / PDF).' },
