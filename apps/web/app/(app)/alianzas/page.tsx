@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeAlianzas } from '@/lib/auth';
+import { requireUsuario, puedeAlianzas, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -20,7 +20,12 @@ export const dynamic = 'force-dynamic';
  *  al departamento para que busque una empresa/aliado o un voluntario profesional. */
 export default async function AlianzasPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeAlianzas(perfil)) redirect('/dashboard');
+  // Consulta cruzada (0226): Logística entra en SOLO LECTURA. La RLS ya lo respalda
+  // —la vista curada `alianzas_panel` le deja ver el registro sin los datos de contacto
+  // personales de la Ficha— así que aquí solo se decide qué se le pinta.
+  const esAli = puedeAlianzas(perfil);
+  const soloLectura = !esAli && puedeLogistica(perfil);
+  if (!esAli && !soloLectura) redirect('/dashboard');
   const supabase = await createClient();
 
   // Conteos del departamento (best-effort: si falta alguna migración, quedan en 0).
@@ -54,7 +59,11 @@ export default async function AlianzasPage() {
     // Correo institucional (0217): plantillas aprobadas + registro de lo que se escribió.
     { href: '/alianzas/correo', icono: 'documento', titulo: 'Correo institucional', texto: 'Escribe con las plantillas del departamento; cada envío queda registrado con su folio y su resultado.' },
     { href: '/reportes/alianzas', icono: 'documento', titulo: 'Reportería', texto: 'Respaldo descargable para presentar a las empresas (CSV / PDF).' },
-  ];
+  ].filter((s) =>
+    // En consulta cruzada solo se ofrece lo que Logística puede abrir de verdad
+    // (0226). Enseñar un enlace que rebota al panel es peor que no enseñarlo.
+    !soloLectura || s.href === '/alianzas/proveedores' || s.href === '/reportes/alianzas'
+  );
 
   return (
     <AnimarEntrada>
@@ -68,6 +77,14 @@ export default async function AlianzasPage() {
           <p className="muted sub">Empresas y aliados · Captación de recursos · Afiliación — consecución de aliados y voluntariado profesional.</p>
         </div>
       </div>
+
+      {soloLectura && (
+        <div className="aviso" style={{ marginBottom: 12 }}>
+          <Icono nombre="ojo" size={15} /> Estás de visita en el panel de Alianzas Estratégicas: <strong>solo lectura</strong>.
+          Puedes consultar con qué aliados se cuenta y su reportería, pero la gestión del registro es del departamento.
+          Los datos de contacto personales de la Ficha de Prospección no se muestran fuera del área.
+        </div>
+      )}
 
       {/* Conteos del departamento */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', margin: '16px 0' }}>

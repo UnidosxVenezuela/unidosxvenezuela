@@ -38,6 +38,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.acopio) {
     d.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
+    // Reportería del área (0227): cobertura real, plazos y quién sostiene la respuesta.
+    d.push({ href: '/reportes/logistica', etiqueta: 'Reportería Logística', icono: 'tareas' });
   }
   if (!flags.acopio && (flags.gestionCasos || flags.verificacion)) {
     d.push({ href: '/insumos/oportunidades', etiqueta: 'Donación-Ofrecimiento', icono: 'caja' });
@@ -56,8 +58,20 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.alianzas) d.push({ href: '/alianzas/proveedores', etiqueta: 'Aliados y capacidad', icono: 'caja', grupo: 'Alianzas Estratégicas' });
   // Correo institucional con plantillas y registro de envíos (0217).
   if (flags.alianzas) d.push({ href: '/alianzas/correo', etiqueta: 'Correo institucional', icono: 'documento', grupo: 'Alianzas Estratégicas' });
-  // Reportería del departamento (0200): respaldo descargable para presentar a empresas.
+  // Reportería del departamento (0200/0228): respaldo descargable para presentar a empresas.
   if (flags.alianzas) d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas', grupo: 'Alianzas Estratégicas' });
+  // Consulta cruzada (0226). Cada área ve el panel de la otra en SOLO LECTURA: Alianzas
+  // necesita saber en qué se está usando lo que consigue, y Logística con qué aliados
+  // puede contar. Solo se ofrece a quien NO es ya del área de destino, para no duplicar
+  // el mismo enlace en el menú de quien ya lo tiene arriba.
+  if (flags.alianzas && !flags.acopio) {
+    d.push({ href: '/insumos', etiqueta: 'Logística (consulta)', icono: 'camion', grupo: 'Alianzas Estratégicas' });
+    d.push({ href: '/reportes/logistica', etiqueta: 'Reportería Logística', icono: 'tareas', grupo: 'Alianzas Estratégicas' });
+  }
+  if (flags.acopio && !flags.alianzas) {
+    d.push({ href: '/alianzas', etiqueta: 'Alianzas (consulta)', icono: 'enlace' });
+    d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas' });
+  }
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   d.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });

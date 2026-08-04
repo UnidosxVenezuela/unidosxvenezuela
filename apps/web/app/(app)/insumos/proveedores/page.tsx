@@ -21,12 +21,21 @@ export default async function ProveedoresPage() {
   // La capacidad viene ya calculada de la base (0224): ventana en curso, consumo y
   // RESTANTE. Best-effort — sin la migración aplicada, la página degrada al directorio
   // de siempre (mismo patrón que /insumos/[id]).
-  const [provRes, capRes] = await Promise.all([
+  const [provRes, capRes, rankRes] = await Promise.all([
     supabase.from('proveedores').select('id, nombre, tipo, contacto, notas, activo, oportunidad_id').order('nombre'),
     supabase.rpc('capacidades_de_proveedor', { p_proveedor: null, p_solo_vigentes: false }),
+    // Cuánto ha aportado de verdad cada uno (0225): lo que convierte el directorio en
+    // un criterio para decidir a quién pedir. Excluye lo cubierto por terceros.
+    supabase.rpc('ranking_proveedores', { p_limite: 100 }),
   ]);
   const proveedores = (provRes.data ?? []) as any[];
   const caps = (capRes.error ? [] : (capRes.data ?? [])) as Capacidad[];
+  const aportadoPor = new Map<string, { total: number; n_aportes: number; ultima: string | null }>();
+  for (const r of (rankRes.error ? [] : (rankRes.data ?? [])) as any[]) {
+    aportadoPor.set(String(r.proveedor_id), {
+      total: Number(r.total ?? 0), n_aportes: Number(r.n_aportes ?? 0), ultima: r.ultima ?? null,
+    });
+  }
 
   const porProveedor = new Map<string, Capacidad[]>();
   for (const c of caps) {
@@ -99,6 +108,7 @@ export default async function ProveedoresPage() {
           {proveedores.map((p) => {
             const suyas = porProveedor.get(p.id) ?? [];
             const disponibles = suyas.filter((c) => c.vigente && Number(c.restante ?? 0) > 0);
+            const hist = aportadoPor.get(String(p.id));
             return (
               <div key={p.id} className="tarjeta" style={{ opacity: p.activo === false ? .65 : 1 }}>
                 <div className="fila" style={{ justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
@@ -111,6 +121,19 @@ export default async function ProveedoresPage() {
                 </div>
                 {p.contacto && <div className="muted fila" style={{ gap: 4, marginTop: 4 }}><Icono nombre="whatsapp" size={14} /> {p.contacto}</div>}
                 {p.notas && <p className="muted" style={{ margin: '6px 0 0', fontSize: '.85rem' }}>{p.notas}</p>}
+
+                {/* CUÁNTO HA APORTADO DE VERDAD (0225): el otro lado del criterio. La
+                    capacidad dice con qué se puede contar; esto, con quién se ha podido. */}
+                {hist && (
+                  <div className="fila" style={{ gap: 6, marginTop: 8, fontSize: '.82rem', flexWrap: 'wrap' }}>
+                    <Icono nombre="ok" size={14} />
+                    <span>
+                      Ha aportado <strong>{hist.total % 1 === 0 ? hist.total.toLocaleString('es-VE') : hist.total.toFixed(1)}</strong>
+                      {' '}en {hist.n_aportes} entrega(s)
+                    </span>
+                    <Link href={'/alianzas/proveedores/' + p.id} className="muted" style={{ textDecoration: 'underline' }}>ver historial</Link>
+                  </div>
+                )}
 
                 {/* LA CAPACIDAD RESTANTE: el dato por el que Logística entra aquí. */}
                 {suyas.length > 0 ? (

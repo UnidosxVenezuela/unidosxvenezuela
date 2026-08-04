@@ -13,6 +13,7 @@ import BotonConfirmar from '@/components/BotonConfirmar';
 import EstadoVacio from '@/components/EstadoVacio';
 import Pill from '@/components/Pill';
 import TarjetaCapacidad, { conUnidad, type Capacidad } from '@/components/CapacidadProveedor';
+import HistorialProveedor, { type HistorialProveedorData } from '@/components/HistorialProveedor';
 import { guardarCapacidad, retirarCapacidad, guardarProveedorAliado, cambiarActivoProveedor } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -31,16 +32,20 @@ export default async function FichaAliadoPage({ params }: { params: { id: string
   const supabase = await createClient();
   const id = params.id;
 
-  const [provRes, capRes] = await Promise.all([
+  const [provRes, capRes, histRes] = await Promise.all([
     supabase.from('proveedores')
       .select('id, nombre, tipo, contacto, notas, activo, oportunidad_id, creado_en')
       .eq('id', id).maybeSingle(),
     supabase.rpc('capacidades_de_proveedor', { p_proveedor: id, p_solo_vigentes: false }),
+    // Historial de lo realmente aportado (0225). Best-effort: si falta la migración,
+    // la ficha sigue funcionando sin el bloque.
+    supabase.rpc('historial_proveedor', { p_proveedor: id }),
   ]);
   const prov = provRes.data as any;
   if (!prov) redirect('/alianzas/proveedores');
   const caps = (capRes.error ? [] : (capRes.data ?? [])) as Capacidad[];
   const sinMigracion = !!capRes.error;
+  const historial = (histRes.error ? null : histRes.data) as HistorialProveedorData | null;
 
   const activas = caps.filter((c) => c.activa !== false);
   const retiradas = caps.filter((c) => c.activa === false);
@@ -196,6 +201,9 @@ export default async function FichaAliadoPage({ params }: { params: { id: string
           </div>
         </details>
       )}
+
+      {/* ── Historial de lo realmente aportado (0225) ── */}
+      {historial && <HistorialProveedor d={historial} />}
 
       {/* ── Datos del aliado ── */}
       <details className="tarjeta" style={{ marginTop: 12 }}>
