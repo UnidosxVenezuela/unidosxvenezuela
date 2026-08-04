@@ -92,5 +92,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   // Destinos útiles que no están en el menú lateral pero sí son navegables para todos.
   d.push({ href: '/perfil', etiqueta: 'Mi perfil', icono: 'ojo' });
   d.push({ href: '/insignias', etiqueta: 'Mis insignias', icono: 'ok' });
+  // Panel de animaciones (celebraciones): la galería de lo que aparece al cerrar un
+  // hito, con su interruptor personal. NO es de un área — es de toda la organización,
+  // así que va sin bandera, para todo el mundo.
+  d.push({ href: '/celebraciones', etiqueta: 'Animaciones', icono: 'sol' });
   return d;
 }

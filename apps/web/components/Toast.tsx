@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { animate } from 'animejs';
 import { exito, error as sonidoError } from '@/lib/sonido';
 import { sinMovimiento } from '@/lib/anime';
+import { PARAM_CELEBRACION } from '@/lib/celebraciones';
 import Icono from './Icono';
 import CheckDibujado from './CheckDibujado';
 
@@ -29,8 +30,12 @@ export default function Toast() {
     if (!ok && !err) return;
     cerrando.current = false;
     setAviso({ texto: (ok || err)!, tipo: ok ? 'ok' : 'err' });
+    // `celebrar` se borra AQUÍ a propósito: es el mismo viaje de vuelta y así
+    // hay UN SOLO escritor de la URL. Si lo limpiara también <CelebracionProveedor/>,
+    // este `replace` (que lleva su propia foto de los parámetros) lo revivirá y la
+    // celebración saldría dos veces. Ver la cabecera de CelebracionProveedor.tsx.
     const sp = new URLSearchParams(Array.from(params.entries()));
-    sp.delete('ok'); sp.delete('err');
+    sp.delete('ok'); sp.delete('err'); sp.delete(PARAM_CELEBRACION);
     router.replace(pathname + (sp.toString() ? '?' + sp.toString() : ''), { scroll: false });
   }, [params, pathname, router]);
 

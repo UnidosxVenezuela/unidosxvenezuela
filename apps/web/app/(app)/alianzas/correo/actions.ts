@@ -116,7 +116,7 @@ export async function enviarCorreoInstitucional(formData: FormData) {
   if (eMarcar) console.error('[correo] no se pudo cerrar el envío %s: %s', id, eMarcar.message);
 
   revalidatePath(RUTA);
-  if (estado === 'enviado') return redirigirOk(RUTA + '/' + id, 'Correo enviado y registrado.');
+  if (estado === 'enviado') return redirigirOk(RUTA + '/' + id, 'Correo enviado y registrado.', 'correo_enviado');
   if (estado === 'no_configurado') {
     return redirigirError(RUTA + '/' + id, 'El correo quedó REGISTRADO, pero no se envió: falta configurar RESEND_API_KEY.');
   }

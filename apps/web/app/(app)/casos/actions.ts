@@ -6,7 +6,8 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado } from '@/lib/constantes';
+import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import type { EventoCelebracion } from '@/lib/celebraciones';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -309,7 +310,7 @@ export async function crearCaso(formData: FormData) {
   }
 
   revalidatePath('/casos');
-  redirigirOk('/casos?caso=' + casoId, 'Solicitud creada');
+  redirigirOk('/casos?caso=' + casoId, 'Solicitud creada', 'solicitud_creada');
 }
 
 // Derivar un caso-requerimiento confirmado a Logística (Propuesta Fase 2): crea la
@@ -326,16 +327,35 @@ export async function derivarCasoLogistica(formData: FormData) {
   redirigirOk(volver, 'Solicitud derivada a Logística. La solicitud de insumo ya está en el tablero para coordinar la entrega.');
 }
 
+/**
+ * Qué estados de una solicitud MERECEN celebración. Solo los que cierran bien:
+ *   · `confirmado` → la solicitud quedó validada (es el botón «Confirmar solicitud»,
+ *     que además está candado detrás del semáforo completo en verde).
+ *   · `resuelto`   → la necesidad quedó cubierta. No hay evento propio para «caso
+ *     resuelto», así que va como `generico`: se celebra a la persona, no el trámite.
+ * Los demás (`falso`, `desestimado`, `pendiente`, `en_proceso`) son correcciones o
+ * pasos intermedios: ahí una animación alegre sería de mal gusto.
+ */
+const CELEBRA_ESTADO_CASO: Partial<Record<EstadoCaso, EventoCelebracion>> = {
+  confirmado: 'solicitud_verificada',
+  resuelto: 'generico',
+};
+
 export async function cambiarEstadoCaso(formData: FormData) {
   const { supabase } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
   const estado = txt(formData.get('estado')) as EstadoCaso;
   if (estado === 'enviado_redaccion') throw new Error('El paso a Redacción lo hace el equipo de Envío a Redacción.');
+  // El estado ANTERIOR solo se usa para no celebrar un no-cambio: el desplegable
+  // «avanzado» permite volver a guardar el estado que ya tenía, y eso no es un hito.
+  const { data: previo } = await supabase.from('casos').select('estado').eq('id', id).maybeSingle();
+  const estadoPrevio = (previo as { estado?: string } | null)?.estado ?? null;
   const { error } = await supabase.from('casos')
     .update({ estado, info_requerida: null, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
+  redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado',
+    estadoPrevio !== estado ? CELEBRA_ESTADO_CASO[estado] : undefined);
 }
 
 // Descartar un caso (marcarlo falso) EXIGIENDO un motivo, que queda anexado a las notas
@@ -394,6 +414,40 @@ export async function tomarCaso(formData: FormData) {
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Solicitud tomada');
 }
 
+/**
+ * ¿Esta marca acaba de dejar el semáforo ENTERO en verde? Solo entonces se celebra.
+ *
+ * Marcar un campo suelto es trámite: una solicitud tiene 5 o 7 campos y celebrar
+ * cada marca devaluaría la celebración (y sería un estorbo para quien verifica en
+ * cadena). El hito es el semáforo COMPLETO, que es además lo que abre el botón
+ * «Confirmar solicitud» (el candado de `DetalleCaso`).
+ *
+ * Se relee el estado real de la base DESPUÉS de la RPC —nunca se deduce del
+ * formulario— y es conservador por diseño: si no se puede saber si la solicitud
+ * lleva los campos extra de requerimiento, NO se celebra. Antes callar que
+ * celebrar un semáforo a medias.
+ */
+async function semaforoRecienCompleto(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  caso: string,
+  yaEstabaVerde: boolean,
+): Promise<EventoCelebracion | undefined> {
+  // Si ese campo ya estaba en verde, esta marca no completó nada (o repitió lo mismo).
+  if (yaEstabaVerde) return undefined;
+  const { data: fila } = await supabase.from('casos').select('es_requerimiento').eq('id', caso).maybeSingle();
+  if (!fila) return undefined; // sin saber la lista de campos, no se celebra
+  const campos = [
+    ...CAMPOS_VERIFICACION_BASE,
+    ...((fila as { es_requerimiento?: boolean | null }).es_requerimiento ? CAMPOS_VERIFICACION_REQ : []),
+  ];
+  const { data: marcas } = await supabase.from('casos_verificacion_campo')
+    .select('campo, estado').eq('caso_id', caso);
+  if (!marcas) return undefined;
+  const porCampo = new Map(((marcas ?? []) as { campo: string; estado: string }[]).map((m) => [m.campo, m.estado]));
+  const completo = campos.every((c) => porCampo.get(c.key) === 'verificado');
+  return completo ? 'solicitud_verificada' : undefined;
+}
+
 // Verificación por campo (0172): marca un dato de la solicitud con su semáforo
 // (sin_revisar / verificado / requiere_info / falso). La RPC reaplica la frontera
 // por categoría (Verificación↔Otras, Búsqueda↔Desaparecidos) y audita el cambio.
@@ -404,12 +458,22 @@ export async function marcarCampoVerificacion(formData: FormData) {
   const estado = txt(formData.get('estado'));
   const nota = opt(formData.get('nota'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  // Foto previa de ESTE campo: hace falta para distinguir «acabo de completar el
+  // semáforo» de «reguardé un campo que ya estaba verde» (que no es un hito).
+  const { data: antes } = estado === 'verificado'
+    ? await supabase.from('casos_verificacion_campo').select('estado').eq('caso_id', caso).eq('campo', campo).maybeSingle()
+    : { data: null };
   const { error } = await supabase.rpc('marcar_campo_verificacion', {
     p_caso: caso, p_campo: campo, p_estado: estado, p_nota: nota,
   });
   if (error) return redirigirError(volver, 'No se pudo marcar el campo: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(volver, 'Verificación del campo actualizada');
+  // Se celebra el semáforo COMPLETO, no cada campo. Y solo al ponerlo en verde:
+  // marcar 🟡/🔴 es trabajo igual de valioso, pero no es un cierre que festejar.
+  const celebrar = estado === 'verificado'
+    ? await semaforoRecienCompleto(supabase, caso, (antes as { estado?: string } | null)?.estado === 'verificado')
+    : undefined;
+  redirigirOk(volver, 'Verificación del campo actualizada', celebrar);
 }
 
 // ── Desglose por ÍTEM de la solicitud (0218) ──
@@ -654,7 +718,7 @@ export async function marcarCasoPublicado(formData: FormData) {
   }
   if (error) return redirigirError(volver, 'No se pudo marcar como publicada: ' + error.message);
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk(volver, 'Solicitud marcada como publicada');
+  redirigirOk(volver, 'Solicitud marcada como publicada', 'caso_publicado');
 }
 
 // Tipo de difusión (0189): Redacción marca si el caso se REDISEÑA y publica
@@ -688,13 +752,19 @@ export async function registrarPublicacionCanal(formData: FormData) {
   const url = opt(formData.get('url'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
   if (!CANALES_DIFUSION.includes(canal)) return redirigirError(volver, 'Canal no válido.');
+  // La pantalla nos dice si la solicitud NO tenía todavía ningún canal publicado: ese
+  // primer canal es el que la RPC marca como «publicada» de verdad (0190 sincroniza el
+  // estado global al primero). Los siguientes son alcance extra del mismo hito, y
+  // celebrar cada red convertiría la celebración en ruido.
+  const primera = txt(formData.get('primera_publicacion')) === '1';
   const { error } = await supabase.rpc('registrar_publicacion_canal', { p_caso: id, p_canal: canal, p_url: url });
   if (error) {
     if (rpcNoExiste(error)) return redirigirError(volver, 'El registro por canal aún no está disponible (falta aplicar la migración 0190).');
     return redirigirError(volver, 'No se pudo registrar la publicación: ' + error.message);
   }
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk(volver, 'Publicación registrada en ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal));
+  redirigirOk(volver, 'Publicación registrada en ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal),
+    primera ? 'caso_publicado' : undefined);
 }
 
 // Quita la publicación de un canal (0190) y reconcilia el estado global (si era el

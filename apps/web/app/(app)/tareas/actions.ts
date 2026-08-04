@@ -107,7 +107,9 @@ export async function cambiarEstado(formData: FormData) {
   if (error) throw new Error('No se pudo cambiar el estado: ' + error.message);
   revalidatePath('/tareas/' + id);
   revalidatePath('/tareas');
-  redirigirOk(opt(formData.get('volver')) || ('/tareas/' + id), 'Estado actualizado');
+  // Solo se celebra el CIERRE de la tarea, no cualquier cambio de estado.
+  redirigirOk(opt(formData.get('volver')) || ('/tareas/' + id), 'Estado actualizado',
+    estado === 'completada' ? 'tarea_completada' : undefined);
 }
 
 export async function actualizarAsignacion(formData: FormData) {

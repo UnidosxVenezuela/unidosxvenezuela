@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { validarArchivo } from '@/lib/validaciones';
+import type { EventoCelebracion } from '@/lib/celebraciones';
 
 async function usuario() {
   const supabase = await createClient();
@@ -156,9 +157,12 @@ export async function cambiarEstadoSolicitud(formData: FormData) {
       }
     }
     revalidatePath('/insumos'); revalidatePath('/insumos/' + id); revalidatePath('/casos'); revalidatePath('/seguimiento');
+    // Se celebra SOLO la entrega completa: una parcial deja trabajo pendiente y
+    // celebrarla sonaría a burla de quien todavía está esperando lo que falta.
     return redirigirOk('/insumos/' + id, forzar
       ? 'Entrega registrada como PARCIAL: quedó constancia de lo que faltaba y la solicitud sigue en el flujo para difundir el resto.'
-      : 'Solicitud entregada.');
+      : 'Solicitud entregada.',
+      forzar ? undefined : 'entrega_completada');
   }
 
   const { error } = await supabase.from('solicitudes_insumo')
@@ -622,7 +626,8 @@ export async function avanzarItem(formData: FormData) {
   revalidatePath('/insumos'); revalidatePath('/casos');
   revalidatePath('/envio-redaccion'); revalidatePath('/seguimiento');
   revalidatePath(volver);
-  redirigirOk(volver, 'Ítem actualizado.');
+  // Solo se celebra el ítem CUMPLIDO; los demás avances son trámite.
+  redirigirOk(volver, 'Ítem actualizado.', estado === 'cumplido' ? 'item_cumplido' : undefined);
 }
 
 // ── Cumplimiento por ítem (0221) ──
@@ -637,6 +642,31 @@ function revalidarCobertura(volver: string) {
 function faltaMigracion0221(error: { message?: string }): boolean {
   const m = (error.message || '').toLowerCase();
   return /could not find the function|function .* does not exist|no existe la funci|casos_item_aportes/.test(m);
+}
+
+/** Estado actual de un ítem del desglose (best-effort: null si no se puede leer). */
+async function estadoItem(supabase: Awaited<ReturnType<typeof createClient>>, item: string): Promise<string | null> {
+  const { data } = await supabase.from('casos_items').select('estado').eq('id', item).maybeSingle();
+  return (data as { estado?: string } | null)?.estado ?? null;
+}
+
+/**
+ * Qué se celebra tras registrar un aporte.
+ *
+ * El ítem NO se cierra desde aquí: lo cierra el trigger de recálculo de 0221 cuando
+ * la suma de aportes alcanza la cantidad pedida. Por eso el estado se RELEE de la base
+ * después de la RPC —nunca se adivina— y solo si el ítem pasó a `cumplido` en ESTE
+ * aporte sube de categoría a «ítem cubierto». Si ya estaba cumplido (una corrección al
+ * alza sobre algo cubierto) o sigue a medias, se queda en «aporte registrado», que
+ * también es un hito real y tiene sus propias animaciones.
+ */
+async function celebracionDeAporte(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  item: string,
+  estabaCumplido: boolean,
+): Promise<EventoCelebracion> {
+  if (estabaCumplido) return 'aporte_registrado';
+  return (await estadoItem(supabase, item)) === 'cumplido' ? 'item_cumplido' : 'aporte_registrado';
 }
 
 export async function registrarAporteItem(formData: FormData) {
@@ -654,6 +684,9 @@ export async function registrarAporteItem(formData: FormData) {
   if (origen === 'tercero' && !tercero) {
     return redirigirError(volver, 'Indica qué organización o persona lo cubrió.');
   }
+  // Foto previa del ítem: distingue «este aporte lo cubrió al 100 %» (hito grande) de
+  // «se corrigió al alza algo que ya estaba cubierto» (no lo es).
+  const estabaCumplido = (await estadoItem(supabase, item)) === 'cumplido';
 
   // (0224) Si el aporte sale de una CAPACIDAD COMPROMETIDA por un aliado, va por su RPC:
   // registra el aporte a nombre de ese proveedor Y deja el `capacidad_id`, que es lo que
@@ -676,7 +709,8 @@ export async function registrarAporteItem(formData: FormData) {
     revalidarCobertura(volver);
     revalidatePath('/insumos/proveedores');
     revalidatePath('/alianzas/proveedores');
-    return redirigirOk(volver, 'Aporte registrado y descontado de la capacidad comprometida del aliado.');
+    return redirigirOk(volver, 'Aporte registrado y descontado de la capacidad comprometida del aliado.',
+      await celebracionDeAporte(supabase, item, estabaCumplido));
   }
 
   const { error } = await supabase.rpc('registrar_aporte_item', {
@@ -691,7 +725,7 @@ export async function registrarAporteItem(formData: FormData) {
     return redirigirError(volver, 'No se pudo registrar el aporte: ' + error.message);
   }
   revalidarCobertura(volver);
-  redirigirOk(volver, 'Aporte registrado.');
+  redirigirOk(volver, 'Aporte registrado.', await celebracionDeAporte(supabase, item, estabaCumplido));
 }
 
 // P9 — «esto ya lo cubrió otra ONG o una persona ajena»: se da por cubierto, deja de

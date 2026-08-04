@@ -6,6 +6,7 @@ import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
 import Toast from '@/components/Toast';
 import ClaveTemporalModal from '@/components/ClaveTemporalModal';
+import CelebracionProveedor from '@/components/CelebracionProveedor';
 import Icono from '@/components/Icono';
 import { Suspense } from 'react';
 
@@ -40,6 +41,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <Suspense fallback={null}><Toast /></Suspense>
       <Suspense fallback={null}><ClaveTemporalModal /></Suspense>
+      {/* Celebración tras un hito (`?celebrar=`). Va DESPUÉS del <Toast/>: el
+          toast dice el hecho y limpia la URL; esto pone el reconocimiento. */}
+      <Suspense fallback={null}><CelebracionProveedor /></Suspense>
       <RegistrarActividad />
       <Shell
         usuario={{
