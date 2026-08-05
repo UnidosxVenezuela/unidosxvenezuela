@@ -1,0 +1,94 @@
+🇻🇪 *NOTAS DEL PARCHE — 5 ago 2026*
+_Apoyo por Venezuela_
+
+El parche más grande hasta ahora. Dos cambios de fondo: *Alianzas Estratégicas pasa a ser un solo equipo* con su correo institucional, y las solicitudes dejan de ser un texto suelto para tener *desglose por ítem* — con su cantidad, su avance y su cumplimiento, uno por uno.
+
+✅ *13 novedades* · 🤝 *Alianzas* · 🚚 *Logística* · 📋 *Solicitudes* · 🛠️ *13 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🤝 *ALIANZAS ESTRATÉGICAS: UN SOLO EQUIPO*
+
+• *Se acabaron los tres roles separados.* Prospección, Captación y Afiliación eran tres roles y tres grupos distintos para gente que hacía lo mismo: conseguir aliados. Ahora es *un solo rol y un solo grupo*, «Alianzas Estratégicas», y quien pertenece entra a las tres secciones sin pedir permiso a nadie. Los grupos viejos *no se borran*: quedan desactivados con su gente dentro, por si hiciera falta volver atrás.
+
+• *De paso se arregló algo que estorbaba a diario.* Hasta ahora, en las solicitudes que Logística escalaba al departamento, *solo Captación podía dejar notas*. Prospección y Afiliación veían el trabajo pero no podían anotar en él. Ya puede todo el equipo.
+
+• *Correo institucional con plantillas.* Alianzas escribe desde la plataforma con *plantillas del departamento* —presentación, solicitud de donación, agradecimiento, seguimiento— y *cada envío queda registrado* con su folio, a quién se le escribió, con qué plantilla y si llegó o falló. Se puede colgar de un caso, de una empresa o de un aliado, así que el correo deja de ser algo que pasó en el teléfono de alguien.
+
+━━━━━━━━━━━━━━━━━━
+📋 *LAS SOLICITUDES, ÍTEM POR ÍTEM*
+
+Esto cambia la forma de trabajar de todos. Antes una solicitud decía «colchones y comida» en un campo de texto. Ahora se desglosa.
+
+• *Cada solicitud lleva su lista.* «5 colchones», «20 raciones», «2 filtros de agua»: cada ítem con su *cantidad*, su *unidad* y su *descripción*. Se entiende de un vistazo qué se pidió de verdad.
+
+• *Cada ítem tiene su propio semáforo.* Ya no avanza la solicitud entera de golpe: avanza *cada ítem*. Y ese avance *lo ven todas las áreas*, no solo Logística — así cualquiera puede seguir un caso sin preguntar por WhatsApp.
+
+• *El cumplimiento se registra con números.* «4 de 5 colchones» se anota tal cual: *quién aportó*, *cuánto* y *cuándo*. Se acabó el «casi completo».
+
+• *Lo que cubre un tercero se marca como tal.* Si otra ONG o un particular cubrió un ítem, se marca —con su nombre— y deja de requerir gestión nuestra. Importante: *eso no se cuenta como capacidad nuestra* en ningún reporte. Lo que hizo otro es de otro.
+
+• *Al derivar se elige QUÉ ítems van a cada área.* Se puede mandar el ítem de comida a Alianzas y el de medicinas a Redacción, por separado. Cada área ve *solo lo suyo*.
+
+• *Los ítems se corrigen, y queda constancia.* Recopilación, Verificación y Logística pueden cambiarlos —porque hay errores y porque las necesidades cambian— y *cada cambio queda registrado* con quién, cuándo y qué valor tenía antes.
+
+━━━━━━━━━━━━━━━━━━
+🚚 *LOGÍSTICA*
+
+• *Las solicitudes que crea Logística ya son solicitudes completas.* Antes nacían huérfanas: sin contacto, sin ubicación, sin adjuntos, sin poder cerrarse al entregar. Ahora se crean con *el mismo formulario que usa Recopilación* y con su desglose por ítem desde el primer momento.
+
+• *Reportería propia, que no existía.* Cuánto se pide y de qué tipo, cuánta cobertura real hay, *en cuánto tiempo se entrega* (promedio y mediana), quién sostiene la respuesta y qué se escaló a Alianzas. Descargable en CSV e imprimible.
+
+• *«Entregado» deja de ser todo o nada.* Una entrega parcial ya no da el caso por resuelto ni manda el aviso de «tu caso fue atendido» a quien todavía está esperando la mitad.
+
+━━━━━━━━━━━━━━━━━━
+🏭 *ALIADOS: CON QUÉ SE PUEDE CONTAR*
+
+• *Cada aliado declara su capacidad.* Alianzas anota qué puede cubrir cada empresa, *cuánto* y *cada cuánto*: una vez, por tiempo limitado, o cada semana, quincena, mes o trimestre.
+
+• *Logística ve lo que queda.* Si una panadería ofrece *50 comidas semanales* y ya se le pidieron 12, Logística ve *38 disponibles* — y la semana siguiente vuelve a 50 sola. Lo puntual se agota y no vuelve. Lo caducado marca cero *con su motivo*: agotarse y vencerse piden decisiones distintas.
+
+• *Historial de cada empresa.* Cuánto ha aportado, desde cuándo, en qué, cómo evoluciona mes a mes, y *lo prometido frente a lo entregado*. Porque prometer no es entregar, y eso ahora se ve.
+
+━━━━━━━━━━━━━━━━━━
+👀 *CADA ÁREA VE A LA OTRA*
+
+Alianzas y Logística *se ven mutuamente, en solo lectura*. Alianzas necesita saber en qué se está usando lo que consigue; Logística, con qué aliados puede contar.
+
+Con un cuidado importante: Logística ve el registro de empresas *sin los datos de contacto personales* de la Ficha de Prospección. Los teléfonos y contactos que las empresas confiaron a Alianzas *no salen del área*.
+
+━━━━━━━━━━━━━━━━━━
+🎉 *CELEBRACIONES*
+
+Al cerrar algo de verdad —crear una solicitud, verificarla, completar una tarea, cubrir un ítem, entregar, publicar— aparece una *animación breve* que reconoce el trabajo. *Van rotando*, así que nadie ve la misma dos veces seguidas.
+
+Dónde *no* aparecen, que importa igual: en nada que se desestime, cancele, devuelva o elimine. Y tampoco en una entrega parcial — quedaría como una burla a quien sigue esperando lo que falta.
+
+Quien no las quiera, *las apaga* en su panel de Animaciones. Y quien tenga activado «reducir movimiento» en su teléfono no verá moverse nada.
+
+Un aviso honesto: por ahora las celebraciones son *vídeo*. En un teléfono muy justo, o con ahorro de datos activado, puede que no aparezca ninguna. No molesta ni rompe nada — sencillamente no sale. Está pendiente aprobar versiones ligeras que funcionen en cualquier equipo.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+
+*Trece* cambios de base de datos: las migraciones *0216* a *0228*. Se aplican con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. A prueba de fallos, como siempre: mientras no se apliquen, cada sección avisa y el resto sigue funcionando.
+
+Dos cosas que conviene saber:
+
+• *Las solicitudes anteriores no tienen desglose.* La cantidad era texto libre («50 cajas») y adivinarla habría metido errores. Esos casos siguen mostrando su texto de siempre; el desglose empieza con los nuevos.
+
+• *Se cerró un agujero de seguridad* que venía de la migración 0208: una función quedó publicada sin permisos y permitía *crear solicitudes de Logística sin haber iniciado sesión*, saltándose las reglas de acceso. Ya está corregido.
+
+Y una decisión que hay que tomar: hoy *cualquier líder de grupo puede otorgar el rol de Alianzas*, y ese rol ahora da acceso al correo externo y a la Ficha de Prospección. Se puede restringir a administración — díganlo y se cambia.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+
+Nos pidieron animaciones para levantar el ánimo. Se dibujaron *doce*, a mano, con sus gradientes, sus luces y sus sombras. Se presentaron con orgullo.
+
+Se aprobaron *cero*. 🙃
+
+El veredicto fue *«pésimo diseño»* y, mirándolas otra vez con calma… no es que le falte razón. Así que las doce están guardadas, esperando su rediseño, y de momento celebran el unicornio y el guacamayo — que los mandó el equipo y esos sí gustaron a todo el mundo a la primera.
+
+Moraleja: uno puede escribir trece migraciones, blindar la seguridad y cuadrar los números al decimal… y que lo tumben por un dibujo de un señor arrastrándose. 🦄✍️
+
+_Apoyo por Venezuela · Notas del parche · Agosto 2026_

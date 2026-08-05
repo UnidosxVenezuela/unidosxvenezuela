@@ -317,7 +317,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'lo-logre',
-    aprobada: true,
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: '¡Lo logréee!',
     descripcion: 'Alguien llega arrastrándose a la meta, se levanta y ondea su letrero.',
     tipo: 'svg',
