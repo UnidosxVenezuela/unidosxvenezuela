@@ -46,6 +46,32 @@ export default async function CasoDetallePage({ params }: { params: { id: string
   for (const r of ((vcampos ?? []) as any[])) mapaVC[r.campo] = r;
   caso.verif_campos = mapaVC;
 
+  // Desglose por ítem (0218) best-effort: si la tabla aún no existe, la consulta vuelve
+  // vacía y el bloque degrada mostrando el texto libre de `req_cantidad`.
+  const { data: items } = await supabase.from('casos_items')
+    .select('id, orden, tipo, descripcion, cantidad, unidad, cantidad_texto, notas, estado')
+    .eq('caso_id', id).order('orden');
+  // Quién puede editar el desglose lo decide la BD (`puede_gestionar_items_caso`, 0218):
+  // incluye Logística y los mandos, más ancho que los gates de esta página. Si la
+  // función aún no existe, rpc devuelve error → false (no rompe).
+  const { data: gestionaItems } = await supabase.rpc('puede_gestionar_items_caso');
+
+  // Historial de cambios de esos ítems (0219) best-effort: quién cambió qué y cuándo.
+  // Se consulta por los ids ya cargados; sin ítems no se consulta nada.
+  const idsItems = ((items ?? []) as any[]).map((i) => i.id);
+  let cambiosItems: any[] = [];
+  let aportesItems: any[] = [];
+  if (idsItems.length > 0) {
+    const { data: ci } = await supabase.from('casos_items_historial')
+      .select('id, item_id, campo, valor_anterior, valor_nuevo, actor_id, creado_en')
+      .in('item_id', idsItems).order('creado_en', { ascending: false });
+    cambiosItems = (ci ?? []) as any[];
+    // Cumplimiento por ítem (0221) best-effort: cuánto se cubrió y quién lo puso. Por la
+    // RPC curada, que resuelve el nombre del tercero/proveedor/afiliado/centro.
+    const { data: ap } = await supabase.rpc('aportes_de_caso', { p_caso: id });
+    aportesItems = (ap as any[]) ?? [];
+  }
+
   const [{ data: perfiles }, { data: historial }, { data: sol }, { data: derivaciones }, { data: correcciones }] = await Promise.all([
     supabase.from('perfiles').select('id, nombre_completo, avatar_url').order('nombre_completo'),
     supabase.from('registro_auditoria').select('id, actor_id, accion, metadata, creado_en')
@@ -57,18 +83,35 @@ export default async function CasoDetallePage({ params }: { params: { id: string
     // Historial de correcciones (0178, Paso 12) best-effort: si la tabla no existe, se omite.
     supabase.from('casos_historial_cambios').select('*').eq('caso_id', id).order('creado_en', { ascending: false }),
   ]);
+  // Qué ítems del desglose se envió a cada área (puente 0222) best-effort: sin la tabla,
+  // la consulta vuelve vacía y cada derivación se lee como «la solicitud completa».
+  let derivacionItems: any[] = [];
+  {
+    const idsDeriv = ((derivaciones ?? []) as any[]).map((d) => d.id);
+    if (idsDeriv.length > 0) {
+      const { data: dit } = await supabase.from('casos_derivacion_items')
+        .select('derivacion_id, item_id').in('derivacion_id', idsDeriv);
+      derivacionItems = (dit ?? []) as any[];
+    }
+  }
+
   // Áreas de destino que este usuario puede tomar/avanzar/cerrar (espejo de la RPC).
   const areasOperables = areasOperablesDe(rolesDe(perfil));
 
   return (
     <div style={{ maxWidth: 720 }}>
       <RealtimeRefrescar tabla="casos" filtro={'id=eq.' + id} />
+      <RealtimeRefrescar tabla="casos_items" filtro={'caso_id=eq.' + id} />
+      {/* Un aporte parcial no cambia `casos_items` (0221): sin esto, «4 de 5» no llegaría en vivo. */}
+      <RealtimeRefrescar tabla="casos_item_aportes" />
       <Link href="/casos" className="muted">← Solicitudes</Link>
       <div style={{ marginTop: 8 }}>
         <DetalleCaso caso={caso} perfiles={perfiles ?? []} historial={historial ?? []} volver={'/casos/' + id} cerrarHref="/casos" puedeEditar={verifica}
           puedeEditarDatos={esAdministrador(perfil) || (verifica && caso.estado !== 'enviado_redaccion') || (caso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(caso.estado))}
           esAdmin={esAdministrador(perfil)} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id} solicitud={sol}
-          derivaciones={derivaciones ?? []} areasOperables={areasOperables} correcciones={correcciones ?? []} />
+          derivaciones={derivaciones ?? []} areasOperables={areasOperables} correcciones={correcciones ?? []}
+          items={(items ?? []) as any[]} puedeGestionarItems={gestionaItems === true} cambiosItems={cambiosItems as any[]}
+          aportesItems={aportesItems as any[]} derivacionItems={derivacionItems as any[]} />
       </div>
     </div>
   );

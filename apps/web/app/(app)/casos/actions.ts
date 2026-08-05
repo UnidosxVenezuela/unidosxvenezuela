@@ -6,7 +6,8 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, centroideEstado } from '@/lib/constantes';
+import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import type { EventoCelebracion } from '@/lib/celebraciones';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
 // Detecta que una RPC/param no existe todavía en la base (migración 0169 sin aplicar):
@@ -309,7 +310,7 @@ export async function crearCaso(formData: FormData) {
   }
 
   revalidatePath('/casos');
-  redirigirOk('/casos?caso=' + casoId, 'Solicitud creada');
+  redirigirOk('/casos?caso=' + casoId, 'Solicitud creada', 'solicitud_creada');
 }
 
 // Derivar un caso-requerimiento confirmado a Logística (Propuesta Fase 2): crea la
@@ -326,16 +327,35 @@ export async function derivarCasoLogistica(formData: FormData) {
   redirigirOk(volver, 'Solicitud derivada a Logística. La solicitud de insumo ya está en el tablero para coordinar la entrega.');
 }
 
+/**
+ * Qué estados de una solicitud MERECEN celebración. Solo los que cierran bien:
+ *   · `confirmado` → la solicitud quedó validada (es el botón «Confirmar solicitud»,
+ *     que además está candado detrás del semáforo completo en verde).
+ *   · `resuelto`   → la necesidad quedó cubierta. No hay evento propio para «caso
+ *     resuelto», así que va como `generico`: se celebra a la persona, no el trámite.
+ * Los demás (`falso`, `desestimado`, `pendiente`, `en_proceso`) son correcciones o
+ * pasos intermedios: ahí una animación alegre sería de mal gusto.
+ */
+const CELEBRA_ESTADO_CASO: Partial<Record<EstadoCaso, EventoCelebracion>> = {
+  confirmado: 'solicitud_verificada',
+  resuelto: 'generico',
+};
+
 export async function cambiarEstadoCaso(formData: FormData) {
   const { supabase } = await exigirCasos(true);
   const id = txt(formData.get('caso_id'));
   const estado = txt(formData.get('estado')) as EstadoCaso;
   if (estado === 'enviado_redaccion') throw new Error('El paso a Redacción lo hace el equipo de Envío a Redacción.');
+  // El estado ANTERIOR solo se usa para no celebrar un no-cambio: el desplegable
+  // «avanzado» permite volver a guardar el estado que ya tenía, y eso no es un hito.
+  const { data: previo } = await supabase.from('casos').select('estado').eq('id', id).maybeSingle();
+  const estadoPrevio = (previo as { estado?: string } | null)?.estado ?? null;
   const { error } = await supabase.from('casos')
     .update({ estado, info_requerida: null, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado');
+  redirigirOk(opt(formData.get('volver')) || '/casos', 'Estado actualizado',
+    estadoPrevio !== estado ? CELEBRA_ESTADO_CASO[estado] : undefined);
 }
 
 // Descartar un caso (marcarlo falso) EXIGIENDO un motivo, que queda anexado a las notas
@@ -394,6 +414,40 @@ export async function tomarCaso(formData: FormData) {
   redirigirOk(opt(formData.get('volver')) || ('/casos?caso=' + id), 'Solicitud tomada');
 }
 
+/**
+ * ¿Esta marca acaba de dejar el semáforo ENTERO en verde? Solo entonces se celebra.
+ *
+ * Marcar un campo suelto es trámite: una solicitud tiene 5 o 7 campos y celebrar
+ * cada marca devaluaría la celebración (y sería un estorbo para quien verifica en
+ * cadena). El hito es el semáforo COMPLETO, que es además lo que abre el botón
+ * «Confirmar solicitud» (el candado de `DetalleCaso`).
+ *
+ * Se relee el estado real de la base DESPUÉS de la RPC —nunca se deduce del
+ * formulario— y es conservador por diseño: si no se puede saber si la solicitud
+ * lleva los campos extra de requerimiento, NO se celebra. Antes callar que
+ * celebrar un semáforo a medias.
+ */
+async function semaforoRecienCompleto(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  caso: string,
+  yaEstabaVerde: boolean,
+): Promise<EventoCelebracion | undefined> {
+  // Si ese campo ya estaba en verde, esta marca no completó nada (o repitió lo mismo).
+  if (yaEstabaVerde) return undefined;
+  const { data: fila } = await supabase.from('casos').select('es_requerimiento').eq('id', caso).maybeSingle();
+  if (!fila) return undefined; // sin saber la lista de campos, no se celebra
+  const campos = [
+    ...CAMPOS_VERIFICACION_BASE,
+    ...((fila as { es_requerimiento?: boolean | null }).es_requerimiento ? CAMPOS_VERIFICACION_REQ : []),
+  ];
+  const { data: marcas } = await supabase.from('casos_verificacion_campo')
+    .select('campo, estado').eq('caso_id', caso);
+  if (!marcas) return undefined;
+  const porCampo = new Map(((marcas ?? []) as { campo: string; estado: string }[]).map((m) => [m.campo, m.estado]));
+  const completo = campos.every((c) => porCampo.get(c.key) === 'verificado');
+  return completo ? 'solicitud_verificada' : undefined;
+}
+
 // Verificación por campo (0172): marca un dato de la solicitud con su semáforo
 // (sin_revisar / verificado / requiere_info / falso). La RPC reaplica la frontera
 // por categoría (Verificación↔Otras, Búsqueda↔Desaparecidos) y audita el cambio.
@@ -404,12 +458,94 @@ export async function marcarCampoVerificacion(formData: FormData) {
   const estado = txt(formData.get('estado'));
   const nota = opt(formData.get('nota'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  // Foto previa de ESTE campo: hace falta para distinguir «acabo de completar el
+  // semáforo» de «reguardé un campo que ya estaba verde» (que no es un hito).
+  const { data: antes } = estado === 'verificado'
+    ? await supabase.from('casos_verificacion_campo').select('estado').eq('caso_id', caso).eq('campo', campo).maybeSingle()
+    : { data: null };
   const { error } = await supabase.rpc('marcar_campo_verificacion', {
     p_caso: caso, p_campo: campo, p_estado: estado, p_nota: nota,
   });
   if (error) return redirigirError(volver, 'No se pudo marcar el campo: ' + error.message);
   revalidatePath('/casos');
-  redirigirOk(volver, 'Verificación del campo actualizada');
+  // Se celebra el semáforo COMPLETO, no cada campo. Y solo al ponerlo en verde:
+  // marcar 🟡/🔴 es trabajo igual de valioso, pero no es un cierre que festejar.
+  const celebrar = estado === 'verificado'
+    ? await semaforoRecienCompleto(supabase, caso, (antes as { estado?: string } | null)?.estado === 'verificado')
+    : undefined;
+  redirigirOk(volver, 'Verificación del campo actualizada', celebrar);
+}
+
+// ── Desglose por ÍTEM de la solicitud (0218) ──
+// Recopilación (quien reporta), Verificación (quien corrige) y Logística (quien la
+// gestiona) mantienen la lista de lo que se necesita, con cantidad numérica + unidad.
+// El permiso lo aplica la RPC (SECURITY DEFINER, `puede_gestionar_items_caso`): aquí NO
+// se usa `exigirCasos()`, cuya lista de roles es más ESTRECHA que la de la base y dejaría
+// fuera a Logística y a los mandos. La RLS sigue siendo la fuente de verdad.
+export async function guardarItemCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const item = opt(formData.get('item_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const descripcion = txt(formData.get('descripcion'));
+  if (!descripcion) return redirigirError(volver, 'Describe qué se necesita en este ítem.');
+  const tipo = opt(formData.get('tipo')) || 'otro';
+  if (!TIPOS_INSUMO_VAL.includes(tipo)) return redirigirError(volver, 'Elige un tipo de ayuda válido.');
+  const cantidad = numOpt(formData.get('cantidad'));
+  if (cantidad !== null && cantidad <= 0) return redirigirError(volver, 'La cantidad debe ser mayor que cero.');
+  const { error } = await supabase.rpc('guardar_item_caso', {
+    p_caso: caso,
+    p_descripcion: descripcion,
+    p_tipo: tipo,
+    p_cantidad: cantidad,
+    p_unidad: opt(formData.get('unidad')),
+    p_notas: opt(formData.get('notas')),
+    p_item: item,
+  });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo guardar el ítem: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath(volver);
+  redirigirOk(volver, item ? 'Ítem actualizado' : 'Ítem añadido al desglose');
+}
+
+export async function eliminarItemCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const item = txt(formData.get('item_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  if (!item) return redirigirError(volver, 'Falta el ítem.');
+  const { error } = await supabase.rpc('eliminar_item_caso', { p_item: item });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo eliminar el ítem: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath(volver);
+  redirigirOk(volver, 'Ítem eliminado del desglose');
+}
+
+// Reordenar: el formulario manda la lista completa de ids YA en el orden deseado
+// (separada por comas), calculada en el servidor al pintar las flechas ↑/↓.
+export async function reordenarItemsCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  const items = txt(formData.get('items')).split(',').map((s) => s.trim()).filter(Boolean);
+  if (!caso || items.length === 0) return redirigirError(volver, 'Falta el orden de los ítems.');
+  const { error } = await supabase.rpc('reordenar_items_caso', { p_caso: caso, p_items: items });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El desglose por ítem aún no está disponible (falta aplicar la migración 0218).');
+    return redirigirError(volver, 'No se pudo reordenar el desglose: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath(volver);
+  redirigirOk(volver, 'Desglose reordenado');
 }
 
 // Fotos aptas para difusión (0187): Verificación marca qué adjunto puede usar
@@ -465,10 +601,16 @@ export async function reubicarCasoOfrecimiento(formData: FormData) {
   redirigirOk('/insumos/oportunidades/' + data, 'Solicitud reubicada como Donación-Ofrecimiento. Complétala o afínala aquí.');
 }
 
-// ── Derivación multi-área (0177, Requerimiento Paso 9) ──
+// ── Derivación multi-área (0177, Requerimiento Paso 9) + por ÍTEM (0222) ──
 // Verificación deriva una solicitud VALIDADA a una o varias áreas de destino, con
 // responsable/acción/prioridad/observaciones. El gate «solo Validado», el permiso
 // y el aviso a cada área los hace el RPC derivar_caso (SECURITY DEFINER).
+//
+// Desde 0222 se elige ADEMÁS qué ítems del desglose van a cada área: el formulario manda
+// una casilla `items_<area>` por cada ítem marcado. La RPC recibe UNA lista de ítems por
+// llamada (`p_items uuid[]`), así que aquí se agrupan las áreas que comparten exactamente
+// la misma selección y se hace una llamada por grupo — normalmente una sola, porque lo
+// habitual es mandar lo mismo a todas.
 export async function derivarCaso(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -482,16 +624,57 @@ export async function derivarCaso(formData: FormData) {
   const observaciones = opt(formData.get('observaciones'));
   if (!id) return redirigirError(volver, 'Falta la solicitud');
   if (areas.length === 0) return redirigirError(volver, 'Elegí al menos un área de destino');
-  const { error } = await supabase.rpc('derivar_caso', {
-    p_caso: id, p_areas: areas, p_responsable: responsable,
-    p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
-  });
-  if (error) {
-    if (rpcNoExiste(error)) return redirigirError(volver, 'La derivación multi-área todavía no está disponible (falta aplicar la migración 0177).');
+
+  // ¿El formulario pintó casillas de ítems? (campo oculto con el desglose disponible).
+  // Si el caso tiene desglose, cada área elegida necesita al menos un ítem: derivar un
+  // área «vacía» dejaría al equipo receptor sin saber qué le tocó.
+  const hayDesglose = txt(formData.get('hay_items')) === '1';
+  const porArea = new Map<string, string[]>();
+  for (const a of areas) {
+    const its = formData.getAll('items_' + a).map(String).map((s) => s.trim()).filter(Boolean);
+    if (hayDesglose && its.length === 0) {
+      return redirigirError(volver, 'Elegí al menos un ítem para «' + (ETIQUETA_AREA_DESTINO[a as keyof typeof ETIQUETA_AREA_DESTINO] ?? a) + '».');
+    }
+    porArea.set(a, its);
+  }
+
+  // Áreas con la MISMA selección → una sola llamada (la RPC aplica p_items a todas las
+  // áreas del array).
+  const grupos = new Map<string, { areas: string[]; items: string[] }>();
+  for (const a of areas) {
+    const items = porArea.get(a) ?? [];
+    const clave = [...items].sort().join('|');
+    const g = grupos.get(clave);
+    if (g) g.areas.push(a); else grupos.set(clave, { areas: [a], items });
+  }
+
+  for (const g of grupos.values()) {
+    const { error } = await supabase.rpc('derivar_caso', {
+      p_caso: id, p_areas: g.areas, p_items: g.items.length > 0 ? g.items : null,
+      p_responsable: responsable, p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
+    });
+    if (!error) continue;
+    // Sin la migración 0222 la función no tiene `p_items`: se deriva la solicitud completa
+    // (comportamiento de 0177/0208) en vez de dejar al equipo sin poder derivar.
+    if (rpcNoExiste(error)) {
+      const { error: e2 } = await supabase.rpc('derivar_caso', {
+        p_caso: id, p_areas: g.areas, p_responsable: responsable,
+        p_accion: accion, p_prioridad: prioridad, p_observaciones: observaciones,
+      });
+      if (e2) {
+        if (rpcNoExiste(e2)) return redirigirError(volver, 'La derivación multi-área todavía no está disponible (falta aplicar la migración 0177).');
+        return redirigirError(volver, 'No se pudo derivar: ' + e2.message);
+      }
+      continue;
+    }
     return redirigirError(volver, 'No se pudo derivar: ' + error.message);
   }
-  revalidatePath('/casos'); revalidatePath(volver);
-  redirigirOk(volver, 'Solicitud derivada a las áreas seleccionadas');
+
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath('/envio-redaccion');
+  revalidatePath('/mi-area'); revalidatePath('/seguimiento'); revalidatePath(volver);
+  redirigirOk(volver, hayDesglose
+    ? 'Solicitud derivada: cada área recibió los ítems que le marcaste'
+    : 'Solicitud derivada a las áreas seleccionadas');
 }
 
 // Acciones de estado de una derivación (tomar / en proceso / cerrar). El RPC
@@ -535,7 +718,7 @@ export async function marcarCasoPublicado(formData: FormData) {
   }
   if (error) return redirigirError(volver, 'No se pudo marcar como publicada: ' + error.message);
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk(volver, 'Solicitud marcada como publicada');
+  redirigirOk(volver, 'Solicitud marcada como publicada', 'caso_publicado');
 }
 
 // Tipo de difusión (0189): Redacción marca si el caso se REDISEÑA y publica
@@ -569,13 +752,19 @@ export async function registrarPublicacionCanal(formData: FormData) {
   const url = opt(formData.get('url'));
   const volver = opt(formData.get('volver')) || ('/casos?caso=' + id);
   if (!CANALES_DIFUSION.includes(canal)) return redirigirError(volver, 'Canal no válido.');
+  // La pantalla nos dice si la solicitud NO tenía todavía ningún canal publicado: ese
+  // primer canal es el que la RPC marca como «publicada» de verdad (0190 sincroniza el
+  // estado global al primero). Los siguientes son alcance extra del mismo hito, y
+  // celebrar cada red convertiría la celebración en ruido.
+  const primera = txt(formData.get('primera_publicacion')) === '1';
   const { error } = await supabase.rpc('registrar_publicacion_canal', { p_caso: id, p_canal: canal, p_url: url });
   if (error) {
     if (rpcNoExiste(error)) return redirigirError(volver, 'El registro por canal aún no está disponible (falta aplicar la migración 0190).');
     return redirigirError(volver, 'No se pudo registrar la publicación: ' + error.message);
   }
   revalidatePath('/envio-redaccion'); revalidatePath('/casos');
-  redirigirOk(volver, 'Publicación registrada en ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal));
+  redirigirOk(volver, 'Publicación registrada en ' + (ETIQUETA_CANAL_DIFUSION[canal] ?? canal),
+    primera ? 'caso_publicado' : undefined);
 }
 
 // Quita la publicación de un canal (0190) y reconcilia el estado global (si era el

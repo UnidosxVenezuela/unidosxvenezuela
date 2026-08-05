@@ -5,6 +5,7 @@ import Pill from '@/components/Pill';
 import EstadoCaso from '@/components/EstadoCaso';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
+import ItemsSemaforo from '@/components/ItemsSemaforo';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
 import { enviarCasoRedaccion, tomarCasoRedaccion, soltarCasoRedaccion, regresarCasoVerificacion, desestimarCaso } from '../casos/actions';
@@ -33,23 +34,50 @@ export default function DetalleRedaccion(
         {caso.categoria && <BadgeCategoria>{caso.categoria}</BadgeCategoria>}
         {caso.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
         {!caso.publicado_en && caso.requiere_difusion && <Pill tono="alta" punto={false}>⚠ Prioriza · Logística no pudo cubrir</Pill>}
-        {caso.origen_area === 'logistica' && <Pill tono="info" punto={false}>🚚 Cobertura parcial</Pill>}
+        {caso.origen_area === 'logistica' && (
+          <Pill tono="info" punto={false}>
+            {caso.caso_padre_numero ? '🚚 Cobertura parcial' : '🚚 Solicitud de Logística'}
+          </Pill>
+        )}
       </div>
 
-      {/* Procedencia (0211): esta solicitud la creó Logística por lo que NO pudo cubrir de
-          otra. Reutiliza los datos de la original (por eso no pasó de nuevo por Verificación). */}
+      {/* Procedencia: `origen_area='logistica'` cubre DOS casos distintos y hay que
+          distinguirlos, o el aviso miente. CON caso padre es una cobertura parcial (0211):
+          lo que no se pudo cubrir de otra solicitud. SIN padre, la levantó el propio equipo
+          de Logística en terreno (0223) y no pasó por Verificación. */}
       {caso.origen_area === 'logistica' && (
         <div className="tarjeta" style={{ marginTop: 8, padding: 10, background: 'var(--t-teal-bg)', border: '1px solid var(--t-teal-fg)' }}>
           <div className="fila" style={{ gap: 6, fontSize: '.86rem' }}>
             <Icono nombre="cohete" size={15} />
-            <span>
-              <strong>Solicitud de Logística por cobertura parcial.</strong>{' '}
-              Se cubrió una parte{caso.caso_padre_numero ? <> de la solicitud <strong>#{String(caso.caso_padre_numero).padStart(5, '0')}</strong></> : null} y esto es <strong>lo que falta</strong>. Reutiliza los datos ya verificados de la original.
-            </span>
+            {caso.caso_padre_numero ? (
+              <span>
+                <strong>Solicitud de Logística por cobertura parcial.</strong>{' '}
+                Se cubrió una parte de la solicitud <strong>#{String(caso.caso_padre_numero).padStart(5, '0')}</strong> y esto es <strong>lo que falta</strong>. Reutiliza los datos ya verificados de la original.
+              </span>
+            ) : (
+              <span>
+                <strong>Solicitud levantada por el área de Logística.</strong>{' '}
+                La recogió el equipo en terreno (visita, llamada o centro que se quedó sin algo) y <strong>no pasó por Verificación</strong>: el área responde por sus datos.
+              </span>
+            )}
           </div>
         </div>
       )}
       <FlujoProgreso paso={p.paso} total={p.total} completo={p.completo} etiqueta={p.etiqueta} />
+
+      {/* Avance por ítem (0220), de SOLO LECTURA. Es lo que permite redactar con precisión
+          —«el agua ya va en camino, faltan las medicinas»— y priorizar la difusión de lo
+          que sigue sin cubrirse. Desde 0222 llega por la vista curada `casos_items_difusion`
+          y trae SOLO los ítems que Verificación derivó a Redes (si no repartió el desglose,
+          llegan todos). Sin contacto ni PII, porque Redacción no lee `casos` desde 0180. Se
+          actualiza en vivo por `casos_difusion_senal` (0181), la tabla-señal, nunca por `casos`. */}
+      <ItemsSemaforo
+        items={caso.items ?? []}
+        aportes={caso.aportes ?? []}
+        verFull={esAdmin}
+        titulo="Qué hay que difundir · avance y cumplimiento por ítem"
+        nota="Solo lo que Verificación envió a esta área. Lo registra Logística; aquí se ve para redactar con precisión: cuánto falta de cada cosa y qué ya cubrió otra organización (eso no hace falta difundirlo)."
+      />
 
       {/* Redactor asignado (0169): tomar / soltar la difusión */}
       <div className="tarjeta" style={{ marginTop: 12, padding: 12 }}>

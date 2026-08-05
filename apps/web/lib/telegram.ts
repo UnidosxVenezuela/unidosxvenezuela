@@ -6,11 +6,11 @@
 // un deep-link de la app, protegida por RLS; Telegram nunca lleva el dato
 // sensible. La función NUNCA lanza: el llamador (best-effort) decide.
 
-const API = 'https://api.telegram.org';
+// `escaparHtml` se movió a `lib/texto.ts` (0217): el correo institucional necesita el
+// mismo escapador y duplicarlo sería tener dos sitios donde olvidar un carácter.
+import { escaparHtml } from './texto';
 
-function escaparHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+const API = 'https://api.telegram.org';
 
 export type ResultadoTelegram = { ok: boolean; statusCode: number; error?: string };
 

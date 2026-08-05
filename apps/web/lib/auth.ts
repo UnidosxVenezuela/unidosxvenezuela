@@ -210,9 +210,14 @@ export function puedeVerificarDigitalizacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'verificador_digitalizacion']);
 }
 
-// Captación de Oportunidades (0129): registra y clasifica contactos estratégicos.
-// Rol propio 'captacion' (scoped: ve SOLO su sección) más el admin general. No
-// maneja datos de víctimas, así que NO exige 2ª verificación.
+// ── Departamento de Alianzas Estratégicas (0129 → 0198 → 0216) ──
+// Desde 0216 el departamento tiene UN SOLO rol operativo: 'captacion' (la clave
+// histórica del enum, reetiquetada «Alianzas Estratégicas» en toda la interfaz). Los
+// roles 'prospeccion' y 'afiliacion' quedaron unificados en él; un valor de enum no se
+// puede borrar, así que siguen existiendo pero ya nadie los tiene y no se asignan.
+// El departamento no maneja datos de víctimas: NO exige 2ª verificación.
+
+/** ¿Tiene el rol del departamento? (clave histórica 'captacion'). */
 export function esCaptacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['captacion']);
 }
@@ -220,23 +225,29 @@ export function puedeCaptacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'captacion']);
 }
 
-// Departamento de Alianzas Estratégicas (0198): Prospección + Captación + Afiliación.
-// Roles propios (ven solo su sección) más el admin general. No exigen 2ª verificación.
+/** Cualquier integrante del departamento (o el admin): registro de aliados,
+ *  base de Afiliación, reportería y bitácora de las solicitudes escaladas.
+ *  Se conservan los tres literales: 'prospeccion'/'afiliacion' son residuo inerte. */
+export function puedeAlianzas(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'captacion', 'prospeccion', 'afiliacion']);
+}
+
+// Alias del rol unificado (0216). `esProspeccion`/`esAfiliacion` siguen mirando el rol
+// literal —sirven para reconocer un residuo— pero `puedeProspeccion`/`puedeAfiliacion`
+// DELEGAN en el departamento: si no, /afiliacion quedaría inaccesible para todos, porque
+// tras la migración NADIE tiene el rol 'afiliacion'. Espejo exacto de las funciones SQL
+// puede_prospeccion() / puede_afiliacion() de 0216.
 export function esProspeccion(e?: EntradaRoles) {
   return tieneAlguno(e, ['prospeccion']);
 }
 export function puedeProspeccion(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'prospeccion']);
+  return puedeAlianzas(e);
 }
 export function esAfiliacion(e?: EntradaRoles) {
   return tieneAlguno(e, ['afiliacion']);
 }
 export function puedeAfiliacion(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'afiliacion']);
-}
-/** Cualquier integrante del departamento (o el admin): base de Afiliación y reportería. */
-export function puedeAlianzas(e?: EntradaRoles) {
-  return tieneAlguno(e, ['admin', 'captacion', 'prospeccion', 'afiliacion']);
+  return puedeAlianzas(e);
 }
 
 // ¿El conjunto de roles de esta persona EXIGE la 2ª verificación (identidad) para

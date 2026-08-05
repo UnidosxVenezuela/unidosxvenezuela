@@ -188,6 +188,12 @@ export default function AccionesRedaccionCaso(
           <form action={registrarPublicacionCanal} style={{ marginTop: 6 }}>
             <input type="hidden" name="caso_id" value={caso.id} />
             <input type="hidden" name="volver" value={volver} />
+            {/* ¿Es el PRIMER canal? Es lo que convierte la solicitud en «publicada»
+                (0190 sincroniza el estado global al primero) y, por tanto, el único
+                registro de canal que se celebra. La lista ya está aquí, así que no
+                hace falta otra consulta; y si llegara desfasada, lo peor que pasa es
+                una celebración de más o de menos — nunca un dato mal guardado. */}
+            <input type="hidden" name="primera_publicacion" value={publicaciones.length === 0 ? '1' : ''} />
             <div className="fila" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <select name="canal" defaultValue="" required className="input" style={{ minHeight: 32, maxWidth: 150 }}>
                 <option value="" disabled>Canal…</option>

@@ -127,11 +127,14 @@ export default async function AyudaPage() {
         </S>
       )}
 
-      {f.captacion && (
-        <S icono="enlace" titulo="Captación de Oportunidades (tu función)">
-          <li>Buscas y registras <strong>aliados</strong> —fundaciones, organizaciones, empresas, proyectos y alianzas— como <strong>tarjetas</strong> con contacto, enlace, ubicación, descripción y archivo. Cada tarjeta avanza por <strong>Investigación → Verificado → Enviado</strong>.</li>
+      {f.alianzas && (
+        <S icono="enlace" titulo="Alianzas Estratégicas (tu función)">
+          <li>El departamento es <strong>uno solo</strong>: empresas y aliados, captación de recursos y afiliación de profesionales y voluntarios. Todo el equipo entra a las tres secciones.</li>
+          <li>Buscas y registras <strong>aliados</strong> —fundaciones, organizaciones, empresas, proyectos y alianzas— como <strong>tarjetas</strong> en <strong>«Empresas y aliados»</strong>, con contacto, enlace, ubicación, descripción, archivo y <strong>Ficha de Prospección</strong>. Cada tarjeta avanza por <strong>Investigación → Verificado → Enviado</strong>.</li>
           <li>Cuando una tarjeta queda <strong>«Enviada»</strong>, <strong>Logística</strong> la ve como <strong>referencia</strong> (solo lectura) y puede dejar <strong>notas en su bitácora</strong>.</li>
+          <li>En <strong>«Afiliación»</strong> registras y clasificas por cargo a los <strong>profesionales y voluntarios</strong> a los que se puede recurrir.</li>
           <li><strong>Donación-Ofrecimiento:</strong> también captas <strong>ofertas</strong> de donación (insumos, dinero, servicios, transporte). Tú las registras; <strong>Verificación</strong> las valida; <strong>Logística</strong> contacta, empareja con una solicitud y concreta. No avanzan sin verificación.</li>
+          <li>Cuando Logística <strong>escala</strong> una solicitud que no puede cubrir, la ves en el panel de <strong>«Alianzas Estratégicas»</strong>: ábrela y deja en su <strong>bitácora</strong> la empresa, el aliado o el voluntario profesional que pueda cubrirla.</li>
           <li>Verificación puede <strong>derivarte</strong> solicitudes validadas al área de <strong>Alianzas Estratégicas</strong> o <strong>Donaciones</strong> (con responsable y prioridad). Sigue el recorrido en <strong>«Seguimiento»</strong>.</li>
           <li>Cuida el <strong>contacto de los aliados</strong>; los datos sensibles de las personas afectadas no son de este equipo.</li>
         </S>

@@ -65,6 +65,9 @@ export const ETIQUETA_AREA: Record<AreaClave, string> = {
   diseno: 'Diseño',
   marketing: 'Marketing',
   transcripcion: 'Transcripción',
+  // Área del departamento de Alianzas Estratégicas (sembrada en 0198). Sin esta entrada
+  // `etiquetaArea()` mostraba la clave cruda en /grupos.
+  alianzas_estrategicas: 'Alianzas Estratégicas',
 };
 
 /** Etiqueta de un área por su clave (tolera áreas creadas por admin). */
@@ -94,9 +97,12 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   apoyo_psicosocial: 'Apoyo Psicosocial',
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
-  captacion: 'Captación de Oportunidades',
-  prospeccion: 'Prospección',
-  afiliacion: 'Afiliación',
+  // Rol ÚNICO del departamento desde 0216 (clave histórica del enum: 'captacion').
+  captacion: 'Alianzas Estratégicas',
+  // Retirados por 0216 (unificados en 'captacion'). Se conservan para poder MOSTRAR y
+  // filtrar lo existente; no se ofrecen para asignar (ver ROLES_INACTIVOS).
+  prospeccion: 'Prospección (retirado)',
+  afiliacion: 'Afiliación (retirado)',
   admin_verificacion: 'Administración · Verificaciones',
   admin_redes: 'Administración · Redes Sociales',
   admin_logistica: 'Administración · Logística y Acopio',
@@ -181,8 +187,12 @@ export const GRUPOS_REGISTRO: {
   { seccion: 'Logística y acopio', area: 'logistica', opciones: [
     { grupo: 'gestion_acopio', etiqueta: 'Logística' },
   ] },
+  // Departamento propio (0198, unificado en 0216): un solo grupo para todo el
+  // departamento. La clave de sistema sigue siendo la histórica 'captacion'.
+  { seccion: 'Alianzas Estratégicas', area: 'general', opciones: [
+    { grupo: 'captacion', etiqueta: 'Alianzas Estratégicas' },
+  ] },
   { seccion: 'Otras áreas', area: 'general', opciones: [
-    { grupo: 'captacion',         etiqueta: 'Captación de Oportunidades' },
     { grupo: 'apoyo_psicosocial', etiqueta: 'Apoyo Psicosocial' },
     { grupo: 'general',           etiqueta: 'Voluntariado general / otra área' },
   ] },
@@ -357,6 +367,140 @@ export function claseEstadoDonacion(e: string): string {
 }
 export const TIPOS_VEHICULO = ['Moto', 'Carro', 'Camioneta', 'Camión', 'Furgón', 'Otro'];
 
+// ── Desglose por ítem de una solicitud (0218) ──
+// Unidades sugeridas para la cantidad de un ítem (el campo admite texto libre: esta
+// lista solo alimenta el `datalist` para escribir siempre igual y poder sumar después).
+export const UNIDADES_ITEM = [
+  'unidades', 'cajas', 'bultos', 'paquetes', 'bolsas', 'sacos', 'kits',
+  'litros', 'kg', 'toneladas', 'raciones', 'personas', 'metros', 'rollos', 'pares',
+];
+/** Cantidad numérica del ítem → texto corto («50», «200,5»), sin ceros de relleno. */
+export function cantidadItem(v: number | string | null | undefined): string {
+  if (v === null || v === undefined || v === '') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? String(n) : String(v);
+}
+
+// ── Semáforo de PASOS por ítem (0220) ──
+// Ojo: NO es el semáforo de verificación por campo (🟢🟡🔴, `casos_verificacion_campo`,
+// 0172/0173). Ese sigue siendo por CASO y no se toca. Este es el de PASOS, el que pinta
+// `FlujoProgreso`: dónde va cada cosa que hace falta.
+//
+// Los SEIS estados son el espejo EXACTO del CHECK de `casos_items.estado` (0218) y de
+// `public.estados_item()` (0220). Deliberadamente NO se reutiliza `ESTADOS_INSUMO`: ese
+// array solo lista cuatro de los seis estados del enum `estado_insumo`, y por eso las
+// tarjetas «no se pudo cubrir» desaparecen del tablero de /insumos (se filtran como
+// activas pero ninguna columna las pinta). Heredar ese array aquí replicaría el bug.
+export const ETIQUETA_ESTADO_ITEM: Record<string, string> = {
+  pendiente: 'Pendiente',
+  en_gestion: 'En gestión',
+  en_ruta: 'En ruta',
+  cumplido: 'Cubierto',
+  no_disponible: 'No se pudo cubrir',
+  cancelado: 'Cancelado',
+};
+/** Los SEIS estados posibles de un ítem. Espejo de `public.estados_item()`. */
+export const ESTADOS_ITEM = Object.keys(ETIQUETA_ESTADO_ITEM);
+/** Los estados que SALEN del flujo: no son un paso de la barra, son un desenlace. */
+export const ESTADOS_ITEM_FUERA = ['no_disponible', 'cancelado'];
+export function claseEstadoItem(e?: string | null): string {
+  if (e === 'cumplido') return 'ok';
+  if (e === 'en_ruta') return 'info';
+  if (e === 'en_gestion') return 'aviso';
+  if (e === 'no_disponible') return 'critica';
+  return '';   // 'pendiente' y 'cancelado': neutro
+}
+/**
+ * A dónde puede moverse un ítem desde donde está. ESPEJO de `public.transiciones_item()`
+ * (0220), que es la fuente de verdad: esto solo decide qué botones se pintan; la RPC
+ * `avanzar_item` revalida siempre. 'cumplido' y 'cancelado' son terminales (solo admin).
+ */
+export const TRANSICIONES_ITEM: Record<string, string[]> = {
+  pendiente: ['en_gestion', 'en_ruta', 'cumplido', 'no_disponible', 'cancelado'],
+  en_gestion: ['en_ruta', 'cumplido', 'pendiente', 'no_disponible', 'cancelado'],
+  en_ruta: ['cumplido', 'en_gestion', 'no_disponible', 'cancelado'],
+  no_disponible: ['pendiente', 'en_gestion', 'cancelado'],
+  cumplido: [],
+  cancelado: [],
+};
+/** El avance natural del ítem (el botón grande: «Avanzar a …»). Null si ya está cerrado. */
+export function siguienteEstadoItem(e?: string | null): string | null {
+  const orden = ['pendiente', 'en_gestion', 'en_ruta', 'cumplido'];
+  const i = orden.indexOf(e ?? 'pendiente');
+  return i >= 0 && i < orden.length - 1 ? (orden[i + 1] ?? null) : null;
+}
+
+// ── Cumplimiento por ítem: de dónde salió cada aporte (0221) ──
+// Espejo EXACTO del CHECK `chk_aporte_origen` de `public.casos_item_aportes`. TEXT +
+// CHECK en la base (nunca un enum nuevo): añadir un origen es drop/add constraint aquí
+// y una línea aquí.
+export const ETIQUETA_ORIGEN_APORTE: Record<string, string> = {
+  inventario: 'Centro de acopio',
+  proveedor: 'Proveedor',
+  donacion: 'Donación',
+  tercero: 'Otra organización o persona',
+  miembro: 'Equipo',
+};
+export const ORIGENES_APORTE = Object.keys(ETIQUETA_ORIGEN_APORTE);
+/**
+ * La distinción que se pidió explícitamente: lo que cubrió LA ORGANIZACIÓN frente a lo
+ * que cubrió UN TERCERO (otra ONG o una persona ajena). No es un matiz estético: un ítem
+ * cubierto por un tercero deja de requerir gestión nuestra, y en la reportería no puede
+ * contar como capacidad propia.
+ */
+export function esAporteDeTercero(origen?: string | null): boolean {
+  return origen === 'tercero';
+}
+
+// ── Capacidad ofertada por un proveedor o aliado (0224) ──
+// Espejo EXACTO del CHECK `chk_capacidad_periodicidad` de `public.proveedor_capacidades`.
+// TEXT + CHECK en la base (nunca un enum nuevo): añadir una periodicidad es drop/add
+// constraint allá y una línea aquí.
+//
+// Las tres formas del compromiso que hay que distinguir a simple vista:
+//   · «una sola vez» (`unica`)  → la cantidad NO se renueva: es un pozo que se agota.
+//   · «por un tiempo limitado»  → recurrente CON `vigencia_hasta`.
+//   · «cada semana / mes / …»   → recurrente sin fecha de fin.
+export const ETIQUETA_PERIODICIDAD: Record<string, string> = {
+  unica: 'Una sola vez',
+  semanal: 'Cada semana',
+  quincenal: 'Cada quincena',
+  mensual: 'Cada mes',
+  trimestral: 'Cada trimestre',
+};
+export const PERIODICIDADES = Object.keys(ETIQUETA_PERIODICIDAD);
+/** Sufijo corto para leer la cantidad de corrido: «50 raciones por semana». */
+export const SUFIJO_PERIODICIDAD: Record<string, string> = {
+  unica: 'en total',
+  semanal: 'por semana',
+  quincenal: 'por quincena',
+  mensual: 'por mes',
+  trimestral: 'por trimestre',
+};
+/** Qué significa cada opción (bajo el selector, para que Alianzas elija bien). */
+export const EXPLICA_PERIODICIDAD: Record<string, string> = {
+  unica: 'Se entrega una vez y se acaba. La cantidad es un total que se va agotando y no vuelve a llenarse.',
+  semanal: 'La cantidad vuelve a estar disponible cada semana, contando desde la fecha de inicio del acuerdo.',
+  quincenal: 'La cantidad vuelve a estar disponible cada 14 días, contando desde la fecha de inicio del acuerdo.',
+  mensual: 'La cantidad vuelve a estar disponible cada mes, contando desde la fecha de inicio del acuerdo.',
+  trimestral: 'La cantidad vuelve a estar disponible cada tres meses, contando desde la fecha de inicio del acuerdo.',
+};
+
+/** Espejo del `estado_vigencia` que devuelve `public.capacidades_de_proveedor()` (0224). */
+export const ETIQUETA_VIGENCIA_CAPACIDAD: Record<string, string> = {
+  vigente: 'Vigente',
+  pendiente: 'Aún no empieza',
+  caducada: 'Caducada',
+  retirada: 'Retirada',
+  proveedor_inactivo: 'Proveedor dado de baja',
+};
+export function claseVigenciaCapacidad(e?: string | null): string {
+  if (e === 'vigente') return 'ok';
+  if (e === 'pendiente') return 'info';
+  if (e === 'caducada') return 'critica';
+  return '';   // 'retirada' y 'proveedor_inactivo': neutro (son decisiones nuestras)
+}
+
 // ── Oportunidades de donación (la OFERTA, 0141) ──
 // Un lead con pipeline de contacto: empresa/proyecto/persona que ofrece ayudar.
 export const ETIQUETA_TIPO_OFERTA: Record<string, string> = {
@@ -449,6 +593,24 @@ export function claseResultadoOferta(e: string): string {
   if (e === 'negativo') return 'critica';
   return '';
 }
+// Correo institucional (0217): estado de cada fila del registro `correo_envios`.
+// La fila nace 'pendiente' ANTES de intentar el envío y se cierra con el resultado;
+// 'no_configurado' es «no hay RESEND_API_KEY», que antes se daba por bueno en silencio.
+export const ETIQUETA_ESTADO_CORREO: Record<string, string> = {
+  pendiente: 'Pendiente', enviado: 'Enviado', fallido: 'Falló', no_configurado: 'Correo sin configurar',
+};
+export const ESTADOS_CORREO = Object.keys(ETIQUETA_ESTADO_CORREO);
+export function claseEstadoCorreo(e: string): string {
+  if (e === 'enviado') return 'ok';
+  if (e === 'fallido') return 'critica';
+  if (e === 'no_configurado') return 'aviso';
+  return ''; // 'pendiente' → neutra
+}
+// A qué se le cuelga un correo (columna `entidad` de correo_envios).
+export const ETIQUETA_ENTIDAD_CORREO: Record<string, string> = {
+  caso: 'Solicitud', oportunidad: 'Empresa o aliado', proveedor: 'Proveedor',
+  afiliado: 'Afiliado', solicitud: 'Solicitud de insumo', perfil: 'Persona', otra: 'Otra',
+};
 // Resultado de verificación de una oferta (lo fija el equipo de Verificación, 0144).
 export const ETIQUETA_ESTADO_VERIF: Record<string, string> = {
   pendiente: 'Pendiente de verificar', verificada: 'Verificada', observada: 'Observada',
@@ -720,10 +882,14 @@ export const ROLES: Rol[] = Object.keys(ETIQUETA_ROL) as Rol[];
 // para asignar. Es reversible: quien ya tenga el rol lo conserva (inerte) y basta quitar
 // las claves/roles de estas listas (y poner grupos.activa=true, migración 0138) para
 // reactivarlos. `ETIQUETA_ROL`/`ROLES` se conservan completos para mostrar y filtrar lo existente.
-export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion'];
+// 'prospeccion' y 'afiliacion' se suman con 0216: sus grupos quedaron absorbidos por el
+// grupo unificado 'captacion' («Alianzas Estratégicas») y desactivados (activa=false).
+export const GRUPOS_INACTIVOS: string[] = ['busqueda', 'busqueda_nna', 'enlace_contacto', 'verificacion_digitalizacion', 'digitalizacion', 'prospeccion', 'afiliacion'];
 // Incluye `admin_digitalizacion`: su área quedó vacía con 0138 (sin grupos/roles que
 // administrar), así que no debe ofrecerse para asignar mientras siga desactivada.
-export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador', 'admin_digitalizacion'];
+// Incluye `prospeccion`/`afiliacion` (0216): unificados en el rol 'captacion'. Un valor
+// de enum no se puede borrar, así que quedan inertes y fuera de ROLES_ASIGNABLES.
+export const ROLES_INACTIVOS: Rol[] = ['busqueda', 'buscador_nna', 'enlace_contacto', 'verificador_digitalizacion', 'digitalizador', 'admin_digitalizacion', 'prospeccion', 'afiliacion'];
 /** Roles que un admin puede asignar (excluye los retirados y el aliado, que va por su flujo). */
 export const ROLES_ASIGNABLES: Rol[] = ROLES.filter((r) => !ROLES_INACTIVOS.includes(r) && r !== 'lider_plataforma_aliada');
 
@@ -921,12 +1087,13 @@ export const ETIQUETA_ESTADO_DERIVACION: Record<EstadoDerivacion, string> = {
   sin_tomar: 'Sin tomar', tomada: 'Tomada', en_proceso: 'En proceso', cerrada: 'Cerrada',
 };
 // Roles operativos por área (toman / avanzan / cierran). Espejo exacto de
-// puede_operar_area_derivacion() en 0177. Coordinación y «otra» solo admin.
+// puede_operar_area_derivacion() en 0177 → 0198 → 0216. Coordinación y «otra» solo admin.
+// `alianzas` es un solo rol desde 0216 ('captacion' = «Alianzas Estratégicas»).
 export const ROLES_POR_AREA_DESTINO: Record<AreaDestino, readonly string[]> = {
   logistica: ['logistica', 'admin_logistica'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers', 'admin_redes'],
   donaciones: ['logistica', 'admin_logistica', 'captacion'],
-  alianzas: ['captacion', 'prospeccion', 'afiliacion'],
+  alianzas: ['captacion'],
   coordinacion: [],
   otra: [],
 };

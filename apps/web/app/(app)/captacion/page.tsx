@@ -149,13 +149,13 @@ export default async function CaptacionPage({ searchParams }: { searchParams: { 
 
   return (
     <AnimarEntrada>
-      <Consejo id="captacion" titulo="Captación de Oportunidades">
+      <Consejo id="captacion" titulo="Empresas y aliados">
         Registra <strong>fundaciones, organizaciones, empresas, proyectos y alianzas</strong> como tarjetas y llévalas por el flujo <strong>Investigación → Verificado → Enviado</strong>. Cada tarjeta guarda contacto, enlace, ubicación, descripción y un archivo/foto.
       </Consejo>
       <div className="pagina-cab">
         <div>
-          <h1 className="fila" style={{ gap: 8 }}><Icono nombre="enlace" size={24} /> Captación de Oportunidades</h1>
-          <p className="muted sub">Contactos estratégicos y oportunidades. {total > 0 && <><strong>{total}</strong> en total.</>}</p>
+          <h1 className="fila" style={{ gap: 8 }}><Icono nombre="enlace" size={24} /> Empresas y aliados</h1>
+          <p className="muted sub">Registro «Captado» de Alianzas Estratégicas. {total > 0 && <><strong>{total}</strong> en total.</>}</p>
         </div>
         <div className="fila" style={{ gap: 8 }}>
           <BotonActualizar />

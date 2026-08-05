@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
+import { validarArchivo } from '@/lib/validaciones';
+import type { EventoCelebracion } from '@/lib/celebraciones';
 
 async function usuario() {
   const supabase = await createClient();
@@ -12,29 +14,157 @@ async function usuario() {
   return { supabase, userId: user.id };
 }
 
+function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
+function opt(v: FormDataEntryValue | null) { const s = txt(v); return s ? s : null; }
+
 // ── Solicitudes ──
+// ALTA de Logística (0223). Antes esto insertaba SEIS campos sueltos en
+// `solicitudes_insumo` y —lo grave— SIN `caso_id`. Una tarea sin caso es una tarea
+// mutilada: sin contacto ni referente (viven en `casos`, 0171), sin coordenadas ni
+// dirección (0112/0173), sin adjuntos que vean las demás áreas (0212/0213 los manda a
+// `casos_adjuntos` solo si hay caso), sin centros cercanos (`centros_cercanos_para_solicitud`
+// hace join con `casos`), sin cobertura parcial (0211 exige caso_id), sin cierre del caso
+// al entregar y —desde 0218— sin desglose por ítem, porque los ítems cuelgan del caso.
+//
+// Ahora se llama a `crear_solicitud_logistica`, que crea el CASO completo, lo deja
+// confirmado con su verificación sembrada, lo deriva a Logística con la selección de
+// ítems (0222) y deja que `solicitud_logistica_de_caso` proyecte la tarea del área. La
+// autorización vive en la RPC (gate `puede_logistica()`); aquí solo se recogen los campos.
 export async function crearSolicitud(formData: FormData) {
   const { supabase, userId } = await usuario();
-  const titulo = String(formData.get('titulo') ?? '').trim();
-  if (!titulo) throw new Error('El título es obligatorio.');
-  const { data, error } = await supabase.from('solicitudes_insumo').insert({
-    titulo,
-    tipo: String(formData.get('tipo') ?? 'otro'),
-    descripcion: String(formData.get('descripcion') ?? '').trim() || null,
-    cantidad: String(formData.get('cantidad') ?? '').trim() || null,
-    urgencia: String(formData.get('urgencia') ?? 'media'),
-    punto_id: String(formData.get('punto_id') ?? '').trim() || null,
-    solicitado_por: userId,
-  }).select('id').single();
-  if (error) throw new Error('No se pudo crear la solicitud: ' + error.message);
-  revalidatePath('/insumos');
-  redirigirOk('/insumos/' + data!.id, 'Solicitud creada');
+  const volver = '/insumos/nueva';
+  const titulo = txt(formData.get('titulo'));
+  if (!titulo) return redirigirError(volver, 'Ponle un título a la solicitud.');
+  const descripcion = txt(formData.get('descripcion'));
+  if (!descripcion) return redirigirError(volver, 'Describe qué se necesita y para quién.');
+
+  // Desglose por ítem: cinco campos repetidos por fila, que el navegador entrega en el
+  // orden del DOM. Se recomponen posición a posición; las filas sin descripción se caen.
+  const dsc = formData.getAll('item_descripcion').map((v) => txt(v));
+  const cnt = formData.getAll('item_cantidad').map((v) => txt(v));
+  const uni = formData.getAll('item_unidad').map((v) => txt(v));
+  const tip = formData.getAll('item_tipo').map((v) => txt(v));
+  const not = formData.getAll('item_notas').map((v) => txt(v));
+  const items = dsc.map((d, i) => ({
+    descripcion: d.slice(0, 300),
+    cantidad: (cnt[i] ?? '').slice(0, 100),
+    unidad: (uni[i] ?? '').slice(0, 40),
+    tipo: tip[i] ?? 'otro',
+    notas: (not[i] ?? '').slice(0, 500),
+  })).filter((i) => i.descripcion !== '');
+  if (items.length === 0) {
+    return redirigirError(volver, 'Añade al menos un ítem al desglose: qué hace falta, cuánto y en qué unidad.');
+  }
+
+  // Los archivos se validan ANTES de crear nada (mismo criterio que crearCaso).
+  const archivos = formData.getAll('archivos').filter((f): f is File => f instanceof File && f.size > 0);
+  for (const file of archivos.slice(0, 10)) {
+    const v = validarArchivo(file.name, file.size, 10);
+    if (!v.ok) return redirigirError(volver, v.motivo || 'Archivo no admitido.');
+  }
+
+  const personas = Number(txt(formData.get('personas_afectadas')));
+  const lat = Number(txt(formData.get('lat')));
+  const lng = Number(txt(formData.get('lng')));
+  const args = {
+    p_titulo: titulo.slice(0, 200),
+    p_descripcion: descripcion,
+    p_items: items,
+    p_referente: opt(formData.get('referente')),
+    p_referente_rol: opt(formData.get('referente_rol')),
+    p_whatsapp: opt(formData.get('contacto_whatsapp')),
+    p_instagram: opt(formData.get('contacto_instagram')),
+    p_ubi_estado: opt(formData.get('ubicacion_estado')),
+    p_ubi_municipio: opt(formData.get('ubicacion_municipio')),
+    p_ubi_parroquia: opt(formData.get('ubicacion_parroquia')),
+    p_ubi_sector: opt(formData.get('ubicacion_sector')),
+    p_ubi_direccion: opt(formData.get('ubicacion_direccion')),
+    p_lat: Number.isFinite(lat) && txt(formData.get('lat')) !== '' ? lat : null,
+    p_lng: Number.isFinite(lng) && txt(formData.get('lng')) !== '' ? lng : null,
+    p_urgencia: txt(formData.get('urgencia')) || 'media',
+    p_personas: Number.isFinite(personas) && txt(formData.get('personas_afectadas')) !== '' ? Math.max(0, Math.trunc(personas)) : null,
+    p_fuente: opt(formData.get('fuente')),
+    p_punto: opt(formData.get('punto_id')),
+    p_notas: opt(formData.get('notas')),
+  };
+
+  const { data, error } = await supabase.rpc('crear_solicitud_logistica', args);
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (/could not find the function|function .* does not exist|no existe la funci|schema cache/.test(m)) {
+      // Sin 0223 aplicada, el camino de siempre: la tarea suelta (mutilada, pero mejor que
+      // bloquear el alta). Se dice con todas las letras para que no pase inadvertido.
+      const { data: legado, error: e2 } = await supabase.from('solicitudes_insumo').insert({
+        titulo: titulo.slice(0, 200),
+        tipo: items[0]!.tipo || 'otro',
+        descripcion,
+        cantidad: items.map((i) => [i.cantidad, i.unidad, i.descripcion].filter(Boolean).join(' ')).join(' · ').slice(0, 500),
+        urgencia: args.p_urgencia,
+        punto_id: args.p_punto,
+        solicitado_por: userId,
+      }).select('id').single();
+      if (e2) return redirigirError(volver, 'No se pudo crear la solicitud: ' + e2.message);
+      revalidatePath('/insumos');
+      return redirigirOk('/insumos/' + legado!.id,
+        'Solicitud creada en modo básico: falta aplicar la migración 0223, así que no lleva contacto, ubicación ni desglose.');
+    }
+    return redirigirError(volver, 'No se pudo crear la solicitud: ' + error.message);
+  }
+
+  const casoId = data as unknown as string;
+
+  // Adjuntos AL CASO (bucket privado «adjuntos», carpeta casos/<id>): así los ven todas
+  // las áreas, no solo Logística (0213). Un archivo fallido no tumba el alta.
+  for (const file of archivos.slice(0, 10)) {
+    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+    const ruta = `casos/${casoId}/${Date.now()}-${safe}`;
+    try {
+      await subirArchivo(supabase, 'adjuntos', ruta, file, { publico: false, upsert: false });
+      const { error: eAdj } = await supabase.from('casos_adjuntos').insert({
+        caso_id: casoId, url: ruta, nombre: file.name, mime: file.type || null, creado_por: userId,
+      });
+      if (eAdj) await borrarArchivo(supabase, 'adjuntos', [ruta]);
+    } catch { /* un adjunto fallido no bloquea la solicitud */ }
+  }
+
+  // La tarea del área la proyecta la RPC (solicitud_logistica_de_caso); se busca por caso.
+  const { data: sol } = await supabase.from('solicitudes_insumo').select('id').eq('caso_id', casoId).maybeSingle();
+  revalidatePath('/insumos'); revalidatePath('/casos'); revalidatePath('/seguimiento'); revalidatePath('/mapa');
+  const destino = (sol as { id?: string } | null)?.id ? '/insumos/' + (sol as { id: string }).id : '/insumos';
+  redirigirOk(destino, 'Solicitud creada con su desglose. Queda marcada como solicitud del área de Logística.');
 }
 
 export async function cambiarEstadoSolicitud(formData: FormData) {
   const { supabase } = await usuario();
   const id = String(formData.get('id'));
   const estado = String(formData.get('estado'));
+
+  // «Entregado» dejó de ser un estado más (0221): con desglose por ítem solo se cierra
+  // con todo cubierto, o forzándolo a sabiendas como ENTREGA PARCIAL. Esa decisión vive
+  // en la RPC (que además audita cuál de las dos fue); aquí solo se enruta.
+  if (estado === 'entregado') {
+    const forzar = String(formData.get('forzar') ?? '') === '1';
+    const { error } = await supabase.rpc('entregar_solicitud_insumo', { p_solicitud: id, p_forzar: forzar });
+    if (error) {
+      const m = (error.message || '').toLowerCase();
+      if (/could not find the function|function .* does not exist|no existe la funci/.test(m)) {
+        // Sin 0221 aplicada, el comportamiento anterior: update directo.
+        const { error: e2 } = await supabase.from('solicitudes_insumo')
+          .update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
+        if (e2) return redirigirError('/insumos/' + id, 'No se pudo actualizar el estado: ' + e2.message);
+      } else {
+        return redirigirError('/insumos/' + id, error.message);
+      }
+    }
+    revalidatePath('/insumos'); revalidatePath('/insumos/' + id); revalidatePath('/casos'); revalidatePath('/seguimiento');
+    // Se celebra SOLO la entrega completa: una parcial deja trabajo pendiente y
+    // celebrarla sonaría a burla de quien todavía está esperando lo que falta.
+    return redirigirOk('/insumos/' + id, forzar
+      ? 'Entrega registrada como PARCIAL: quedó constancia de lo que faltaba y la solicitud sigue en el flujo para difundir el resto.'
+      : 'Solicitud entregada.',
+      forzar ? undefined : 'entrega_completada');
+  }
+
   const { error } = await supabase.from('solicitudes_insumo')
     .update({ estado, actualizado_en: new Date().toISOString() }).eq('id', id);
   if (error) throw new Error('No se pudo actualizar el estado: ' + error.message);
@@ -211,26 +341,65 @@ export async function asignarCentroSolicitud(formData: FormData) {
 // y, si se pide, marca la solicitud como entregada. Así «entregar» SÍ mueve inventario
 // (antes se cerraba la solicitud sin descontar). La RPC exige puede_gestionar_acopio, que
 // cubre a Logística. El motivo enlaza el asiento con la solicitud de origen.
+// Desde 0221, si se indica a QUÉ ÍTEM del desglose corresponde lo surtido, la salida y el
+// aporte se escriben juntos con `aportar_item_desde_centro`: el aporte queda enlazado al
+// asiento de inventario por `movimiento_id` —la FK que faltaba— y el ítem se cierra solo
+// al llegar al 100 %. Sin ítem elegido (o sin la migración aplicada) se mantiene el
+// camino de siempre: `registrar_salida` a secas.
 export async function surtirDesdeCentro(formData: FormData) {
   const { supabase } = await usuario();
   const id = String(formData.get('id'));
   const puntoId = String(formData.get('punto_id') ?? '').trim();
   const itemId = String(formData.get('item_id') ?? '').trim();
+  const casoItemId = String(formData.get('caso_item_id') ?? '').trim();
   const cantidad = Number(String(formData.get('cantidad') ?? '').replace(',', '.'));
   const marcarEntregada = String(formData.get('marcar_entregada') ?? '') === '1';
+  const forzarEntrega = String(formData.get('forzar') ?? '') === '1';
   if (!puntoId || !itemId) throw new Error('Elige el centro y el producto a surtir.');
   if (!Number.isFinite(cantidad) || cantidad <= 0) throw new Error('Indica cuánto se surte.');
-  const { data: sol } = await supabase.from('solicitudes_insumo').select('titulo').eq('id', id).maybeSingle();
-  const ref = ((sol as any)?.titulo ? 'Entrega — ' + (sol as any).titulo : 'Entrega de solicitud') + ' (sol. ' + id.slice(0, 8) + ')';
-  const { error } = await supabase.rpc('registrar_salida', {
-    p_punto: puntoId, p_item: itemId, p_cantidad: cantidad, p_motivo: ref,
-  });
-  if (error) throw new Error('No se pudo surtir del inventario: ' + error.message);
-  if (marcarEntregada) {
-    await supabase.from('solicitudes_insumo').update({ estado: 'entregado', actualizado_en: new Date().toISOString() }).eq('id', id);
+
+  let aporteOk = false;
+  if (casoItemId) {
+    const { error } = await supabase.rpc('aportar_item_desde_centro', {
+      p_item: casoItemId, p_punto: puntoId, p_producto: itemId, p_cantidad: cantidad, p_solicitud: id,
+    });
+    if (!error) aporteOk = true;
+    else {
+      const m = (error.message || '').toLowerCase();
+      if (!/could not find the function|function .* does not exist|no existe la funci/.test(m)) {
+        return redirigirError('/insumos/' + id, 'No se pudo surtir del inventario: ' + error.message);
+      }
+    }
   }
-  revalidatePath('/insumos/' + id); revalidatePath('/acopio/' + puntoId);
-  redirigirOk('/insumos/' + id, 'Surtido del inventario' + (marcarEntregada ? ' · solicitud entregada' : ''));
+  if (!aporteOk) {
+    const { data: sol } = await supabase.from('solicitudes_insumo').select('titulo').eq('id', id).maybeSingle();
+    const ref = ((sol as any)?.titulo ? 'Entrega — ' + (sol as any).titulo : 'Entrega de solicitud') + ' (sol. ' + id.slice(0, 8) + ')';
+    const { error } = await supabase.rpc('registrar_salida', {
+      p_punto: puntoId, p_item: itemId, p_cantidad: cantidad, p_motivo: ref,
+    });
+    if (error) throw new Error('No se pudo surtir del inventario: ' + error.message);
+  }
+
+  let avisoEntrega = '';
+  if (marcarEntregada) {
+    const { error } = await supabase.rpc('entregar_solicitud_insumo', { p_solicitud: id, p_forzar: forzarEntrega });
+    if (error) {
+      const m = (error.message || '').toLowerCase();
+      if (/could not find the function|function .* does not exist|no existe la funci/.test(m)) {
+        await supabase.from('solicitudes_insumo').update({ estado: 'entregado', actualizado_en: new Date().toISOString() }).eq('id', id);
+        avisoEntrega = ' · solicitud entregada';
+      } else {
+        // El stock YA se descontó y el aporte quedó registrado: no es un fallo, es que
+        // aún falta cubrir algo. Se dice con todas las letras.
+        revalidatePath('/insumos/' + id); revalidatePath('/acopio/' + puntoId); revalidatePath('/casos');
+        return redirigirError('/insumos/' + id, 'Surtido registrado, pero la solicitud NO se marcó como entregada: ' + error.message);
+      }
+    } else avisoEntrega = ' · solicitud entregada';
+  }
+
+  revalidatePath('/insumos'); revalidatePath('/insumos/' + id); revalidatePath('/acopio/' + puntoId);
+  revalidatePath('/casos'); revalidatePath('/envio-redaccion');
+  redirigirOk('/insumos/' + id, 'Surtido del inventario' + (casoItemId && aporteOk ? ' y anotado en el ítem' : '') + avisoEntrega);
 }
 
 // Evidencia de entrega (Fase 3, paso 6 del flujograma): foto y/o nota que respalda
@@ -427,4 +596,169 @@ export async function eliminarNotaSolicitud(formData: FormData) {
   if (error) throw new Error('No se pudo eliminar la nota: ' + error.message);
   revalidatePath('/insumos/' + solicitud_id);
   redirigirOk('/insumos/' + solicitud_id, 'Nota eliminada.');
+}
+
+// ── Semáforo de PASOS por ítem (0220) ──
+// Mover el avance de UN ítem del desglose. Toda la autorización y la validación de la
+// transición viven en la RPC `avanzar_item` (SECURITY DEFINER, gate puede_logistica() or
+// es_admin()): aquí no se decide nada, solo se traduce el error a un aviso legible.
+// Vive en el módulo de Logística porque es SU trabajo —Recopilación y Verificación editan
+// el CONTENIDO del desglose (`guardar_item_caso`, 0218), no su avance—, pero la acción se
+// puede pasar como prop a cualquier pantalla que deba dejar moverlo.
+export async function avanzarItem(formData: FormData) {
+  const { supabase } = await usuario();
+  const item = String(formData.get('item_id') ?? '').trim();
+  const estado = String(formData.get('estado') ?? '').trim();
+  const volver = String(formData.get('volver') ?? '').trim() || '/insumos';
+  if (!item || !estado) return redirigirError(volver, 'Falta el ítem o el estado.');
+
+  const { error } = await supabase.rpc('avanzar_item', { p_item: item, p_estado: estado });
+  if (error) {
+    const m = (error.message || '').toLowerCase();
+    if (/could not find the function|function .* does not exist|no existe la funci/.test(m)) {
+      return redirigirError(volver, 'El semáforo por ítem aún no está disponible (falta aplicar la migración 0220).');
+    }
+    return redirigirError(volver, 'No se pudo mover el ítem: ' + error.message);
+  }
+  // El avance de un ítem se ve desde varias áreas: se revalidan todas las pantallas que
+  // lo pintan. Redacción, además, recibe el aviso en vivo por `casos_difusion_senal` (0181),
+  // que el trigger de 0220 sella — nunca por `casos`, que le entregaría el contacto.
+  revalidatePath('/insumos'); revalidatePath('/casos');
+  revalidatePath('/envio-redaccion'); revalidatePath('/seguimiento');
+  revalidatePath(volver);
+  // Solo se celebra el ítem CUMPLIDO; los demás avances son trámite.
+  redirigirOk(volver, 'Ítem actualizado.', estado === 'cumplido' ? 'item_cumplido' : undefined);
+}
+
+// ── Cumplimiento por ítem (0221) ──
+// Cuánto se consiguió de cada cosa y gracias a quién. La autorización, la validación del
+// origen y el cierre del ítem al 100 % viven en la RPC `registrar_aporte_item`; aquí solo
+// se recogen los campos y se traduce el error.
+function revalidarCobertura(volver: string) {
+  revalidatePath('/insumos'); revalidatePath('/casos');
+  revalidatePath('/envio-redaccion'); revalidatePath('/seguimiento');
+  if (volver) revalidatePath(volver);
+}
+function faltaMigracion0221(error: { message?: string }): boolean {
+  const m = (error.message || '').toLowerCase();
+  return /could not find the function|function .* does not exist|no existe la funci|casos_item_aportes/.test(m);
+}
+
+/** Estado actual de un ítem del desglose (best-effort: null si no se puede leer). */
+async function estadoItem(supabase: Awaited<ReturnType<typeof createClient>>, item: string): Promise<string | null> {
+  const { data } = await supabase.from('casos_items').select('estado').eq('id', item).maybeSingle();
+  return (data as { estado?: string } | null)?.estado ?? null;
+}
+
+/**
+ * Qué se celebra tras registrar un aporte.
+ *
+ * El ítem NO se cierra desde aquí: lo cierra el trigger de recálculo de 0221 cuando
+ * la suma de aportes alcanza la cantidad pedida. Por eso el estado se RELEE de la base
+ * después de la RPC —nunca se adivina— y solo si el ítem pasó a `cumplido` en ESTE
+ * aporte sube de categoría a «ítem cubierto». Si ya estaba cumplido (una corrección al
+ * alza sobre algo cubierto) o sigue a medias, se queda en «aporte registrado», que
+ * también es un hito real y tiene sus propias animaciones.
+ */
+async function celebracionDeAporte(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  item: string,
+  estabaCumplido: boolean,
+): Promise<EventoCelebracion> {
+  if (estabaCumplido) return 'aporte_registrado';
+  return (await estadoItem(supabase, item)) === 'cumplido' ? 'item_cumplido' : 'aporte_registrado';
+}
+
+export async function registrarAporteItem(formData: FormData) {
+  const { supabase } = await usuario();
+  const item = String(formData.get('item_id') ?? '').trim();
+  const volver = String(formData.get('volver') ?? '').trim() || '/insumos';
+  if (!item) return redirigirError(volver, 'Falta el ítem.');
+  const crudo = String(formData.get('cantidad') ?? '').replace(',', '.').trim();
+  const cantidad = crudo === '' ? null : Number(crudo);
+  if (cantidad !== null && (!Number.isFinite(cantidad) || cantidad <= 0)) {
+    return redirigirError(volver, 'La cantidad aportada debe ser mayor que cero.');
+  }
+  const origen = String(formData.get('origen') ?? 'miembro').trim() || 'miembro';
+  const tercero = String(formData.get('tercero') ?? '').trim().slice(0, 160) || null;
+  if (origen === 'tercero' && !tercero) {
+    return redirigirError(volver, 'Indica qué organización o persona lo cubrió.');
+  }
+  // Foto previa del ítem: distingue «este aporte lo cubrió al 100 %» (hito grande) de
+  // «se corrigió al alza algo que ya estaba cubierto» (no lo es).
+  const estabaCumplido = (await estadoItem(supabase, item)) === 'cumplido';
+
+  // (0224) Si el aporte sale de una CAPACIDAD COMPROMETIDA por un aliado, va por su RPC:
+  // registra el aporte a nombre de ese proveedor Y deja el `capacidad_id`, que es lo que
+  // hace que «cuánto le queda» se calcule de lo realmente aportado. El origen y el nombre
+  // de tercero sobran ahí: los fija la propia RPC.
+  const capacidad = String(formData.get('capacidad_id') ?? '').trim();
+  if (capacidad) {
+    const { error: eCap } = await supabase.rpc('aportar_desde_capacidad', {
+      p_item: item,
+      p_capacidad: capacidad,
+      p_cantidad: cantidad,
+      p_nota: String(formData.get('nota') ?? '').trim().slice(0, 500) || null,
+    });
+    if (eCap) {
+      if (faltaMigracion0221(eCap) || /aportar_desde_capacidad|proveedor_capacidades/.test((eCap.message || '').toLowerCase())) {
+        return redirigirError(volver, 'La capacidad por proveedor aún no está disponible (falta aplicar la migración 0224).');
+      }
+      return redirigirError(volver, 'No se pudo registrar el aporte: ' + eCap.message);
+    }
+    revalidarCobertura(volver);
+    revalidatePath('/insumos/proveedores');
+    revalidatePath('/alianzas/proveedores');
+    return redirigirOk(volver, 'Aporte registrado y descontado de la capacidad comprometida del aliado.',
+      await celebracionDeAporte(supabase, item, estabaCumplido));
+  }
+
+  const { error } = await supabase.rpc('registrar_aporte_item', {
+    p_item: item,
+    p_cantidad: cantidad,
+    p_origen: origen,
+    p_tercero: tercero,
+    p_nota: String(formData.get('nota') ?? '').trim().slice(0, 500) || null,
+  });
+  if (error) {
+    if (faltaMigracion0221(error)) return redirigirError(volver, 'El cumplimiento por ítem aún no está disponible (falta aplicar la migración 0221).');
+    return redirigirError(volver, 'No se pudo registrar el aporte: ' + error.message);
+  }
+  revalidarCobertura(volver);
+  redirigirOk(volver, 'Aporte registrado.', await celebracionDeAporte(supabase, item, estabaCumplido));
+}
+
+// P9 — «esto ya lo cubrió otra ONG o una persona ajena»: se da por cubierto, deja de
+// gestionarse, y queda grabado QUIÉN lo cubrió para no contarlo como capacidad propia.
+export async function marcarItemPorTercero(formData: FormData) {
+  const { supabase } = await usuario();
+  const item = String(formData.get('item_id') ?? '').trim();
+  const volver = String(formData.get('volver') ?? '').trim() || '/insumos';
+  const tercero = String(formData.get('tercero') ?? '').trim().slice(0, 160);
+  if (!item) return redirigirError(volver, 'Falta el ítem.');
+  if (!tercero) return redirigirError(volver, 'Indica qué organización o persona lo cubrió.');
+  const { error } = await supabase.rpc('marcar_item_cubierto_tercero', {
+    p_item: item, p_tercero: tercero,
+    p_nota: String(formData.get('nota') ?? '').trim().slice(0, 500) || null,
+  });
+  if (error) {
+    if (faltaMigracion0221(error)) return redirigirError(volver, 'El cumplimiento por ítem aún no está disponible (falta aplicar la migración 0221).');
+    return redirigirError(volver, 'No se pudo marcar como cubierto por un tercero: ' + error.message);
+  }
+  revalidarCobertura(volver);
+  redirigirOk(volver, 'Marcado como cubierto por «' + tercero + '». Deja de gestionarse y queda registrado que lo cubrió un tercero.');
+}
+
+export async function quitarAporteItem(formData: FormData) {
+  const { supabase } = await usuario();
+  const aporte = String(formData.get('aporte_id') ?? '').trim();
+  const volver = String(formData.get('volver') ?? '').trim() || '/insumos';
+  if (!aporte) return redirigirError(volver, 'Falta el aporte.');
+  const { error } = await supabase.rpc('eliminar_aporte_item', { p_aporte: aporte });
+  if (error) {
+    if (faltaMigracion0221(error)) return redirigirError(volver, 'El cumplimiento por ítem aún no está disponible (falta aplicar la migración 0221).');
+    return redirigirError(volver, 'No se pudo quitar el aporte: ' + error.message);
+  }
+  revalidarCobertura(volver);
+  redirigirOk(volver, 'Aporte quitado. Si con eso el ítem baja del 100 %, vuelve a «en gestión».');
 }

@@ -15,6 +15,30 @@ export type AlianzasResumen = {
   por_estado?: Record<string, number>;
   por_rubro?: Record<string, number>;
   por_score?: Record<string, number>;
+  // Ampliación 0228: el departamento entero, no solo el registro «Captado». Todo
+  // opcional — una base sin 0228 aplicada sigue pintando el reporte de 0200.
+  afiliados?: {
+    total?: number; activos?: number; con_cuenta?: number;
+    por_tipo?: Record<string, number>;
+    por_cargo?: { cargo: string; n: number }[];
+  };
+  escalado?: { a_alianzas?: number; voluntariado?: number; escalado_pendiente?: number; escalado_resuelto?: number };
+  por_origen?: Record<string, number>;
+  transporte?: { con_transporte?: number; sin_transporte?: number };
+  correos?: {
+    total?: number; enviados?: number; fallidos?: number; ultimo?: string | null;
+    por_plantilla?: { plantilla: string; n: number }[];
+  };
+  capacidad?: {
+    compromisos?: number; proveedores?: number; comprometido?: number;
+    restante?: number; entregado?: number; recurrentes?: number; puntuales?: number;
+  };
+};
+
+export const ETIQUETA_ORIGEN_OPORTUNIDAD: Record<string, string> = {
+  prospeccion: 'Prospección (búsqueda activa)',
+  captacion: 'Captación (llegó al equipo)',
+  sin_especificar: 'Sin especificar',
 };
 
 /** Trae el resumen agregado (RPC 0200). Gatea puede_alianzas(); si falta la migración

@@ -3,12 +3,12 @@ import { requireUsuario, esAdministrador, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import {
   areasOperablesDe, ETIQUETA_AREA_DESTINO, ETIQUETA_ESTADO_DERIVACION,
-  ETIQUETA_PRIORIDAD_DERIVACION,
+  ETIQUETA_PRIORIDAD_DERIVACION, ETIQUETA_ESTADO_ITEM, claseEstadoItem, cantidadItem,
 } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
 import AnimarEntrada from '@/components/AnimarEntrada';
 import Icono from '@/components/Icono';
-import Pill from '@/components/Pill';
+import Pill, { tonoDeClase } from '@/components/Pill';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Consejo from '@/components/Consejos';
@@ -18,6 +18,13 @@ import { tomarDerivacion, avanzarDerivacion, cerrarDerivacion } from '../casos/a
 const TONO_EST: Record<string, string> = { sin_tomar: 'neutra', tomada: 'info', en_proceso: 'aviso', cerrada: 'ok' };
 const TONO_PRIO: Record<string, string> = { alta: 'critica', media: 'aviso', baja: 'neutra' };
 const VOLVER = '/mi-area';
+
+/** «50 cajas · agua potable 5 L» — los ítems que trae mis_derivaciones() desde 0222. */
+function etiquetaItemDerivado(i: { descripcion?: string | null; cantidad?: number | string | null; unidad?: string | null; cantidad_texto?: string | null }) {
+  const n = cantidadItem(i.cantidad);
+  const cant = n ? n + (i.unidad ? ' ' + i.unidad : '') : (i.cantidad_texto ?? '').trim();
+  return (cant ? cant + ' · ' : '') + (i.descripcion ?? '');
+}
 
 /**
  * Bandeja «Mi área» (0201/0202). El operador PURO de un área (logística, redes,
@@ -101,6 +108,28 @@ export default async function MiAreaPage() {
                   {d.caso_categoria && <BadgeCategoria>{d.caso_categoria}</BadgeCategoria>}
                   {d.personas_afectadas != null && <span className="muted" style={{ fontSize: '.8rem' }}><Icono nombre="grupos" size={13} /> {d.personas_afectadas} afectadas</span>}
                 </div>
+
+                {/* Qué ÍTEMS del desglose se enviaron a TU área (0222). Sin selección
+                    —o si la derivación es anterior a 0222— la solicitud llegó completa. */}
+                {Number(d.n_desglose ?? 0) > 0 && (
+                  Number(d.n_items ?? 0) > 0 ? (
+                    <div className="fila" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center', marginTop: 8 }}>
+                      <span className="muted" style={{ fontSize: '.8rem' }}>
+                        Te enviaron {d.n_items} de {d.n_desglose} {Number(d.n_desglose) === 1 ? 'ítem' : 'ítems'}:
+                      </span>
+                      {((d.items ?? []) as any[]).map((i: any) => (
+                        <span key={i.id} className="insignia" style={{ fontSize: '.74rem', display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                          {etiquetaItemDerivado(i)}
+                          {i.estado && <Pill tono={tonoDeClase(claseEstadoItem(i.estado))}>{ETIQUETA_ESTADO_ITEM[i.estado] ?? i.estado}</Pill>}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="muted" style={{ fontSize: '.8rem', marginTop: 8 }}>
+                      Te derivaron la <strong>solicitud completa</strong> ({d.n_desglose} {Number(d.n_desglose) === 1 ? 'ítem' : 'ítems'} del desglose).
+                    </div>
+                  )
+                )}
 
                 {d.accion && <p style={{ margin: '8px 0 0', fontSize: '.9rem' }}><strong>Acción requerida:</strong> {d.accion}</p>}
                 {d.observaciones && <p className="muted" style={{ margin: '4px 0 0', fontSize: '.82rem', fontStyle: 'italic' }}>Obs.: {d.observaciones}</p>}

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ETIQUETA_ROL } from '@/lib/constantes';
 import { sonidosActivos, setSonidos, clic } from '@/lib/sonido';
+import { celebracionesActivas, setCelebraciones } from '@/lib/celebraciones';
 import type { Rol } from '@unidos/types';
 import Avatar from './Avatar';
 import Icono from './Icono';
@@ -15,16 +16,24 @@ export default function UserChip({ nombre, rol, email, avatarUrl }: {
 }) {
   const [abierto, setAbierto] = useState(false);
   const [sonido, setSonido] = useState(true);
+  const [fiesta, setFiesta] = useState(true);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const ruta = usePathname();
 
-  useEffect(() => { setSonido(sonidosActivos()); }, []);
+  useEffect(() => { setSonido(sonidosActivos()); setFiesta(celebracionesActivas()); }, []);
   function alternarSonido() {
     const v = !sonido;
     setSonido(v);
     setSonidos(v);
     if (v) clic(); // confirmación audible al reactivar
+  }
+  // Las celebraciones (animación tras cerrar un hito) se pueden apagar. Es un eje
+  // DISTINTO de `prefers-reduced-motion`: eso las deja quietas, esto las quita.
+  function alternarCelebraciones() {
+    const v = !fiesta;
+    setFiesta(v);
+    setCelebraciones(v);
   }
 
   useEffect(() => {
@@ -64,6 +73,9 @@ export default function UserChip({ nombre, rol, email, avatarUrl }: {
           <Link href="/perfil" onClick={() => setAbierto(false)}><Icono nombre="usuario" size={16} /> Mi perfil</Link>
           <button onClick={alternarSonido} aria-pressed={sonido}>
             <Icono nombre={sonido ? 'sonido' : 'sonido_off'} size={16} /> Sonidos: {sonido ? 'activados' : 'silenciados'}
+          </button>
+          <button onClick={alternarCelebraciones} aria-pressed={fiesta}>
+            <Icono nombre="cohete" size={16} /> Celebraciones: {fiesta ? 'activadas' : 'desactivadas'}
           </button>
           <button onClick={salir}><Icono nombre="salir" size={16} /> Cerrar sesión</button>
         </div>

@@ -160,6 +160,31 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       // Link del grupo de WhatsApp (0188) + publicaciones por canal (0190), best-effort.
       { const { data: aj } = await supabase.from('ajustes_app').select('valor').eq('clave', 'whatsapp_grupo_difusion').maybeSingle(); dWhatsappGrupo = (aj as any)?.valor ?? null; }
       { const { data: pubs } = await supabase.from('casos_publicaciones').select('id, canal, url, estado_canal, publicado_en').eq('caso_id', dCaso.id).eq('estado_canal', 'publicado').order('publicado_en'); dPublicaciones = (pubs as any[]) ?? []; }
+      // Desglose por ítem con su semáforo de PASOS (0220), por la RPC CURADA: Redacción no
+      // lee `casos` desde 0180, así que `items_de_caso` es su única vía —y devuelve solo
+      // qué hace falta, cuánto y por dónde va, sin contacto ni PII—. Sirve para redactar
+      // con precisión («faltan las medicinas, el agua ya va en camino»). Best-effort.
+      // Desde 0222 la fuente es la VISTA `casos_items_difusion`, que trae SOLO los ítems
+      // derivados al área «redes» (la derivación selectiva: puede que a Redacción solo se
+      // le hayan mandado las medicinas y el agua sea cosa de Logística). Si la derivación
+      // no trae selección —o es anterior a 0222— la vista devuelve el desglose completo,
+      // así que Redacción nunca se queda a ciegas. Best-effort: sin la migración, se cae
+      // a la RPC curada de 0220/0221.
+      {
+        const { data: itsD, error: eItsD } = await supabase.from('casos_items_difusion')
+          .select('id, caso_id, orden, tipo, descripcion, cantidad, unidad, cantidad_texto, estado, cubierto, pct')
+          .eq('caso_id', dCaso.id).order('orden');
+        if (!eItsD) {
+          dCaso.items = (itsD as any[]) ?? [];
+        } else {
+          const { data: its } = await supabase.rpc('items_de_caso', { p_caso: dCaso.id });
+          dCaso.items = (its as any[]) ?? [];
+        }
+      }
+      // Y el CUMPLIMIENTO de cada ítem (0221), también por RPC curada: cuánto se cubrió,
+      // quién lo puso y —lo que más le importa a Redacción— si lo cubrió OTRA ONG. Un ítem
+      // cubierto por un tercero ya no hay que difundirlo; uno al 20 % sí, y con número.
+      { const { data: aps } = await supabase.rpc('aportes_de_caso', { p_caso: dCaso.id }); dCaso.aportes = (aps as any[]) ?? []; }
       // Evidencias (0209): TODOS los adjuntos del caso (vista `casos_adjuntos_difusion`
       // + política de storage), no solo los curados. Best-effort: si la migración aún no
       // se aplicó, la consulta vuelve vacía y no se rompe.

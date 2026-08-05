@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeAlianzas } from '@/lib/auth';
+import { requireUsuario, puedeAlianzas, puedeLogistica } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
@@ -20,7 +20,12 @@ export const dynamic = 'force-dynamic';
  *  al departamento para que busque una empresa/aliado o un voluntario profesional. */
 export default async function AlianzasPage() {
   const { perfil } = await requireUsuario();
-  if (!puedeAlianzas(perfil)) redirect('/dashboard');
+  // Consulta cruzada (0226): Logística entra en SOLO LECTURA. La RLS ya lo respalda
+  // —la vista curada `alianzas_panel` le deja ver el registro sin los datos de contacto
+  // personales de la Ficha— así que aquí solo se decide qué se le pinta.
+  const esAli = puedeAlianzas(perfil);
+  const soloLectura = !esAli && puedeLogistica(perfil);
+  if (!esAli && !soloLectura) redirect('/dashboard');
   const supabase = await createClient();
 
   // Conteos del departamento (best-effort: si falta alguna migración, quedan en 0).
@@ -45,23 +50,41 @@ export default async function AlianzasPage() {
   if (!esc.error) escaladas = (esc.data ?? []) as any[];
 
   const SUBS = [
-    { href: '/captacion', icono: 'enlace', titulo: 'Captación y Prospección', texto: 'Registro de empresas y aliados (el «Captado»), con la Ficha de Prospección y la 2ª verificación.' },
+    { href: '/captacion', icono: 'enlace', titulo: 'Empresas y aliados', texto: 'Registro de empresas y aliados (el «Captado»), con la Ficha de Prospección y la 2ª verificación.' },
     { href: '/afiliacion', icono: 'usuario', titulo: 'Afiliación', texto: 'Profesionales y voluntarios clasificados por cargo, en tablero.' },
+    // Capacidad ofertada por los aliados concretados (0224): la mitad del acuerdo que
+    // faltaba —qué puede cubrir cada uno, cuánto y cada cuánto— y que Logística lee como
+    // capacidad de respuesta disponible.
+    { href: '/alianzas/proveedores', icono: 'caja', titulo: 'Aliados y su capacidad', texto: 'Con qué puede colaborar cada aliado concretado: cuánto, cada cuánto y hasta cuándo. Logística ve en todo momento lo que le queda.' },
+    // Correo institucional (0217): plantillas aprobadas + registro de lo que se escribió.
+    { href: '/alianzas/correo', icono: 'documento', titulo: 'Correo institucional', texto: 'Escribe con las plantillas del departamento; cada envío queda registrado con su folio y su resultado.' },
     { href: '/reportes/alianzas', icono: 'documento', titulo: 'Reportería', texto: 'Respaldo descargable para presentar a las empresas (CSV / PDF).' },
-  ];
+  ].filter((s) =>
+    // En consulta cruzada solo se ofrece lo que Logística puede abrir de verdad
+    // (0226). Enseñar un enlace que rebota al panel es peor que no enseñarlo.
+    !soloLectura || s.href === '/alianzas/proveedores' || s.href === '/reportes/alianzas'
+  );
 
   return (
     <AnimarEntrada>
       <Consejo id="alianzas" titulo="Alianzas Estratégicas">
-        El departamento reúne <strong>Prospección</strong> (empresas), <strong>Captación</strong> y <strong>Afiliación</strong> (profesionales y voluntarios). Desde aquí entras a cada frente y ves las <strong>solicitudes que Logística escala</strong> para buscarles una empresa o un voluntario.
+        Un solo departamento y un solo equipo: <strong>empresas y aliados</strong>, <strong>captación de recursos</strong> y <strong>afiliación</strong> de profesionales y voluntarios. Desde aquí entras a cada frente y ves las <strong>solicitudes que Logística escala</strong> para buscarles una empresa o un voluntario.
       </Consejo>
 
       <div className="pagina-cab">
         <div>
           <h1 className="fila" style={{ gap: 8 }}><Icono nombre="enlace" size={24} /> Alianzas Estratégicas</h1>
-          <p className="muted sub">Prospección · Captación · Afiliación — consecución de empresas, aliados y voluntariado profesional.</p>
+          <p className="muted sub">Empresas y aliados · Captación de recursos · Afiliación — consecución de aliados y voluntariado profesional.</p>
         </div>
       </div>
+
+      {soloLectura && (
+        <div className="aviso" style={{ marginBottom: 12 }}>
+          <Icono nombre="ojo" size={15} /> Estás de visita en el panel de Alianzas Estratégicas: <strong>solo lectura</strong>.
+          Puedes consultar con qué aliados se cuenta y su reportería, pero la gestión del registro es del departamento.
+          Los datos de contacto personales de la Ficha de Prospección no se muestran fuera del área.
+        </div>
+      )}
 
       {/* Conteos del departamento */}
       <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', margin: '16px 0' }}>

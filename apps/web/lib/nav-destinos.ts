@@ -38,20 +38,40 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.acopio) {
     d.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });
+    // Reportería del área (0227): cobertura real, plazos y quién sostiene la respuesta.
+    d.push({ href: '/reportes/logistica', etiqueta: 'Reportería Logística', icono: 'tareas' });
   }
   if (!flags.acopio && (flags.gestionCasos || flags.verificacion)) {
     d.push({ href: '/insumos/oportunidades', etiqueta: 'Donación-Ofrecimiento', icono: 'caja' });
   }
   if (flags.aliados) d.push({ href: '/aliados', etiqueta: 'Datos aliados', icono: 'whatsapp' });
   if (flags.contenido) d.push({ href: '/contenido', etiqueta: 'Contenido', icono: 'imagen' });
-  // Departamento de Alianzas Estratégicas (0198-0200): su puerta de entrada (hub) más el
-  // registro «Captado» (Captación + Prospección de empresas, con Ficha de Prospección) y
-  // Afiliación. Captación ya NO cuelga del menú de «Logística»: vive bajo su departamento.
+  // Departamento de Alianzas Estratégicas (0198-0200, unificado en 0216): su puerta de
+  // entrada (hub) más el registro «Captado» (empresas y aliados, con Ficha de Prospección)
+  // y Afiliación. Con un solo rol para el departamento, las tres secciones se abren con la
+  // MISMA bandera: quien pertenece a Alianzas entra a todas.
   if (flags.alianzas) d.push({ href: '/alianzas', etiqueta: 'Alianzas Estratégicas', icono: 'enlace', grupo: 'Alianzas Estratégicas' });
-  if (flags.captacion || flags.prospeccion) d.push({ href: '/captacion', etiqueta: 'Captación y Prospección', icono: 'buscar', grupo: 'Alianzas Estratégicas' });
-  if (flags.afiliacion) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
-  // Reportería del departamento (0200): respaldo descargable para presentar a empresas.
+  if (flags.alianzas) d.push({ href: '/captacion', etiqueta: 'Empresas y aliados', icono: 'buscar', grupo: 'Alianzas Estratégicas' });
+  if (flags.alianzas) d.push({ href: '/afiliacion', etiqueta: 'Afiliación', icono: 'usuario', grupo: 'Alianzas Estratégicas' });
+  // Capacidad ofertada por los aliados concretados (0224): qué puede cubrir cada uno,
+  // cuánto y cada cuánto. Es lo que Logística lee como capacidad de respuesta disponible.
+  if (flags.alianzas) d.push({ href: '/alianzas/proveedores', etiqueta: 'Aliados y capacidad', icono: 'caja', grupo: 'Alianzas Estratégicas' });
+  // Correo institucional con plantillas y registro de envíos (0217).
+  if (flags.alianzas) d.push({ href: '/alianzas/correo', etiqueta: 'Correo institucional', icono: 'documento', grupo: 'Alianzas Estratégicas' });
+  // Reportería del departamento (0200/0228): respaldo descargable para presentar a empresas.
   if (flags.alianzas) d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas', grupo: 'Alianzas Estratégicas' });
+  // Consulta cruzada (0226). Cada área ve el panel de la otra en SOLO LECTURA: Alianzas
+  // necesita saber en qué se está usando lo que consigue, y Logística con qué aliados
+  // puede contar. Solo se ofrece a quien NO es ya del área de destino, para no duplicar
+  // el mismo enlace en el menú de quien ya lo tiene arriba.
+  if (flags.alianzas && !flags.acopio) {
+    d.push({ href: '/insumos', etiqueta: 'Logística (consulta)', icono: 'camion', grupo: 'Alianzas Estratégicas' });
+    d.push({ href: '/reportes/logistica', etiqueta: 'Reportería Logística', icono: 'tareas', grupo: 'Alianzas Estratégicas' });
+  }
+  if (flags.acopio && !flags.alianzas) {
+    d.push({ href: '/alianzas', etiqueta: 'Alianzas (consulta)', icono: 'enlace' });
+    d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas' });
+  }
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   d.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });
@@ -72,5 +92,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   // Destinos útiles que no están en el menú lateral pero sí son navegables para todos.
   d.push({ href: '/perfil', etiqueta: 'Mi perfil', icono: 'ojo' });
   d.push({ href: '/insignias', etiqueta: 'Mis insignias', icono: 'ok' });
+  // Panel de animaciones (celebraciones): la galería de lo que aparece al cerrar un
+  // hito, con su interruptor personal. NO es de un área — es de toda la organización,
+  // así que va sin bandera, para todo el mundo.
+  d.push({ href: '/celebraciones', etiqueta: 'Animaciones', icono: 'sol' });
   return d;
 }

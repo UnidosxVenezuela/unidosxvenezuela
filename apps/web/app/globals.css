@@ -865,6 +865,35 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 .cobertura-barra { flex: 1; height: 8px; border-radius: 999px; background: var(--sup3); overflow: hidden; min-width: 100px; }
 .cobertura-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--btn-prim), var(--amarillo)); }
 
+/* Cumplimiento de un ÍTEM del desglose (0221): «4 de 5 colchones — 80 %».
+   La barra se parte en DOS tramos sobre la misma pista para que la distinción que pidió
+   el equipo se lea de un vistazo: lo que cubrió la organización (degradado de la casa) y
+   lo que cubrió un TERCERO —otra ONG o una persona ajena— en teal, el mismo color con el
+   que la plataforma marca lo que viene de fuera. */
+.cob-item { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.cob-item .cobertura-barra { flex: 1; height: 6px; min-width: 90px; display: flex; }
+.cob-item .cobertura-fill { border-radius: 0; }
+.cob-item .cobertura-fill:first-child { border-radius: 999px 0 0 999px; }
+.cob-item .cobertura-fill:last-child { border-radius: 0 999px 999px 0; }
+.cobertura-fill.tercero { background: var(--t-teal-fg); }
+.cob-item .cob-txt { font-size: .78rem; color: var(--texto2); white-space: nowrap; font-weight: 600; }
+.cob-item .cob-txt.falta { color: var(--critica); }
+
+/* CAPACIDAD RESTANTE de un proveedor (0224). El número grande es el dato por el que
+   existe la pantalla: Logística no necesita un porcentaje, necesita «quedan 20 raciones
+   esta semana». Por eso el restante manda y la barra —que muestra lo YA CONSUMIDO de la
+   ventana en curso— queda debajo, fina y secundaria.
+   Un compromiso fuera de vigencia (caducado, aún no empezado, retirado) se pinta apagado
+   y con el MOTIVO: «se agotó» y «se acabó el trato» no piden lo mismo. */
+.cap-hero { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.cap-hero .cap-num { font-size: 1.7rem; font-weight: 800; line-height: 1; color: var(--ok); letter-spacing: -.02em; }
+.cap-hero .cap-txt { font-size: .85rem; color: var(--texto2); font-weight: 600; }
+.cap-hero.cap-hero-cero .cap-num { color: var(--critica); }
+.cap-hero.cap-hero-off .cap-num { color: var(--texto2); opacity: .6; }
+.cap-hero.cap-hero-off .cap-txt { font-weight: 500; }
+.cobertura-fill.capacidad { background: linear-gradient(90deg, var(--t-teal-fg), var(--amarillo)); }
+.cap-tarjeta.cap-off { opacity: .68; }
+
 /* Barra de progreso hacia la próxima insignia (vitrina de Insignias). */
 .medalla-prog { width: 100%; }
 .medalla-prog-barra { height: 6px; border-radius: 999px; background: var(--sup3); overflow: hidden; }
@@ -891,6 +920,202 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
   .celeb-card { animation: none; }
   .celeb-aura { animation: none; opacity: .7; }
   .celeb-confeti { display: none; }
+}
+
+/* ===== MOTOR DE CELEBRACIONES (prefijo `.cel-`) =====
+   Overlay que reconoce el trabajo terminado: animación breve + mensaje corto.
+   Piezas: `lib/celebraciones.ts` (catálogo/rotación), `components/Celebracion.tsx`
+   (overlay), `components/celebraciones/*.tsx` (animaciones SVG).
+
+   OJO: `.celeb-*` (arriba) es OTRA cosa — la celebración manual de insignias.
+   Este motor usa `.cel-*`. No mezclar.
+
+   Clases que expone el motor (las pueden usar las animaciones y el panel):
+     .cel-capa          capa fija a pantalla completa, NO captura el puntero
+     .cel-capa-quieta   variante con movimiento reducido (aviso estático)
+     .cel-figura        dibujo + mensaje; ESTA sí captura el puntero (cierra al tocar)
+     .cel-saliendo      estado de salida (200 ms, coincide con SALIDA_MS)
+     .cel-arte          contenedor del dibujo (transparente por defecto)
+     .cel-arte-caja     variante en tarjeta (ilustración con fondo sólido)
+     .cel-video         <video> de una celebración de vídeo
+     .cel-video-alfa    vídeo con canal alfa: se superpone sin caja
+     .cel-poster        imagen de respaldo (vista previa del panel)
+     .cel-svg           raíz <svg> de una animación (la ponen las animaciones)
+     .cel-svg-quieto    la misma con movimiento reducido: no anima nada
+     .cel-mensaje       píldora con el texto (región aria-live)
+     .cel-aviso         aviso estático de movimiento reducido
+     .cel-incrustada    vista previa del panel (sin capa fija) */
+
+/* Va por DEBAJO del toast (1000) y por encima de todo lo demás (máximo 200).
+   `pointer-events: none` es la regla de oro: la celebración jamás bloquea el
+   trabajo, se puede seguir tocando la app por debajo mientras se ve. */
+.cel-capa {
+  position: fixed; inset: 0; z-index: 900; pointer-events: none;
+  display: grid; align-items: end; justify-items: center;
+  /* Por encima del toast, para que se lean los dos a la vez. */
+  padding: 0 16px clamp(92px, 13vh, 152px);
+}
+.cel-figura {
+  pointer-events: auto; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  max-width: min(360px, 92vw);
+  animation: cel-entrada .34s cubic-bezier(.2, .9, .3, 1);
+}
+.cel-saliendo { animation: cel-salida .2s ease forwards; }
+
+.cel-arte { display: flex; align-items: center; justify-content: center; }
+.cel-arte-caja {
+  background: var(--sup1); border: 1px solid var(--borde); border-radius: 18px;
+  box-shadow: var(--sombra2); overflow: hidden;
+}
+.cel-video { display: block; width: min(230px, 62vw); height: auto; }
+/* Con canal alfa no hay caja: es una pegatina sobre la app, y la sombra la despega. */
+.cel-video-alfa { filter: drop-shadow(0 10px 22px rgba(16, 24, 64, .30)); }
+.cel-poster { display: block; width: min(230px, 62vw); height: auto; border-radius: 14px; }
+.cel-svg { display: block; filter: drop-shadow(0 8px 18px rgba(16, 24, 64, .22)); }
+
+.cel-mensaje {
+  background: var(--sup1); color: var(--texto); border: 1px solid var(--borde);
+  border-radius: var(--r-pill); padding: 9px 16px; font-weight: 700; font-size: .92rem;
+  line-height: 1.25; text-align: center; min-height: 1.2em;
+  box-shadow: var(--sombra2), 0 0 0 3px rgba(255, 206, 0, .26);
+}
+
+/* Movimiento reducido: mismo mensaje, quieto y discreto. Nunca desaparece. */
+.cel-aviso {
+  pointer-events: auto; display: flex; align-items: center; gap: 10px;
+  background: var(--sup1); color: var(--texto); border: 1px solid var(--borde);
+  border-left: 4px solid var(--ok-solido); border-radius: 13px; padding: 11px 15px;
+  font-weight: 600; font-size: .92rem; box-shadow: var(--sombra2); max-width: min(360px, 92vw);
+}
+.cel-aviso-vertical { flex-direction: column; text-align: center; border-left-width: 1px; }
+.cel-aviso-ico { display: inline-flex; color: var(--ok-solido); flex-shrink: 0; }
+.cel-aviso-arte { display: inline-flex; align-items: center; justify-content: center; }
+.cel-aviso-txt { min-width: 0; }
+
+/* Vista previa del panel: lo mismo, pero dentro del flujo de la página. */
+.cel-incrustada { display: flex; justify-content: center; padding: 8px 0; }
+.cel-incrustada .cel-figura { cursor: default; }
+
+@keyframes cel-entrada { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes cel-salida { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(8px) scale(.98); } }
+
+[data-tema="oscuro"] .cel-svg { filter: drop-shadow(0 8px 20px rgba(0, 0, 0, .55)); }
+[data-tema="oscuro"] .cel-video-alfa { filter: drop-shadow(0 10px 24px rgba(0, 0, 0, .6)); }
+[data-tema="oscuro"] .cel-mensaje { box-shadow: var(--sombra2), 0 0 0 3px rgba(255, 206, 0, .20); }
+
+@media (max-width: 560px) {
+  .cel-capa { padding-bottom: clamp(100px, 18vh, 168px); }
+  .cel-video, .cel-poster { width: min(190px, 56vw); }
+}
+
+/* Movimiento reducido: NADA se mueve. (El bloque global de más arriba ya deja
+   las animaciones en .001ms; esto lo hace explícito y cubre a las animaciones
+   SVG que otros añadan, que además reciben `reducido` por props.) */
+@media (prefers-reduced-motion: reduce) {
+  .cel-figura, .cel-saliendo, .cel-arte, .cel-mensaje, .cel-aviso { animation: none; transition: none; }
+  .cel-svg, .cel-svg-quieto, .cel-svg *, .cel-svg-quieto * { animation: none !important; transition: none !important; }
+}
+
+/* ===== PANEL DE ANIMACIONES (prefijo `.pcel-`) =====
+   La galería de celebraciones de `/celebraciones` (componente `PanelCelebraciones`).
+   Prefijo propio porque `.cel-*` ya es del MOTOR (el overlay) y `.celeb-*` de la
+   vitrina de insignias: tres cosas distintas, tres prefijos. Aquí solo va lo del
+   panel; el dibujo lo sigue pintando el motor con sus clases.
+
+     .pcel-rejilla      rejilla de tarjetas del catálogo
+     .pcel-tarjeta      una celebración (encima de `.tarjeta`)
+     .pcel-vista        hueco de la vista previa (alto fijo: la rejilla no baila)
+     .pcel-vista-vacia  marcador de «aún no descargada» (nada viaja hasta pulsar)
+     .pcel-momentos     fila de momentos en los que puede salir
+     .pcel-pie          pie de la tarjeta con el botón de probar
+     .pcel-filtros      fila de chips de momento
+     .pcel-chip         chip de filtro (usa aria-pressed como estado, no una clase)
+     .pcel-tono         etiqueta del tono (color propio, no roba los de estado)
+     .pcel-nota         aviso informativo con soporte de tema (ver abajo)
+     .pcel-mazos        columnas de la baraja (solo Coordinación)
+     .pcel-mazo(-tit|-lista|-num|-prox)  un mazo y sus cartas en orden */
+
+.pcel-rejilla {
+  display: grid; gap: 14px; margin-bottom: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(248px, 1fr));
+}
+.pcel-tarjeta { display: flex; flex-direction: column; gap: 10px; margin-bottom: 0; }
+
+/* Alto fijo para que las tarjetas no salten al aparecer un dibujo: la rejilla queda
+   quieta mientras se prueban unas y otras. */
+.pcel-vista {
+  min-height: 246px; display: grid; place-items: center; overflow: hidden;
+  background: var(--sup2); border: 1px solid var(--borde); border-radius: 14px; padding: 6px;
+}
+.pcel-vista .cel-incrustada { padding: 0; }
+/* En una tarjeta el dibujo manda sobre el ancho que pide el motor. */
+.pcel-vista .cel-video, .pcel-vista .cel-poster { width: min(196px, 100%); }
+.pcel-vista .cel-mensaje { font-size: .82rem; padding: 6px 12px; }
+
+.pcel-vista-vacia {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: var(--texto2); font-size: .84rem; text-align: center; padding: 16px;
+}
+.pcel-vista-vacia svg { opacity: .55; }
+
+.pcel-momentos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pcel-pie { margin-top: auto; padding-top: 2px; }
+
+.pcel-filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.pcel-chip {
+  border: 1px solid var(--borde-f); background: var(--sup1); color: var(--texto);
+  border-radius: var(--r-pill); padding: 6px 14px; min-height: 36px;
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.pcel-chip:hover { background: var(--sup2); }
+.pcel-chip[aria-pressed="true"] { background: var(--azul); border-color: var(--azul-osc); color: #fff; }
+.pcel-chip:focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; }
+
+/* El tono no es un ESTADO: usa los tintes de tile, no los colores de pill (verde =
+   correcto, rojo = error), que aquí dirían algo que no es. */
+.pcel-tono {
+  display: inline-flex; align-items: center; padding: 4px 12px; border-radius: var(--r-pill);
+  font-size: .76rem; font-weight: 600; white-space: nowrap;
+  background: var(--sup2); color: var(--texto2);
+}
+.pcel-tono[data-tono="epico"] { background: var(--t-azul-bg); color: var(--t-azul-fg); }
+.pcel-tono[data-tono="gracioso"] { background: var(--t-ambar-bg); color: var(--t-ambar-fg); }
+.pcel-tono[data-tono="tierno"] { background: var(--t-rosa-bg); color: var(--t-rosa-fg); }
+.pcel-tono[data-tono="sobrio"] { background: var(--t-teal-bg); color: var(--t-teal-fg); }
+
+/* Aviso informativo. Es `.aviso-superv` bien hecho: aquel fija `color: var(--azul-osc)`
+   —un azul casi negro que NO cambia con el tema— sobre `--tinte-prim`, que en oscuro es
+   otro azul casi negro; el texto queda ilegible. Este usa `--texto` y `--link`, que sí
+   cambian, así que se lee en los dos temas. */
+.pcel-nota {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin: 14px 0; padding: 11px 14px;
+  background: var(--tinte-prim); border: 1px solid var(--borde-f); border-left: 3px solid var(--link);
+  border-radius: 10px; color: var(--texto); font-size: .9rem;
+}
+.pcel-nota svg { flex-shrink: 0; color: var(--link); margin-top: 2px; }
+
+.pcel-mazos {
+  display: grid; gap: 14px; margin-top: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+.pcel-mazo { background: var(--sup2); border: 1px solid var(--borde); border-radius: 12px; padding: 12px 14px; }
+.pcel-mazo-tit { margin: 0 0 8px; font-size: .9rem; font-weight: 700; }
+.pcel-mazo-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.pcel-mazo-lista li { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--texto2); }
+.pcel-mazo-num {
+  display: inline-grid; place-items: center; width: 20px; height: 20px; flex-shrink: 0;
+  border-radius: 999px; background: var(--sup3); color: var(--texto2);
+  font-size: .7rem; font-weight: 700;
+}
+.pcel-mazo-prox { color: var(--texto); font-weight: 700; }
+.pcel-mazo-prox .pcel-mazo-num { background: var(--azul); color: #fff; }
+
+@media (max-width: 560px) {
+  .pcel-rejilla { grid-template-columns: 1fr; }
+  .pcel-vista { min-height: 230px; }
 }
 
 /* Comparador de identidad (modal rostro vs documento, con zoom). */

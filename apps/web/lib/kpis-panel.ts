@@ -56,8 +56,9 @@ export async function kpisDeRol(supabase: any, userId: string, flags: NavFlags):
       contar: () => num(supabase.from('solicitudes_insumo').select('*', { count: 'exact', head: true }).in('estado', ['solicitado', 'en_gestion', 'en_ruta'])),
     },
     {
-      cond: flags.captacion,
-      base: { etiqueta: 'Oportunidades por investigar', sub: 'en investigación', icono: 'enlace', tinte: '#eef2ff', color: 'var(--azul)', href: '/captacion' },
+      // Departamento de Alianzas Estratégicas (rol único desde 0216).
+      cond: flags.alianzas,
+      base: { etiqueta: 'Aliados por investigar', sub: 'en investigación', icono: 'enlace', tinte: '#eef2ff', color: 'var(--azul)', href: '/captacion' },
       contar: () => num(supabase.from('oportunidades').select('*', { count: 'exact', head: true }).eq('estado', 'investigacion')),
     },
     {

@@ -1,7 +1,10 @@
 'use server';
 // Afiliación (0198): base de profesionales y voluntarios del departamento de Alianzas
-// Estratégicas. La gestiona el admin general y el rol 'afiliacion'. La autorización
-// real la impone la RLS (puede_alianzas); aquí se valida para dar buen error.
+// Estratégicas. Desde 0216 la gestiona TODO el departamento (rol unificado 'captacion')
+// más el admin general: el rol 'afiliacion' quedó unificado y ya nadie lo tiene, así que
+// exigirlo dejaba la sección inaccesible. La autorización real la impone la RLS
+// (puede_alianzas); aquí se valida para dar buen error. Espejo de exigirAlianzas() en
+// app/(app)/captacion/actions.ts.
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
@@ -20,7 +23,8 @@ async function exigirAfiliacion() {
   if (!user) redirect('/login');
   const { data: yo } = await supabase.from('perfiles').select('rol, roles_extra').eq('id', user.id).single();
   const roles = [yo?.rol, ...(((yo?.roles_extra as Rol[] | null) ?? []))];
-  if (!roles.includes('admin') && !roles.includes('afiliacion')) throw new Error('No tienes permiso para gestionar afiliados.');
+  if (!(['admin', 'captacion', 'prospeccion', 'afiliacion'] as Rol[]).some((r) => roles.includes(r)))
+    throw new Error('No tienes permiso para gestionar afiliados.');
   return { supabase, user };
 }
 

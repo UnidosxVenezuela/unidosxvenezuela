@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { requireUsuario, puedeLogistica } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeAlianzas } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { fechaHora } from '@/lib/fechas';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ESTADOS_INSUMO, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
+import { resumenItems, resumenCobertura, type AporteItem } from '@/lib/flujo';
+import { BarraCobertura, pctTerceros } from '@/components/AportesItem';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
 import Kpi from '@/components/Kpi';
@@ -16,11 +18,14 @@ import ResaltarNuevos from '@/components/ResaltarNuevos';
 
 export default async function InsumosPage() {
   const { perfil } = await requireUsuario();
-  const rolesG = [perfil?.rol, ...((perfil?.roles_extra as string[] | null) ?? [])];
-  const esLog = rolesG.includes('admin') || rolesG.includes('logistica') || rolesG.includes('admin_logistica');
-  // Captación entra en modo CONSULTA (0163): revisa las solicitudes y deja en su
-  // bitácora referencias de aliados; no gestiona ni avanza nada (eso es de Logística).
-  const esCapt = !esLog && rolesG.includes('captacion');
+  // Gates con los HELPERS, nunca con rolesDe().includes(): `puedeLogistica` incluye al
+  // MANDO del grupo de Logística (líder/coordinador sin rol operativo, 0214), que la RLS
+  // sí reconoce; escribirlo a mano lo dejaba fuera de su propia área.
+  const esLog = puedeLogistica(perfil);
+  // Alianzas Estratégicas entra en modo CONSULTA (0163): revisa las solicitudes y deja en
+  // su bitácora referencias de empresas y aliados; no gestiona ni avanza nada (eso es de
+  // Logística). Mismo criterio que /insumos/[id] (0216: un solo rol de departamento).
+  const esCapt = !esLog && puedeAlianzas(perfil);
   if (!esLog && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
@@ -38,9 +43,68 @@ export default async function InsumosPage() {
   const enCurso = activas.filter((s) => s.estado !== 'solicitado').length;
   const pctCobertura = activas.length ? Math.round((enCurso / activas.length) * 100) : 0;
 
+  // Desglose por ítem (0218) de las solicitudes derivadas de un caso: en la tarjeta, además
+  // del estado agregado, se ve CUÁNTO del desglose está cubierto (0220). Una sola consulta
+  // para todo el tablero; la lectura la concede `citems_select` (es_verificado). Best-effort:
+  // sin la migración vuelve vacío y las tarjetas quedan como estaban.
+  const casoIds = Array.from(new Set(solicitudes.map((s) => s.caso_id).filter(Boolean))) as string[];
+  const itemsPorCaso = new Map<string, { id: string; estado?: string | null; cantidad?: number | null }[]>();
+  const aportesPorCaso = new Map<string, AporteItem[]>();
+  if (casoIds.length > 0) {
+    const { data: its } = await supabase.from('casos_items').select('id, caso_id, estado, cantidad').in('caso_id', casoIds);
+    // Derivación selectiva (0222): si Verificación repartió el desglose, este tablero solo
+    // debe contar LO QUE SE LE DERIVÓ A LOGÍSTICA — si no, la barra diría que faltan tres
+    // ítems que en realidad son de Alianzas. Sin puente (o sin la migración) se cuentan
+    // todos, exactamente como antes.
+    const soloLogistica = new Map<string, Set<string>>();
+    {
+      const { data: dls } = await supabase.from('casos_derivaciones')
+        .select('id, caso_id').in('caso_id', casoIds).eq('area', 'logistica');
+      const casoDeDeriv = new Map<string, string>(((dls ?? []) as any[]).map((d) => [d.id, d.caso_id]));
+      if (casoDeDeriv.size > 0) {
+        const { data: puente } = await supabase.from('casos_derivacion_items')
+          .select('derivacion_id, item_id').in('derivacion_id', Array.from(casoDeDeriv.keys()));
+        for (const r of ((puente ?? []) as any[])) {
+          const caso = casoDeDeriv.get(r.derivacion_id);
+          if (!caso) continue;
+          const s = soloLogistica.get(caso) ?? new Set<string>();
+          s.add(r.item_id);
+          soloLogistica.set(caso, s);
+        }
+      }
+    }
+    const casoDeItem = new Map<string, string>();
+    for (const it of ((its ?? []) as any[])) {
+      const permitidos = soloLogistica.get(it.caso_id);
+      if (permitidos && !permitidos.has(it.id)) continue;   // ese ítem se derivó a otra área
+      const arr = itemsPorCaso.get(it.caso_id) ?? [];
+      arr.push({ id: it.id, estado: it.estado, cantidad: it.cantidad });
+      itemsPorCaso.set(it.caso_id, arr);
+      casoDeItem.set(it.id, it.caso_id);
+    }
+    // Cuánto se cubrió y qué parte la pusieron terceros (0221). Una sola consulta para
+    // todo el tablero; la lectura la concede `citem_aportes_select` (es_verificado).
+    if (casoDeItem.size > 0) {
+      const { data: aps } = await supabase.from('casos_item_aportes')
+        .select('id, item_id, cantidad, origen').in('item_id', Array.from(casoDeItem.keys()));
+      for (const a of ((aps ?? []) as any[])) {
+        const caso = casoDeItem.get(a.item_id);
+        if (!caso) continue;
+        const arr = aportesPorCaso.get(caso) ?? [];
+        arr.push(a as AporteItem);
+        aportesPorCaso.set(caso, arr);
+      }
+    }
+  }
+
   return (
     <AnimarEntrada>
       <RealtimeRefrescar tabla="solicitudes_insumo" />
+      {/* El avance por ítem también llega en vivo: lo mueve Logística, pero el desglose lo
+          editan además Recopilación y Verificación (0218). */}
+      <RealtimeRefrescar tabla="casos_items" />
+      {/* Y el cumplimiento (0221): un aporte parcial no cambia `casos_items`. */}
+      <RealtimeRefrescar tabla="casos_item_aportes" />
       <div className="pagina-cab">
         <div>
           <h1>Logística</h1>
@@ -62,7 +126,7 @@ export default async function InsumosPage() {
 
       {esCapt && (
         <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
-          <Icono nombre="ojo" size={15} /> Vista de <strong>consulta para Captación</strong>: abre una solicitud y deja en su <strong>bitácora</strong> las empresas o alianzas que puedan ayudar a completarla. La gestión y el avance son de Logística.
+          <Icono nombre="ojo" size={15} /> Vista de <strong>consulta para Alianzas Estratégicas</strong>: abre una solicitud y deja en su <strong>bitácora</strong> las empresas o alianzas que puedan ayudar a completarla. La gestión y el avance son de Logística.
         </p>
       )}
 
@@ -123,10 +187,32 @@ export default async function InsumosPage() {
                   {(() => {
                     const paso = ESTADOS_INSUMO.indexOf(s.estado) + 1;
                     const completo = s.estado === 'entregado';
+                    // Avance del DESGLOSE (0220): una solicitud «en gestión» puede tener 3
+                    // de 5 ítems ya cubiertos, y eso es lo que de verdad dice cuánto falta.
+                    const its = s.caso_id ? itemsPorCaso.get(s.caso_id) : undefined;
+                    const r = its && its.length > 0 ? resumenItems(its) : null;
+                    // Y CUÁNTO de lo pedido se cubrió (0221): «3 de 5 ítems» no dice lo
+                    // mismo que «80 % de lo pedido», y la parte en teal es la que puso un
+                    // tercero —no cuenta como capacidad nuestra—.
+                    const cob = its && its.length > 0 ? resumenCobertura(its, (s.caso_id ? aportesPorCaso.get(s.caso_id) : undefined) ?? []) : null;
+                    const pctTer = cob ? pctTerceros(cob.cubiertoTercero, cob.pedido) : 0;
                     return (
                       <div style={{ borderTop: '1px solid var(--borde)', marginTop: 10, paddingTop: 8 }}>
                         <FlujoProgreso paso={paso} total={ESTADOS_INSUMO.length} completo={completo}
                           etiqueta={completo ? 'Flujo completo · Entregado ✓' : `Paso ${paso} de ${ESTADOS_INSUMO.length} · ${ETIQUETA_ESTADO_INSUMO[s.estado] ?? s.estado}`} />
+                        {/* `r.total` deja fuera los ítems cancelados (espejo de
+                            public.cobertura_items_caso): con el desglose entero cancelado
+                            no hay barra que pintar. */}
+                        {r && r.total > 0 && (
+                          <div style={{ marginTop: 6 }}>
+                            <FlujoProgreso paso={r.cumplidos} total={r.total} completo={r.completo} etiqueta={r.etiqueta} />
+                          </div>
+                        )}
+                        {cob && cob.pct !== null && (
+                          <BarraCobertura pct={cob.pct} pctTercero={pctTer}
+                            etiqueta={`${cob.pct}% cubierto${cob.conTercero > 0 ? ` · ${cob.conTercero} por terceros` : ''}`}
+                            aria="Cobertura del desglose por cantidad" />
+                        )}
                       </div>
                     );
                   })()}
