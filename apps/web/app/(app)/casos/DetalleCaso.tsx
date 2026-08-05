@@ -295,8 +295,15 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
 
       {/* Desglose por ítem (0218): qué se necesita, línea por línea, con cantidad
           numérica. Los casos anteriores no tienen ítems: el bloque degrada mostrando el
-          texto libre de `req_cantidad` como referencia. */}
-      {(caso.es_requerimiento || (items ?? []).length > 0) && (
+          texto libre de `req_cantidad` como referencia.
+
+          Hasta 0229 este bloque exigía además `caso.es_requerimiento`, y eso dejaba fuera
+          justo a las solicitudes que MÁS falta hacía desglosar: las anteriores al ítem,
+          que se manejaban con texto libre («50 cajas de agua») y nacen con ese campo en
+          false (0112). No había forma de adoptarlas. Ahora basta con que alguien pueda
+          gestionar el desglose: si el caso no lleva ítems, el bloque invita a crearlos.
+          Quien no puede editar y no hay nada que enseñar, no ve una tarjeta vacía. */}
+      {(caso.es_requerimiento || puedeGestionarItems || (items ?? []).length > 0) && (
         <BloqueItemsCaso casoId={caso.id} items={items ?? []} reqCantidad={caso.req_cantidad}
           reqTipo={caso.req_tipo} volver={volver} puedeGestionar={puedeGestionarItems}
           cambios={cambiosItems ?? []} nombres={nombres}

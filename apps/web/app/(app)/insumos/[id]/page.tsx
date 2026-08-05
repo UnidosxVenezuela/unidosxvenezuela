@@ -13,6 +13,7 @@ import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
 import ItemsSemaforo from '@/components/ItemsSemaforo';
+import EditorDesglose from '../EditorDesglose';
 import { cambiarEstadoSolicitud, asignarProveedorSolicitud, asignarCentroSolicitud, crearEnvio, eliminarEnvio, eliminarSolicitud, guardarEvidenciaEntrega, registrarNotaSolicitud, eliminarNotaSolicitud, surtirDesdeCentro, escalarSolicitud, devolverEntregaInsumo, solicitarCoberturaParcial, subirAdjuntosInsumo, eliminarAdjuntoInsumo, avanzarItem, registrarAporteItem, marcarItemPorTercero, quitarAporteItem } from '../actions';
 import { desestimarCaso } from '../../casos/actions';
 import { resumenItems, resumenCobertura } from '@/lib/flujo';
@@ -94,6 +95,8 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   let items: any[] = [];
   let aportes: any[] = [];
   let nDesglose = 0;
+  let itemsAdmin: any[] = [];
+  let sinRepartir = 0;
   if (s.caso_id) {
     const { data: itA, error: eItA } = await supabase.rpc('items_de_caso_area', { p_caso: s.caso_id, p_area: 'logistica' });
     if (!eItA) {
@@ -109,6 +112,16 @@ export default async function SolicitudPage({ params }: { params: { id: string }
     // de un compañero se muestre con la regla de privacidad de siempre.
     const { data: ap } = await supabase.rpc('aportes_de_caso', { p_caso: s.caso_id });
     aportes = (ap as any[]) ?? [];
+
+    // Desglose COMPLETO para el editor (0229): para corregir hace falta ver el conjunto,
+    // o se duplican líneas que ya existen en la parte derivada a otra área. Trae además
+    // `tiene_rastro` (decide si «quitar» borra o CANCELA) y `mi_area`. No expone nada que
+    // `citems_select` (0218) no exponga ya. Best-effort: sin la migración 0229 el editor
+    // no se pinta y la pantalla se comporta exactamente como antes.
+    const { data: itAdm, error: eItAdm } = await supabase.rpc('items_de_caso_admin', { p_caso: s.caso_id });
+    if (!eItAdm) itemsAdmin = (itAdm as any[]) ?? [];
+    const { data: sr } = await supabase.rpc('items_sin_repartir', { p_caso: s.caso_id });
+    sinRepartir = Number(sr ?? 0) || 0;
   }
   // Capacidad COMPROMETIDA por los aliados que hoy tiene margen (0224): es lo que permite
   // registrar el aporte «a cuenta» de un aliado y descontarlo de su ventana en curso, en
@@ -233,6 +246,18 @@ export default async function SolicitudPage({ params }: { params: { id: string }
             capacidades={gestor ? capacidades : []}
             volver={'/insumos/' + id}
           />
+
+          {/* Corregir el desglose SIN salir de la gestión (0229). `ItemsSemaforo` mueve el
+              avance y anota aportes, pero no permitía agregar, quitar ni cambiar una línea:
+              para eso había que irse a /casos/[id], y ni siquiera había enlace. Las
+              necesidades cambian en mitad del trabajo —aparece un gasto de traslado, la
+              familia ya consiguió los colchones, el número real era otro—, así que el
+              editor tiene que estar donde ocurre el trabajo. Plegado por defecto: la
+              pantalla sigue siendo la de gestionar, no la de editar. */}
+          {gestor && s.caso_id && (
+            <EditorDesglose casoId={s.caso_id} items={itemsAdmin} volver={'/insumos/' + id}
+              sinRepartir={sinRepartir} />
+          )}
 
           {casoFull && (
             <div className="tarjeta">
