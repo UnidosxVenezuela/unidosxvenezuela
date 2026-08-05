@@ -60,7 +60,7 @@ export default function EditorDesglose({ casoId, items = [], volver, sinRepartir
     <details className="tarjeta" style={{ marginTop: 12 }}>
       <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
         <span className="fila" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }}>
-          <Icono nombre="editar" size={15} /> Corregir el desglose
+          <Icono nombre="caja" size={15} /> Corregir el desglose
           <span className="muted" style={{ fontWeight: 400, fontSize: '.84rem' }}>
             · agregar, cambiar o quitar líneas
           </span>
@@ -120,7 +120,7 @@ export default function EditorDesglose({ casoId, items = [], volver, sinRepartir
                         <input type="hidden" name="item_id" value={i.id} />
                         <input type="hidden" name="volver" value={volver} />
                         <BotonConfirmar
-                          mensaje={'¿Cancelar «' + i.descripcion + '»?\n\nNo se borra: este ítem ya tiene cosas registradas (aportes o cambios) y esa constancia se conserva. Queda marcado como cancelado.'}
+                          mensaje={'¿Cancelar «' + i.descripcion + '»? No se borra: este ítem ya tiene cosas registradas —aportes o cambios— y esa constancia se conserva. Queda marcado como cancelado.'}
                           className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem', color: 'var(--critica)' }}
                           title="Cancelar el ítem (conserva lo registrado)">
                           Cancelar

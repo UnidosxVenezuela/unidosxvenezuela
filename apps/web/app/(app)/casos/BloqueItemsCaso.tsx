@@ -175,7 +175,7 @@ export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTi
                             <input type="hidden" name="item_id" value={i.id} />
                             <input type="hidden" name="volver" value={volver} />
                             <BotonConfirmar
-                              mensaje={'¿Cancelar «' + i.descripcion + '»?\n\nNo se borra: este ítem ya tiene cosas registradas (aportes o cambios) y esa constancia se conserva. Queda marcado como cancelado.'}
+                              mensaje={'¿Cancelar «' + i.descripcion + '»? No se borra: este ítem ya tiene cosas registradas —aportes o cambios— y esa constancia se conserva. Queda marcado como cancelado.'}
                               className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem', color: 'var(--critica)' }}
                               title="Cancelar el ítem (conserva lo registrado)">
                               Cancelar
