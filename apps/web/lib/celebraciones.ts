@@ -96,7 +96,7 @@
  *
  *    `eventos: ['generico']` = comodín, sirve para CUALQUIER evento. Si listas
  *    eventos concretos, solo sale en esos (útil si el dibujo lleva un rótulo).
- *    Nada más: la rotación, el overlay y el panel la recogen automáticamente.
+ *    Nada más: la rotación y el overlay la recogen automáticamente.
  * ────────────────────────────────────────────────────────────────────────────
  */
 
@@ -664,34 +664,6 @@ export function marcarVista(id: string): void {
     barajas[ev] = mazo.filter((x) => x !== id);
   }
   guardarRotacion({ v: VERSION_ROTACION, ultima: id, barajas });
-}
-
-/**
- * Foto de SOLO LECTURA del estado de la baraja, para que el panel pueda enseñar el
- * orden actual (ayuda a entender por qué salió lo que salió). Copia defensiva: quien
- * la lea no puede alterar el estado guardado tocando el objeto que recibe.
- */
-export type FotoRotacion = {
-  /** Última celebración vista, sea del evento que sea. */
-  ultima: string | null;
-  /** evento → ids que quedan por salir, EN ORDEN (el primero es el siguiente). */
-  barajas: Record<string, string[]>;
-};
-
-export function fotoRotacion(): FotoRotacion {
-  const estado = leerRotacion();
-  const barajas: Record<string, string[]> = {};
-  for (const [ev, mazo] of Object.entries(estado.barajas)) barajas[ev] = mazo.slice();
-  return { ultima: estado.ultima, barajas };
-}
-
-/** Vuelve a empezar (botón «rebarajar» del panel, o al cerrar sesión). */
-export function reiniciarRotacion(): void {
-  try {
-    if (typeof localStorage !== 'undefined') localStorage.removeItem(CLAVE_ROTACION);
-  } catch {
-    /* da igual */
-  }
 }
 
 /* ══════════════════════════ Guardas del navegador ══════════════════════════ */
