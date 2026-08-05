@@ -529,6 +529,36 @@ export async function eliminarItemCaso(formData: FormData) {
   redirigirOk(volver, 'Ítem eliminado del desglose');
 }
 
+// Quitar un ítem que YA DEJÓ RASTRO: se CANCELA, no se borra.
+//
+// `eliminar_item_caso` es un DELETE duro y las tres tablas que cuelgan del ítem van con
+// `on delete cascade`: su historial (0219), sus APORTES (0221) y sus derivaciones (0222).
+// Borrar un ítem con «4 de 5 colchones» entregados haría desaparecer esas cuatro entregas
+// y cambiaría la cobertura de la reportería hacia atrás — se perdería constancia de un
+// trabajo que sí se hizo. Por eso la interfaz solo ofrece borrar cuando el ítem está
+// limpio (el error de tecleo recién cometido) y aquí, cuando no lo está.
+//
+// Usa `avanzar_item` (0220), cuya puerta es `puede_logistica() or es_admin()`: cancelar
+// algo que ya tiene entregas anotadas es una decisión operativa de quien las anotó, no
+// una corrección del desglose. Recopilación y Verificación siguen pudiendo editar el
+// contenido del ítem; para retirarlo del todo se lo piden a Logística.
+export async function cancelarItemCaso(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+  const caso = txt(formData.get('caso_id'));
+  const item = txt(formData.get('item_id'));
+  const volver = opt(formData.get('volver')) || ('/casos?caso=' + caso);
+  if (!item) return redirigirError(volver, 'Falta el ítem.');
+  const { error } = await supabase.rpc('avanzar_item', { p_item: item, p_estado: 'cancelado' });
+  if (error) {
+    if (rpcNoExiste(error)) return redirigirError(volver, 'El semáforo por ítem aún no está disponible (falta aplicar la migración 0220).');
+    return redirigirError(volver, 'No se pudo cancelar el ítem: ' + error.message);
+  }
+  revalidatePath('/casos'); revalidatePath('/insumos'); revalidatePath(volver);
+  redirigirOk(volver, 'Ítem cancelado · se conserva lo ya registrado');
+}
+
 // Reordenar: el formulario manda la lista completa de ids YA en el orden deseado
 // (separada por comas), calculada en el servidor al pintar las flechas ↑/↓.
 export async function reordenarItemsCaso(formData: FormData) {

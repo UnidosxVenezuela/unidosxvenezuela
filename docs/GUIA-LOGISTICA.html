@@ -210,12 +210,31 @@
   <div class="callout blind"><b>Eso no cuenta como capacidad nuestra en ningún reporte.</b> Lo que hizo otro es de otro.
   Si lo mezcláramos, los números dirían que tenemos más músculo del que tenemos —y con eso se planifica mal.</div>
 
-  <h3>Los ítems se corrigen, y queda constancia</h3>
+  <h3>Los ítems se corrigen en cualquier fase, y queda constancia</h3>
   <p>Los ítems <b>no son solo de Logística</b>: <b>Recopilación, Verificación y Logística</b> pueden modificarlos —porque hay
   errores de captura y porque las necesidades cambian sobre la marcha. Cada cambio queda registrado con <b>quién</b>,
   <b>cuándo</b> y <b>qué valor tenía antes</b>.</p>
+  <p><b>No hay fase límite.</b> Se puede agregar, cambiar o quitar una línea con la gestión ya empezada e incluso con la
+  entrega en camino. Y lo haces <b>desde tu propia pantalla</b>: en el detalle de la solicitud, en
+  <b>«Corregir el desglose»</b>. No hay que salirse a ningún sitio.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Por qué importa</h4><p>Aparece un <b>gasto de traslado</b> que nadie previó. La familia ya
+      consiguió los colchones por su cuenta. El número real era otro. Eso pasa todos los días: si no se puede anotar,
+      el desglose deja de decir la verdad.</p></div>
+    <div class="card"><h4>Las solicitudes viejas también</h4><p>Las anteriores al ítem solo tienen un texto suelto
+      («50 cajas de agua»). Ábrelas y <b>sepáralas en líneas</b> cuando te venga bien: el texto de siempre se
+      recalcula solo. No hace falta esperar a que llegue una nueva.</p></div>
+  </div>
   <div class="callout"><b>Edita, no borres.</b> Si un ítem está mal, corrígelo: el historial guarda lo anterior y así se
   entiende qué pasó. Borrar y volver a crear rompe el rastro.</div>
+  <div class="callout blind"><b>Y para quitar un ítem que ya tiene entregas anotadas: cancélalo, no lo borres.</b>
+  Borrarlo se lleva por delante <b>sus aportes y su historial</b> —si estaban anotados «4 de 5 colchones», esas cuatro
+  entregas desaparecen y la cobertura de la reportería cambia hacia atrás, como si nunca se hubieran hecho. Un ítem
+  <b>cancelado</b> se queda a la vista con todo su registro intacto. Borrar de verdad queda para el error de tecleo
+  recién cometido, cuando todavía no hay nada que perder. La plataforma te ofrece el botón que toca en cada caso.</div>
+  <div class="callout warn"><b>Lo que agregues entra en tu parte del caso.</b> Si Verificación repartió el desglose entre
+  varias áreas, el ítem que añadas se suma a lo tuyo y lo seguirás viendo. Si lo añade Recopilación o Verificación,
+  queda <b>sin repartir</b> hasta que Verificación lo derive —y la pantalla te avisa de que hay ítems en esa situación.</div>
 
   <h3>Al derivar se elige QUÉ ítems van a cada área</h3>
   <p>Cuando una solicitud se manda a <b>Alianzas Estratégicas</b> o a <b>Redacción</b>, se marca <b>qué ítems</b> van a cada una.
@@ -535,6 +554,8 @@
       Una línea por cosa, con su cantidad y su unidad.</p></div>
     <div class="card"><h4>✘ No borres un ítem para corregirlo</h4><p><b>Edítalo</b>: el historial guarda el valor anterior
       y así se entiende qué pasó. Borrar y recrear rompe el rastro.</p></div>
+    <div class="card"><h4>✘ No borres un ítem con entregas anotadas</h4><p><b>Cancélalo.</b> Borrarlo se lleva sus aportes
+      y su historial: desaparecería la constancia de lo que sí se entregó.</p></div>
   </div>
 </section>
 
@@ -560,8 +581,14 @@
   <p>Sí: puedes cubrir con una <b>oferta de donación</b>, un <b>servicio</b> o un proveedor. El acopio cercano es una opción,
   no una obligación.</p>
   <h3>Una solicitud vieja no tiene desglose por ítem.</h3>
-  <p>Es correcto. Antes de agosto la cantidad era <b>texto libre</b> («50 cajas») y adivinar el desglose habría metido
-  errores. Esos casos siguen mostrando su texto de siempre; el desglose empieza con los nuevos.</p>
+  <p>Es correcto: antes de agosto la cantidad era <b>texto libre</b> («50 cajas») y adivinar el desglose automáticamente
+  habría metido errores, así que no se hizo. Pero <b>puedes desglosarla tú</b> cuando te venga bien, desde
+  «Corregir el desglose» en el detalle de la solicitud. El texto de siempre se recalcula solo a partir de las líneas
+  que escribas.</p>
+  <h3>Agregué un ítem y no lo veo en mi pantalla.</h3>
+  <p>No debería pasar: lo que agregas <b>entra en tu parte del caso</b>. Si Verificación repartió el desglose y el ítem
+  lo añadió otra área, sí puede quedar fuera de lo tuyo —la pantalla te avisa de cuántos ítems del caso no te tocan y
+  de cuántos están <b>sin repartir</b>. En ese caso, pídele a Verificación que lo derive.</p>
   <h3>Entregué solo una parte. ¿Marco «Entregado»?</h3>
   <p>Márcalo como <b>entrega parcial</b>. El caso <b>no</b> se cierra ni se avisa a quien reportó de que ya fue atendido
   —sigue esperando la otra mitad. Anota cuánto entregaste en cada ítem y el caso queda abierto por lo que falta.</p>
@@ -595,7 +622,15 @@
     <code>proveedor_capacidades</code> / <code>ventana_capacidad</code> / <code>capacidad_restante</code> (<code>0224</code>).
     <b>Vistas cruzadas</b> <code>alianzas_panel</code> y <code>afiliados_select_logistica</code> (<code>0226</code>).
     <b>Reportería</b>: <code>entregado_en</code> + <code>sellar_entregado_insumo()</code> y <code>resumen_logistica()</code>
-    separando <code>cubierto</code> de <code>cubierto_tercero</code> (<code>0227</code>).
+    separando <code>cubierto</code> de <code>cubierto_tercero</code> (<code>0227</code>).<br>
+    <b>Edición en cualquier fase</b> (<code>0229</code>): las RPC del desglose nunca tuvieron puerta por estado —el
+    límite era la interfaz—. Se quita el gate <code>es_requerimiento</code> del bloque de ítems y se añade el editor a
+    <code>/insumos/[id]</code>. <code>guardar_item_caso</code> engancha el ítem NUEVO a la derivación del área de quien lo
+    crea (<code>area_derivacion_propia</code> + <code>enganchar_item_a_mi_area</code>), solo si esa derivación ya es
+    selectiva: sin eso, <code>items_de_caso_area</code> (0222) lo dejaba fuera y el ítem desaparecía de la pantalla de
+    quien lo acababa de añadir. <code>items_de_caso_admin</code> aporta <code>tiene_rastro</code> —que decide si «quitar»
+    borra o cancela— y <code>mi_area</code>; <code>items_sin_repartir</code> avisa de desglose sin derivar. El bypass
+    <code>app.items_ok</code> (0218) se mantiene intacto: editar un ítem NO reabre la verificación del caso.
     PDF generado desde <code>docs/GUIA-LOGISTICA.html</code> (Chromium).
   </div>
 </section>

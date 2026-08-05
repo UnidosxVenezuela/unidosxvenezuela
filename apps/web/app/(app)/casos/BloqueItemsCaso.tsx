@@ -6,7 +6,7 @@ import { TIPOS_INSUMO, ETIQUETA_TIPO_INSUMO, UNIDADES_ITEM, cantidadItem, ETIQUE
 import { pasoDeItem } from '@/lib/flujo';
 import AportesItem, { BarraCobertura, pctTerceros, type AporteItem } from '@/components/AportesItem';
 import { resumenCobertura } from '@/lib/flujo';
-import { guardarItemCaso, eliminarItemCaso, reordenarItemsCaso } from './actions';
+import { guardarItemCaso, eliminarItemCaso, reordenarItemsCaso, cancelarItemCaso } from './actions';
 import HistorialItem, { type CambioItem } from './HistorialItem';
 
 export type ItemCaso = {
@@ -158,16 +158,43 @@ export default function BloqueItemsCaso({ casoId, items = [], reqCantidad, reqTi
                           <button className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem' }} title="Bajar" aria-label="Bajar el ítem">↓</button>
                         </form>
                       )}
-                      <form action={eliminarItemCaso}>
-                        <input type="hidden" name="caso_id" value={casoId} />
-                        <input type="hidden" name="item_id" value={i.id} />
-                        <input type="hidden" name="volver" value={volver} />
-                        <BotonConfirmar
-                          mensaje={'¿Quitar «' + i.descripcion + '» del desglose?'}
-                          className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem', color: 'var(--critica)' }}>
-                          <Icono nombre="basura" size={14} />
-                        </BotonConfirmar>
-                      </form>
+                      {/* Quitar. Si el ítem YA DEJÓ RASTRO —aportes anotados o historial de
+                          cambios— no se borra: se CANCELA. El DELETE va en cascada sobre
+                          sus aportes (0221) y su historial (0219), así que borrar un ítem
+                          con «4 de 5 colchones» entregados haría desaparecer esas cuatro
+                          entregas y cambiaría la cobertura de la reportería hacia atrás.
+                          El ítem cancelado se queda a la vista, con su registro intacto. */}
+                      {(() => {
+                        const conRastro = (aportesPorItem.get(i.id)?.length ?? 0) > 0
+                                       || (cambiosPorItem.get(i.id)?.length ?? 0) > 0;
+                        const yaCerrado = i.estado === 'cancelado';
+                        if (yaCerrado) return null;
+                        return conRastro ? (
+                          <form action={cancelarItemCaso}>
+                            <input type="hidden" name="caso_id" value={casoId} />
+                            <input type="hidden" name="item_id" value={i.id} />
+                            <input type="hidden" name="volver" value={volver} />
+                            <BotonConfirmar
+                              mensaje={'¿Cancelar «' + i.descripcion + '»? No se borra: este ítem ya tiene cosas registradas —aportes o cambios— y esa constancia se conserva. Queda marcado como cancelado.'}
+                              className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem', color: 'var(--critica)' }}
+                              title="Cancelar el ítem (conserva lo registrado)">
+                              Cancelar
+                            </BotonConfirmar>
+                          </form>
+                        ) : (
+                          <form action={eliminarItemCaso}>
+                            <input type="hidden" name="caso_id" value={casoId} />
+                            <input type="hidden" name="item_id" value={i.id} />
+                            <input type="hidden" name="volver" value={volver} />
+                            <BotonConfirmar
+                              mensaje={'¿Quitar «' + i.descripcion + '» del desglose?'}
+                              className="btn" style={{ minHeight: 30, padding: '1px 8px', fontSize: '.8rem', color: 'var(--critica)' }}
+                              title="Quitar el ítem">
+                              <Icono nombre="basura" size={14} />
+                            </BotonConfirmar>
+                          </form>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
