@@ -117,6 +117,10 @@ export default function PanelCelebraciones({ esAdmin = false }: { esAdmin?: bool
 
   const visibles = filtro === 'todas' ? CATALOGO : elegiblesPara(filtro);
   const nVideo = visibles.filter((c) => c.tipo === 'video').length;
+  // Las que están EN USO y las que esperan visto bueno. `elegiblesPara` ya filtra
+  // las no aprobadas, así que al filtrar por evento la segunda lista queda vacía.
+  const enUso = visibles.filter((c) => c.aprobada);
+  const pendientes = visibles.filter((c) => !c.aprobada);
 
   return (
     <>
@@ -229,7 +233,7 @@ export default function PanelCelebraciones({ esAdmin = false }: { esAdmin?: bool
 
       {/* ── La galería ──────────────────────────────────────────────────────── */}
       <div className="pcel-rejilla">
-        {visibles.map((c) => (
+        {enUso.map((c) => (
           <Tarjeta
             key={c.id}
             celebracion={c}
@@ -240,6 +244,35 @@ export default function PanelCelebraciones({ esAdmin = false }: { esAdmin?: bool
           />
         ))}
       </div>
+
+      {/* ── Pendientes de aprobación ────────────────────────────────────────
+          Siguen en el catálogo y se pueden probar aquí, pero NO le salen a nadie
+          trabajando hasta que su diseño se apruebe. Se enseñan porque esconderlas
+          haría que se olvidaran: están esperando una decisión, no descartadas. */}
+      {pendientes.length > 0 && (
+        <section style={{ marginTop: 28 }}>
+          <div className="fila" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }}>
+            <h2 style={{ margin: 0 }}>Pendientes de aprobación</h2>
+            <span className="pill pill-neutra">{pendientes.length}</span>
+          </div>
+          <p className="muted" style={{ marginTop: 4, marginBottom: 14, maxWidth: '68ch' }}>
+            Están hechas y se pueden probar, pero <strong>no salen en la aplicación</strong>: nadie
+            las verá al terminar una tarea. Cuando su diseño se dé por bueno, pasan a la rotación.
+          </p>
+          <div className="pcel-rejilla" style={{ opacity: 0.72 }}>
+            {pendientes.map((c) => (
+              <Tarjeta
+                key={c.id}
+                celebracion={c}
+                ronda={rondas[c.id] ?? 0}
+                esSiguiente={false}
+                servible={montado ? c.tipo !== 'video' || videoOk : true}
+                onProbar={() => probar(c.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── La baraja (solo Coordinación) ───────────────────────────────────── */}
       {esAdmin && <Baraja foto={foto} montado={montado} onRebarajar={rebarajar} />}

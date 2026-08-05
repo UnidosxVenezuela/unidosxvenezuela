@@ -84,6 +84,7 @@
  *
  *      {
  *        id: 'manos-unidas',                   // kebab-case, único y estable
+ *        aprobada: true,                       // sin esto NO entra en la rotación
  *        nombre: 'Manos unidas',               // corto, en español (lo ve la gente)
  *        descripcion: 'Dos manos que se juntan y sueltan un destello.',
  *        tipo: 'svg',
@@ -213,6 +214,18 @@ type CelebracionBase = {
   pesoKb?: number;
   /** Cuánto se queda en pantalla. Por defecto: SVG 3400 ms, vídeo 4200 ms. */
   duracionMs?: number;
+  /**
+   * ¿Está APROBADO su diseño? Solo las aprobadas entran en la rotación.
+   *
+   * Una celebración sin aprobar sigue en el catálogo y se puede ver y probar en
+   * /celebraciones, pero NUNCA le sale a nadie trabajando. Así el diseño se
+   * revisa con calma sin sacar el código de la rama ni perder el trabajo hecho:
+   * aprobar es cambiar este campo a `true`.
+   *
+   * Ausente = NO aprobada. El valor por defecto tiene que ser el conservador:
+   * que algo salga en producción debe ser una decisión explícita.
+   */
+  aprobada?: boolean;
 };
 
 export type CelebracionSvg = CelebracionBase & {
@@ -249,6 +262,7 @@ export const CATALOGO: Celebracion[] = [
     // Referencia del contrato + red de seguridad del motor: si un vídeo falla,
     // no carga o la conexión va justa, SIEMPRE queda esta. No la quites.
     id: 'destello-base',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Destello',
     descripcion: 'Un visto que se dibuja y suelta chispas tricolor.',
     tipo: 'svg',
@@ -259,6 +273,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'sello-aprobado',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Sello de aprobado',
     descripcion: 'Un sello cae sobre el documento, rebota y deja la marca «VERIFICADO».',
     tipo: 'svg',
@@ -269,6 +284,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'caja-entregada',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Caja que llega',
     descripcion: 'Una caja de ayuda baja, se abre y suelta confeti; sale un corazón.',
     tipo: 'svg',
@@ -279,6 +295,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'cohete-difusion',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Cohete',
     descripcion: 'Un cohete despega dejando estela y suelta ondas de difusión.',
     tipo: 'svg',
@@ -289,6 +306,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'barra-100',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Barra al 100 %',
     descripcion: 'Una barra corre hasta el 100 %, se pone verde y estalla en partículas.',
     tipo: 'svg',
@@ -299,6 +317,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'lo-logre',
+    aprobada: true,
     nombre: '¡Lo logréee!',
     descripcion: 'Alguien llega arrastrándose a la meta, se levanta y ondea su letrero.',
     tipo: 'svg',
@@ -309,6 +328,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'cafe-al-100',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Café al 100 %',
     descripcion: 'Se rellena la taza, sube el vapor y el medidor de energía llega al 100 %.',
     tipo: 'svg',
@@ -319,6 +339,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'cara-meme',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Cara de satisfacción',
     descripcion: 'Una cara dibujada con ojos enormes y sonrisa de suficiencia, con rótulo.',
     tipo: 'svg',
@@ -330,6 +351,7 @@ export const CATALOGO: Celebracion[] = [
 
   {
     id: 'choque-manos',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Choque de manos',
     descripcion: 'Dos manos chocan los cinco con onda de impacto, chispas y un «¡ESO!».',
     tipo: 'svg',
@@ -340,6 +362,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'corazon-lleno',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Corazón que se llena',
     descripcion: 'Un corazón late, se va llenando y al rebosar suelta gotas y ondas.',
     tipo: 'svg',
@@ -350,6 +373,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'gato-teclista',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Gato teclista',
     descripcion: 'Un gato teclea con las patas borrosas: «procesando…» pasa a «¡listo!».',
     tipo: 'svg',
@@ -360,6 +384,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'trofeo',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Trofeo',
     descripcion: 'Un trofeo sube con rayos de luz girando y se graba «GRACIAS» en la placa.',
     tipo: 'svg',
@@ -370,6 +395,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'planta-crece',
+    aprobada: false,   // diseño pendiente de aprobación
     nombre: 'Planta que crece',
     descripcion: 'Un brote sale de la tierra, echa hojas, florece y saca un segundo brote.',
     tipo: 'svg',
@@ -382,6 +408,7 @@ export const CATALOGO: Celebracion[] = [
   // ── Vídeo ────────────────────────────────────────────────────────────────
   {
     id: 'unicornio',
+    aprobada: true,
     nombre: 'Unicornio',
     descripcion: 'Un unicornio que aparece y celebra. Se superpone sin caja.',
     tipo: 'video',
@@ -394,6 +421,7 @@ export const CATALOGO: Celebracion[] = [
   },
   {
     id: 'guacamayo',
+    aprobada: true,
     nombre: 'Guacamayo',
     descripcion: 'Un guacamayo tricolor que alza el vuelo. Se superpone sin caja.',
     tipo: 'video',
@@ -407,6 +435,7 @@ export const CATALOGO: Celebracion[] = [
   {
     // Lleva el rótulo QUEMADO en la imagen → solo puede salir en su evento.
     id: 'solicitud-publicada',
+    aprobada: true,
     nombre: 'Solicitud publicada',
     descripcion: 'Ilustración azul con el rótulo «Solicitud publicada».',
     tipo: 'video',
@@ -419,6 +448,7 @@ export const CATALOGO: Celebracion[] = [
   {
     // Rótulo quemado: atada a su evento.
     id: 'tarea-completada',
+    aprobada: true,
     nombre: 'Tarea completada',
     descripcion: 'Ilustración azul con el rótulo «Tarea completada».',
     tipo: 'video',
@@ -575,6 +605,8 @@ export function elegiblesPara(evento: EventoCelebracion, opciones: OpcionesSelec
   const permitirVideo = opciones.permitirVideo ?? true;
   const excluir = new Set(opciones.excluir ?? []);
   return catalogo.filter((c) => {
+    // Sin aprobar = no sale nunca en producción, aunque siga en el catálogo.
+    if (!c.aprobada) return false;
     if (excluir.has(c.id)) return false;
     if (!permitirVideo && c.tipo === 'video') return false;
     // Comodín (`generico`) o listada explícitamente para este evento.
