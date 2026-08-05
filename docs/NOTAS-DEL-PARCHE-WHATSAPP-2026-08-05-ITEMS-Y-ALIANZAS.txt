@@ -63,7 +63,7 @@ Al cerrar algo de verdad —crear una solicitud, verificarla, completar una tare
 
 Dónde *no* aparecen, que importa igual: en nada que se desestime, cancele, devuelva o elimine. Y tampoco en una entrega parcial — quedaría como una burla a quien sigue esperando lo que falta.
 
-Quien no las quiera, *las apaga* en su panel de Animaciones. Y quien tenga activado «reducir movimiento» en su teléfono no verá moverse nada.
+Quien no las quiera, *las apaga* desde su menú de usuario (arriba a la derecha), junto al interruptor de sonidos. Y quien tenga activado «reducir movimiento» en su teléfono no verá moverse nada.
 
 Un aviso honesto: por ahora las celebraciones son *vídeo*. En un teléfono muy justo, o con ahorro de datos activado, puede que no aparezca ninguna. No molesta ni rompe nada — sencillamente no sale. Está pendiente aprobar versiones ligeras que funcionen en cualquier equipo.
 
