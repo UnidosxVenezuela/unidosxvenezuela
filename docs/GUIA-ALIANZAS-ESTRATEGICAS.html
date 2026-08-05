@@ -1,4 +1,5 @@
 <meta charset="utf-8">
+<title>Guía del departamento · Alianzas Estratégicas</title>
 <style>
   :root{
     --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
@@ -60,6 +61,13 @@
   .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
   ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
   .mini{ font-size:9.5pt; color:var(--suave); }
+  /* Barra de capacidad */
+  .barra{ display:flex; height:18px; border-radius:9px; overflow:hidden; border:1px solid var(--borde); margin:7px 0 3px; background:#fff; }
+  .barra i{ display:block; } .barra .usado{ background:var(--azul); } .barra .libre{ background:#dbeafe; }
+  .antes-despues{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0; }
+  .ad{ border:1px solid var(--borde); border-radius:12px; padding:9px 12px; background:#fff; font-size:10pt; break-inside:avoid; }
+  .ad h4{ margin:0 0 5px; font-size:9.5pt; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; }
+  .ad.viejo{ background:#fafafa; } .ad.nuevo{ border-color:#a7f3d0; background:#f6fffb; }
 </style>
 
 <!-- ══════════════ PORTADA ══════════════ -->
@@ -68,10 +76,11 @@
   <div class="cuerpo">
     <div class="kicker">Guía del departamento · Apoyo por Venezuela</div>
     <h1>Alianzas<br>Estratégicas</h1>
-    <div class="sub">Cómo el departamento consigue <b>empresas, aliados y voluntariado profesional</b>: Prospección,
-      Captación y Afiliación, con la <b>Ficha de Prospección</b>, la <b>2ª verificación</b> y la reportería de respaldo.</div>
+    <div class="sub">Cómo el departamento consigue <b>empresas, aliados y voluntariado profesional</b>: un solo equipo
+      con tres frentes, la <b>Ficha de Prospección</b>, la <b>capacidad de cada aliado</b>, el <b>correo institucional</b>
+      y la reportería de respaldo.</div>
     <div class="marca"><span class="punto"></span> Apoyo por Venezuela · Alianzas Estratégicas</div>
-    <div class="pie">Versión imprimible · Actualizada julio 2026 · Prospección · Captación · Afiliación</div>
+    <div class="pie">Versión imprimible · Actualizada agosto 2026 · Un solo rol · Un solo grupo</div>
   </div>
   <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
 </div>
@@ -81,24 +90,39 @@
   <h2>1 · Qué es este departamento</h2>
   <p class="lead"><b>Alianzas Estratégicas</b> es el departamento que <b>consigue los recursos y aliados</b> que sostienen
   la respuesta: empresas que donan o prestan servicios, organizaciones y fundaciones, y personas —profesionales y
-  voluntarios— dispuestas a ayudar. Reúne <b>tres frentes</b> que trabajan coordinados y alimentan a Logística.</p>
+  voluntarios— dispuestas a ayudar. Trabaja en <b>tres frentes</b>, pero es <b>un solo equipo</b>.</p>
+
+  <div class="callout ok"><b>Cambió en agosto de 2026:</b> antes había <b>tres roles y tres grupos separados</b>
+  —Prospección, Captación y Afiliación— para gente que hacía lo mismo: conseguir aliados. Ahora hay
+  <b>un solo rol y un solo grupo</b>, «Alianzas Estratégicas», y <b>quien pertenece entra a los tres frentes</b>
+  sin pedirle permiso a nadie. Los grupos viejos no se borraron: quedaron desactivados con su gente dentro.</div>
+
   <div class="grid g3">
     <div class="card"><span class="n" style="background:#0033A0">1</span><h4>Prospección</h4><p>Va tras <b>empresas medianas y grandes</b>. Las registra con una <b>Ficha</b> completa para poder presentarles una alianza con respaldo.</p></div>
-    <div class="card"><span class="n" style="background:#E6B800">2</span><h4>Captación</h4><p>Registra <b>fundaciones, organizaciones, proyectos y alianzas</b>. Antes colgaba de Logística; ahora vive aquí, junto a Prospección.</p></div>
+    <div class="card"><span class="n" style="background:#E6B800">2</span><h4>Captación</h4><p>Registra <b>fundaciones, organizaciones, proyectos y alianzas</b>, y explora el tablero de ofertas de donación.</p></div>
     <div class="card"><span class="n" style="background:#CF142B">3</span><h4>Afiliación</h4><p>Clasifica a las <b>personas</b> que se suman: <b>profesionales</b> y <b>voluntarios</b>, ordenados por cargo.</p></div>
   </div>
-  <div class="callout"><b>Idea clave:</b> Prospección y Captación alimentan un <b>mismo registro</b> —el «Captado»—, así que una
+  <div class="callout"><b>Idea clave:</b> los tres frentes alimentan un <b>mismo registro</b> —el «Captado»—, así que una
   empresa o aliado se trabaja en un solo sitio, sin datos partidos. Afiliación lleva su propio registro de personas.</div>
   <p>Todo el departamento entra por la <b>página de inicio <code>/alianzas</code></b>: da acceso a los tres frentes, muestra
   los conteos (empresas, profesionales, voluntarios) y —importante— la <b>lista de solicitudes que Logística escala</b> al
   departamento para que les busque una empresa o un voluntario.</p>
+
+  <h3>Tu acceso</h3>
+  <p>La administración (o el líder del grupo) te suma al grupo <b>«Alianzas Estratégicas»</b>. No hay auto-inscripción.
+  Al entrar te sincroniza el rol y verás <b>las tres secciones</b>, el <b>correo institucional</b> y la
+  <b>vista de solo lectura de Logística</b>.</p>
+  <div class="callout warn"><b>Buena noticia:</b> Alianzas <b>no maneja datos de personas afectadas</b>, así que no necesitas
+  la 2ª verificación de identidad que sí piden otros equipos (Recopilación, Búsqueda…). Con pertenecer al grupo, ya entras.
+  <br><b>Si no ves el menú:</b> aún no estás en el grupo o no te sincronizó el rol. Pídeselo a tu líder o a la administración
+  —la seguridad de la base de datos (RLS) exige el rol para mostrar la sección.</div>
 </section>
 
 <!-- ══════════════ 2. LA FICHA DE PROSPECCIÓN ══════════════ -->
 <section class="pagina">
   <h2>2 · La Ficha de Prospección</h2>
-  <p>Cuando Prospección detecta una <b>empresa</b>, la registra con su <b>Ficha</b>: el respaldo con el que después se le
-  presenta la alianza. La Ficha es <b>opcional</b> —una tarjeta simple de Captación sigue funcionando igual—, pero cuando se
+  <p>Cuando se detecta una <b>empresa</b>, se registra con su <b>Ficha</b>: el respaldo con el que después se le
+  presenta la alianza. La Ficha es <b>opcional</b> —una tarjeta simple sigue funcionando igual—, pero cuando se
   usa, activa la 2ª verificación y la reportería. Estos son sus campos:</p>
   <table>
     <thead><tr><th style="width:34%">Bloque</th><th>Qué se registra</th></tr></thead>
@@ -113,6 +137,10 @@
   </table>
   <div class="callout ok"><b>Por qué el score es 1-5 y no texto libre:</b> así se puede <b>comparar y ordenar</b> empresas por
   confiabilidad de un vistazo, en vez de leer párrafos sueltos.</div>
+  <div class="callout blind"><b>Los contactos no salen del área.</b> Desde agosto, Logística puede ver el registro de
+  empresas <b>en solo lectura</b> —pero <b>sin el teléfono del responsable ni los contactos operativos y alternos</b>.
+  Esos datos los confiaron las empresas a Alianzas y la plataforma los oculta a las otras áreas. Tú también:
+  no los reenvíes por fuera.</div>
 </section>
 
 <!-- ══════════════ 3. EL FLUJO Y LA 2ª VERIFICACIÓN ══════════════ -->
@@ -131,13 +159,89 @@
     <div class="card"><h4>El candado 🔒</h4><p>Una ficha <b>no se puede «Enviar a Logística»</b> hasta que los cinco campos estén en <span class="pill p-green">verde</span>. Evita mandar aliados sin confirmar.</p></div>
     <div class="card"><h4>El cronómetro ⌛</h4><p>El sistema <b>sella el tiempo</b> que pasa de «Pendiente» a «Verificado» automáticamente. El tablero muestra el <b>promedio</b>, global y <b>por persona</b>.</p></div>
   </div>
-  <div class="callout warn"><b>Nota:</b> una entrada simple de Captación (sin Ficha) <b>no</b> queda atrapada por el candado —solo
+  <div class="callout warn"><b>Nota:</b> una entrada simple (sin Ficha) <b>no</b> queda atrapada por el candado —solo
   se exige la 2ª verificación cuando la Ficha está en uso (hay rubro, capacidades, u origen «Prospección»).</div>
 </section>
 
-<!-- ══════════════ 4. AFILIACIÓN ══════════════ -->
+<!-- ══════════════ 4. CAPACIDAD DEL ALIADO ══════════════ -->
 <section class="pagina">
-  <h2>4 · Afiliación — profesionales y voluntarios</h2>
+  <h2>4 · Con qué se puede contar: la capacidad</h2>
+  <p class="lead">Conseguir el aliado es la mitad del trabajo. La otra mitad es dejar escrito <b>qué puede dar,
+  cuánto y cada cuánto</b> —porque de eso depende con qué puede contar Logística de verdad.</p>
+
+  <p>En <b>«Aliados y capacidad»</b> declaras, por cada aliado, una línea por cada cosa que puede cubrir:</p>
+  <table>
+    <thead><tr><th style="width:26%">Campo</th><th>Qué poner</th></tr></thead>
+    <tbody>
+      <tr><td><b>Qué cubre</b></td><td>El insumo o servicio concreto. «Comidas preparadas», no «ayuda alimentaria».</td></tr>
+      <tr><td><b>Cantidad</b></td><td>El número, con su unidad. <b>50 comidas</b>, <b>200 litros</b>, <b>1000 medicamentos</b>.</td></tr>
+      <tr><td><b>Periodicidad</b></td><td>Cada cuánto se repite: <b>una sola vez</b>, <b>por tiempo limitado</b>, o cada <b>semana</b>, <b>quincena</b>, <b>mes</b> o <b>trimestre</b>.</td></tr>
+      <tr><td><b>Vigencia</b></td><td>Si es por tiempo limitado, hasta cuándo. Al pasar la fecha, la capacidad marca cero <b>con su motivo</b>.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Lo que Logística ve: la capacidad restante</h3>
+  <div class="card">
+    <b>Ejemplo:</b> declaras que la Panadería La Espiga da <b>50 comidas semanales</b>. Logística ya le pidió 12 esta semana.
+    <div class="barra"><i class="usado" style="width:24%"></i><i class="libre" style="width:76%"></i></div>
+    <p class="mini">Logística ve <b>38 disponibles</b> esta semana. El lunes vuelve a 50 sola, porque es recurrente.</p>
+  </div>
+
+  <div class="grid g3">
+    <div class="card"><h4>🔁 Recurrente</h4><p>Se <b>renueva</b> cada periodo. Lo consumido vuelve a estar disponible al empezar el siguiente.</p></div>
+    <div class="card"><h4>⏳ Por tiempo limitado</h4><p><b>Caduca</b> en una fecha. Al vencer marca cero y dice <b>por qué</b>: no es lo mismo agotarse que vencerse.</p></div>
+    <div class="card"><h4>1️⃣ De una sola vez</h4><p>Se <b>agota y no vuelve</b>. Útil para donaciones puntuales: una entrega y se acabó.</p></div>
+  </div>
+
+  <div class="callout blind"><b>Agotarse y vencerse piden decisiones distintas.</b> Si se agotó, hay que esperar al
+  siguiente periodo o buscar otro aliado. Si se venció, hay que <b>volver a hablar con la empresa</b> para renovar el
+  compromiso. Por eso la plataforma los distingue en vez de mostrar un cero seco.</div>
+
+  <div class="callout warn"><b>No dejes una capacidad sin periodicidad.</b> Logística no sabrá si puede contar con ella
+  otra vez, y terminará preguntando por WhatsApp —que es exactamente lo que esto viene a evitar.</div>
+</section>
+
+<!-- ══════════════ 5. HISTORIAL DE DONACIONES ══════════════ -->
+<section class="pagina">
+  <h2>5 · El historial de cada aliado</h2>
+  <p>Cada empresa o aliado tiene su <b>historial de donaciones</b>: qué ha aportado de verdad, desde cuándo y cómo
+  evoluciona. Ábrelo <b>antes de volver a pedirle algo</b> —cambia por completo la conversación.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Qué muestra</h4><p>Total aportado, número de donaciones, <b>desglose por tipo de insumo</b>, evolución <b>mes a mes</b> y la fecha del último aporte.</p></div>
+    <div class="card"><h4>Lo prometido frente a lo entregado</h4><p>Compara la <b>capacidad declarada</b> con lo que realmente llegó. Porque prometer no es entregar, y eso ahora se ve.</p></div>
+  </div>
+  <div class="callout"><b>También hay un ranking</b> de aliados por volumen aportado, para saber quién sostiene de verdad
+  la respuesta y a quién conviene agradecer con nombre y apellido.</div>
+  <div class="callout blind"><b>Lo que cubrió un tercero no cuenta como capacidad nuestra.</b> Si otra ONG puso los
+  colchones de un caso, eso se marca aparte y <b>queda fuera</b> de los totales del aliado y de todos los reportes.
+  Mezclarlo falsearía con cuánta capacidad contamos.</div>
+</section>
+
+<!-- ══════════════ 6. CORREO INSTITUCIONAL ══════════════ -->
+<section class="pagina">
+  <h2>6 · El correo institucional</h2>
+  <p class="lead">Alianzas es el área que <b>maneja el correo</b> de la organización hacia empresas y aliados. Se escribe
+  <b>desde la plataforma</b>, con plantillas del departamento, y cada envío queda registrado.</p>
+
+  <div class="steps">
+    <div class="step"><div class="sn">1 · Elige plantilla</div><p>Presentación, solicitud de donación, agradecimiento o seguimiento.</p></div>
+    <div class="step"><div class="sn">2 · Escribe y envía</div><p>Se rellena con los datos del destinatario y se manda.</p></div>
+    <div class="step"><div class="sn">3 · Queda el folio</div><p>A quién, con qué plantilla, cuándo y si llegó o falló.</p></div>
+  </div>
+
+  <p>Cada envío se puede <b>colgar de un caso, de una empresa o de un aliado</b>, así que el correo deja de ser algo que
+  pasó en el teléfono de alguien y pasa a ser parte del expediente. Si alguien se va del equipo, el seguimiento no se va con él.</p>
+
+  <div class="callout ok"><b>Escribe desde el correo institucional, no desde tu cuenta personal.</b> Las respuestas
+  igual te llegan, pero el registro queda para todo el equipo.</div>
+  <div class="callout warn"><b>Lo que se guarda y lo que no:</b> se guarda <b>a quién</b> se escribió, con qué plantilla,
+  cuándo y el resultado del envío. <b>No</b> se guarda el texto final que se mandó. Si necesitas dejar constancia de algo
+  acordado, anótalo en la bitácora del caso o del aliado.</div>
+</section>
+
+<!-- ══════════════ 7. AFILIACIÓN ══════════════ -->
+<section class="pagina">
+  <h2>7 · Afiliación — profesionales y voluntarios</h2>
   <p>El frente de <b>Afiliación</b> lleva el registro de las <b>personas</b> que se suman a la causa, clasificadas en dos tipos
   y ordenadas <b>por cargo</b> en un tablero tipo tarjetas:</p>
   <div class="grid g2">
@@ -147,32 +251,77 @@
   <p>Cada persona se registra con su nombre, contacto, cargo y habilidades. Si además es <b>usuaria de la plataforma</b>, queda
   <b>enlazada a su perfil</b> sin duplicar su identidad. El apartado permite <b>segmentar</b> entre Profesionales y Voluntarios y
   ver el tablero por cargo, como columnas de una pizarra.</p>
-  <div class="callout"><b>Dónde:</b> menú <b>Alianzas Estratégicas → Afiliación</b>. Lo gestiona el rol de Afiliación (o el admin).</div>
+  <div class="callout"><b>Dónde:</b> menú <b>Alianzas Estratégicas → Afiliación</b>. Ahora lo gestiona <b>todo el
+  departamento</b>, no un rol aparte.</div>
 </section>
 
-<!-- ══════════════ 5. REPORTERÍA + PUENTE CON LOGÍSTICA ══════════════ -->
+<!-- ══════════════ 8. EL PUENTE CON LOGÍSTICA ══════════════ -->
 <section class="pagina">
-  <h2>5 · Reportería y puente con Logística</h2>
-  <h3>Reportería descargable (el respaldo)</h3>
-  <p>En <b>Alianzas Estratégicas → Reportería</b> está la <b>foto del «Captado»</b>: cuántas empresas hay, por estado, por rubro
-  y por score, el <b>tiempo promedio</b> a verificado, y la tabla de empresas con su volumen/insumos. Todo se puede
-  <b>imprimir (PDF)</b> o <b>descargar (CSV)</b> como <b>respaldo formal para presentar a las empresas</b> —del estilo
-  «70 empresas · 1000 medicamentos».</p>
-  <h3>El puente: escalar desde Logística</h3>
+  <h2>8 · El puente con Logística</h2>
+
+  <h3>Cuando Logística escala algo</h3>
   <p>Cuando <b>Logística</b> no puede cubrir una solicitud con su inventario ni con proveedores, en el detalle de la solicitud
-  tiene dos botones nuevos:</p>
+  tiene dos botones:</p>
   <div class="grid g2">
     <div class="card"><h4>Enviar a Alianzas Estratégicas</h4><p>Pide al departamento que <b>busque una empresa o aliado</b> que cubra la solicitud.</p></div>
     <div class="card"><h4>Voluntariado Profesional</h4><p>Pide un <b>profesional voluntario</b> (de Afiliación) para la tarea.</p></div>
   </div>
   <div class="callout ok"><b>Se avisa solo:</b> al escalar, el departamento recibe la <b>notificación</b> y ve esa solicitud en su
   <b>página de inicio</b> (<code>/alianzas</code>), en la lista «Solicitudes escaladas desde Logística». Nada se pierde en el camino.</div>
+
+  <div class="callout"><b>Ahora anota todo el equipo.</b> Hasta agosto, en esas solicitudes escaladas <b>solo Captación
+  podía dejar notas</b>: Prospección y Afiliación veían el trabajo pero no podían anotar en él. Ya puede
+  <b>cualquiera del departamento</b> escribir en la bitácora.</div>
+
+  <h3>Llega desglosado por ítems</h3>
+  <p>Las solicitudes ya no son un texto suelto: llevan una <b>lista de ítems</b> con su cantidad. Y cuando te escalan una,
+  Logística elige <b>qué ítems</b> te manda. Puedes recibir solo el ítem de comida de un caso, mientras el de medicinas
+  va a otra área.</p>
+  <div class="antes-despues">
+    <div class="ad viejo">
+      <h4>Antes</h4>
+      <p style="margin:0;color:#475569">«Necesitan colchones y comida para la familia.» Y a buscar quién cubre… algo de eso.</p>
+    </div>
+    <div class="ad nuevo">
+      <h4>Ahora</h4>
+      <p style="margin:0;color:#047857">Te llega <b>«20 raciones de comida»</b>, con su cantidad exacta y su avance. Sabes qué buscar y cuánto.</p>
+    </div>
+  </div>
+
+  <h3>Ves lo que Logística hace con lo que consigues</h3>
+  <p>Desde agosto, Alianzas entra al <b>panel de Logística en solo lectura</b>, y Logística entra al de Alianzas igual.
+  Tú necesitas saber en qué se está usando lo que consigues; ellos, con qué aliados pueden contar.</p>
+</section>
+
+<!-- ══════════════ 9. REPORTERÍA ══════════════ -->
+<section class="pagina">
+  <h2>9 · Reportería: el respaldo formal</h2>
+  <p>En <b>Alianzas Estratégicas → Reportería</b> está la <b>foto completa del departamento</b>. Todo se puede
+  <b>imprimir (PDF)</b> o <b>descargar (CSV)</b> como <b>respaldo para presentar a las empresas</b> —del estilo
+  «70 empresas · 1000 medicamentos».</p>
+  <table>
+    <thead><tr><th style="width:32%">Bloque</th><th>Qué responde</th></tr></thead>
+    <tbody>
+      <tr><td><b>El «Captado»</b></td><td>Cuántas empresas hay, por estado, por rubro y por score de confiabilidad.</td></tr>
+      <tr><td><b>Tiempos</b></td><td>Cuánto se tarda de «Pendiente» a «Verificado», global y por persona.</td></tr>
+      <tr><td><b>Afiliados</b></td><td>Cuántos profesionales y voluntarios hay, y por qué cargo.</td></tr>
+      <tr><td><b>Escalado</b></td><td>Qué llegó desde Logística, cuánto se resolvió y cuánto sigue abierto.</td></tr>
+      <tr><td><b>Por origen</b></td><td>De dónde salen los aliados: prospección propia, ofertas espontáneas, referidos.</td></tr>
+      <tr><td><b>Transporte</b></td><td>Cuántos aliados tienen transporte propio —dato que cambia la planificación de Logística.</td></tr>
+      <tr><td><b>Correos</b></td><td>Cuántos se enviaron, con qué plantillas y cuántos fallaron.</td></tr>
+      <tr><td><b>Capacidad</b></td><td>Cuánto hay comprometido, de qué tipo y cuánto queda disponible.</td></tr>
+    </tbody>
+  </table>
+
   <div class="footer-note">
-    <b>Apoyo por Venezuela</b> · Guía del departamento de Alianzas Estratégicas · Julio 2026 · versión imprimible.
-    Nota técnica (desarrollo): roles <code>prospeccion</code> / <code>afiliacion</code> + <code>captacion</code> bajo el gate
-    <code>puede_alianzas()</code>; departamento, grupos y Afiliación (migración 0198); Ficha de Prospección, 2ª verificación
-    campo por campo (<code>marcar_campo_verif_prospeccion</code>), candado y sello de tiempo (0199); reportería
-    <code>resumen_alianzas()</code> + escalado de <code>solicitudes_insumo</code> (0200). PDF generado desde
+    <b>Apoyo por Venezuela</b> · Guía del departamento de Alianzas Estratégicas · Agosto 2026 · versión imprimible.
+    Sustituye a las guías separadas de Captación, que dejaron de aplicar cuando los tres roles se unificaron.
+    Nota técnica (desarrollo): rol único <code>captacion</code> y grupo «Alianzas Estratégicas» bajo
+    <code>puede_alianzas()</code> (migración 0216); correo institucional <code>correo_plantillas</code> /
+    <code>correo_envios</code> (0217); capacidad y periodicidad <code>proveedor_capacidades</code> +
+    <code>capacidad_restante</code> (0224); historial y ranking <code>historial_proveedor</code> /
+    <code>ranking_proveedores</code> (0225); vistas cruzadas y <code>alianzas_panel</code> sin datos de contacto (0226);
+    reportería ampliada <code>resumen_alianzas()</code> (0228). PDF generado desde
     <code>docs/GUIA-ALIANZAS-ESTRATEGICAS.html</code> (Chromium).
   </div>
 </section>
