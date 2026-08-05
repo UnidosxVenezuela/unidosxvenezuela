@@ -1,0 +1,120 @@
+CIERRES ALTERNATIVOS PARA LAS NOTAS DEL PARCHE
+«Y lo más importante del parche…»
+==================================================================
+
+Ocho opciones para sustituir el cierre del parche de agosto. Elige una y pégala
+tal cual; están escritas en el mismo tono y con el mismo formato de WhatsApp.
+
+Todas cumplen tres reglas del tono de la casa:
+  · La broma es a costa de QUIEN PROGRAMA, nunca del equipo ni de la gente
+    afectada.
+  · Nada de ironía sobre la emergencia. El humor va del oficio, no de la tragedia.
+  · Remata con algo verdadero: la gracia funciona porque el dato es real.
+
+==================================================================
+OPCIÓN 1 — La cantidad de cambios pedidos  (la que pediste)
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Este parche empezó como *«un ajuste chiquito en Alianzas»*.
+Terminó en *trece migraciones*, dos áreas nuevas de reportería y un sistema de correo. 📈
+En el camino se pidieron *tantos cambios* que hubo que inventar una tabla nueva solo para llevar la cuenta de las cosas… y entonces alguien pidió un cambio *en esa tabla*. 🙃
+Moraleja: en esta organización, «un ajuste chiquito» es una *unidad de medida* que nadie ha logrado calibrar todavía. 📏
+
+==================================================================
+OPCIÓN 2 — El desglose por ítem se aplica a sí mismo
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Este parche pedía que todo se desglosara *ítem por ítem*, con su cantidad y su porcentaje de cumplimiento.
+Así que aplicamos la misma medicina a la lista de cambios que nos pidieron:
+
+  • Cambios solicitados: *muchos*
+  • Cambios entregados: *muchos*
+  • Cumplimiento: *100 %*
+  • Cubierto por terceros: *0 %* 🙃
+
+Lo único que no se pudo desglosar fue *«y ya de paso, ¿podrías…?»*, que resultó ser un ítem de *cantidad infinita*. ♾️
+
+==================================================================
+OPCIÓN 3 — Las animaciones rechazadas  (autocrítica)
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Nos pidieron animaciones para levantar el ánimo. Se dibujaron *doce*, a mano, con sus luces y sus sombras. Se presentaron con orgullo.
+Se aprobaron *cero*. 🙃
+El veredicto fue *«pésimo diseño»* y, mirándolas otra vez con calma… no es que le falte razón.
+Moraleja: uno puede escribir trece migraciones, blindar la seguridad y cuadrar los números al decimal… y que lo tumben por un dibujo de un señor arrastrándose. 🦄✍️
+
+==================================================================
+OPCIÓN 4 — El semáforo del propio parche
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Ahora cada ítem tiene su semáforo: *pendiente → en gestión → en ruta → cumplido*.
+Aplicado a este parche, el semáforo quedó así:
+
+  🟢 Las migraciones
+  🟢 La seguridad
+  🟢 Los números
+  🔴 Los dibujos
+
+Tres de cuatro. En cualquier otro contexto eso es un *notable*. Aquí es *«las animaciones no se aprueban»*. 🎨
+Justo es justo: el estándar del equipo es alto, y por eso la plataforma está donde está.
+
+==================================================================
+OPCIÓN 5 — La capacidad restante, aplicada a quien programa
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Este parche añadió la *capacidad restante* de cada aliado: cuánto prometió, cuánto entregó y cuánto le queda.
+Alguien propuso —medio en broma— aplicárselo *al equipo de desarrollo*.
+La idea murió rápido cuando se calculó el primer dato:
+
+  • Capacidad comprometida: *«esto lo tengo listo hoy»*
+  • Capacidad restante: *0*
+  • Periodicidad: *diaria* ☕🙃
+
+Al menos el café ahora se rellena al 100 %. Eso sí funciona.
+
+==================================================================
+OPCIÓN 6 — Lo que descubrimos sin querer (seguridad)
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Revisando el código viejo apareció una función que llevaba *meses* permitiendo crear solicitudes de Logística *sin haber iniciado sesión*. 😬
+Ya está tapada. Pero durante un rato incómodo, técnicamente, *cualquiera en internet* podía pedirle cosas a Logística.
+Lo tranquilizador: nadie lo usó.
+Lo inquietante: es que ni siquiera *nosotros* lo sabíamos.
+Moraleja del día: el mejor momento para revisar el código viejo fue hace seis meses; el segundo mejor, hoy. 🔒
+
+==================================================================
+OPCIÓN 7 — Los nombres de las cosas
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Este parche unificó *tres roles en uno*. Suena simple.
+Lo que costó de verdad no fue el código: fue decidir *cómo se iba a llamar*.
+Hubo debate sobre si «Alianzas Estratégicas» era muy largo, si «Alianzas» a secas se entendía, y si alguien iba a escribir «Alianzas Estratégias» en algún sitio. (Sí. Alguien lo hizo. Ya está corregido.) ✍️
+Dicen que en informática solo hay dos problemas difíciles: invalidar la caché y *ponerle nombre a las cosas*.
+Este parche confirma que el segundo es peor. 🏷️
+
+==================================================================
+OPCIÓN 8 — La entrega parcial, aplicada al parche
+==================================================================
+
+😅 *Y lo más importante del parche…*
+Una de las reglas nuevas dice que una *entrega parcial* no puede darse por completa, porque sería una burla a quien sigue esperando lo que falta.
+Esa regla se escribió pensando en colchones y medicinas.
+Resultó aplicarse igual de bien a *este parche*: las animaciones quedaron a medias, así que el parche sale marcado —con toda propiedad— como *entrega parcial*. 📦
+Lo demás está entregado y funcionando. Lo que falta, queda pendiente y a la vista.
+Que es exactamente lo que le pedimos a todo el mundo que haga. 💛
+
+==================================================================
+NOTA SOBRE EL USO
+==================================================================
+
+Si el parche trae malas noticias (algo se cayó, se perdió trabajo, hubo un
+error que afectó a la gente), NO uses ninguna de estas. El humor va cuando las
+noticias son buenas; cuando no lo son, toca explicar y punto. Un chiste encima
+de un problema se lee como si no se le hubiera dado importancia.
