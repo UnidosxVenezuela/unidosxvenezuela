@@ -68,6 +68,21 @@ Quien no las quiera, *las apaga* desde su menú de usuario (arriba a la derecha)
 Un aviso honesto: por ahora las celebraciones son *vídeo*. En un teléfono muy justo, o con ahorro de datos activado, puede que no aparezca ninguna. No molesta ni rompe nada — sencillamente no sale. Está pendiente aprobar versiones ligeras que funcionen en cualquier equipo.
 
 ━━━━━━━━━━━━━━━━━━
+📘 *LAS GUÍAS ESTÁN AL DÍA*
+
+Un parche de este tamaño deja las guías viejas mintiendo, así que se rehicieron *todas*.
+
+• *Se retiró la guía de Captación.* Ese rol ya no existe; lo que decía está ahora en la *guía de Alianzas Estratégicas*, reescrita de cero.
+
+• *Se actualizaron* las de Logística, Recopilación, Verificación, Envío a Redacción, Administración y la de uso general — cada una con lo que le cambió: el desglose por ítem, la capacidad de los aliados, la reportería, la entrega parcial.
+
+• *Dos guías nuevas de una página:* «Desglose por ítem» (para Recopilación, Verificación y Logística) y «Alianzas Estratégicas».
+
+• *La sección «Ayuda» de la plataforma* también está reescrita, área por área. Si tienes una duda rápida, ahí está — no hace falta abrir el PDF.
+
+Todas siguen en *docs/*, en HTML y PDF, listas para imprimir o mandar por aquí.
+
+━━━━━━━━━━━━━━━━━━
 🔧 *PARA EL ADMINISTRADOR*
 
 *Trece* cambios de base de datos: las migraciones *0216* a *0228*. Se aplican con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. A prueba de fallos, como siempre: mientras no se apliquen, cada sección avisa y el resto sigue funcionando.
@@ -78,17 +93,17 @@ Dos cosas que conviene saber:
 
 • *Se cerró un agujero de seguridad* que venía de la migración 0208: una función quedó publicada sin permisos y permitía *crear solicitudes de Logística sin haber iniciado sesión*, saltándose las reglas de acceso. Ya está corregido.
 
-Y una decisión que hay que tomar: hoy *cualquier líder de grupo puede otorgar el rol de Alianzas*, y ese rol ahora da acceso al correo externo y a la Ficha de Prospección. Se puede restringir a administración — díganlo y se cambia.
+Sobre quién puede otorgar el rol de Alianzas: se planteó restringirlo a administración, porque ese rol ahora da acceso al correo externo y a la Ficha de Prospección. *La decisión tomada es que todo queda como está*: cualquier líder de grupo lo sigue otorgando, igual que los demás roles de área.
 
 ━━━━━━━━━━━━━━━━━━
 😅 *Y lo más importante del parche…*
 
-Nos pidieron animaciones para levantar el ánimo. Se dibujaron *doce*, a mano, con sus gradientes, sus luces y sus sombras. Se presentaron con orgullo.
+Este parche empezó como *«un ajuste chiquito en Alianzas»*.
 
-Se aprobaron *cero*. 🙃
+Terminó en *trece migraciones*, dos áreas nuevas de reportería y un sistema de correo. 📈
 
-El veredicto fue *«pésimo diseño»* y, mirándolas otra vez con calma… no es que le falte razón. Así que las doce están guardadas, esperando su rediseño, y de momento celebran el unicornio y el guacamayo — que los mandó el equipo y esos sí gustaron a todo el mundo a la primera.
+En el camino se pidieron *tantos cambios* que hubo que inventar una tabla nueva solo para llevar la cuenta de las cosas… y entonces alguien pidió un cambio *en esa tabla*. 🙃
 
-Moraleja: uno puede escribir trece migraciones, blindar la seguridad y cuadrar los números al decimal… y que lo tumben por un dibujo de un señor arrastrándose. 🦄✍️
+Moraleja: en esta organización, «un ajuste chiquito» es una *unidad de medida* que nadie ha logrado calibrar todavía. 📏
 
 _Apoyo por Venezuela · Notas del parche · Agosto 2026_
