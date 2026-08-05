@@ -1,0 +1,109 @@
+<meta charset="utf-8">
+<title>Guía · Desglose por ítem</title>
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.34; font-size:10.2pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:12px 0 4px; }
+  .head h1{ font-size:20pt; color:var(--azul); margin:0; line-height:1.05; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 13px; font-size:10pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 9px; font-size:9.8pt; }
+  h2{ font-size:11.6pt; color:var(--azul-osc); margin:10px 0 5px; display:flex; align-items:center; gap:7px; }
+  .pasos{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; }
+  .paso{ border:1px solid var(--borde); border-radius:11px; padding:8px 10px; background:#fff; }
+  .paso .n{ width:30px;height:30px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;font-size:14pt;
+    display:flex;align-items:center;justify-content:center; margin-bottom:6px; }
+  .paso > b{ display:block; color:var(--azul-osc); font-size:11pt; margin-bottom:2px; }
+  .paso p{ margin:0; font-size:9pt; color:#334155; }
+  .sino{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .col{ border-radius:11px; padding:8px 11px; }
+  .col.si{ background:#ecfdf5; border:1px solid #a7f3d0; } .col.no{ background:#fef2f2; border:1px solid #fecaca; }
+  .col h3{ margin:0 0 5px; font-size:11pt; } .col.si h3{ color:var(--ok);} .col.no h3{ color:var(--crit);}
+  .col ul{ margin:0; padding-left:18px; } .col li{ margin:2px 0; font-size:9.2pt; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:7px 11px; margin-top:9px; font-size:9.4pt; }
+  .rec b{ color:var(--azul-osc); }
+  .antes{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .caja{ border:1px solid var(--borde); border-radius:11px; padding:8px 11px; background:#fff; font-size:9.4pt; }
+  .caja h3{ margin:0 0 6px; font-size:10.5pt; color:var(--suave); text-transform:uppercase; letter-spacing:.06em; }
+  .caja.mal{ background:#fafafa; } .caja.bien{ border-color:#a7f3d0; background:#f6fffb; }
+  .item{ display:flex; justify-content:space-between; gap:8px; padding:4px 0; border-bottom:1px dashed var(--borde); }
+  .item:last-child{ border-bottom:0; }
+  .item .c{ font-weight:800; color:var(--azul-osc); white-space:nowrap; }
+  .sem{ display:inline-block; padding:1px 7px; border-radius:999px; font-size:8.6pt; font-weight:700; }
+  .sem.g{ background:#dcfce7; color:#15803d; } .sem.a{ background:#fef3c7; color:#a16207; } .sem.n{ background:#e5e7eb; color:#4b5563; }
+  .quien{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-top:4px; }
+  .quien div{ border:1px solid var(--borde); border-radius:11px; padding:7px 9px; font-size:9.2pt; background:#fff; }
+  .quien b{ color:var(--azul-osc); display:block; margin-bottom:2px; font-size:10.4pt; }
+  .pie{ margin-top:12px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.5pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Desglose por ítem</h1>
+  <span class="rp">GUÍA RÁPIDA · 1 página</span>
+</div>
+<p class="sub">Lo que se necesita ya no es un texto suelto: es una <b>lista con cantidades</b>. Cada línea se sigue, se mide y se cierra por su cuenta. Esto es para <b>Recopilación, Verificación y Logística</b>.</p>
+
+<h2>El cambio, de un vistazo</h2>
+<div class="antes">
+  <div class="caja mal">
+    <h3>Antes</h3>
+    <p style="margin:0;color:#475569">«Necesitan colchones y comida para la familia, también algo para el agua.»</p>
+    <p style="margin:8px 0 0;color:#b91c1c;font-size:9.4pt"><b>Problema:</b> nadie sabe cuántos son, ni qué se cubrió, ni qué falta. Al final se cierra «casi completo» y no queda constancia de nada.</p>
+  </div>
+  <div class="caja bien">
+    <h3>Ahora</h3>
+    <div class="item"><span>Colchones</span><span class="c">5 <span class="sem a">4 de 5</span></span></div>
+    <div class="item"><span>Raciones de comida</span><span class="c">20 <span class="sem g">completo</span></span></div>
+    <div class="item"><span>Filtros de agua</span><span class="c">2 <span class="sem n">pendiente</span></span></div>
+    <p style="margin:8px 0 0;color:#047857;font-size:9.4pt"><b>Ventaja:</b> se ve qué falta sin preguntarle a nadie.</p>
+  </div>
+</div>
+
+<h2>Quién hace qué</h2>
+<div class="quien">
+  <div><b>Recopilación</b>Escribe la lista al registrar la solicitud: una línea por cosa, con cantidad y unidad.</div>
+  <div><b>Verificación</b>Revisa y corrige el desglose antes de validar. Al derivar, elige <b>qué ítems</b> van a cada área.</div>
+  <div><b>Logística</b>Avanza cada ítem y anota <b>cuánto</b> se cubrió y <b>quién</b> lo aportó.</div>
+</div>
+
+<h2>✅ Cómo se trabaja en 3 pasos</h2>
+<div class="pasos">
+  <div class="paso"><div class="n">1</div><b>Se desglosa</b><p>Una línea por cosa, con <b>cantidad</b> y <b>unidad</b>. «5 colchones», no «unos colchones».</p></div>
+  <div class="paso"><div class="n">2</div><b>Se reparte</b><p>Al derivar, marcas <b>qué ítems</b> van a cada área. Cada quien ve solo lo suyo.</p></div>
+  <div class="paso"><div class="n">3</div><b>Se cubre</b><p>Cada aporte se anota con su <b>cantidad</b> y <b>quién</b> lo puso. El ítem se cierra al llegar al total.</p></div>
+</div>
+
+<h2>Lo que sí y lo que no</h2>
+<div class="sino">
+  <div class="col si">
+    <h3>Sí</h3>
+    <ul>
+      <li><b>Corrige</b> un ítem cuando esté mal o cambie la necesidad — las tres áreas pueden, y queda registrado quién lo cambió.</li>
+      <li><b>Anota cantidades reales.</b> Si entregaste 4 de 5, pon 4. El «casi» no sirve para decidir.</li>
+      <li><b>Marca lo que cubrió otro.</b> Si otra ONG puso los colchones, márcalo como cumplido por un tercero, con su nombre.</li>
+      <li><b>Entrega parcial es una opción válida</b> y honesta: el caso sigue abierto para lo que falta.</li>
+    </ul>
+  </div>
+  <div class="col no">
+    <h3>No</h3>
+    <ul>
+      <li><b>No metas todo en un solo ítem.</b> «Ayuda variada, 1» no se puede seguir ni medir.</li>
+      <li><b>No cierres un ítem sin haberlo cubierto</b> para que el tablero se vea bonito. El número es para decidir, no para lucir.</li>
+      <li><b>No cuentes como nuestro</b> lo que puso un tercero: falsea con cuánta capacidad contamos de verdad.</li>
+      <li><b>No borres para corregir.</b> Edita: el historial guarda lo anterior y así se entiende qué pasó.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="rec">
+  <b>El semáforo ahora es por ítem.</b> Cada línea avanza sola (Pendiente → En gestión → En ruta → Cumplido) y ese avance <b>lo ven todas las áreas</b>, no solo Logística. Es lo que evita el «¿cómo va lo de los colchones?» por WhatsApp: se mira y ya.
+</div>
+
+<div class="pie">
+  <span><span class="punto"></span> Apoyo por Venezuela · Guía rápida</span>
+  <span>Desglose por ítem · Agosto 2026</span>
+</div>

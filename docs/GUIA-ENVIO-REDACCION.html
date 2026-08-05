@@ -53,6 +53,7 @@
   .step .sn{ font-weight:800; color:var(--azul); font-size:9pt; } .step p{ margin:2px 0 0; font-size:9.5pt; }
   .footer-note{ margin-top:16px; border-top:1px dashed var(--borde); padding-top:8px; color:var(--suave); font-size:9pt; }
   ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+  .nueva{ display:inline-block; font-size:8pt; font-weight:800; color:#fff; background:var(--rojo); border-radius:999px; padding:1px 7px; vertical-align:middle; }
 </style>
 
 <div class="cover">
@@ -63,7 +64,7 @@
     <div class="sub">Difunde en redes las solicitudes <b>confirmadas</b> y deja constancia de qué se publicó y dónde,
       con el <b>contacto interno de la persona siempre blindado</b>.</div>
     <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
-    <div class="pie">Versión imprimible · Actualizada julio 2026 · Grupo «Redacción / Redes»</div>
+    <div class="pie">Versión imprimible · Actualizada agosto 2026 · Grupo «Redacción / Redes»</div>
   </div>
   <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
 </div>
@@ -239,6 +240,20 @@
   su <b>acción sugerida</b> y su <b>prioridad</b>.</p>
   <div class="callout"><b>Regla:</b> solo se derivan solicitudes <b>Validadas</b> (verificación completa). Si algo te
   llega derivado, ya pasó el filtro —tú te encargas de difundirlo. Y, como siempre, <b>sin contacto interno</b>.</div>
+
+  <h3>Ahora te llega con los ítems marcados <span class="nueva">nuevo</span></h3>
+  <p>Desde agosto de 2026 las solicitudes llevan un <b>desglose por ítem</b>: «5 colchones», «20 raciones de comida»,
+  «2 filtros de agua». Al derivarte una, Verificación o Logística marcan <b>qué ítems</b> te tocan a ti.</p>
+  <div class="grid g2">
+    <div class="card"><h4>Qué cambia para ti</h4><p>Ya no difundes «una solicitud» en abstracto: sabes <b>qué falta
+      exactamente</b> y <b>cuánto</b>. Un pedido concreto («faltan 3 colchones») moviliza mucho más que uno vago.</p></div>
+    <div class="card"><h4>Y ves cómo va</h4><p>Cada ítem tiene su <b>semáforo</b> y su avance, visible desde tu vista.
+      Si Logística ya cubrió 4 de 5, puedes ajustar el mensaje en vez de pedir de más.</p></div>
+  </div>
+  <div class="callout warn"><b>Difunde solo los ítems que te marcaron.</b> Si a ti te derivaron el ítem de medicinas y a
+  Alianzas el de comida, pedir las dos cosas en redes duplica el esfuerzo y confunde a quien quiere ayudar.</div>
+  <div class="callout ok"><b>Actualiza cuando se cubra.</b> Si un ítem llega a <b>cumplido</b>, deja de pedirlo. Nada
+  desgasta más a una audiencia que seguir viendo peticiones de algo que ya se resolvió.</div>
 </section>
 
 <!-- 8 -->
@@ -277,13 +292,20 @@
   les <b>copias</b> el material difundible.</p>
 
   <div class="footer-note">
-    <b>Apoyo por Venezuela</b> · Guía del equipo de Envío a Redacción / Redes · Actualizada julio 2026.<br>
+    <b>Apoyo por Venezuela</b> · Guía del equipo de Envío a Redacción / Redes · Actualizada agosto 2026.<br>
     Nota técnica: módulo <code>/envio-redaccion</code> (rol <code>redaccion</code>; el Admin de Redes supervisa en
     lectura). Vista de redacción con tablero/lista, KPIs y cobertura, más <b>canales de publicación</b>
     (<code>canales_publicacion</code>) y <b>redactor</b> (<code>redactor_id</code>) — migración <code>0169</code>.
     Blindaje duro del contacto: Redacción lee la <b>vista curada</b> <code>casos_difusion</code> (solo columnas
     seguras, nunca el contacto interno) — <code>0180</code>. Actualización en vivo por <b>tabla-señal</b>
     <code>casos_difusion_senal</code>, sin datos sensibles — <code>0181</code>. Derivación multi-área a <b>Redes</b>
-    (<code>casos_derivaciones</code>) — <code>0177</code>. PDF generado desde <code>docs/GUIA-ENVIO-REDACCION.html</code>.
+    (<code>casos_derivaciones</code>) — <code>0177</code>.<br>
+    <b>Agosto 2026</b> — <b>Desglose por ítem</b>: <code>casos_items</code> con política
+    <code>citems_select using (public.es_verificado())</code> (<code>0218</code>). La política se resolvió así
+    deliberadamente: colgarla de un <code>exists(… casos …)</code> habría dejado a Redacción con cero filas en silencio,
+    porque su acceso va por la vista curada y no por <code>casos</code>. <b>Derivación selectiva</b> mediante
+    <code>casos_derivacion_items</code> (<code>0222</code>): Redacción ve los ítems que le marcaron, con su semáforo
+    (<code>0220</code>) y su cobertura (<code>0221</code>).
+    PDF generado desde <code>docs/GUIA-ENVIO-REDACCION.html</code>.
   </div>
 </section>
