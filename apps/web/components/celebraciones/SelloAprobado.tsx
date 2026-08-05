@@ -2,225 +2,128 @@
 import { useLayoutEffect, useRef } from 'react';
 import { createTimeline } from 'animejs';
 import type { PropsAnimacionCelebracion } from '@/lib/celebraciones';
+import { DefsCelebracion, PALETA as P, vol, lin, SombraSuelo } from './estilo';
 
 /**
- * «Sello de aprobado»: un sello de caucho cae con fuerza sobre un documento,
- * el papel acusa el golpe, el sello rebota, vuelve a tocar flojito y se retira
- * dejando la marca «VERIFICADO» con su polvo de tinta.
+ * «Sello aprobado» — el sello cae con fuerza sobre el documento, rebota, y deja
+ * la marca VERIFICADO con un poco de polvo de tinta.
  *
- * Momento que cuenta: `solicitud_verificada`. La forma sola ya dice el evento
- * (papel + sello + marca), el rótulo solo lo confirma. Es el trámite cumplido:
- * satisfactorio y sobrio, sin fiesta — verificar es responsabilidad, no jolgorio.
+ * Es la satisfacción del trámite cerrado: seco, contundente, sin fuegos
+ * artificiales. Encaja con Verificación, que es un área de rigor.
  *
- * REGLAS DE GEOMETRÍA (ver el contrato en `lib/celebraciones.ts`):
- *  - `viewBox="-60 -60 120 120"` → el origen es el centro y el `transform-origin`
- *    por defecto de SVG cae justo ahí: `scale`/`rotate` giran alrededor del centro.
- *  - Cada elemento animado es HIJO DIRECTO del <svg> y su dibujo está centrado en
- *    el origen; se coloca en su sitio con `translate`. anime.js compone
- *    `translate … rotate … scale`, así que el `scale` actúa sobre el dibujo en su
- *    propio centro y DESPUÉS se traslada. Nunca se anidan transformaciones
- *    animadas (un padre movido desplaza el origen de giro de sus hijos).
- *  - Todo lo animado nace con `opacity: 0` en el JSX: si anime.js tarda un
- *    fotograma en fijar el estado inicial, no se ve ningún salto.
+ * ACABADO: el documento tiene esquina doblada y sombra propia; el mango del sello
+ * es madera con veta y volumen; la marca de tinta va ligeramente girada y con los
+ * bordes irregulares (una marca perfecta no parece tinta).
  */
 
-/**
- * El `viewBox` está centrado en el origen, así que el `transform-origin` por
- * defecto (el centro del view-box) ES el punto (0,0): toda transformación queda
- * como una matriz pura sobre el origen y el `transform-origin` deja de importar.
- * De eso depende TODA la geometría de este archivo, y a su vez depende de que
- * `transform-box` sea `view-box` — es el valor inicial, pero se declara
- * explícito para no jugárselo a la interpretación del navegador.
- */
-const EJE = { transformBox: 'view-box' } as const;
+const U = 'sello';
 
-/** Dónde golpea el sello el papel (y dónde nace la marca). */
-const IMPACTO_Y = 8;
-/** Inclinación de la marca: un sello a mano nunca cae recto. */
-const GIRO_MARCA = -9;
-/** Transform en reposo de la marca = su fotograma final. */
-const MARCA_QUIETA = `translateY(${IMPACTO_Y}px) rotate(${GIRO_MARCA}deg)`;
-
-/**
- * Polvo de tinta que salta en el golpe. Determinista (nada de azar a nivel de
- * módulo) y aplastado en vertical: se esparce A RAS del papel, no en burbuja.
- */
-const POLVO = Array.from({ length: 11 }, (_, i) => {
-  const ang = (i / 11) * Math.PI * 2 + (i % 2 ? 0.42 : 0);
-  const dist = 24 + (i % 3) * 8;
-  return {
-    x: +(Math.cos(ang) * dist).toFixed(1),
-    y: +(IMPACTO_Y + Math.sin(ang) * dist * 0.5).toFixed(1),
-    r: i % 3 === 0 ? 2.5 : i % 3 === 1 ? 1.7 : 2.1,
-    op: i % 2 ? 0.8 : 0.5,
-  };
-});
-
-export default function SelloAprobado({ onFin, reducido, size = 160 }: PropsAnimacionCelebracion) {
+export default function SelloAprobado({ onFin, reducido, size = 240 }: PropsAnimacionCelebracion) {
   const raizRef = useRef<SVGSVGElement>(null);
   const finRef = useRef(onFin);
   finRef.current = onFin;
 
   useLayoutEffect(() => {
     const raiz = raizRef.current;
-    // Movimiento reducido: NO se anima nada. El JSX ya está pintado en su
-    // fotograma final (documento sellado, sin sello ni polvo: ya se retiró).
     if (reducido || !raiz) return;
+    const uno = <T extends SVGElement>(s: string) => raiz.querySelector<T>(s);
+    const todos = <T extends SVGElement>(s: string) => Array.from(raiz.querySelectorAll<T>(s));
+    const vivos: { revert: () => void }[] = [];
 
-    const doc = raiz.querySelector<SVGGElement>('.sa-doc');
-    const sello = raiz.querySelector<SVGGElement>('.sa-sello');
-    const marca = raiz.querySelector<SVGGElement>('.sa-marca');
-    const onda = raiz.querySelector<SVGRectElement>('.sa-onda');
-    const polvo = Array.from(raiz.querySelectorAll<SVGCircleElement>('.sa-polvo'));
-
-    let tl: ReturnType<typeof createTimeline> | null = null;
     try {
-      const linea = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
-      tl = linea;
+      const tl = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
+      vivos.push(tl);
 
-      // 1. El documento entra sobre la mesa.
-      if (doc) linea.add(doc, { opacity: [0, 1], scale: [0.9, 1], translateY: [9, 0], duration: 340, ease: 'outBack' }, 0);
+      const doc = uno<SVGGElement>('.se-doc');
+      if (doc) tl.add(doc, { opacity: [0, 1], translateY: [8, 0], duration: 380, ease: 'outBack' }, 0);
 
-      // 2. El sello cae ACELERANDO (`inQuad`): es lo que le da el peso.
+      // El sello baja con fuerza y rebota dos veces.
+      const sello = uno<SVGGElement>('.se-sello');
       if (sello) {
-        linea.add(sello, { opacity: [0, 1], duration: 110 }, 190);
-        linea.add(sello, { translateY: [-74, IMPACTO_Y], duration: 380, ease: 'inQuad' }, 190);
-        // 3. Golpe: el caucho se aplasta contra el papel y se recupera.
-        linea.add(sello, { scaleY: [1, 0.86], scaleX: [1, 1.05], duration: 70 }, 570);
-        linea.add(sello, { scaleY: 1, scaleX: 1, duration: 260, ease: 'outBack' }, 640);
-        // 4. Rebota, vuelve a tocar flojito y se retira dejando ver la marca.
-        linea.add(sello, { translateY: -18, duration: 230 }, 650);
-        linea.add(sello, { translateY: IMPACTO_Y - 3, duration: 170, ease: 'inQuad' }, 880);
-        linea.add(sello, { translateY: -80, opacity: 0, duration: 430, ease: 'inCubic' }, 1090);
+        tl.add(sello, { opacity: [0, 1], translateY: [-46, -30], duration: 260 }, 320);
+        tl.add(sello, { translateY: -2, duration: 130, ease: 'inQuad' }, 640);      // golpe
+        tl.add(sello, { translateY: -16, duration: 210, ease: 'outQuad' }, 780);
+        tl.add(sello, { translateY: -4, duration: 160, ease: 'inQuad' }, 1000);     // rebote
+        tl.add(sello, { translateY: -34, duration: 420, ease: 'outCubic' }, 1180);
       }
-
-      // El papel acusa el impacto (y solo entonces, no antes).
+      // Sacudida del documento al recibir el golpe.
       if (doc) {
-        linea.add(doc, { scale: 1.035, duration: 70 }, 570);
-        linea.add(doc, { scale: 1, duration: 340, ease: 'outBack' }, 640);
+        tl.add(doc, { translateY: [0, 2.2], duration: 90, ease: 'outQuad' }, 760);
+        tl.add(doc, { translateY: 0, duration: 260, ease: 'outBounce' }, 850);
       }
-
-      // 5. La marca queda impresa en el instante del golpe, no después.
-      //    `translateY`/`rotate` se repiten en cada entrada (ya están en el JSX):
-      //    así el transform completo nunca depende de lo que anime.js infiera.
+      // La marca aparece en el golpe.
+      const marca = uno<SVGGElement>('.se-marca');
       if (marca) {
-        linea.add(marca, {
-          opacity: [0, 1], scale: [1.3, 1],
-          translateY: IMPACTO_Y, rotate: GIRO_MARCA,
-          duration: 250, ease: 'outBack',
-        }, 570);
-        // Golpe de gracia: la tinta asienta con un latido corto.
-        linea.add(marca, { scale: 1.07, translateY: IMPACTO_Y, rotate: GIRO_MARCA, duration: 150 }, 1560);
-        linea.add(marca, { scale: 1, translateY: IMPACTO_Y, rotate: GIRO_MARCA, duration: 260 }, 1710);
+        tl.add(marca, { opacity: [0, 1], scale: [1.25, 1], duration: 180, ease: 'outQuad' }, 770);
       }
-      if (onda) {
-        linea.add(onda, {
-          translateY: IMPACTO_Y, rotate: GIRO_MARCA,
-          scale: [1, 1.4], opacity: [0.55, 0], duration: 680,
-        }, 1560);
-      }
-
-      // 6. Polvo de tinta: sale del punto de impacto y se apaga.
-      polvo.forEach((c, i) => {
-        const p = POLVO[i];
-        if (!p) return;
-        linea.add(c, {
-          translateX: [0, p.x],
-          translateY: [IMPACTO_Y, p.y],
-          scale: [0.4, 1],
-          opacity: [p.op, 0],
-          duration: 780,
-          delay: i * 22,
-          ease: 'outCubic',
-        }, 560);
+      // Polvo de tinta.
+      todos<SVGCircleElement>('.se-polvo').forEach((c, i) => {
+        const ang = (i / 8) * Math.PI * 2;
+        tl.add(c, {
+          translateX: +(Math.cos(ang) * 17).toFixed(1), translateY: +(Math.sin(ang) * 9 - 3).toFixed(1),
+          opacity: [0.75, 0], scale: [1, 0.3], duration: 620, delay: i * 18, ease: 'outQuad',
+        }, 780);
       });
-
-      // Respiro final para que dé tiempo a leer el mensaje del overlay.
-      linea.add(raiz, { opacity: 1, duration: 700 });
+      tl.add(raiz, { opacity: 1, duration: 700 }, 2100);
     } catch {
-      // Si anime.js falla no dejamos el dibujo a medias ni la celebración colgada.
+      vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } });
       finRef.current();
       return;
     }
-
-    return () => { tl?.revert(); };
+    return () => { vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } }); };
   }, [reducido]);
 
   return (
     <svg
-      ref={raizRef}
-      width={size}
-      height={size}
-      viewBox="-60 -60 120 120"
+      ref={raizRef} width={size} height={size} viewBox="-60 -60 120 120"
       preserveAspectRatio="xMidYMid meet"
       className={'cel-svg' + (reducido ? ' cel-svg-quieto' : '')}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      aria-hidden="true"
-      focusable="false"
+      style={{ maxWidth: '100%', height: 'auto' }} aria-hidden="true" focusable="false"
     >
-      {/* ── El documento (con su esquina doblada) ── */}
-      <g className="sa-doc" style={{ ...EJE, opacity: reducido ? 1 : 0 }}>
-        <path
-          d="M -34 -44 H 20 L 34 -30 V 44 H -34 Z"
-          style={{ fill: 'var(--sup1)', stroke: 'var(--borde-f)', strokeWidth: 1.6 }}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M 20 -44 L 34 -30 H 20 Z"
-          style={{ fill: 'var(--sup2)', stroke: 'var(--borde-f)', strokeWidth: 1.6 }}
-          strokeLinejoin="round"
-        />
-        <rect x="-24" y="-34" width="32" height="5" rx="2.5" style={{ fill: 'var(--azul)', opacity: 0.55 }} />
-        <rect x="-24" y="-24" width="47" height="3.4" rx="1.7" style={{ fill: 'var(--borde-f)' }} />
-        <rect x="-24" y="-17.5" width="39" height="3.4" rx="1.7" style={{ fill: 'var(--borde-f)' }} />
-        <rect x="-24" y="27" width="44" height="3.4" rx="1.7" style={{ fill: 'var(--borde-f)' }} />
-        <rect x="-24" y="33.5" width="27" height="3.4" rx="1.7" style={{ fill: 'var(--borde-f)' }} />
+      <DefsCelebracion u={U} tonos={['madera', 'rojo', 'metal', 'blanco', 'azul']} />
+
+      <SombraSuelo u={U} cx={0} cy={40} rx={26} ry={4} opacidad={0.18} />
+
+      {/* ── Documento ────────────────────────────────────────────────── */}
+      <g className="se-doc" opacity={reducido ? 1 : 0}>
+        <rect x="-26" y="-28" width="52" height="66" rx="3" fill={P.metal.sombra} opacity="0.3" transform="translate(1.4,2)" />
+        <path d="M -26 -28 H 14 L 26 -16 V 38 H -26 Z" fill={vol('blanco', U)} />
+        {/* Esquina doblada: sin esto es un rectángulo, no un papel. */}
+        <path d="M 14 -28 L 26 -16 H 14 Z" fill={P.blanco.sombra} />
+        <path d="M 14 -28 L 26 -16" stroke={P.metal.base} strokeWidth="0.9" opacity="0.6" />
+        {/* Renglones */}
+        {[-20, -14, -8, -2].map((y, i) => (
+          <rect key={i} x="-19" y={y} width={i === 3 ? 22 : 32} height="2.6" rx="1.3" fill={P.azul.luz} opacity="0.35" />
+        ))}
+        {[22, 28].map((y, i) => (
+          <rect key={i} x="-19" y={y} width={i ? 20 : 30} height="2.4" rx="1.2" fill={P.metal.base} opacity="0.3" />
+        ))}
       </g>
 
-      {/* ── El polvo de tinta (transitorio: no existe en el fotograma final) ── */}
-      {!reducido && POLVO.map((p, i) => (
-        <circle key={i} className="sa-polvo" r={p.r} style={{ ...EJE, fill: 'var(--rojo)', opacity: 0 }} />
+      {/* ── Marca de tinta ───────────────────────────────────────────── */}
+      <g className="se-marca" opacity={reducido ? 1 : 0} transform="rotate(-9 0 8)" style={{ transformOrigin: '60px 68px' }}>
+        <rect x="-23" y="0" width="46" height="17" rx="2.4" fill="none" stroke={P.rojo.base} strokeWidth="2.4" opacity="0.9" />
+        <rect x="-20.4" y="2.6" width="40.8" height="11.8" rx="1.4" fill="none" stroke={P.rojo.base} strokeWidth="0.9" opacity="0.7" />
+        <text x="0" y="8.8" textAnchor="middle" dominantBaseline="central" fontSize="8.6" fontWeight="900"
+          fill={P.rojo.base} letterSpacing="0.4" opacity="0.92">VERIFICADO</text>
+      </g>
+      {!reducido && Array.from({ length: 8 }, (_, i) => (
+        <circle className="se-polvo" key={i} cx="0" cy="8" r={i % 2 ? 1.1 : 0.8} fill={P.rojo.base} opacity="0" />
       ))}
 
-      {/* ── La marca: lo único que de verdad queda ── */}
-      <g className="sa-marca" style={{ ...EJE, transform: MARCA_QUIETA, opacity: reducido ? 1 : 0 }}>
-        <rect
-          x="-29" y="-10.5" width="58" height="21" rx="4"
-          style={{ fill: 'none', stroke: 'var(--rojo)', strokeWidth: 2.6 }}
-        />
-        {/* `textLength` fija el ancho pase lo que pase con la fuente cargada. */}
-        <text
-          x="0" y="0" dy="0.35em"
-          textAnchor="middle"
-          textLength={46}
-          lengthAdjust="spacingAndGlyphs"
-          fontSize="10"
-          fontWeight="800"
-          letterSpacing="0.4"
-          style={{ fill: 'var(--rojo)' }}
-        >
-          VERIFICADO
-        </text>
+      {/* ── El sello ─────────────────────────────────────────────────── */}
+      <g className="se-sello" opacity={reducido ? 0 : 0} transform="translate(0,-46)">
+        {/* Mango de madera */}
+        <rect x="-7" y="-30" width="14" height="13" rx="6" fill={vol('madera', U)} />
+        <path d="M -3.6 -28 V -19" stroke={P.madera.brillo} strokeWidth="1.4" opacity="0.5" strokeLinecap="round" />
+        <rect x="-3.4" y="-18" width="6.8" height="9" rx="2" fill={lin('madera', U)} />
+        {/* Cuerpo metálico */}
+        <rect x="-13" y="-9.5" width="26" height="9" rx="2.6" fill={lin('metal', U)} />
+        <path d="M -10 -7.6 H 10" stroke="#fff" strokeWidth="1.4" opacity="0.55" strokeLinecap="round" />
+        {/* Almohadilla entintada */}
+        <rect x="-15" y="-1" width="30" height="5.4" rx="1.6" fill={P.rojo.sombra} />
+        <rect x="-15" y="-1" width="30" height="2.6" rx="1.3" fill={P.rojo.base} />
       </g>
-
-      {/* Halo de la marca al asentar (transitorio). */}
-      {!reducido && (
-        <rect
-          className="sa-onda"
-          x="-29" y="-10.5" width="58" height="21" rx="5"
-          style={{ ...EJE, fill: 'none', stroke: 'var(--rojo)', strokeWidth: 2, transform: MARCA_QUIETA, opacity: 0 }}
-        />
-      )}
-
-      {/* ── El sello (se retira al final: no existe en el fotograma final) ── */}
-      {!reducido && (
-        <g className="sa-sello" style={{ ...EJE, opacity: 0 }}>
-          <ellipse cx="0" cy="-34" rx="13" ry="7.5" style={{ fill: 'var(--azul-osc)' }} />
-          <rect x="-5" y="-34" width="10" height="15" style={{ fill: 'var(--azul-osc)' }} />
-          <path d="M -24 -19 L 24 -19 L 28 -7 L -28 -7 Z" style={{ fill: 'var(--azul)' }} strokeLinejoin="round" />
-          <rect x="-28" y="-7" width="56" height="7" rx="2.5" style={{ fill: 'var(--rojo)' }} />
-        </g>
-      )}
     </svg>
   );
 }

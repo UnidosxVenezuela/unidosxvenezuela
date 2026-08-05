@@ -1,239 +1,133 @@
 'use client';
-import { useId, useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { animate, createTimeline } from 'animejs';
 import type { PropsAnimacionCelebracion } from '@/lib/celebraciones';
+import { DefsCelebracion, PALETA as P, vol, lin, SombraSuelo, Chispa } from './estilo';
 
 /**
- * «Trofeo» — sube desde abajo con rebote, gira detrás una rueda de rayos de luz,
- * le cruza un brillo, saltan destellos y al final aparece grabado «GRACIAS» en
- * la placa. Para los hitos.
+ * «Trofeo» — sube con rayos de luz girando detrás y remata con un destello.
  *
- * POR QUÉ «GRACIAS» Y NO «CAMPEÓN»: aquí no se compite con nadie. El trofeo es
- * el reconocimiento de un equipo que está cansado, no un marcador.
- *
- * NOTAS DE MONTAJE
- *  - La RUEDA DE RAYOS es un grupo que gira en bucle lento alrededor de su
- *    origen local; los rayos son más largos que el lienzo a propósito, el `<svg>`
- *    los recorta y así la luz llega a los bordes sin dibujar el borde.
- *  - EL BRILLO es un rectángulo blanco inclinado que se desplaza recortado por
- *    la silueta de la copa (`clipPath`). El rectángulo va dentro de un `<g>` con
- *    la inclinación: si la inclinación fuera atributo del propio rectángulo,
- *    anime.js la borraría al animarle el desplazamiento (atributo `transform` y
- *    propiedad CSS `transform` son la misma cosa).
- *  - Los ids de `linearGradient` y `clipPath` salen de `useId()`: el panel puede
- *    pintar varias vistas previas a la vez y dos ids iguales se pisan.
- *  - Los tonos dorados son un acento deliberado de la ilustración (un trofeo es
- *    dorado en los dos temas); el resto va con tokens.
+ * ACABADO: la copa lleva degradado dorado de tres paradas MÁS una banda especular
+ * vertical (el reflejo alargado que tiene todo metal pulido) y un reflejo curvo en
+ * el labio. Sin esa banda, un trofeo dorado parece plástico.
  */
 
-const ORO_OSC = '#c98f10';
-const GRABADO = '#6b4a05';
-
-/** Silueta de la copa (sirve de dibujo y de recorte para el brillo). */
-const COPA = 'M -16.5 -30 L 16.5 -30 L 13 -8 Q 12 -1 0 -1 Q -12 -1 -13 -8 Z';
-
-/** Rueda de luz: 12 rayos largos que el lienzo recorta. */
-const RAYOS = Array.from({ length: 12 }, (_, i) => i * 30);
-
-/** Destellos: dónde y cuándo. Deterministas, nada de azar a nivel de módulo. */
-const DESTELLOS = [
-  { x: -31, y: -37, r: 7, t: 900 },
-  { x: 27, y: -41, r: 8, t: 1080 },
-  { x: 35, y: -15, r: 6, t: 1300 },
-  { x: -35, y: -12, r: 6.5, t: 1500 },
-  { x: 2, y: -47, r: 5.5, t: 1700 },
-];
+const U = 'trofeo';
 
 export default function Trofeo({ onFin, reducido, size = 240 }: PropsAnimacionCelebracion) {
   const raizRef = useRef<SVGSVGElement>(null);
   const finRef = useRef(onFin);
   finRef.current = onFin;
 
-  const uid = useId().replace(/:/g, '');
-  const idOro = `tr-oro-${uid}`;
-  const idCopa = `tr-copa-${uid}`;
-
   useLayoutEffect(() => {
     const raiz = raizRef.current;
-    // Movimiento reducido: el SVG ya está en su fotograma final (trofeo arriba,
-    // «GRACIAS» grabado, destellos puestos). No se anima NADA.
     if (reducido || !raiz) return;
-
-    const uno = <T extends SVGElement>(sel: string) => raiz.querySelector<T>(sel);
-    const todos = <T extends SVGElement>(sel: string) => Array.from(raiz.querySelectorAll<T>(sel));
-
-    const rueda = uno<SVGGElement>('.tr-rueda');
-    const halo = uno<SVGCircleElement>('.tr-halo');
-    const trofeo = uno<SVGGElement>('.tr-trofeo');
-    const brillo = uno<SVGRectElement>('.tr-brillo');
-    const posa = uno<SVGEllipseElement>('.tr-posa');
-    const chispas = todos<SVGGElement>('.tr-chispa');
-    const gracias = uno<SVGTextElement>('.tr-gracias');
-
-    /** Si anime.js falla, el trofeo se queda arriba y con su placa grabada. */
-    const rescate = () => {
-      if (gracias) gracias.style.opacity = '1';
-      chispas.forEach((c) => { c.style.opacity = '0.9'; });
-    };
-
+    const uno = <T extends SVGElement>(s: string) => raiz.querySelector<T>(s);
+    const todos = <T extends SVGElement>(s: string) => Array.from(raiz.querySelectorAll<T>(s));
     const vivos: { revert: () => void }[] = [];
+
     try {
-      // La rueda de luz gira sola, despacio y sin parar: es el fondo de la escena.
-      if (rueda) {
-        vivos.push(animate(rueda, { rotate: 360, duration: 15000, ease: 'linear', loop: true }));
-      }
+      const rayos = uno<SVGGElement>('.tr-rayos');
+      if (rayos) vivos.push(animate(rayos, { rotate: [0, 360], duration: 14000, loop: true, ease: 'linear' }));
 
       const tl = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
       vivos.push(tl);
 
-      if (rueda) tl.add(rueda, { opacity: [0, 1], duration: 460 }, 0);
-      if (halo) tl.add(halo, { opacity: [0, 0.14], scale: [0.4, 1], duration: 520 }, 0);
-
-      // El trofeo sube. `outBack` da el asentamiento sin animarlo aparte.
-      if (trofeo) tl.add(trofeo, { translateY: [56, 0], opacity: [0, 1], duration: 620, ease: 'outBack' }, 140);
-      if (posa) {
-        tl.add(posa, { scale: [0.3, 1.5], opacity: [{ to: 0.5, duration: 120 }, { to: 0, duration: 460 }], duration: 580 }, 600);
+      if (rayos) tl.add(rayos, { opacity: [0, 0.55], scale: [0.5, 1], duration: 620, ease: 'outCubic' }, 260);
+      const copa = uno<SVGGElement>('.tr-copa');
+      if (copa) {
+        tl.add(copa, { translateY: [26, 0], opacity: [0, 1], duration: 620, ease: 'outBack' }, 120);
+        tl.add(copa, { scale: [1, 1.09], duration: 180, ease: 'outQuad' }, 900);
+        tl.add(copa, { scale: 1, duration: 380, ease: 'outBounce' }, 1080);
       }
-
-      // Brillo que cruza la copa.
-      if (brillo) {
-        tl.add(brillo, { translateX: [0, 62], opacity: [{ to: 0.5, duration: 160 }, { to: 0, duration: 420 }], duration: 620, ease: 'inOutQuad' }, 780);
-      }
-
-      // Destellos alrededor: cada uno abre y cierra.
-      chispas.forEach((c, i) => {
-        const d = DESTELLOS[i];
-        if (!d) return;
-        tl.add(c, {
-          scale: [{ to: 1, duration: 260 }, { to: 0.2, duration: 380 }],
-          opacity: [{ to: 1, duration: 200 }, { to: 0, duration: 440 }],
-          rotate: [-30, 20],
-          duration: 640,
-          ease: 'outQuad',
-        }, d.t);
+      const brillo = uno<SVGRectElement>('.tr-brillo');
+      if (brillo) tl.add(brillo, { translateX: [-16, 16], opacity: [0, 0.85, 0], duration: 700, ease: 'inOutQuad' }, 900);
+      const cinta = uno<SVGGElement>('.tr-cinta');
+      if (cinta) tl.add(cinta, { opacity: [0, 1], translateY: [8, 0], duration: 420, ease: 'outBack' }, 1180);
+      todos<SVGGElement>('.tr-chispa').forEach((g, i) => {
+        const ang = (i / 9) * Math.PI * 2 + 0.4;
+        tl.add(g, {
+          translateX: +(Math.cos(ang) * 34).toFixed(1), translateY: +(Math.sin(ang) * 30).toFixed(1),
+          opacity: [1, 0], scale: [0.3, 1.15], duration: 900, delay: i * 24, ease: 'outCubic',
+        }, 1000);
       });
-
-      // REMATE: se graba «GRACIAS» y el trofeo da un golpe de pecho.
-      if (gracias) tl.add(gracias, { opacity: [0, 1], scale: [0.55, 1], duration: 460, ease: 'outBack' }, 1900);
-      if (trofeo) {
-        tl.add(trofeo, {
-          scale: [{ to: 1.07, duration: 200 }, { to: 1, duration: 300 }], translateY: 0, ease: 'outQuad',
-        }, 2060);
-      }
-      if (halo) {
-        tl.add(halo, { opacity: [{ to: 0.3, duration: 200 }, { to: 0.14, duration: 420 }], duration: 620, ease: 'inOutQuad' }, 2060);
-      }
-      if (gracias) {
-        tl.add(gracias, { scale: [{ to: 1.1, duration: 180 }, { to: 1, duration: 240 }], opacity: 1, ease: 'inOutQuad' }, 2380);
-      }
-
-      // Colchón final: que dé tiempo a leer el mensaje del overlay.
-      tl.add(raiz, { opacity: 1, duration: 520 }, 2620);
+      tl.add(raiz, { opacity: 1, duration: 600 }, 2300);
     } catch {
-      rescate();
       vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } });
       finRef.current();
       return;
     }
-
     return () => { vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } }); };
   }, [reducido]);
 
+  const RAYOS = Array.from({ length: 12 }, (_, i) => i * 30);
+
   return (
     <svg
-      ref={raizRef}
-      width={size}
-      height={size}
-      viewBox="-60 -60 120 120"
+      ref={raizRef} width={size} height={size} viewBox="-60 -60 120 120"
       preserveAspectRatio="xMidYMid meet"
       className={'cel-svg' + (reducido ? ' cel-svg-quieto' : '')}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      aria-hidden="true"
-      focusable="false"
+      style={{ maxWidth: '100%', height: 'auto' }} aria-hidden="true" focusable="false"
     >
+      <DefsCelebracion u={U} tonos={['amarillo', 'naranja', 'rojo', 'metal']} />
       <defs>
-        <linearGradient id={idOro} gradientUnits="userSpaceOnUse" x1="0" y1="-36" x2="0" y2="26">
-          <stop offset="0" stopColor="#ffd95e" />
-          <stop offset="0.55" stopColor="#f0b429" />
-          <stop offset="1" stopColor="#d99a12" />
+        <linearGradient id={`oro-${U}`} x1="0" y1="0" x2="1" y2="0.3">
+          <stop offset="0%" stopColor="#B8790A" />
+          <stop offset="26%" stopColor="#FFD75E" />
+          <stop offset="48%" stopColor="#FFF3C4" />
+          <stop offset="70%" stopColor="#F2B417" />
+          <stop offset="100%" stopColor="#96620A" />
         </linearGradient>
-        <clipPath id={idCopa}>
-          <path d={COPA} />
+        <clipPath id={`copa-${U}`}>
+          <path d="M -15 -22 H 15 Q 15 4 0 9 Q -15 4 -15 -22 Z" />
         </clipPath>
       </defs>
 
-      {/* ── Luz de fondo: rueda de rayos + halo ────────────────────────── */}
-      <g transform="translate(0,-10)">
-        <g className="tr-rueda" opacity={reducido ? 1 : 0}>
-          {RAYOS.map((a) => (
-            <path key={a} d="M -4.5 0 L -2 -78 L 2 -78 L 4.5 0 Z" fill="var(--amarillo)" opacity="0.16" transform={`rotate(${a})`} />
-          ))}
-        </g>
-        <circle className="tr-halo" r="34" fill="var(--amarillo)" opacity={reducido ? 0.14 : 0} />
+      {/* Rayos giratorios */}
+      <g className="tr-rayos" opacity={reducido ? 0.55 : 0} style={{ transformOrigin: '60px 58px' }}
+        transform={reducido ? undefined : 'scale(0.5)'}>
+        {RAYOS.map((a) => (
+          <path key={a} d="M 0 -2.8 L 46 0 L 0 2.8 Z" fill={P.amarillo.luz} opacity="0.5"
+            transform={`rotate(${a} 0 -2)`} />
+        ))}
       </g>
 
-      {/* Onda de la base al posarse. Va dentro de un `<g>` colocado para que
-          escale DESDE ella misma: si escalara desde el centro del lienzo, se
-          iría hacia abajo mientras crece. */}
-      <g transform="translate(0,28)">
-        <ellipse className="tr-posa" rx="24" ry="4" fill="none" stroke="var(--amarillo)" strokeWidth="2.4" opacity="0" />
+      <SombraSuelo u={U} cx={0} cy={34} rx={19} ry={3.6} opacidad={0.22} />
+
+      <g className="tr-copa" style={{ transformOrigin: '60px 66px' }} opacity={reducido ? 1 : 0}>
+        {/* Asas */}
+        <path d="M -15 -18 q -11 0 -11 8 q 0 8 11 9" fill="none" stroke="#C98A0C" strokeWidth="3.6" strokeLinecap="round" />
+        <path d="M 15 -18 q 11 0 11 8 q 0 8 -11 9" fill="none" stroke="#C98A0C" strokeWidth="3.6" strokeLinecap="round" />
+        <path d="M -15 -18 q -9.4 0 -9.4 8" fill="none" stroke="#FFE79A" strokeWidth="1.4" strokeLinecap="round" opacity="0.8" />
+        {/* Cáliz */}
+        <path d="M -15 -22 H 15 Q 15 4 0 9 Q -15 4 -15 -22 Z" fill={`url(#oro-${U})`} />
+        {/* Banda especular que barre al rematar */}
+        <g clipPath={`url(#copa-${U})`}>
+          <rect className="tr-brillo" x="-4" y="-24" width="7" height="36" fill="#fff" opacity="0" transform="skewX(-14)" />
+        </g>
+        {/* Labio y reflejo curvo */}
+        <rect x="-16.6" y="-24.6" width="33.2" height="4.4" rx="2.2" fill={lin('amarillo', U)} />
+        <path d="M -11 -19 Q -12.4 -6 -5.4 2.4" fill="none" stroke="#FFF6D8" strokeWidth="2.2" opacity="0.7" strokeLinecap="round" />
+        {/* Estrella grabada */}
+        <path d="M 0 -14 l 2.5 5.1 5.6 .8 -4.1 4 1 5.6 -5-2.6 -5 2.6 1-5.6 -4.1-4 5.6-.8 Z" fill="#FFF6D8" opacity="0.85" />
+        {/* Pie */}
+        <rect x="-3.4" y="9" width="6.8" height="9" fill={lin('amarillo', U)} />
+        <path d="M -11 18 H 11 L 13 26 H -13 Z" fill={`url(#oro-${U})`} />
+        <rect x="-14.4" y="26" width="28.8" height="5.4" rx="2" fill={lin('amarillo', U)} />
+        <path d="M -12 27.6 H 12" stroke="#FFF3C4" strokeWidth="1.2" opacity="0.7" strokeLinecap="round" />
       </g>
 
-      {/* ── El trofeo ──────────────────────────────────────────────────── */}
-      <g className="tr-trofeo">
-        <g stroke={ORO_OSC} strokeWidth="1.6" strokeLinejoin="round">
-          {/* Asas: van detrás de la copa. */}
-          <path d="M -17 -27 q -13.5 1 -13 9.5 q 0.5 8.5 11.5 9" fill="none" stroke={`url(#${idOro})`} strokeWidth="5" strokeLinecap="round" />
-          <path d="M 17 -27 q 13.5 1 13 9.5 q -0.5 8.5 -11.5 9" fill="none" stroke={`url(#${idOro})`} strokeWidth="5" strokeLinecap="round" />
-
-          <path d={COPA} fill={`url(#${idOro})`} />
-          <rect x="-19.5" y="-36.5" width="39" height="7" rx="3.5" fill={`url(#${idOro})`} />
-          <rect x="-4.2" y="-2" width="8.4" height="9" rx="1.6" fill={`url(#${idOro})`} />
-          <rect x="-13" y="6" width="26" height="6.5" rx="2" fill={`url(#${idOro})`} />
-          <rect x="-22" y="12" width="44" height="13" rx="2.5" fill={`url(#${idOro})`} />
-        </g>
-
-        {/* Estrella grabada en la copa. */}
-        <path
-          d="M 0 -25.5 L 2.4 -18.6 L 9.6 -18.6 L 3.8 -14.2 L 6 -7.4 L 0 -11.6 L -6 -7.4 L -3.8 -14.2 L -9.6 -18.6 L -2.4 -18.6 Z"
-          fill={ORO_OSC}
-          opacity="0.55"
-        />
-
-        {/* Brillo que cruza, recortado por la silueta de la copa. */}
-        <g clipPath={`url(#${idCopa})`}>
-          <g transform="rotate(18)">
-            <rect className="tr-brillo" x="-46" y="-44" width="10" height="62" fill="#ffffff" opacity="0" />
-          </g>
-        </g>
-
-        {/* El grabado de la placa. Colocado en su propio `<g>` para que el
-            «pop» del final crezca en su sitio y no se deslice hacia abajo. */}
-        <g transform="translate(0,21.4)">
-          <text
-            className="tr-gracias"
-            textAnchor="middle"
-            fontSize="7.4"
-            fontWeight="800"
-            letterSpacing="1.3"
-            fill={GRABADO}
-            opacity={reducido ? 1 : 0}
-          >
-            GRACIAS
-          </text>
-        </g>
+      {/* Cinta */}
+      <g className="tr-cinta" opacity={reducido ? 1 : 0}>
+        <rect x="-27" y="36" width="54" height="14" rx="7" fill={P.rojo.sombra} opacity="0.35" transform="translate(0,1.4)" />
+        <rect x="-27" y="36" width="54" height="14" rx="7" fill={vol('rojo', U)} />
+        <text x="0" y="43.4" textAnchor="middle" dominantBaseline="central" fontSize="7.6" fontWeight="900"
+          fill="#fff" letterSpacing="1.4">GRACIAS</text>
       </g>
 
-      {/* ── Destellos ──────────────────────────────────────────────────── */}
-      {DESTELLOS.map((d, i) => (
-        <g key={i} transform={`translate(${d.x},${d.y})`}>
-          <g className="tr-chispa" opacity={reducido ? 0.9 : 0}>
-            <path
-              d={`M 0 ${-d.r} Q ${d.r * 0.18} ${-d.r * 0.18} ${d.r} 0 Q ${d.r * 0.18} ${d.r * 0.18} 0 ${d.r} `
-                + `Q ${-d.r * 0.18} ${d.r * 0.18} ${-d.r} 0 Q ${-d.r * 0.18} ${-d.r * 0.18} 0 ${-d.r} Z`}
-              fill="var(--amarillo)"
-            />
-          </g>
+      {!reducido && Array.from({ length: 9 }, (_, i) => (
+        <g className="tr-chispa" key={i} opacity="0" transform="translate(0,-10)">
+          <Chispa r={i % 2 ? 3.4 : 2.4} color={i % 3 ? P.amarillo.luz : '#fff'} />
         </g>
       ))}
     </svg>

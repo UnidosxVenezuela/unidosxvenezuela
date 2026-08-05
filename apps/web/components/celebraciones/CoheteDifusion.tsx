@@ -1,251 +1,139 @@
 'use client';
 import { useLayoutEffect, useRef } from 'react';
-import { createTimeline, svg } from 'animejs';
+import { animate, createTimeline } from 'animejs';
 import type { PropsAnimacionCelebracion } from '@/lib/celebraciones';
+import { DefsCelebracion, PALETA as P, vol, lin, Chispa } from './estilo';
 
 /**
- * «Cohete»: enciende, se agacha, despega dejando estela, y al llegar arriba
- * suelta ondas de difusión y chispas tricolor.
+ * «Cohete» — despega dejando estela cuando algo sale a difusión.
  *
- * Momento que cuenta: `caso_publicado`. Publicar una solicitud es sacarla del
- * cajón y ponerla donde alguien puede verla; por eso el remate no es el
- * despegue sino las ONDAS que salen del cohete: la señal llegando lejos.
- *
- * REGLAS DE GEOMETRÍA (ver el contrato en `lib/celebraciones.ts`):
- *  - `viewBox="-60 -60 120 120"`: el origen es el centro y ahí cae el
- *    `transform-origin` por defecto de SVG.
- *  - Cada elemento animado es HIJO DIRECTO del <svg>, con el dibujo centrado en
- *    el origen y colocado con `translate`. Nunca se anidan transformaciones
- *    animadas (un padre movido desplaza el centro de giro de sus hijos).
- *  - Por eso la LLAMA no va dentro del cohete: es hermana suya y sigue su
- *    `translateY` con un desfase fijo. Su dibujo arranca en y=0 y cae hacia
- *    abajo, así el `scaleY` la estira sin despegarla del cohete.
+ * ACABADO: el fuselaje lleva degradado vertical y una franja de sombra en el
+ * costado derecho (lo hace cilíndrico, no plano); la ventanilla es cristal con
+ * doble brillo; la llama tiene tres capas (externa naranja, media amarilla, núcleo
+ * blanco) que es lo que hace que parezca fuego y no un triángulo.
  */
 
-/**
- * El `viewBox` está centrado en el origen, así que el `transform-origin` por
- * defecto (el centro del view-box) ES el punto (0,0): toda transformación queda
- * como una matriz pura sobre el origen y el `transform-origin` deja de importar.
- * De eso depende TODA la geometría de este archivo, y a su vez depende de que
- * `transform-box` sea `view-box` — es el valor inicial, pero se declara
- * explícito para no jugárselo a la interpretación del navegador.
- */
-const EJE = { transformBox: 'view-box' } as const;
+const U = 'cohete';
 
-/** Alturas del cohete a lo largo del vuelo (coordenadas del viewBox). */
-const PAD = 34;       // apoyado en la plataforma
-const AGACHE = 37;    // se agacha antes de saltar
-const MEDIO = -2;     // a media subida (acelerando)
-const APICE = -30;    // donde se queda
-/** La llama cuelga del cohete a esta distancia fija. */
-const LLAMA = 13;
-
-/** Humo del despegue: determinista, esparcido a ras de la plataforma. */
-const HUMO = Array.from({ length: 7 }, (_, i) => {
-  const lado = i % 2 ? 1 : -1;
-  const paso = Math.floor(i / 2) + 1;
-  return {
-    x: +(lado * (9 + paso * 8)).toFixed(1),
-    y: +(44 - paso * 3).toFixed(1),
-    r: 4 + (i % 3) * 1.6,
-  };
-});
-
-/** Chispas tricolor del remate: salen del ápice en todas direcciones. */
-const CHISPAS = Array.from({ length: 9 }, (_, i) => {
-  const ang = (i / 9) * Math.PI * 2 + 0.3;
-  const dist = 20 + (i % 3) * 6;
-  return {
-    x: +(Math.cos(ang) * dist).toFixed(1),
-    y: +(APICE + Math.sin(ang) * dist).toFixed(1),
-    color: ['var(--amarillo)', 'var(--azul)', 'var(--rojo)'][i % 3],
-  };
-});
-
-/** Estrellitas de fondo: estáticas, solo dan cielo. */
-const ESTRELLAS = [
-  { x: -42, y: -34, r: 1.7 }, { x: 38, y: -44, r: 1.3 },
-  { x: -30, y: -50, r: 1.2 }, { x: 45, y: -14, r: 1.6 },
-  { x: -48, y: -6, r: 1.2 },
-];
-
-export default function CoheteDifusion({ onFin, reducido, size = 160 }: PropsAnimacionCelebracion) {
+export default function CoheteDifusion({ onFin, reducido, size = 240 }: PropsAnimacionCelebracion) {
   const raizRef = useRef<SVGSVGElement>(null);
   const finRef = useRef(onFin);
   finRef.current = onFin;
 
   useLayoutEffect(() => {
     const raiz = raizRef.current;
-    // Movimiento reducido: NO se anima nada. El JSX ya está en su fotograma
-    // final (cohete arriba, estela entera, sin llama ni humo ni ondas).
     if (reducido || !raiz) return;
+    const uno = <T extends SVGElement>(s: string) => raiz.querySelector<T>(s);
+    const todos = <T extends SVGElement>(s: string) => Array.from(raiz.querySelectorAll<T>(s));
+    const vivos: { revert: () => void }[] = [];
 
-    const cohete = raiz.querySelector<SVGGElement>('.co-cohete');
-    const llama = raiz.querySelector<SVGGElement>('.co-llama');
-    const estela = raiz.querySelector<SVGPathElement>('.co-estela');
-    const humo = Array.from(raiz.querySelectorAll<SVGCircleElement>('.co-humo'));
-    const ondas = Array.from(raiz.querySelectorAll<SVGCircleElement>('.co-onda'));
-    const chispas = Array.from(raiz.querySelectorAll<SVGCircleElement>('.co-chispa'));
-
-    let tl: ReturnType<typeof createTimeline> | null = null;
     try {
-      const linea = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
-      tl = linea;
+      const tl = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
+      vivos.push(tl);
 
-      // 1. Aparece en la plataforma y se agacha: la pausa antes del salto es lo
-      //    que hace que el despegue se sienta como despegue.
-      if (cohete) {
-        linea.add(cohete, { translateY: [PAD + 12, PAD], opacity: [0, 1], duration: 340, ease: 'outBack' }, 0);
-        linea.add(cohete, { translateY: AGACHE, duration: 190, ease: 'inQuad' }, 340);
-      }
-      // 2. Enciende.
-      if (llama) linea.add(llama, { translateY: AGACHE + LLAMA, scaleY: [0, 1], opacity: [0, 1], duration: 200 }, 340);
-
-      // 3. Despegue: acelera (`inQuad`) y frena arriba (`outQuad`).
-      if (cohete) {
-        linea.add(cohete, { translateY: [AGACHE, MEDIO], duration: 560, ease: 'inQuad' }, 530);
-        linea.add(cohete, { translateY: APICE, duration: 520, ease: 'outQuad' }, 1090);
-      }
+      const llama = uno<SVGGElement>('.co-llama');
       if (llama) {
-        linea.add(llama, { translateY: [AGACHE + LLAMA, MEDIO + LLAMA], scaleY: 1.6, duration: 560, ease: 'inQuad' }, 530);
-        linea.add(llama, { translateY: APICE + LLAMA, scaleY: 1.15, duration: 520, ease: 'outQuad' }, 1090);
-        linea.add(llama, { translateY: APICE + LLAMA, scaleY: 0.5, opacity: 0.3, duration: 480 }, 1610);
+        vivos.push(animate(llama, { scaleY: [0.8, 1.25], scaleX: [1.08, 0.92], duration: 90, loop: 22, alternate: true, ease: 'inOutQuad' }));
       }
-      // La estela se dibuja al ritmo de la subida.
-      if (estela) {
-        linea.add(svg.createDrawable(estela), { draw: ['0 0', '0 1'], duration: 980, ease: 'outQuad' }, 530);
-        linea.add(estela, { opacity: 0.16, duration: 600 }, 2280);
-      }
-
-      // 4. Humo en la plataforma.
-      humo.forEach((c, i) => {
-        const h = HUMO[i];
-        if (!h) return;
-        linea.add(c, {
-          translateX: [0, h.x],
-          translateY: [44, h.y],
-          scale: [0.35, 1.5],
-          opacity: [0.4, 0],
-          duration: 900,
-          delay: i * 30,
-          ease: 'outCubic',
-        }, 530);
-      });
-
-      // 5. Golpe de gracia: el cohete se planta y suelta las ondas de difusión.
+      const cohete = uno<SVGGElement>('.co-cohete');
       if (cohete) {
-        linea.add(cohete, { translateY: APICE, scale: 1.09, duration: 150 }, 1630);
-        linea.add(cohete, { translateY: APICE, scale: 1, duration: 280 }, 1780);
+        // Temblor de encendido antes de soltar.
+        tl.add(cohete, { translateX: [{ to: -1.2, duration: 55 }, { to: 1.2, duration: 55 }], loop: 6, ease: 'inOutQuad' }, 120);
+        tl.add(cohete, { translateY: [0, 5], duration: 220, ease: 'inQuad' }, 760);   // se agacha
+        // Sube y se QUEDA arriba, pequeño. Si se va del todo, el último fotograma
+        // queda en blanco y la celebración se siente rota: siempre tiene que
+        // haber un remate que permanezca.
+        tl.add(cohete, { translateY: -40, scale: [1, 0.62], duration: 1000, ease: 'outCubic' }, 1000);
       }
-      // Tope de 3,0: con r=9 el aro llega a 27 y, centrado en el ápice (-30),
-      // queda a 3 del borde del viewBox. Más y se vería CORTADO por arriba.
-      ondas.forEach((c, i) => {
-        linea.add(c, {
-          translateY: APICE,
-          scale: [0.5, 3],
-          opacity: [0.6, 0],
-          duration: 880,
-          delay: i * 160,
-        }, 1640);
-      });
-      chispas.forEach((c, i) => {
-        const ch = CHISPAS[i];
-        if (!ch) return;
-        linea.add(c, {
-          translateX: [0, ch.x],
-          translateY: [APICE, ch.y],
-          scale: [1, 0.4],
-          opacity: [1, 0],
-          duration: 760,
-          delay: i * 28,
-          ease: 'outCubic',
-        }, 1700);
-      });
+      // Estela que queda marcando el recorrido.
+      const estela = uno<SVGPathElement>('.co-estela');
+      if (estela) tl.add(estela, { opacity: [0, 0.5], scaleY: [0.2, 1], duration: 800, ease: 'outQuad' }, 1100);
+      // Rótulo del remate.
+      const rot = uno<SVGGElement>('.co-rotulo');
+      if (rot) tl.add(rot, { opacity: [0, 1], translateY: [10, 0], duration: 460, ease: 'outBack' }, 1600);
+      if (llama) tl.add(llama, { opacity: [0, 1], scaleY: [0.2, 1], duration: 240 }, 640);
 
-      // Respiro final para que dé tiempo a leer el mensaje del overlay.
-      linea.add(raiz, { opacity: 1, duration: 400 });
+      const humo = todos<SVGCircleElement>('.co-humo');
+      humo.forEach((c, i) => {
+        tl.add(c, {
+          opacity: [0.5, 0], scale: [0.4, 2.4], translateY: [0, 8], translateX: (i % 2 ? 1 : -1) * (6 + i * 2),
+          duration: 900, delay: i * 60, ease: 'outQuad',
+        }, 980);
+      });
+      todos<SVGGElement>('.co-estrella').forEach((g, i) => {
+        tl.add(g, { opacity: [0, 0.9, 0], scale: [0.4, 1.2], duration: 700, delay: i * 90 }, 1150);
+      });
+      tl.add(raiz, { opacity: 1, duration: 500 }, 2300);
     } catch {
+      vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } });
       finRef.current();
       return;
     }
-
-    return () => { tl?.revert(); };
+    return () => { vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } }); };
   }, [reducido]);
 
   return (
     <svg
-      ref={raizRef}
-      width={size}
-      height={size}
-      viewBox="-60 -60 120 120"
+      ref={raizRef} width={size} height={size} viewBox="-60 -60 120 120"
       preserveAspectRatio="xMidYMid meet"
       className={'cel-svg' + (reducido ? ' cel-svg-quieto' : '')}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      aria-hidden="true"
-      focusable="false"
+      style={{ maxWidth: '100%', height: 'auto' }} aria-hidden="true" focusable="false"
     >
-      {/* Cielo y plataforma: estáticos, sin transformaciones. */}
-      {ESTRELLAS.map((e, i) => (
-        <circle key={i} cx={e.x} cy={e.y} r={e.r} style={{ fill: 'var(--texto2)', opacity: 0.35 }} />
-      ))}
-      <path
-        d="M -22 49 H 22"
-        style={{ fill: 'none', stroke: 'var(--borde-f)', strokeWidth: 2.6 }}
-        strokeLinecap="round"
-      />
+      <DefsCelebracion u={U} tonos={['rojo', 'azul', 'metal', 'blanco', 'amarillo', 'naranja']} />
 
-      {/* Estela: sin animar se ve entera (es el fotograma final); con animación,
-          `svg.createDrawable` la esconde antes del primer pintado y la traza. */}
-      <path
-        className="co-estela"
-        d="M 0 46 C -3.5 34 3.5 22 0 10 C -3.5 -2 3 -12 0 -22"
-        style={{ fill: 'none', stroke: 'var(--azul)', strokeWidth: 3.4, opacity: 0.32 }}
-        strokeLinecap="round"
-      />
-
-      {/* Humo, ondas y chispas: transitorios, no existen en el fotograma final. */}
-      {!reducido && HUMO.map((h, i) => (
-        <circle key={i} className="co-humo" r={h.r} style={{ ...EJE, fill: 'var(--texto2)', opacity: 0 }} />
-      ))}
-      {!reducido && [0, 1, 2].map((i) => (
-        <circle
-          key={i} className="co-onda" r="9"
-          style={{ ...EJE, fill: 'none', stroke: 'var(--azul)', strokeWidth: 2.4, transform: `translateY(${APICE}px)`, opacity: 0 }}
-        />
-      ))}
-
-      {/* Llama: hermana del cohete (no hija), dibujada de y=0 hacia abajo para
-          que `scaleY` la estire sin despegarla de la base. */}
-      {!reducido && (
-        <g className="co-llama" style={{ ...EJE, transform: `translateY(${PAD + LLAMA}px)`, opacity: 0 }}>
-          <path d="M 0 17 C -5.5 10 -6.5 5 -6.5 0 L 6.5 0 C 6.5 5 5.5 10 0 17 Z" style={{ fill: 'var(--amarillo)' }} />
-          <path d="M 0 11 C -2.8 7 -3.2 3.5 -3.2 0 L 3.2 0 C 3.2 3.5 2.8 7 0 11 Z" style={{ fill: 'var(--rojo)' }} />
+      {/* Estrellas de fondo */}
+      {!reducido && [[-32, -34], [30, -26], [-24, -12], [36, -44], [18, -50]].map(([x, y], i) => (
+        <g className="co-estrella" key={i} opacity="0" transform={`translate(${x},${y})`}>
+          <Chispa r={i % 2 ? 3.2 : 2.2} color={P.amarillo.luz} />
         </g>
-      )}
+      ))}
 
-      {/* ── El cohete ── */}
-      <g className="co-cohete" style={{ ...EJE, transform: `translateY(${reducido ? APICE : PAD + 12}px)`, opacity: reducido ? 1 : 0 }}>
-        <path d="M -9 3 L -16.5 13 L -9 12 Z" style={{ fill: 'var(--azul)' }} strokeLinejoin="round" />
-        <path d="M 9 3 L 16.5 13 L 9 12 Z" style={{ fill: 'var(--azul)' }} strokeLinejoin="round" />
-        <path
-          d="M 0 -20 C 6.5 -12.5 9 -3.5 9 4.5 V 12 H -9 V 4.5 C -9 -3.5 -6.5 -12.5 0 -20 Z"
-          style={{ fill: 'var(--sup1)', stroke: 'var(--borde-f)', strokeWidth: 1.6 }}
-          strokeLinejoin="round"
-        />
-        <path
-          d="M 0 -20 C 3.6 -16 5.8 -10.8 6.8 -5.5 H -6.8 C -5.8 -10.8 -3.6 -16 0 -20 Z"
-          style={{ fill: 'var(--rojo)' }}
-          strokeLinejoin="round"
-        />
-        <circle cx="0" cy="0" r="4.4" style={{ fill: 'var(--azul)' }} />
-        <circle cx="0" cy="0" r="4.4" style={{ fill: 'none', stroke: 'var(--borde-f)', strokeWidth: 1.2 }} />
-        <rect x="-9" y="6" width="18" height="3.2" style={{ fill: 'var(--amarillo)' }} />
-        <rect x="-6" y="12" width="12" height="2.4" rx="1" style={{ fill: 'var(--azul-osc)' }} />
+      {/* Humo del despegue */}
+      {!reducido && Array.from({ length: 6 }, (_, i) => (
+        <circle className="co-humo" key={i} cx={i % 2 ? 4 : -4} cy="34" r="4.6" fill={P.metal.luz} opacity="0" />
+      ))}
+      <path d="M -46 38 H 46" stroke="var(--borde-f)" strokeWidth="2.6" strokeLinecap="round" opacity="0.7" />
+
+      {/* Estela del recorrido: queda dibujada tras el despegue */}
+      <path className="co-estela" d="M 0 34 V -8" stroke={P.amarillo.luz} strokeWidth="3.4"
+        strokeLinecap="round" opacity={reducido ? 0.5 : 0} strokeDasharray="5 6"
+        style={{ transformOrigin: '60px 94px' }} />
+
+      <g className="co-cohete" transform={reducido ? 'translate(0,-40) scale(0.62)' : undefined}
+        style={{ transformOrigin: '60px 60px' }}>
+        {/* Llama: tres capas */}
+        <g className="co-llama" opacity={reducido ? 1 : 0} style={{ transformOrigin: '60px 84px' }}>
+          <path d="M -7.4 24 Q 0 46 7.4 24 Q 0 30 -7.4 24 Z" fill={P.naranja.base} opacity="0.9" />
+          <path d="M -5 24 Q 0 39 5 24 Q 0 28.4 -5 24 Z" fill={P.amarillo.base} />
+          <path d="M -2.6 24 Q 0 32.6 2.6 24 Q 0 26.4 -2.6 24 Z" fill="#FFF6D0" />
+        </g>
+        {/* Aletas */}
+        <path d="M -6.4 12 L -14 25 L -6.4 23 Z" fill={vol('rojo', U)} />
+        <path d="M 6.4 12 L 14 25 L 6.4 23 Z" fill={P.rojo.sombra} />
+        {/* Fuselaje */}
+        <path d="M 0 -26 Q 9.4 -10 9.4 12 Q 9.4 22 0 24 Q -9.4 22 -9.4 12 Q -9.4 -10 0 -26 Z" fill={lin('blanco', U)} />
+        {/* Franja de sombra lateral: lo hace cilíndrico */}
+        <path d="M 4.4 -19 Q 9.4 -8 9.4 12 Q 9.4 21 3.6 23.4 Q 6.6 14 6.4 4 Q 6.2 -8 4.4 -19 Z" fill={P.blanco.sombra} opacity="0.85" />
+        <path d="M -5.2 -14 Q -7.4 -2 -7 14" fill="none" stroke="#fff" strokeWidth="2.2" opacity="0.75" strokeLinecap="round" />
+        {/* Morro */}
+        <path d="M 0 -26 Q 6.6 -18 8 -10 Q 0 -13 -8 -10 Q -6.6 -18 0 -26 Z" fill={vol('rojo', U)} />
+        {/* Ventanilla */}
+        <circle cx="0" cy="0" r="5.6" fill={P.metal.sombra} />
+        <circle cx="0" cy="0" r="4.4" fill={vol('azul', U)} />
+        <ellipse cx="-1.5" cy="-1.6" rx="1.8" ry="1.2" fill="#fff" opacity="0.8" transform="rotate(-30 -1.5 -1.6)" />
+        <circle cx="1.8" cy="1.6" r="0.7" fill="#fff" opacity="0.6" />
+        {/* Banda inferior */}
+        <path d="M -8.8 15 Q 0 17.4 8.8 15 L 8.4 19 Q 0 21.4 -8.4 19 Z" fill={vol('rojo', U)} />
       </g>
 
-      {!reducido && CHISPAS.map((ch, i) => (
-        <circle key={i} className="co-chispa" r="2.6" style={{ ...EJE, fill: ch.color, opacity: 0 }} />
-      ))}
+      {/* Remate que permanece */}
+      <g className="co-rotulo" opacity={reducido ? 1 : 0}>
+        <rect x="-38" y="20" width="76" height="15.4" rx="7.7" fill={P.azul.sombra} opacity="0.32" transform="translate(0,1.4)" />
+        <rect x="-38" y="20" width="76" height="15.4" rx="7.7" fill={vol('azul', U)} />
+        <path d="M -33 23.4 H 33" stroke="#fff" strokeWidth="1.2" opacity="0.4" strokeLinecap="round" />
+        <text x="0" y="28.2" textAnchor="middle" dominantBaseline="central" fontSize="8.2" fontWeight="800"
+          fill="#fff">Ya está en difusión</text>
+      </g>
     </svg>
   );
 }

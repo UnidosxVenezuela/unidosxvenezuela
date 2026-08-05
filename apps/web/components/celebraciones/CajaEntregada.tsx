@@ -2,269 +2,162 @@
 import { useLayoutEffect, useRef } from 'react';
 import { createTimeline } from 'animejs';
 import type { PropsAnimacionCelebracion } from '@/lib/celebraciones';
+import { DefsCelebracion, PALETA as P, vol, lin, SombraSuelo, Chispa } from './estilo';
 
 /**
- * «Caja que llega»: una caja de ayuda baja, toca el suelo, se abre y suelta
- * confeti; de dentro sube un corazón que late una vez.
+ * «Caja entregada» — la caja de ayuda baja, toca el suelo, se abren las solapas y
+ * sale luz y confeti.
  *
- * Momentos que cuenta: `entrega_completada` e `item_cumplido`. Es EL momento
- * de esta plataforma —el único que de verdad le cambia el día a una familia—,
- * así que la animación busca dignidad, no chiste: la caja pesa (cae acelerando
- * y el suelo lo acusa), se abre despacio, y lo que sale es lo que importa.
+ * Es el ÚNICO momento del flujo que de verdad cambia la vida de alguien, así que
+ * es de los remates más grandes. Lleva la bandera en el costado: lo que se entrega
+ * lo entrega esta gente.
  *
- * REGLAS DE GEOMETRÍA (ver el contrato en `lib/celebraciones.ts`):
- *  - `viewBox="-60 -60 120 120"`: el origen es el centro y ahí cae el
- *    `transform-origin` por defecto de SVG.
- *  - Cada elemento animado es HIJO DIRECTO del <svg> y su dibujo está centrado
- *    en el origen; se coloca con `translate`. Nunca se anidan transformaciones
- *    animadas: un padre movido desplaza el centro de giro de sus hijos.
- *  - Las TAPAS son la excepción interesante: su dibujo tiene la BISAGRA en el
- *    origen (no su centro), así el `rotate` gira sobre la bisagra —como una
- *    tapa de verdad— y el `translate` posterior la lleva a la esquina de la caja.
- *  - Todo lo animado nace con `opacity: 0` en el JSX: si anime.js tarda un
- *    fotograma en fijar el estado inicial, no se ve ningún salto.
+ * ACABADO: cartón con degradado y arista lateral más oscura (da el volumen del
+ * prisma), cinta de embalaje con brillo, resplandor difuminado al abrirse, y
+ * sombra de suelo que se ACHICA al caer — es lo que vende el peso.
  */
 
-/* Acentos deliberados: el cartón no es un token porque no cambia con el tema
-   (una caja de ayuda es del color que es, y este tono lee bien en claro y en
-   oscuro). Todo lo demás sí usa tokens. */
-const CARTON = '#c8894a';
-const CARTON_OSC = '#9c6733';
-const CARTON_CLA = '#ddab72';
-/* La sombra de contacto tampoco es un token: `var(--texto)` es casi blanco en
-   tema oscuro y la sombra se convertiría en un RESPLANDOR bajo la caja, justo lo
-   contrario del peso que buscamos. Con un casi-negro fijo se ve en tema claro y
-   se desvanece en el oscuro — que es lo que hace una sombra sobre suelo oscuro.
-   El aterrizaje sigue leyéndose por la línea de suelo y por el achatado. */
-const SOMBRA = '#0b1020';
+const U = 'caja';
 
-/**
- * El `viewBox` está centrado en el origen, así que el `transform-origin` por
- * defecto (el centro del view-box) ES el punto (0,0): toda transformación queda
- * como una matriz pura sobre el origen y el `transform-origin` deja de importar.
- * De eso depende TODA la geometría de este archivo, y a su vez depende de que
- * `transform-box` sea `view-box` — es el valor inicial, pero se declara
- * explícito para no jugárselo a la interpretación del navegador.
- */
-const EJE = { transformBox: 'view-box' } as const;
-
-const SUELO_Y = 41;
-/** Centro de la caja apoyada (la caja mide 34 de alto → toca el suelo en 39). */
-const CAJA_Y = 22;
-/** Altura de las bisagras = borde superior de la caja. */
-const BISAGRA_Y = CAJA_Y - 17;
-/** Cuánto cae desde fuera de cuadro. */
-const CAIDA = 95;
-/** Apertura de las tapas (grados). Sale con `outBack`, así que pasa un poco. */
-const ABIERTA = 118;
-/** Dónde se queda el corazón. */
-const CORAZON_Y = -22;
-
-const TAPA_I_QUIETA = `translate(-27px, ${BISAGRA_Y}px) rotate(-${ABIERTA}deg)`;
-const TAPA_D_QUIETA = `translate(27px, ${BISAGRA_Y}px) rotate(${ABIERTA}deg)`;
-
-/**
- * Confeti en abanico hacia arriba (no en círculo: sale DE la caja, y una caja
- * no escupe hacia abajo). Determinista: nada de azar a nivel de módulo.
- */
-const CONFETI = Array.from({ length: 14 }, (_, i) => {
-  const ang = -Math.PI / 2 + (i / 13 - 0.5) * 2.5;
-  const dist = 30 + (i % 4) * 6;
+const CONF = Array.from({ length: 12 }, (_, i) => {
+  const ang = -Math.PI / 2 + (i / 11 - 0.5) * 2.1;
   return {
-    x: +(Math.cos(ang) * dist).toFixed(1),
-    y: +(3 + Math.sin(ang) * dist * 0.95).toFixed(1),
-    giro: i % 2 ? 210 : -180,
-    redondo: i % 4 === 3,
-    color: ['var(--amarillo)', 'var(--azul)', 'var(--rojo)', 'var(--ok-solido)'][i % 4],
+    x: +(Math.cos(ang) * (24 + (i % 3) * 7)).toFixed(1),
+    y: +(Math.sin(ang) * (26 + (i % 4) * 6)).toFixed(1),
+    color: [P.amarillo.base, P.azul.base, P.rojo.base, P.verde.luz][i % 4],
+    r: i % 3 === 0 ? 3.2 : 2.4,
   };
 });
 
-/** Corazón dibujado a mano con dos bezier simétricas, centrado en el origen. */
-const CORAZON = 'M 0 8 C -3.6 4 -10.4 0.8 -10.4 -4 C -10.4 -8.4 -6.6 -10.9 -3.3 -9.7'
-  + ' C -1.4 -9 -0.4 -7.6 0 -6.3 C 0.4 -7.6 1.4 -9 3.3 -9.7'
-  + ' C 6.6 -10.9 10.4 -8.4 10.4 -4 C 10.4 0.8 3.6 4 0 8 Z';
-
-export default function CajaEntregada({ onFin, reducido, size = 160 }: PropsAnimacionCelebracion) {
+export default function CajaEntregada({ onFin, reducido, size = 240 }: PropsAnimacionCelebracion) {
   const raizRef = useRef<SVGSVGElement>(null);
   const finRef = useRef(onFin);
   finRef.current = onFin;
 
   useLayoutEffect(() => {
     const raiz = raizRef.current;
-    // Movimiento reducido: NO se anima nada. El JSX ya está en su fotograma
-    // final (caja apoyada y abierta, corazón arriba, sin confeti ni destellos).
     if (reducido || !raiz) return;
+    const uno = <T extends SVGElement>(s: string) => raiz.querySelector<T>(s);
+    const todos = <T extends SVGElement>(s: string) => Array.from(raiz.querySelectorAll<T>(s));
+    const vivos: { revert: () => void }[] = [];
 
-    const sombra = raiz.querySelector<SVGEllipseElement>('.ce-sombra');
-    const caja = raiz.querySelector<SVGGElement>('.ce-caja');
-    const tapaI = raiz.querySelector<SVGGElement>('.ce-tapa-i');
-    const tapaD = raiz.querySelector<SVGGElement>('.ce-tapa-d');
-    const brillo = raiz.querySelector<SVGEllipseElement>('.ce-brillo');
-    const corazon = raiz.querySelector<SVGPathElement>('.ce-corazon');
-    const aro = raiz.querySelector<SVGCircleElement>('.ce-aro');
-    const confeti = Array.from(raiz.querySelectorAll<SVGGElement>('.ce-confeti'));
-
-    let tl: ReturnType<typeof createTimeline> | null = null;
     try {
-      const linea = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
-      tl = linea;
+      const tl = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
+      vivos.push(tl);
 
-      // 1. La caja BAJA acelerando (`inQuad`) y la sombra se cierra a la vez:
-      //    es lo que hace que se lea como peso y no como un globo.
-      if (sombra) linea.add(sombra, { translateY: SUELO_Y, scaleX: [0.35, 0.62], opacity: [0, 0.09], duration: 520 }, 0);
-      if (caja) linea.add(caja, { translateY: [CAJA_Y - CAIDA, CAJA_Y], opacity: [0, 1], duration: 540, ease: 'inQuad' }, 0);
-      if (tapaI) {
-        linea.add(tapaI, {
-          translateX: -27, translateY: [BISAGRA_Y - CAIDA, BISAGRA_Y], rotate: 0,
-          opacity: [0, 1], duration: 540, ease: 'inQuad',
-        }, 0);
-      }
-      if (tapaD) {
-        linea.add(tapaD, {
-          translateX: 27, translateY: [BISAGRA_Y - CAIDA, BISAGRA_Y], rotate: 0,
-          opacity: [0, 1], duration: 540, ease: 'inQuad',
-        }, 0);
-      }
-
-      // 2. Toca el suelo: la caja se achata y se recupera. El `translateY` sube
-      //    2,4 durante el achatado para que la BASE no se despegue del suelo
-      //    (el `scale` actúa desde el centro del dibujo, no desde su base).
+      const caja = uno<SVGGElement>('.cj-caja');
+      const sombra = uno<SVGEllipseElement>('.cj-sombra');
       if (caja) {
-        linea.add(caja, { scaleY: 0.86, scaleX: 1.09, translateY: CAJA_Y + 2.4, duration: 80 }, 540);
-        linea.add(caja, { scaleY: 1, scaleX: 1, translateY: CAJA_Y, duration: 380, ease: 'outBack' }, 620);
+        tl.add(caja, { translateY: [-52, 0], opacity: [0, 1], duration: 620, ease: 'inQuad' }, 0);
+        // Aplaste al aterrizar: el peso se ve en la deformación, no en la caída.
+        tl.add(caja, { scaleX: 1.13, scaleY: 0.86, duration: 90 }, 620);
+        tl.add(caja, { scaleX: 1, scaleY: 1, duration: 380, ease: 'outBounce' }, 710);
       }
       if (sombra) {
-        linea.add(sombra, { translateY: SUELO_Y, scaleX: 1.2, opacity: 0.17, duration: 110 }, 540);
-        linea.add(sombra, { translateY: SUELO_Y, scaleX: 1, opacity: 0.12, duration: 380 }, 650);
+        // La sombra crece a la vez que la caja se acerca: es lo que da la altura.
+        tl.add(sombra, { rx: [8, 22], opacity: [0.1, 0.28], duration: 620, ease: 'inQuad' }, 0);
       }
-
-      // 3. Se abre. `outBack` da el pasadito de las tapas de cartón.
-      if (tapaI) linea.add(tapaI, { translateX: -27, translateY: BISAGRA_Y, rotate: -ABIERTA, duration: 480, ease: 'outBack' }, 690);
-      if (tapaD) linea.add(tapaD, { translateX: 27, translateY: BISAGRA_Y, rotate: ABIERTA, duration: 480, ease: 'outBack' }, 690);
-
-      // 4. Lo que hay dentro se enciende.
-      if (brillo) {
-        linea.add(brillo, { translateY: BISAGRA_Y, scale: [0.35, 1.3], opacity: [0, 0.75], duration: 240 }, 800);
-        linea.add(brillo, { translateY: BISAGRA_Y, scale: 1.7, opacity: 0, duration: 620 }, 1040);
+      // Solapas
+      const izq = uno<SVGGElement>('.cj-solapa-izq');
+      const der = uno<SVGGElement>('.cj-solapa-der');
+      if (izq) tl.add(izq, { rotate: [0, -118], duration: 420, ease: 'outBack' }, 900);
+      if (der) tl.add(der, { rotate: [0, 118], duration: 420, ease: 'outBack' }, 940);
+      // Luz que sale
+      const luz = uno<SVGGElement>('.cj-luz');
+      if (luz) {
+        tl.add(luz, { opacity: [0, 0.85], scale: [0.4, 1.25], duration: 420, ease: 'outQuad' }, 1080);
+        tl.add(luz, { opacity: 0.35, scale: 1, duration: 700 }, 1520);
       }
-
-      // 5. Confeti: sale de la boca de la caja, gira y se apaga.
-      confeti.forEach((g, i) => {
-        const c = CONFETI[i];
+      // Corazón que sube
+      const cora = uno<SVGGElement>('.cj-corazon');
+      if (cora) {
+        tl.add(cora, { opacity: [0, 1], translateY: [4, -18], scale: [0.4, 1], duration: 620, ease: 'outBack' }, 1120);
+      }
+      todos<SVGGElement>('.cj-conf').forEach((g, i) => {
+        const c = CONF[i];
         if (!c) return;
-        linea.add(g, {
-          translateX: [0, c.x],
-          translateY: [3, c.y],
-          rotate: c.giro,
-          scale: [0.5, 1],
-          opacity: [1, 0],
-          duration: 900,
-          delay: i * 24,
-          ease: 'outCubic',
-        }, 860);
+        tl.add(g, {
+          translateX: c.x, translateY: c.y, rotate: i % 2 ? 200 : -180,
+          opacity: [1, 0], scale: [1.1, 0.4], duration: 1000, delay: i * 22, ease: 'outCubic',
+        }, 1120);
       });
-
-      // 6. Golpe de gracia: sube el corazón y late una vez. Esto es la entrega.
-      if (corazon) {
-        linea.add(corazon, { translateY: [4, CORAZON_Y], scale: [0.15, 1], opacity: [0, 1], duration: 560, ease: 'outBack' }, 980);
-        linea.add(corazon, { translateY: CORAZON_Y, scale: 1.16, duration: 170 }, 1560);
-        linea.add(corazon, { translateY: CORAZON_Y, scale: 1, duration: 300 }, 1730);
-      }
-      if (aro) linea.add(aro, { translateY: CORAZON_Y, scale: [0.45, 2.5], opacity: [0.5, 0], duration: 780 }, 1580);
-
-      // Respiro final para que dé tiempo a leer el mensaje del overlay.
-      linea.add(raiz, { opacity: 1, duration: 620 });
+      tl.add(raiz, { opacity: 1, duration: 600 }, 2500);
     } catch {
+      vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } });
       finRef.current();
       return;
     }
-
-    return () => { tl?.revert(); };
+    return () => { vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } }); };
   }, [reducido]);
 
   return (
     <svg
-      ref={raizRef}
-      width={size}
-      height={size}
-      viewBox="-60 -60 120 120"
+      ref={raizRef} width={size} height={size} viewBox="-60 -60 120 120"
       preserveAspectRatio="xMidYMid meet"
       className={'cel-svg' + (reducido ? ' cel-svg-quieto' : '')}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      aria-hidden="true"
-      focusable="false"
+      style={{ maxWidth: '100%', height: 'auto' }} aria-hidden="true" focusable="false"
     >
-      {/* Suelo: estático, sin transformaciones. */}
-      <path
-        d={`M -44 ${SUELO_Y} H 44`}
-        style={{ fill: 'none', stroke: 'var(--borde-f)', strokeWidth: 2.4, opacity: 0.75 }}
-        strokeLinecap="round"
-      />
-      <ellipse
-        className="ce-sombra"
-        rx="30" ry="5.5"
-        style={{
-          ...EJE,
-          fill: SOMBRA,
-          transform: `translateY(${SUELO_Y}px)`,
-          opacity: reducido ? 0.12 : 0,
-        }}
-      />
+      <DefsCelebracion u={U} tonos={['madera', 'amarillo', 'azul', 'rojo', 'crema']} />
+      <defs>
+        <radialGradient id={`luz-${U}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFF6C8" stopOpacity="0.95" />
+          <stop offset="60%" stopColor="#FFD75E" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#FFD75E" stopOpacity="0" />
+        </radialGradient>
+      </defs>
 
-      {/* Aro y destello: transitorios, no existen en el fotograma final. */}
-      {!reducido && (
-        <circle
-          className="ce-aro" r="13"
-          style={{ ...EJE, fill: 'none', stroke: 'var(--rojo)', strokeWidth: 2.4, transform: `translateY(${CORAZON_Y}px)`, opacity: 0 }}
-        />
-      )}
+      <path d="M -50 33 H 50" stroke="var(--borde-f)" strokeWidth="2.6" strokeLinecap="round" opacity="0.7" />
+      <ellipse className="cj-sombra" cx="0" cy="33" rx={reducido ? 22 : 8} ry="4" fill="#0B1220"
+        opacity={reducido ? 0.28 : 0.1} filter={`url(#sombra-${U})`} />
 
-      {/* ── La caja ── */}
-      <g className="ce-caja" style={{ ...EJE, transform: `translateY(${CAJA_Y}px)`, opacity: reducido ? 1 : 0 }}>
-        <rect
-          x="-27" y="-17" width="54" height="34" rx="3"
-          style={{ fill: CARTON, stroke: CARTON_OSC, strokeWidth: 1.6 }}
-        />
-        <rect x="-27" y="-7" width="54" height="2.2" style={{ fill: CARTON_OSC, opacity: 0.4 }} />
-        {/* Tricolor: esta caja es NUESTRA, se reconoce de un vistazo. */}
-        <rect x="-27" y="1" width="18" height="8" style={{ fill: 'var(--amarillo)' }} />
-        <rect x="-9" y="1" width="18" height="8" style={{ fill: 'var(--azul)' }} />
-        <rect x="9" y="1" width="18" height="8" style={{ fill: 'var(--rojo)' }} />
+      {/* Resplandor y confeti van DETRÁS de la caja */}
+      <g className="cj-luz" opacity={reducido ? 0.35 : 0} style={{ transformOrigin: '60px 54px' }}>
+        <circle cx="0" cy="-6" r="30" fill={`url(#luz-${U})`} />
+      </g>
+      <g transform="translate(0,-8)">
+        {!reducido && CONF.map((c, i) => (
+          <g className="cj-conf" key={i} opacity="0"><Chispa r={c.r} color={c.color} /></g>
+        ))}
       </g>
 
-      {/* Destello del interior (transitorio). */}
-      {!reducido && (
-        <ellipse
-          className="ce-brillo" rx="21" ry="6"
-          style={{ ...EJE, fill: 'var(--amarillo)', transform: `translateY(${BISAGRA_Y}px)`, opacity: 0 }}
-        />
-      )}
-
-      {/* ── Las tapas: el dibujo tiene la BISAGRA en el origen (0,0) ──
-          Así `rotate` gira sobre la bisagra y el `translate` posterior la lleva
-          a su esquina de la caja. Cerrada = 0°, abierta = ±118°. */}
-      <g className="ce-tapa-i" style={{ ...EJE, transform: TAPA_I_QUIETA, opacity: reducido ? 1 : 0 }}>
-        <rect x="0" y="-6.5" width="27" height="6.5" rx="1.5" style={{ fill: CARTON_CLA, stroke: CARTON_OSC, strokeWidth: 1.4 }} />
-      </g>
-      <g className="ce-tapa-d" style={{ ...EJE, transform: TAPA_D_QUIETA, opacity: reducido ? 1 : 0 }}>
-        <rect x="-27" y="-6.5" width="27" height="6.5" rx="1.5" style={{ fill: CARTON_CLA, stroke: CARTON_OSC, strokeWidth: 1.4 }} />
-      </g>
-
-      {/* Confeti (transitorio). */}
-      {!reducido && CONFETI.map((c, i) => (
-        <g className="ce-confeti" key={i} style={{ ...EJE, opacity: 0 }}>
-          {c.redondo
-            ? <circle r="3" style={{ fill: c.color }} />
-            : <rect x="-2.4" y="-4.4" width="4.8" height="8.8" rx="1.4" style={{ fill: c.color }} />}
+      <g className="cj-caja" style={{ transformOrigin: '60px 93px' }} opacity={reducido ? 1 : 0}>
+        {/* Solapas abiertas (por detrás del cuerpo) */}
+        <g className="cj-solapa-izq" style={{ transformOrigin: '42px 68px' }}
+          transform={reducido ? 'rotate(-118 -18 8)' : undefined}>
+          <path d="M -18 8 L -18 2 L 0 2 L 0 8 Z" fill={P.madera.sombra} />
+          <path d="M -18 8 L -18 2 L 0 2 L 0 8 Z" fill={lin('madera', U)} opacity="0.85" />
         </g>
-      ))}
+        <g className="cj-solapa-der" style={{ transformOrigin: '60px 68px' }}
+          transform={reducido ? 'rotate(118 0 8)' : undefined}>
+          <path d="M 0 8 L 0 2 L 18 2 L 18 8 Z" fill={P.madera.sombra} />
+          <path d="M 0 8 L 0 2 L 18 2 L 18 8 Z" fill={lin('madera', U)} opacity="0.85" />
+        </g>
 
-      {/* Lo que iba dentro. */}
-      <path
-        className="ce-corazon"
-        d={CORAZON}
-        style={{ ...EJE, fill: 'var(--rojo)', transform: `translateY(${CORAZON_Y}px)`, opacity: reducido ? 1 : 0 }}
-      />
+        {/* Cuerpo: frente + costado (el costado más oscuro da el prisma) */}
+        <path d="M -18 8 H 12 V 32 H -18 Z" fill={vol('madera', U)} />
+        <path d="M 12 8 L 19 3 V 27 L 12 32 Z" fill={P.madera.sombra} />
+        <path d="M -18 8 L -11 3 H 19 L 12 8 Z" fill={P.madera.luz} />
+        {/* Cinta de embalaje */}
+        <rect x="-4" y="8" width="6.6" height="24" fill={P.crema.sombra} opacity="0.75" />
+        <rect x="-4" y="8" width="2.4" height="24" fill={P.crema.brillo} opacity="0.5" />
+        {/* Bandera en el costado */}
+        <g>
+          <rect x="-14" y="16" width="17" height="3.4" fill="#F2B417" />
+          <rect x="-14" y="19.4" width="17" height="3.4" fill="#1F5FC0" />
+          <rect x="-14" y="22.8" width="17" height="3.4" fill="#D62B3C" />
+          <rect x="-14" y="16" width="17" height="10.2" fill="none" stroke={P.madera.sombra} strokeWidth="0.7" opacity="0.6" />
+        </g>
+        {/* Luz de borde superior izquierdo */}
+        <path d="M -17 9.4 V 30" stroke="#fff" strokeWidth="1.6" opacity="0.35" strokeLinecap="round" />
+      </g>
+
+      {/* Corazón que sale de la caja */}
+      <g className="cj-corazon" opacity={reducido ? 1 : 0} transform={reducido ? 'translate(0,-18)' : undefined}
+        style={{ transformOrigin: '60px 62px' }}>
+        <path d="M 0 6 C -9 -1 -8 -9 -3.4 -9 C -1.2 -9 0 -7.2 0 -6 C 0 -7.2 1.2 -9 3.4 -9 C 8 -9 9 -1 0 6 Z"
+          fill={vol('rojo', U)} />
+        <ellipse cx="-2.8" cy="-5.4" rx="1.9" ry="1.3" fill="#fff" opacity="0.6" transform="rotate(-28 -2.8 -5.4)" />
+      </g>
     </svg>
   );
 }

@@ -2,81 +2,45 @@
 import { useLayoutEffect, useRef } from 'react';
 import { createTimeline } from 'animejs';
 import type { PropsAnimacionCelebracion } from '@/lib/celebraciones';
+import { DefsCelebracion, PALETA as P, vol, Chispa } from './estilo';
 
 /**
- * «Choque de manos» — dos manos llegan desde abajo por su propio eje, chocan en
- * el centro y sueltan onda, rayas de impacto y chispas. Remata con un «¡ESO!»
- * de tebeo y una estrella en el punto del choque.
+ * «Choque de manos» — dos manos chocan con onda de impacto y destellos.
  *
- * POR QUÉ ESTA: es la única del catálogo que dice, sin texto, que esto no lo
- * hace nadie solo. Son DOS manos de DOS personas distintas: dos tonos de piel y
- * dos mangas del tricolor. Nadie choca los cinco consigo mismo.
+ * Aquí no lo hace nadie solo: por eso las dos manos tienen TONOS DE PIEL DISTINTOS
+ * y mangas de colores distintos. Es un detalle pequeño y es el que cuenta la
+ * historia — si fueran iguales parecería una persona aplaudiendo.
  *
- * NOTAS DE MONTAJE
- *  - Cada mano va en un `<g>` de COLOCACIÓN con atributo `transform`
- *    (translate + rotate) y DENTRO otro `<g>` que es el que anima anime.js.
- *    Motivo: el atributo `transform` de SVG y la propiedad CSS `transform` son
- *    LA MISMA cosa, así que si anime.js animara el grupo ya colocado le
- *    borraría la colocación de un plumazo.
- *  - La entrada es un `translateY` DENTRO del grupo ya rotado: en ese marco
- *    «abajo» apunta hacia el antebrazo, así que las manos entran deslizándose
- *    por su eje natural. Sale gratis y se lee como dos brazos que se estiran.
- *  - Todo lo que escala (ondas, rayas, chispas, estrella) cuelga de un `<g>`
- *    colocado en el punto de impacto y dibuja alrededor de SU origen local: con
- *    `viewBox="-60 -60 120 120"` el `transform-origin` por defecto cae ahí, así
- *    que escalan desde el choque sin tocar `transform-origin`.
- *  - La mano derecha es la misma pieza con `scale(-1,1)`: un solo dibujo.
+ * ACABADO: cada mano lleva dedos separados (no una manopla), nudillos insinuados,
+ * degradado de volumen y luz de borde. Las líneas de impacto salen del punto de
+ * contacto, no del centro del lienzo.
  */
 
-/** Acentos deliberados de la ilustración (el resto va con tokens del tema). */
-const PIEL_A = '#e9b183';
-const PIEL_B = '#a3673d';
+const U = 'choque';
+const PIEL_A = { sombra: '#A9663A', base: '#D99560', luz: '#EFB98A' };
+const PIEL_B = { sombra: '#6E4526', base: '#966039', luz: '#B98457' };
 
-/** Punto donde se cruzan las manos: centro de todos los efectos. */
-const IMPACTO = 'translate(0,-12)';
-
-/** Chispas del choque. Deterministas: nada de azar a nivel de módulo. */
-const CHISPAS = Array.from({ length: 10 }, (_, i) => {
-  const ang = ((-180 + i * 36) * Math.PI) / 180;
-  // Distancias cortas a propósito: desde (0,-12) la de arriba llega a y = -42 y
-  // no se sale del viewBox (el <svg> recorta, y una chispa cortada canta mucho).
-  const dist = 22 + (i % 3) * 4;
-  return {
-    x: +(Math.cos(ang) * dist).toFixed(1),
-    y: +(Math.sin(ang) * dist).toFixed(1),
-    giro: i % 2 ? 165 : -140,
-    redonda: i % 3 === 2,
-    color: ['var(--amarillo)', 'var(--rojo)', 'var(--amarillo-osc)'][i % 3],
-  };
-});
-
-/** Rayas de impacto de tebeo, en grados. */
-const RAYAS = [-150, -110, -70, -30, 20, 160];
-
-/** Una mano: dedos detrás, palma encima, manga al final. Se dibuja mirando arriba. */
-function Mano({ piel, manga }: { piel: string; manga: string }) {
+/** Una mano: palma + cuatro dedos + pulgar. `dir` = 1 derecha, -1 izquierda. */
+function Mano({ dir, piel, manga, u }: { dir: 1 | -1; piel: typeof PIEL_A; manga: string; u: string }) {
   return (
-    <g stroke="var(--texto)" strokeWidth="1.7" strokeLinejoin="round" strokeLinecap="round">
-      {/* Los dedos van ANTES que la palma: así la palma les tapa la base y no
-          hace falta dibujar la unión. */}
-      <g fill={piel}>
-        <rect x="-10.8" y="-24" width="5.8" height="26" rx="2.9" />
-        <rect x="-4.6" y="-26" width="5.8" height="28" rx="2.9" />
-        <rect x="1.6" y="-24.5" width="5.8" height="26.5" rx="2.9" />
-        <rect x="7.6" y="-19.5" width="5.2" height="22" rx="2.6" />
-        {/* Pulgar: mismo rectángulo redondeado, colocado y girado aparte. */}
-        <g transform="translate(-11.8,8) rotate(-30)">
-          <rect x="-3.3" y="-9.5" width="6.6" height="18" rx="3.3" />
-        </g>
-        <rect x="-12" y="-7" width="24" height="28" rx="7.5" />
-      </g>
-      <rect x="-12.6" y="16" width="25.2" height="11.5" rx="3.6" fill={manga} />
-      {/* Nudillos: tres marcas suaves para que la palma no sea una pastilla. */}
-      <g strokeWidth="1.1" opacity="0.32" fill="none">
-        <path d="M -6.4 -1.6 v 3.6" />
-        <path d="M 0 -2.6 v 3.6" />
-        <path d="M 6.4 -1.6 v 3.6" />
-      </g>
+    <g transform={`scale(${dir},1) rotate(-13)`}>
+      {/* Manga */}
+      <path d="M 22 -2 L 34 -9 L 34 12 L 22 8 Z" fill={manga} />
+      <path d="M 24 -1 L 32.6 -6" stroke="#fff" strokeWidth="1.4" opacity="0.3" strokeLinecap="round" />
+      {/* Palma */}
+      <path d="M 2 -9 Q 20 -12 23 -1 Q 24 7 16 9.6 Q 4 12 1 4 Z" fill={piel.base} />
+      <path d="M 2 -9 Q 20 -12 23 -1 Q 24 7 16 9.6 Q 4 12 1 4 Z" fill={`url(#vol-piel-${u})`} opacity="0.35" />
+      {/* Dedos */}
+      {[-8.6, -3.4, 1.8, 7].map((y, i) => (
+        <rect key={i} x={-6 - (i === 0 || i === 3 ? 1.4 : 0)} y={y - 1.9} width={10 + (i === 1 || i === 2 ? 1.6 : 0)}
+          height="3.9" rx="1.95" fill={i % 2 ? piel.base : piel.luz} />
+      ))}
+      {/* Pulgar */}
+      <path d="M 8 8.4 Q 4 14.4 10 15.6 Q 15 16 15.6 11" fill={piel.base} />
+      {/* Nudillos y luz de borde */}
+      <path d="M -3 -7.6 q 2.4 -1.4 4.6 0" fill="none" stroke={piel.sombra} strokeWidth="0.8" opacity="0.55" strokeLinecap="round" />
+      <path d="M -3 8.4 q 2.4 1.2 4.6 0" fill="none" stroke={piel.sombra} strokeWidth="0.8" opacity="0.5" strokeLinecap="round" />
+      <path d="M 3 -9.6 Q 18 -11.6 22 -2.4" fill="none" stroke="#fff" strokeWidth="1.4" opacity="0.4" strokeLinecap="round" />
     </g>
   );
 }
@@ -88,206 +52,97 @@ export default function ChoqueManos({ onFin, reducido, size = 240 }: PropsAnimac
 
   useLayoutEffect(() => {
     const raiz = raizRef.current;
-    // Movimiento reducido: no se anima NADA. El SVG ya está en su fotograma
-    // final (manos juntas, estrella y rótulo visibles, efectos apagados).
     if (reducido || !raiz) return;
+    const uno = <T extends SVGElement>(s: string) => raiz.querySelector<T>(s);
+    const todos = <T extends SVGElement>(s: string) => Array.from(raiz.querySelectorAll<T>(s));
+    const vivos: { revert: () => void }[] = [];
 
-    const uno = <T extends SVGElement>(sel: string) => raiz.querySelector<T>(sel);
-    const todos = <T extends SVGElement>(sel: string) => Array.from(raiz.querySelectorAll<T>(sel));
-
-    const manos = todos<SVGGElement>('.ch-mano');
-    const ondas = todos<SVGCircleElement>('.ch-onda');
-    const rayas = todos<SVGPathElement>('.ch-raya');
-    const chispas = todos<SVGGElement>('.ch-chispa');
-    const estrella = uno<SVGGElement>('.ch-estrella');
-    const rotulo = uno<SVGGElement>('.ch-rotulo');
-
-    /** Si anime.js falla, el remate (estrella + rótulo) se pinta igual. */
-    const rescate = () => {
-      [estrella, rotulo].forEach((el) => { if (el) el.style.opacity = '1'; });
-    };
-
-    let tl: ReturnType<typeof createTimeline> | null = null;
     try {
-      const linea = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
-      tl = linea;
+      const tl = createTimeline({ defaults: { ease: 'outQuad' }, onComplete: () => finRef.current() });
+      vivos.push(tl);
 
-      // 1) Las manos entran deslizándose por su propio eje.
-      manos.forEach((m, i) => {
-        linea.add(m, { translateY: [44, 0], opacity: [0, 1], duration: 380, ease: 'outQuad' }, i * 25);
-      });
-
-      // 2) EL CHOQUE: retroceso corto y vuelta con rebote.
-      manos.forEach((m) => {
-        linea.add(m, {
-          translateY: [{ to: 7, duration: 110, ease: 'outQuad' }, { to: 0, duration: 280, ease: 'outBack' }],
-        }, 400);
-      });
-
-      // 3) Onda expansiva (dos anillos) desde el punto de choque.
-      ondas.forEach((o, i) => {
-        linea.add(o, {
-          scale: [0.25, i ? 3.6 : 2.6],
-          opacity: [{ to: i ? 0.45 : 0.85, duration: 90 }, { to: 0, duration: i ? 690 : 530 }],
-          duration: i ? 780 : 620,
-          ease: 'outQuad',
-        }, 410 + i * 120);
-      });
-
-      // 4) Rayas de tebeo: salen hacia fuera y se apagan enseguida.
-      rayas.forEach((r, i) => {
-        linea.add(r, {
-          scale: [0.3, 1.2],
-          opacity: [{ to: 0.95, duration: 110 }, { to: 0, duration: 330 }],
-          duration: 440,
-          delay: i * 16,
-          ease: 'outQuad',
-        }, 420);
-      });
-
-      // 5) Chispas: cada una a su sitio, girando y apagándose.
-      chispas.forEach((g, i) => {
-        const ch = CHISPAS[i];
-        if (!ch) return;
-        linea.add(g, {
-          translateX: ch.x,
-          translateY: ch.y,
-          rotate: ch.giro,
-          scale: [1, 0.4],
-          opacity: [{ to: 1, duration: 80 }, { to: 0, duration: 700 }],
-          duration: 780,
-          delay: i * 18,
-          ease: 'outCubic',
-        }, 420);
-      });
-
-      // 6) El grito de tebeo, justo después del golpe.
-      if (rotulo) {
-        linea.add(rotulo, {
-          opacity: [0, 1], scale: [0.25, 1], rotate: [-26, -8], duration: 420, ease: 'outBack',
-        }, 580);
+      const izq = uno<SVGGElement>('.ch-izq');
+      const der = uno<SVGGElement>('.ch-der');
+      if (izq) {
+        tl.add(izq, { translateX: [-54, -3], opacity: [0, 1], duration: 480, ease: 'inQuad' }, 100);
+        tl.add(izq, { translateX: -14, duration: 130, ease: 'outQuad' }, 580);       // retroceso del golpe
+        tl.add(izq, { translateX: -8, duration: 420, ease: 'outBounce' }, 720);
       }
-
-      // 7) REMATE: las manos se separan un pelo, sale la estrella y el rótulo
-      //    da un último golpe. Una celebración sin punto final se siente rota.
-      manos.forEach((m) => {
-        linea.add(m, {
-          translateY: [{ to: 4, duration: 280 }, { to: 0, duration: 320 }],
-          ease: 'inOutQuad',
-        }, 1420);
+      if (der) {
+        tl.add(der, { translateX: [54, 3], opacity: [0, 1], duration: 480, ease: 'inQuad' }, 100);
+        tl.add(der, { translateX: 14, duration: 130, ease: 'outQuad' }, 580);
+        tl.add(der, { translateX: 8, duration: 420, ease: 'outBounce' }, 720);
+      }
+      // Onda de impacto.
+      const onda = uno<SVGCircleElement>('.ch-onda');
+      if (onda) tl.add(onda, { r: [3, 34], opacity: [0.85, 0], strokeWidth: [5, 0.8], duration: 700, ease: 'outQuad' }, 570);
+      const fog = uno<SVGCircleElement>('.ch-fogonazo');
+      if (fog) tl.add(fog, { opacity: [0, 0.85, 0], scale: [0.3, 1.6], duration: 380 }, 560);
+      // Líneas de impacto.
+      todos<SVGPathElement>('.ch-linea').forEach((l, i) => {
+        tl.add(l, { opacity: [0.9, 0], scale: [0.4, 1.5], duration: 520, delay: i * 16 }, 580);
       });
-      if (estrella) {
-        linea.add(estrella, { opacity: [0, 1], scale: [0, 1], rotate: [-45, 0], duration: 460, ease: 'outBack' }, 1460);
+      const rot = uno<SVGGElement>('.ch-rotulo');
+      if (rot) {
+        tl.add(rot, { opacity: [0, 1], scale: [0.4, 1], rotate: [-10, -6], duration: 460, ease: 'outBack' }, 700);
       }
-      if (rotulo) {
-        linea.add(rotulo, {
-          scale: [{ to: 1.16, duration: 170 }, { to: 1, duration: 230 }], rotate: -8, ease: 'outBack',
-        }, 1920);
-      }
-      if (estrella) {
-        linea.add(estrella, {
-          scale: [{ to: 1.2, duration: 180 }, { to: 1, duration: 240 }], opacity: 1, ease: 'inOutQuad',
-        }, 1940);
-      }
-
-      // Colchón final: que dé tiempo a leer el mensaje del overlay.
-      linea.add(raiz, { opacity: 1, duration: 700 }, 2320);
+      todos<SVGGElement>('.ch-chispa').forEach((g, i) => {
+        const ang = (i / 8) * Math.PI * 2 + 0.4;
+        tl.add(g, {
+          translateX: +(Math.cos(ang) * 32).toFixed(1), translateY: +(Math.sin(ang) * 26).toFixed(1),
+          opacity: [1, 0], scale: [0.3, 1.1], duration: 800, delay: i * 22, ease: 'outCubic',
+        }, 620);
+      });
+      tl.add(raiz, { opacity: 1, duration: 700 }, 2000);
     } catch {
-      // Nunca dejamos la celebración colgada ni el dibujo a medias.
-      rescate();
-      tl?.revert();
+      vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } });
       finRef.current();
       return;
     }
-
-    return () => { tl?.revert(); };
+    return () => { vivos.forEach((a) => { try { a.revert(); } catch { /* nada */ } }); };
   }, [reducido]);
 
   return (
     <svg
-      ref={raizRef}
-      width={size}
-      height={size}
-      viewBox="-60 -60 120 120"
+      ref={raizRef} width={size} height={size} viewBox="-60 -60 120 120"
       preserveAspectRatio="xMidYMid meet"
       className={'cel-svg' + (reducido ? ' cel-svg-quieto' : '')}
-      style={{ maxWidth: '100%', height: 'auto' }}
-      aria-hidden="true"
-      focusable="false"
+      style={{ maxWidth: '100%', height: 'auto' }} aria-hidden="true" focusable="false"
     >
-      {/* ── Las dos manos ──────────────────────────────────────────────── */}
-      <g transform="translate(-15,13) rotate(20)">
-        <g className="ch-mano">
-          <Mano piel={PIEL_A} manga="var(--azul)" />
+      <DefsCelebracion u={U} tonos={['piel', 'azul', 'rojo', 'amarillo']} />
+
+      {/* Líneas de impacto, desde el punto de contacto */}
+      {!reducido && Array.from({ length: 10 }, (_, i) => {
+        const a = (i / 10) * 360;
+        return (
+          <path className="ch-linea" key={i} d="M 0 -15 L 0 -25" stroke={P.amarillo.base} strokeWidth="2.6"
+            strokeLinecap="round" opacity="0" transform={`rotate(${a})`} style={{ transformOrigin: '60px 60px' }} />
+        );
+      })}
+      <circle className="ch-onda" cx="0" cy="0" r="3" fill="none" stroke={P.amarillo.luz} strokeWidth="5" opacity="0" />
+      <circle className="ch-fogonazo" cx="0" cy="0" r="16" fill={`url(#brillo-${U})`} opacity="0"
+        style={{ transformOrigin: '60px 60px' }} />
+
+      {!reducido && Array.from({ length: 8 }, (_, i) => (
+        <g className="ch-chispa" key={i} opacity="0">
+          <Chispa r={i % 2 ? 3.2 : 2.4} color={[P.amarillo.base, P.azul.luz, P.rojo.luz][i % 3]} />
         </g>
+      ))}
+
+      <g className="ch-izq" opacity={reducido ? 1 : 0}
+        transform={reducido ? 'translate(-8,0)' : undefined} style={{ transformOrigin: '60px 60px' }}>
+        <Mano dir={-1} piel={PIEL_A} manga={P.azul.base} u={U} />
       </g>
-      <g transform="translate(15,13) rotate(-20)">
-        <g className="ch-mano">
-          {/* La misma mano, del revés: una sola pieza para las dos. */}
-          <g transform="scale(-1,1)">
-            <Mano piel={PIEL_B} manga="var(--rojo)" />
-          </g>
-        </g>
-      </g>
-
-      {/* ── Efectos del choque (todo alrededor del punto de impacto) ───── */}
-      <g transform={IMPACTO}>
-        <circle className="ch-onda" r="12" fill="none" stroke="var(--amarillo)" strokeWidth="3.2" opacity="0" />
-        <circle className="ch-onda" r="12" fill="none" stroke="var(--rojo)" strokeWidth="2.2" opacity="0" />
-
-        {RAYAS.map((a) => (
-          <g key={a} transform={`rotate(${a})`}>
-            <path
-              className="ch-raya"
-              d="M 0 -17 L 0 -26"
-              fill="none"
-              stroke="var(--amarillo)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              opacity="0"
-            />
-          </g>
-        ))}
-
-        {CHISPAS.map((ch, i) => (
-          <g className="ch-chispa" key={i} opacity="0">
-            {ch.redonda
-              ? <circle r="3.2" fill={ch.color} />
-              : <rect x="-2.4" y="-4.6" width="4.8" height="9.2" rx="1.5" fill={ch.color} />}
-          </g>
-        ))}
-
-        {/* Estrella del remate, justo donde se cruzan las manos. */}
-        <g className="ch-estrella" opacity={reducido ? 1 : 0}>
-          <path
-            d="M 0 -15 Q 2.6 -2.6 15 0 Q 2.6 2.6 0 15 Q -2.6 2.6 -15 0 Q -2.6 -2.6 0 -15 Z"
-            fill="var(--amarillo)"
-            stroke="var(--amarillo-osc)"
-            strokeWidth="1.2"
-            strokeLinejoin="round"
-          />
-        </g>
+      <g className="ch-der" opacity={reducido ? 1 : 0}
+        transform={reducido ? 'translate(8,0)' : undefined} style={{ transformOrigin: '60px 60px' }}>
+        <Mano dir={1} piel={PIEL_B} manga={P.rojo.base} u={U} />
       </g>
 
-      {/* ── El grito ───────────────────────────────────────────────────── */}
-      <g transform="translate(30,-34)">
-        <g className="ch-rotulo" opacity={reducido ? 1 : 0} transform={reducido ? 'rotate(-8)' : undefined}>
-          <text
-            x="0"
-            y="4.6"
-            textAnchor="middle"
-            fontSize="15"
-            fontWeight="900"
-            letterSpacing="0.5"
-            fill="var(--amarillo)"
-            stroke="var(--texto)"
-            strokeWidth="3"
-            strokeLinejoin="round"
-            style={{ paintOrder: 'stroke' }}
-          >
-            ¡ESO!
-          </text>
-        </g>
+      {/* Rótulo */}
+      <g className="ch-rotulo" opacity={reducido ? 1 : 0}
+        transform={reducido ? 'rotate(-6 0 -34)' : undefined} style={{ transformOrigin: '60px 26px' }}>
+        <text x="0" y="-32" textAnchor="middle" fontSize="17" fontWeight="900" fill={P.amarillo.base}
+          style={{ paintOrder: 'stroke', stroke: P.azul.sombra, strokeWidth: 4, strokeLinejoin: 'round' }}>¡ESO!</text>
       </g>
     </svg>
   );
