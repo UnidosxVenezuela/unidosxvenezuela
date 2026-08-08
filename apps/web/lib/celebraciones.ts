@@ -327,9 +327,13 @@ export const CATALOGO: Celebracion[] = [
     cargar: () => import('@/components/celebraciones/LoLogre'),
   },
   {
-    id: 'cafe-al-100',
+    // Boceto SVG del mismo concepto, NO aprobado. El id lleva sufijo desde que llegó
+    // el vídeo aprobado 'cafe-al-100' (agosto 2026): dos entradas con el mismo id
+    // rompen celebracionPorId() y el registro de «ya vista» de la rotación, y lo
+    // harían en silencio. Se conserva por si algún día se rediseña.
+    id: 'cafe-al-100-svg',
     aprobada: false,   // diseño pendiente de aprobación
-    nombre: 'Café al 100 %',
+    nombre: 'Café al 100 % (boceto)',
     descripcion: 'Se rellena la taza, sube el vapor y el medidor de energía llega al 100 %.',
     tipo: 'svg',
     eventos: ['tarea_completada', 'generico'],
@@ -458,7 +462,84 @@ export const CATALOGO: Celebracion[] = [
     fuente: '/celebraciones/tarea-completada.webm',
     poster: '/celebraciones/tarea-completada.jpg',
   },
+
+  // ── Segunda tanda de vídeo (agosto 2026) ─────────────────────────────────
+  // Las cuatro venían con el fondo QUEMADO (yuv420p, sin canal alfa). Las dos
+  // primeras traían un croma de verdad —magenta saturado y verde— y se
+  // recortaron; las dos últimas traen un fondo ILUSTRADO con degradado cuyo
+  // tono se solapa con la piel del personaje y con el marrón de la rama, así
+  // que recortarlas dejaba agujeros en el propio dibujo. Esas dos se quedan
+  // con su fondo, en caja, igual que 'solicitud-publicada' y 'tarea-completada'.
+  {
+    id: 'cafe-al-100',
+    aprobada: true,
+    nombre: 'Café al 100 %',
+    descripcion: 'Se rellena la taza, el medidor sube hasta el 100 % y estalla en fuegos artificiales.',
+    tipo: 'video',
+    eventos: ['tarea_completada', 'generico'],
+    tono: 'tierno',
+    pesoKb: 332,
+    fuente: '/celebraciones/cafe-al-100.webm',
+    poster: '/celebraciones/cafe-al-100.jpg',
+    alfa: true,
+  },
+  {
+    id: 'chiguire',
+    aprobada: true,
+    nombre: 'Chigüire',
+    descripcion: 'Un chigüire con bufanda tricolor salta y baila entre confeti. Se superpone sin caja.',
+    tipo: 'video',
+    eventos: ['generico', 'item_cumplido', 'aporte_registrado'],
+    tono: 'gracioso',
+    pesoKb: 380,
+    fuente: '/celebraciones/chiguire.webm',
+    poster: '/celebraciones/chiguire.jpg',
+    alfa: true,
+  },
+  {
+    // Fondo ilustrado con degradado rosa: NO admite recorte (ver nota de arriba).
+    id: 'jornada-cumplida',
+    aprobada: true,
+    nombre: 'Jornada cumplida',
+    descripcion: 'Tras una jornada larga frente al portátil, cae el confeti. Con su fondo.',
+    tipo: 'video',
+    eventos: ['tarea_completada', 'generico'],
+    tono: 'gracioso',
+    pesoKb: 316,
+    fuente: '/celebraciones/jornada-cumplida.webm',
+    poster: '/celebraciones/jornada-cumplida.jpg',
+  },
+  {
+    // Fondo ilustrado con degradado magenta: NO admite recorte.
+    id: 'araguaney',
+    aprobada: true,
+    nombre: 'Araguaney',
+    descripcion: 'Una rama de araguaney florece y llega un pájaro azul a posarse. Con su fondo.',
+    tipo: 'video',
+    eventos: ['generico', 'entrega_completada', 'caso_publicado'],
+    tono: 'sobrio',
+    pesoKb: 332,
+    fuente: '/celebraciones/araguaney.webm',
+    poster: '/celebraciones/araguaney.jpg',
+  },
 ];
+
+/**
+ * Guarda de desarrollo: dos entradas con el MISMO id rompen `celebracionPorId()` —que
+ * devuelve la primera— y el registro de «ya vista» de la rotación, que también va por id:
+ * una haría desaparecer a la otra del reparto sin ningún error visible. Pasó de verdad al
+ * añadir el vídeo 'cafe-al-100' junto al boceto SVG del mismo nombre (agosto 2026).
+ * Solo avisa en desarrollo; en producción no cuesta nada.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  const vistos = new Set<string>();
+  const repes = CATALOGO.map((c) => c.id).filter((id) => (vistos.has(id) ? true : (vistos.add(id), false)));
+  if (repes.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error('[celebraciones] ids duplicados en CATALOGO: ' + [...new Set(repes)].join(', ')
+      + ' — cada entrada necesita un id único o se pisan en la rotación.');
+  }
+}
 
 /** Busca por id (para el panel y para los enlaces directos). */
 export function celebracionPorId(id: string, catalogo: Celebracion[] = CATALOGO): Celebracion | null {
