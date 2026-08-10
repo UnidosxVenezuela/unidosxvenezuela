@@ -77,6 +77,23 @@ Quien no las quiera, *las apaga* desde su menú de usuario (arriba a la derecha)
 Un aviso honesto, que sigue en pie: las celebraciones son *vídeo*, las ocho. En un teléfono muy justo, o con ahorro de datos activado, puede que no aparezca ninguna. No molesta ni rompe nada — sencillamente no sale. Sigue pendiente aprobar versiones ligeras que funcionen en cualquier equipo.
 
 ━━━━━━━━━━━━━━━━━━
+🇨🇴 *COLOMBIA: LA PLATAFORMA TAMBIÉN LOS RECIBE*
+
+Un terremoto de *magnitud 7,4* golpeó Colombia. Hay familias empezando los días más difíciles, y aquí sabemos bien lo que es eso.
+
+Desde ahora *cada solicitud indica su país*: Venezuela o Colombia. Al entrar verás un aviso que lo explica; se cierra y no vuelve a salir.
+
+• *Al reportar, elige el país.* El desplegable de debajo cambia solo: en Venezuela pide el *estado*, en Colombia el *departamento* — y parroquia pasa a corregimiento, sector a barrio o vereda. Están cargados los 32 departamentos y Bogotá D.C.
+
+• *El mapa ya servía.* No hizo falta cambiarlo: siempre usó mapas mundiales. Lo único que se arregló es que abría siempre sobre Caracas; ahora abre sobre el país que elijas.
+
+• *Cada solicitud lleva su bandera*, también las venezolanas. Con dos respuestas a la vez, marcar solo una dejaría la otra ambigua. Y hay un filtro por país en la lista.
+
+• *Los centros de acopio también tienen país*, y esto es lo importante: Cúcuta está a unos *10 km* de San Antonio del Táchira. Antes, el centro «más cercano» a un caso colombiano habría sido venezolano y la entrega cruzaba una frontera internacional sin que nadie se enterara. Ahora los del país de la solicitud salen *siempre primero*; los del otro lado se ven marcados como *«cruza frontera»*, para que usarlos sea una decisión —con sus aduanas y sus permisos— y no un descuido.
+
+Todo lo anterior queda como Venezuela, que es su país de verdad.
+
+━━━━━━━━━━━━━━━━━━
 📘 *LAS GUÍAS ESTÁN AL DÍA*
 
 Un parche de este tamaño deja las guías viejas mintiendo, así que se rehicieron *todas*.
@@ -85,7 +102,9 @@ Un parche de este tamaño deja las guías viejas mintiendo, así que se rehicier
 
 • *Se actualizaron* las de Logística, Recopilación, Verificación, Envío a Redacción, Administración y la de uso general — cada una con lo que le cambió: el desglose por ítem, la capacidad de los aliados, la reportería, la entrega parcial.
 
-• *Dos guías nuevas de una página:* «Desglose por ítem» (para Recopilación, Verificación y Logística) y «Alianzas Estratégicas».
+• *Cuatro guías nuevas:* «Desglose por ítem», «Alianzas Estratégicas», *«Incorporar un centro de acopio»* —el alta paso a paso, qué pide cada campo y qué hacer después— y *«Manejo de información sensible»*, para todo el equipo.
+
+• *La de información sensible conviene leerla entera.* No habla de contraseñas: habla de lo que pasa un martes a las once de la noche con el teléfono en la mano — la captura reenviada a un grupo, la dirección exacta publicada, la foto de los niños. El riesgo casi nunca es que alguien entre a la base de datos; es que algo protegido salga de la plataforma con la mejor intención.
 
 • *La sección «Ayuda» de la plataforma* también está reescrita, área por área. Si tienes una duda rápida, ahí está — no hace falta abrir el PDF.
 

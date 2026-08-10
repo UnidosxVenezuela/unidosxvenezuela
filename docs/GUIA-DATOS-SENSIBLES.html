@@ -1,0 +1,244 @@
+<meta charset="utf-8">
+<title>Guía · Manejo de información sensible</title>
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --amarillo-osc:#E6B800; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --aviso:#a16207; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.45; font-size:10.6pt; }
+  h1,h2,h3{ line-height:1.2; }
+  h2{ font-size:15pt; color:var(--azul); margin:0 0 .3rem; border-bottom:2px solid var(--amarillo); padding-bottom:4px; }
+  h3{ font-size:11.8pt; color:var(--azul-osc); margin:.85rem 0 .25rem; }
+  p{ margin:.35rem 0; }
+  section{ break-inside:avoid; margin-bottom:13px; }
+  .lead{ color:var(--suave); font-size:10.4pt; }
+  .tri{ height:14px; display:flex; } .tri i{ flex:1; }
+  .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  /* Portada */
+  .cover{ height:250mm; display:flex; flex-direction:column; justify-content:center; text-align:center;
+    border:1px solid var(--borde); border-radius:14px; overflow:hidden; page-break-after:always; }
+  .cover .cuerpo{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:0 22mm; }
+  .cover .kicker{ letter-spacing:.16em; text-transform:uppercase; color:var(--suave); font-weight:700; font-size:10pt; }
+  .cover h1{ font-size:29pt; color:var(--azul); margin:10px 0 6px; }
+  .cover .sub{ font-size:12.5pt; color:var(--texto); max-width:520px; }
+  .cover .marca{ margin-top:24px; font-weight:800; color:var(--azul); font-size:13pt; display:flex; align-items:center; gap:8px; }
+  .cover .pie{ color:var(--suave); font-size:9.5pt; margin-top:6px; }
+  .punto{ display:inline-block; width:12px;height:12px;border-radius:50%;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+  .grid{ display:grid; gap:9px; } .g2{ grid-template-columns:1fr 1fr; } .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ border:1px solid var(--borde); border-radius:11px; padding:9px 12px; background:#fff; break-inside:avoid; }
+  .card h4{ margin:0 0 .2rem; font-size:11pt; color:var(--azul-osc); } .card p{ margin:.1rem 0; font-size:9.6pt; }
+  .callout{ border-left:4px solid var(--azul); background:#f2f6ff; border-radius:0 10px 10px 0; padding:8px 12px; margin:9px 0; break-inside:avoid; font-size:10pt; }
+  .callout.warn{ border-left-color:var(--amarillo-osc); background:#fffbe9; }
+  .callout.blind{ border-left-color:var(--rojo); background:#fef2f2; }
+  .callout.ok{ border-left-color:var(--ok); background:#ecfdf5; }
+  .callout b{ color:var(--azul-osc); }
+  table{ width:100%; border-collapse:collapse; font-size:9.6pt; margin:5px 0; break-inside:avoid; }
+  th,td{ text-align:left; padding:5px 9px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  th{ background:#f1f5ff; color:var(--azul-osc); font-size:9pt; text-transform:uppercase; letter-spacing:.03em; }
+  tr:nth-child(even) td{ background:#fafbfe; }
+  .niv{ display:inline-block; font-size:8.4pt; font-weight:800; border-radius:999px; padding:1px 8px; }
+  .n1{ background:#dcfce7; color:#166534; } .n2{ background:#dbeafe; color:#1e40af; }
+  .n3{ background:#fef3c7; color:#92400e; } .n4{ background:#fee2e2; color:#991b1b; }
+  .sino{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  .col{ border-radius:11px; padding:9px 12px; }
+  .col.si{ background:#ecfdf5; border:1px solid #a7f3d0; } .col.no{ background:#fef2f2; border:1px solid #fecaca; }
+  .col h3{ margin:0 0 4px; font-size:11pt; } .col.si h3{ color:var(--ok);} .col.no h3{ color:var(--crit);}
+  .col ul{ margin:0; padding-left:17px; } .col li{ margin:2px 0; font-size:9.6pt; }
+  ul{ margin:.3rem 0 .3rem 1.1rem; padding:0; } li{ margin:.15rem 0; }
+  .footer-note{ margin-top:14px; border-top:1px dashed var(--borde); padding-top:7px; color:var(--suave); font-size:8.8pt; }
+  .regla{ display:flex; gap:9px; align-items:flex-start; border:1px solid var(--borde); border-radius:11px;
+    padding:9px 12px; background:#fff; margin-bottom:8px; break-inside:avoid; }
+  .regla .n{ width:26px;height:26px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;
+    font-size:11pt; display:flex;align-items:center;justify-content:center; flex-shrink:0; }
+  .regla b{ color:var(--azul-osc); }
+</style>
+
+<div class="cover">
+  <div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+  <div class="cuerpo">
+    <div class="kicker">Guía para todo el equipo · Apoyo por Venezuela</div>
+    <h1>Manejo de información<br>sensible</h1>
+    <div class="sub">Qué datos manejamos, quién puede ver cada cosa y cómo evitar el error que
+      más daño hace: <b>sacar de la plataforma algo que dentro estaba protegido</b>.</div>
+    <div class="marca"><span class="punto"></span> Apoyo por Venezuela</div>
+    <div class="pie">Versión imprimible · Agosto 2026 · Venezuela y Colombia</div>
+  </div>
+  <div class="tri"><i class="r"></i><i class="y"></i><i class="a"></i></div>
+</div>
+
+<!-- 1 -->
+<section>
+  <h2>1 · Por qué esta guía</h2>
+  <p class="lead">Trabajamos con datos de personas que están pasando por lo peor: dónde viven, a qué
+  teléfono llamarlas, cuántos niños hay en la casa, qué medicina necesitan. Esa información se entregó
+  para <b>recibir ayuda</b>, no para nada más.</p>
+  <div class="callout blind"><b>El riesgo real no es que alguien entre a la base de datos.</b> Eso está
+  bien cerrado. El riesgo es mucho más cotidiano: una captura de pantalla reenviada a un grupo de
+  WhatsApp, una dirección exacta publicada en una historia, un CSV descargado que se queda en un
+  teléfono prestado. <b>Casi siempre lo hace alguien con buena intención y con prisa.</b></p>
+  <p>Por eso esta guía no habla de contraseñas ni de cifrado. Habla de lo que haces tú, un martes
+  a las once de la noche, con el teléfono en la mano.</p>
+</section>
+
+<!-- 2 -->
+<section>
+  <h2>2 · Las cuatro reglas</h2>
+  <p class="lead">Si no recuerdas nada más de esta guía, recuerda estas cuatro.</p>
+
+  <div class="regla"><span class="n">1</span><div>
+    <b>Lo que ves dentro, se queda dentro.</b> La plataforma ya decide quién ve qué. En el momento en
+    que haces una captura, copias un teléfono o descargas un archivo, esa protección deja de existir y
+    pasa a depender solo de ti.</div></div>
+
+  <div class="regla"><span class="n">2</span><div>
+    <b>Usa el contacto solo para lo que es.</b> El teléfono de una persona afectada sirve para coordinar
+    su entrega. No para sumarla a un grupo, no para pasárselo a un conocido que «quiere ayudar», no para
+    verificar otra cosa.</div></div>
+
+  <div class="regla"><span class="n">3</span><div>
+    <b>Ante la duda, no lo publiques.</b> Un dato de más no se puede recoger después. Si no estás
+    seguro de si algo es difundible, pregúntale a Verificación antes — no después.</div></div>
+
+  <div class="regla"><span class="n">4</span><div>
+    <b>Tu cuenta es tuya.</b> No la prestes ni compartas la contraseña, ni «un momentito» para que otra
+    persona cargue algo. Todo lo que pase con tu cuenta queda registrado a tu nombre — y si alguien
+    necesita entrar, se le crea una cuenta: se hace en un minuto.</div></div>
+</section>
+
+<!-- 3 -->
+<section>
+  <h2>3 · Qué información manejamos, por nivel</h2>
+  <table>
+    <thead><tr><th style="width:19%">Nivel</th><th style="width:37%">Qué es</th><th>Quién la ve</th></tr></thead>
+    <tbody>
+      <tr><td><span class="niv n1">Pública</span></td><td>Lo que ya se difundió: el texto autorizado, anuncios generales.</td><td>Cualquiera. Es lo único que puede salir a redes.</td></tr>
+      <tr><td><span class="niv n2">Interna</span></td><td>Coordinación del día a día, estados, avances.</td><td>Todo el equipo verificado.</td></tr>
+      <tr><td><span class="niv n3">Restringida</span></td><td>Detalle de un grupo o de una zona; contactos de aliados.</td><td>Solo el área o el grupo que la trabaja.</td></tr>
+      <tr><td><span class="niv n4">Confidencial</span></td><td>Datos de personas afectadas, menores, situaciones de riesgo, salud.</td><td>Quien la necesita para actuar, y nadie más.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>La plataforma ya reparte esto sola.</b> No tienes que decidir a quién enseñar
+  cada dato: si tú lo ves, es porque tu trabajo lo pide. Lo que sí decides —y por eso esta guía— es
+  <b>qué haces con ello después</b>.</div>
+</section>
+
+<!-- 4 -->
+<section>
+  <h2>4 · Quién ve qué, y por qué</h2>
+  <p class="lead">Puede sorprender que un compañero no vea algo que tú sí. No es desconfianza: es que su
+  trabajo no lo necesita, y cada persona de más que ve un dato es un riesgo de más.</p>
+  <table>
+    <thead><tr><th style="width:23%">Área</th><th>Qué ve del solicitante</th></tr></thead>
+    <tbody>
+      <tr><td><b>Recopilación</b></td><td>Todo lo que registra, porque es quien habla con la fuente.</td></tr>
+      <tr><td><b>Verificación</b></td><td>Todo, para poder comprobarlo dato por dato. Además <b>decide qué es difundible</b>.</td></tr>
+      <tr><td><b>Logística</b></td><td>Contacto, coordenadas y adjuntos — <b>los necesita para entregar</b>. Es acceso de trabajo, no un permiso general.</td></tr>
+      <tr><td><b>Redacción / Redes</b></td><td><b>NUNCA el contacto interno.</b> Solo lo autorizado para difundir. La plataforma se lo oculta por diseño, no por costumbre.</td></tr>
+      <tr><td><b>Alianzas</b></td><td>Empresas y aliados. <b>No maneja datos de personas afectadas.</b> Y sus contactos de la Ficha <b>no salen del área</b>.</td></tr>
+      <tr><td><b>Búsqueda</b></td><td>Personas desaparecidas, con su propio blindaje. No aparecen en los tableros del resto.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><b>Si te piden un dato que tú ves y la otra persona no:</b> no se lo pases.
+  Dile que lo pida por el canal del área. Puede parecer rígido, pero es exactamente lo que evita que un
+  contacto acabe circulando por cinco chats.</div>
+</section>
+
+<!-- 5 -->
+<section>
+  <h2>5 · Los cinco descuidos más frecuentes</h2>
+  <div class="grid g2">
+    <div class="card"><h4>📸 La captura de pantalla</h4><p>Mandar una captura del caso a un grupo para
+      «que lo vean rápido». Ahí va el teléfono, la dirección y el nombre, a un grupo que no controlas y
+      del que no puedes borrarlo. <b>Manda el número de la solicitud</b>: quien deba verla, entra.</p></div>
+    <div class="card"><h4>📍 La dirección exacta en redes</h4><p>Publicar «casa de la señora X, calle Y
+      número Z». Basta con la zona. Una dirección exacta más una necesidad expuesta es una invitación
+      para quien busca aprovecharse.</p></div>
+    <div class="card"><h4>👶 La foto de los niños</h4><p>Conmueve, y por eso funciona — y por eso es
+      peligrosa. <b>Menores: nunca cara reconocible, nunca nombre, nunca escuela.</b> Sin excepciones,
+      aunque la familia diga que sí.</p></div>
+    <div class="card"><h4>📄 El archivo descargado</h4><p>Un CSV en la carpeta de descargas de un
+      equipo compartido, o en un teléfono que se presta. Si tienes que exportar, <b>bórralo al terminar</b>
+      y no lo reenvíes.</p></div>
+    <div class="card"><h4>🔑 La cuenta prestada</h4><p>«Entra con la mía que es más rápido». Todo lo que
+      haga esa persona queda a tu nombre, y tú respondes por ello.</p></div>
+    <div class="card"><h4>💬 El grupo equivocado</h4><p>Pegar información de un caso en el chat general
+      del equipo, donde hay gente de áreas que no deben verla. Cada caso tiene su <b>bitácora</b>: ahí sí.</p></div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section>
+  <h2>6 · Fotos, videos y consentimiento</h2>
+  <div class="sino">
+    <div class="col si"><h3>Sí</h3><ul>
+      <li><b>Pide permiso antes</b>, explicando dónde se va a publicar. Y déjalo anotado.</li>
+      <li><b>Fotos de la ayuda</b>, del equipo trabajando, de la entrega — sin caras reconocibles de quien recibe.</li>
+      <li><b>Planos generales</b> y detalles: manos, cajas, el camión. Cuentan lo mismo sin exponer a nadie.</li>
+      <li><b>Revisa el fondo</b>: una placa, un sobre con una dirección, un documento sobre la mesa.</li>
+    </ul></div>
+    <div class="col no"><h3>No</h3><ul>
+      <li><b>Nunca menores identificables</b>, ni con permiso de la familia.</li>
+      <li><b>No fotografíes documentos</b> de identidad ni recetas médicas para difundir.</li>
+      <li><b>No uses el dolor como material.</b> Si la foto expone a alguien en su peor momento, no va.</li>
+      <li><b>No publiques antes de que Verificación lo autorice</b>, aunque estés seguro.</li>
+    </ul></div>
+  </div>
+  <div class="callout"><b>Un permiso no es para siempre ni para todo.</b> Que alguien acepte una foto para
+  el informe interno no significa que acepte verla en redes. Si cambia el uso, se vuelve a preguntar.</div>
+</section>
+
+<!-- 7 -->
+<section>
+  <h2>7 · Dos países, un cuidado</h2>
+  <p>Desde agosto de 2026 la plataforma atiende <b>Venezuela y Colombia</b>. Cada solicitud queda marcada
+  con su país y no se mezclan. Para el manejo de datos, esto añade dos cosas:</p>
+  <div class="grid g2">
+    <div class="card"><h4>Los datos no cruzan porque sí</h4><p>Que dos casos estén a 10 km no los hace
+      del mismo sitio. Un contacto colombiano se trabaja con el equipo que lleva Colombia; no se reparte
+      «por si acaso» a quien tenga tiempo.</p></div>
+    <div class="card"><h4>Cruzar la frontera es una decisión</h4><p>Si Logística usa un centro del otro
+      país, la plataforma lo marca como <b>«cruza frontera»</b>. Eso no es solo logística: implica
+      permisos y aduanas. Se consulta antes con coordinación.</p></div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section>
+  <h2>8 · Si algo se expuso</h2>
+  <p class="lead">Pasa. Lo importante es qué se hace en la hora siguiente, y lo peor que puedes hacer es
+  callarlo.</p>
+  <div class="grid g3">
+    <div class="card"><h4>1 · Contén</h4><p>Borra la publicación, saca el mensaje del grupo, elimina el
+      archivo. Cuanto antes, menos alcance.</p></div>
+    <div class="card"><h4>2 · Avisa</h4><p>A tu coordinación, <b>enseguida</b>. No a un compañero: a
+      quien puede tomar decisiones.</p></div>
+    <div class="card"><h4>3 · Cuenta qué salió</h4><p>Qué dato, de quién, dónde y cuánto tiempo estuvo
+      visible. Sin adornar. De eso depende si hay que avisar a la persona afectada.</p></div>
+  </div>
+  <div class="callout ok"><b>No se sanciona a quien avisa.</b> Se agradece. Lo que sí hace daño es el
+  error que se esconde: cuando aparece días después, ya no se puede contener y la persona expuesta se
+  entera por su cuenta.</div>
+</section>
+
+<!-- 9 -->
+<section>
+  <h2>9 · Antes de enviar, tres preguntas</h2>
+  <div class="grid g3">
+    <div class="card"><h4>¿Hace falta?</h4><p>¿La otra persona necesita este dato <b>para hacer su
+      trabajo</b>, o solo le interesa?</p></div>
+    <div class="card"><h4>¿Es el canal?</h4><p>¿Va por la plataforma —donde queda registrado y
+      protegido— o por un chat del que nadie responde?</p></div>
+    <div class="card"><h4>¿Y si fuera mi familia?</h4><p>¿Me parecería bien que este mensaje, con estos
+      datos, circulara sobre mi madre?</p></div>
+  </div>
+  <div class="callout warn"><b>Si alguna respuesta te hace dudar, no lo envíes todavía.</b> Pregunta.
+  Un minuto de más nunca ha hecho daño a nadie; un dato de más, sí.</div>
+
+  <div class="footer-note">
+    <b>Apoyo por Venezuela</b> · Guía de manejo de información sensible · Agosto 2026 · versión imprimible.
+    Complementa a las guías de cada área, que detallan qué ve y qué no ve cada equipo. La base de datos
+    impone estas reglas por su cuenta (seguridad a nivel de fila), pero ninguna regla técnica alcanza a
+    una captura de pantalla: por eso esta guía existe. Si algo aquí no coincide con lo que ves en la
+    plataforma, dilo — la que está mal es la guía.
+  </div>
+</section>
