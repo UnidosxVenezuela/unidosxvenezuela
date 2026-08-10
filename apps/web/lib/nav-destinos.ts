@@ -14,6 +14,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   const d: Destino[] = [
     { href: '/dashboard', etiqueta: 'Panel', icono: 'panel' },
     { href: '/grupos', etiqueta: 'Grupos', icono: 'grupos' },
+    // Bandeja de conversaciones (0231). Para todo el mundo: la RLS de cada hilo decide
+    // qué aparece, así que quien no participa de nada la ve vacía.
+    { href: '/conversaciones', etiqueta: 'Conversaciones', icono: 'conversacion' },
   ];
   if (flags.gestionCasos || flags.verificacion) {
     d.push({ href: '/casos', etiqueta: 'Solicitudes', icono: 'documento' });

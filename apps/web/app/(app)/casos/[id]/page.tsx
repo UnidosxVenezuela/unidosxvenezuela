@@ -4,6 +4,7 @@ import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdmini
 import { areasOperablesDe } from '@/lib/constantes';
 import { createClient } from '@/lib/supabase/server';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Hilo from '@/components/Hilo';
 import DetalleCaso from '../DetalleCaso';
 
 export default async function CasoDetallePage({ params }: { params: { id: string } }) {
@@ -113,6 +114,10 @@ export default async function CasoDetallePage({ params }: { params: { id: string
           items={(items ?? []) as any[]} puedeGestionarItems={gestionaItems === true} cambiosItems={cambiosItems as any[]}
           aportesItems={aportesItems as any[]} derivacionItems={derivacionItems as any[]} />
       </div>
+
+      {/* La bitácora que la GUIA-DATOS-SENSIBLES ya prometía: «Cada caso tiene su
+          bitácora: ahí sí». La lee exactamente quien puede leer el caso. */}
+      <Hilo ambito="caso" anclaId={id} />
     </div>
   );
 }
