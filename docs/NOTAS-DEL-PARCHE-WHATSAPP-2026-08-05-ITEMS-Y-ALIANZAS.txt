@@ -128,7 +128,7 @@ Sobre quién puede otorgar el rol de Alianzas: se planteó restringirlo a admini
 
 Este parche empezó como *«un ajuste chiquito en Alianzas»*.
 
-Terminó en *trece migraciones*, dos áreas nuevas de reportería y un sistema de correo. 📈
+Terminó en *quince migraciones*, dos áreas nuevas de reportería, un sistema de correo y un país más. 📈
 
 En el camino se pidieron *tantos cambios* que hubo que inventar una tabla nueva solo para llevar la cuenta de las cosas… y entonces alguien pidió un cambio *en esa tabla*. 🙃
 
