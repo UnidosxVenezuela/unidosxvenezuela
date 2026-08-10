@@ -52,8 +52,6 @@ export async function actualizarPerfil(formData: FormData) {
     ciudad: opt('ciudad'),
     disponibilidad: opt('disponibilidad'),
     horas_semana: opt('horas_semana'),
-    experiencia: opt('experiencia'),
-    contacto_emergencia: opt('contacto_emergencia'),
   }).eq('id', user.id);
 
   if (error) {
@@ -62,6 +60,16 @@ export async function actualizarPerfil(formData: FormData) {
     }
     throw new Error('No se pudo guardar el perfil: ' + error.message);
   }
+
+  // Experiencia y contacto de emergencia viven fuera de `perfiles` desde 0232: la RLS
+  // filtra filas y no columnas, así que mientras estuvieron ahí cualquier cuenta
+  // verificada podía leer el teléfono del familiar de todo el mundo. Van por su RPC.
+  const { error: errIntake } = await supabase.rpc('guardar_intake_perfil', {
+    p_experiencia: opt('experiencia'),
+    p_contacto_emergencia: opt('contacto_emergencia'),
+    p_perfil: null,
+  });
+  if (errIntake) throw new Error('No se pudieron guardar tus datos de contacto: ' + errIntake.message);
   revalidatePath('/perfil');
   redirect('/perfil?guardado=1');
 }

@@ -7,6 +7,7 @@ import Shell from '@/components/Shell';
 import Toast from '@/components/Toast';
 import ClaveTemporalModal from '@/components/ClaveTemporalModal';
 import AvisoColombia from '@/components/AvisoColombia';
+import ChatFlotante from '@/components/ChatFlotante';
 import CelebracionProveedor from '@/components/CelebracionProveedor';
 import Icono from '@/components/Icono';
 import { Suspense } from 'react';
@@ -16,6 +17,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const coord = esCoordinacion(perfil);
   const supabase = await createClient();
   const flags = await flagsDeNavegacion(supabase, user!.id, perfil);
+
+  // Mensajes de conversación sin leer, para el acceso flotante (0233). Una función que
+  // devuelve un entero, no la bandeja entera: esto se pinta en todas las pantallas.
+  // Degrada a cero si la migración aún no está aplicada.
+  const { data: sinLeerData } = await supabase.rpc('mis_hilos_sin_leer');
+  const sinLeer = typeof sinLeerData === 'number' ? sinLeerData : 0;
 
   // Bloqueo total: una cuenta sin verificar (y que no sea coordinación) solo
   // ve una pantalla de espera, sin navegación ni contenido, hasta su aprobación.
@@ -63,6 +70,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       >
         {children}
       </Shell>
+      {/* Acceso flotante a las conversaciones. Va FUERA del <Shell> a propósito: es
+          `position: fixed` y así no depende de que ningún contenedor de la maqueta
+          tenga `transform`, que rompería el anclaje al viewport. */}
+      <ChatFlotante sinLeerInicial={sinLeer} miId={user!.id} />
     </>
   );
 }

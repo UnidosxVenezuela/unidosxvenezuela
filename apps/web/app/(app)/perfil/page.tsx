@@ -21,6 +21,15 @@ export default async function PerfilPage({
   const { data: vi } = await supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', user!.id).maybeSingle();
   const identidadVerificada = (vi as any)?.estado === 'aprobada';
 
+  // Intake sensible (0232): tabla aparte con RLS de dueño-o-administración. Degrada a
+  // vacío si la migración aún no está aplicada, para no tumbar la página del perfil.
+  const { data: intakeData } = await supabase
+    .from('perfiles_intake')
+    .select('experiencia, contacto_emergencia')
+    .eq('perfil_id', user!.id)
+    .maybeSingle();
+  const intake = (intakeData ?? null) as { experiencia: string | null; contacto_emergencia: string | null } | null;
+
   return (
     <div style={{ maxWidth: 560 }}>
       <div className="pagina-cab">
@@ -93,14 +102,20 @@ export default async function PerfilPage({
           <label htmlFor="disponibilidad">Disponibilidad (horario + zona horaria)</label>
           <input id="disponibilidad" name="disponibilidad" className="input" defaultValue={perfil?.disponibilidad ?? ''} placeholder="Ej.: 4-8 pm hora Venezuela (GMT-4)" />
         </div>
+        {/* Estos dos viven en `perfiles_intake` desde 0232, con RLS de dueño-o-admin.
+            Antes estaban en `perfiles`, donde la policy los entregaba a cualquier cuenta
+            verificada: la RLS filtra filas, no columnas. */}
         <div className="campo">
           <label htmlFor="experiencia">Experiencia relevante (opcional)</label>
-          <textarea id="experiencia" name="experiencia" className="input" rows={3} defaultValue={perfil?.experiencia ?? ''} placeholder="Verificación de información, búsqueda de personas, atención humanitaria, gestión de datos…" />
+          <textarea id="experiencia" name="experiencia" className="input" rows={3} defaultValue={intake?.experiencia ?? ''} placeholder="Verificación de información, búsqueda de personas, atención humanitaria, gestión de datos…" />
         </div>
         <div className="campo">
           <label htmlFor="contacto_emergencia">Contacto de emergencia (opcional)</label>
-          <input id="contacto_emergencia" name="contacto_emergencia" className="input" defaultValue={perfil?.contacto_emergencia ?? ''} placeholder="Nombre (relación) · teléfono" />
-          <p className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>Solo lo ve la administración; nos ayuda a cuidarte.</p>
+          <input id="contacto_emergencia" name="contacto_emergencia" className="input" defaultValue={intake?.contacto_emergencia ?? ''} placeholder="Nombre (relación) · teléfono" />
+          <p className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>
+            Lo ves tú y lo ve la administración; nadie más. Es de una persona que no está
+            en la plataforma, así que lo guardamos aparte y no aparece en ningún listado.
+          </p>
         </div>
 
         <button className="btn btn-primario" type="submit">Guardar cambios</button>

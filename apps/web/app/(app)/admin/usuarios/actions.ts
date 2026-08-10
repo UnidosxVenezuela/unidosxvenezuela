@@ -343,7 +343,6 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
         whatsapp: p.whatsapp, pais: p.pais ?? paisDefecto,
         // Ficha del voluntario (0115): solo se envían si vinieron por columnas.
         ciudad: p.ciudad, disponibilidad: p.disponibilidad, horas_semana: p.horas_semana,
-        experiencia: p.experiencia, contacto_emergencia: p.contacto_emergencia,
         ...(p.habilidades.length ? { habilidades: p.habilidades } : {}),
       })
       .eq('id', creado.user.id);
@@ -353,6 +352,16 @@ export async function importarUsuarios(_prev: EstadoImport, formData: FormData):
       const dupW = /idx_perfiles_whatsapp|whatsapp/i.test(e2.message);
       filas.push({ nombre: p.nombre, whatsapp: p.whatsapp, email: p.email, estado: dupW ? 'duplicado' : 'error', detalle: dupW ? 'Ya hay una cuenta con ese WhatsApp' : e2.message });
       continue;
+    }
+    // Experiencia y contacto de emergencia van a `perfiles_intake` (0232), que tiene RLS
+    // de dueño-o-administración. Un fallo aquí NO revierte el alta: la cuenta ya existe y
+    // sirve; lo que falta es un dato opcional que la persona puede completar después.
+    if (p.experiencia || p.contacto_emergencia) {
+      await supabase.rpc('guardar_intake_perfil', {
+        p_experiencia: p.experiencia,
+        p_contacto_emergencia: p.contacto_emergencia,
+        p_perfil: creado.user.id,
+      });
     }
     if (grupoId) {
       await supabase.from('miembros_grupo').insert({ grupo_id: grupoId, perfil_id: creado.user.id });

@@ -404,12 +404,18 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 .adjunto-chip:hover { background: var(--sup2); }
 @media (max-width: 980px) { .grupo-grid { grid-template-columns: 1fr; } .grupo-aside { position: static; } }
 
-/* Aviso flotante (toast) */
-.toast { position: fixed; bottom: max(20px, env(safe-area-inset-bottom)); right: 20px; z-index: 1000; max-width: 380px;
+/* Aviso flotante (toast). Se aparta del carril del acceso flotante al chat: ver
+   --fab-hueco al final de este archivo. */
+.toast { position: fixed; bottom: calc(max(20px, env(safe-area-inset-bottom)) + var(--fab-hueco, 0px)); right: 20px; z-index: 1000; max-width: 380px;
   display: flex; align-items: center; gap: 11px; padding: 12px 14px; border-radius: 13px;
   background: var(--sup1); color: var(--texto); font-weight: 600; cursor: pointer;
   border: 1px solid var(--borde); border-left: 4px solid var(--azul);
-  box-shadow: var(--sombra2); animation: toastIn .22s cubic-bezier(.22,.61,.36,1); }
+  box-shadow: var(--sombra2);
+  /* La entrada la anima anime.js con un muelle (ver Toast.tsx): si además corriera la
+     keyframe `toastIn`, las dos pelearían por el mismo transform y el aviso saltaría.
+     `touch-action: pan-y` deja que el arrastre horizontal descarte el aviso sin que el
+     navegador se lleve el gesto para hacer scroll lateral. */
+  touch-action: pan-y; user-select: none; }
 .toast:hover { background: var(--sup2); }
 .toast-ico { display: inline-flex; width: 30px; height: 30px; border-radius: 9px; align-items: center; justify-content: center; flex-shrink: 0; }
 .toast-txt { flex: 1; font-size: .92rem; line-height: 1.3; min-width: 0; }
@@ -428,7 +434,8 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--borde);
 .toast-err { border-left-color: var(--rojo); }
 .toast-err .toast-ico { background: var(--pill-crit-bg); color: var(--rojo); }
 @media (max-width: 560px) { .toast { left: 16px; right: 16px; max-width: none; } }
-@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+/* `toastIn` se retiró al pasar la entrada a anime.js con muelle: dos animaciones sobre
+   el mismo transform hacían saltar el aviso. Con `reduced-motion` no se anima nada. */
 
 /* ===== Panel lateral deslizante (slide-over) =====
    Detalle de caso / tarea / pieza: cubre el lado derecho a altura completa con
@@ -721,7 +728,7 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
    abajo a la derecha, sobre el contenido, y se puede cerrar. En móvil ocupa el
    ancho inferior. z-index por debajo de toasts/drawers/menús. */
 .consejo {
-  position: fixed; right: 18px; bottom: max(18px, env(safe-area-inset-bottom)); z-index: 45;
+  position: fixed; right: 18px; bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--fab-hueco, 0px)); z-index: 45;
   max-width: 340px;
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 14px; border-radius: 14px;
@@ -732,7 +739,7 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 }
 @keyframes consejo-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (max-width: 640px) {
-  .consejo { left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); max-width: none; }
+  .consejo { left: 12px; right: 12px; bottom: calc(max(12px, env(safe-area-inset-bottom)) + var(--fab-hueco, 0px)); max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -1333,4 +1340,67 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
 @media (max-width: 640px) {
   .hilo-lista { max-height: 60vh; }
   .hilo-bandeja-fila { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Acceso flotante a las conversaciones (0231/0233)
+   ───────────────────────────────────────────────────────────── */
+
+/* El botón se reserva su carril abajo a la derecha. `.toast` y `.consejo` —que vivían
+   ahí— se apartan hacia arriba sumando esta variable, en vez de solaparse con él.
+   Es un solo sitio que tocar si el botón cambia de tamaño. */
+:root { --fab-hueco: 68px; }
+@media (max-width: 640px) { :root { --fab-hueco: 64px; } }
+
+.fab-chat {
+  position: fixed;
+  right: 18px; bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 46;                    /* sobre `.consejo` (45), bajo drawers y toasts */
+  width: 52px; height: 52px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  background: var(--btn-prim); color: #fff;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 10px 26px rgba(9,14,30,.28), 0 2px 6px rgba(9,14,30,.18);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), background .18s ease, box-shadow .18s ease;
+}
+.fab-chat:hover { background: var(--btn-prim-h); transform: translateY(-2px); box-shadow: 0 14px 32px rgba(9,14,30,.34), 0 3px 8px rgba(9,14,30,.2); }
+.fab-chat:active { transform: translateY(0) scale(.96); }
+.fab-chat:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+
+/* Insignia de pendientes. Va arriba a la derecha del botón, con borde del color del
+   fondo para que se lea sobre cualquier contenido que quede detrás. */
+.fab-chat-insignia {
+  position: absolute; top: -3px; right: -3px;
+  min-width: 21px; height: 21px; padding: 0 5px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  background: var(--critica, #dc2626); color: #fff;
+  font-size: .72rem; font-weight: 800; line-height: 1;
+  border: 2px solid var(--fondo);
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* Con pendientes, un halo muy tenue y lento. No parpadea ni salta: esto se pinta en
+   todas las pantallas de una plataforma de emergencia y no puede competir con el
+   contenido. Quien pidió menos movimiento no lo ve (regla global de más abajo). */
+.fab-chat-pendiente::before {
+  content: ''; position: absolute; inset: -5px; border-radius: 999px;
+  border: 2px solid var(--btn-prim); opacity: .35;
+  animation: fab-halo 2.6s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes fab-halo {
+  0%   { transform: scale(.92); opacity: .35; }
+  70%  { transform: scale(1.18); opacity: 0; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+
+/* Al imprimir no pinta nada. */
+@media print { .fab-chat { display: none !important; } }
+
+/* Texto solo para lectores de pantalla. */
+.sr-solo {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
 }

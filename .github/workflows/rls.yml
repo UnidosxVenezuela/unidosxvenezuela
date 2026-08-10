@@ -62,13 +62,21 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/semilla_hilos_0231.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_hilos_0231.sql
 
-      # Idempotencia: se reaplica 0231 con la base YA POBLADA, que es el caso difícil
-      # (constraints sobre filas existentes, policies con datos detrás). Se lee de
-      # /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
+      # Intake sensible fuera de `perfiles` (0232) + contador de sin leer (0233).
+      # Reutiliza la semilla de 0231, que ya está sembrada por el paso anterior.
+      - name: Ejecutar pruebas de intake y contador (0232/0233)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_intake_0232.sql
+
+      # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
+      # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
+      # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
       # desde supabase/migrations dentro del propio .sql de pruebas era un falso verde,
       # ya que psql no se detiene ante un \i que no encuentra el fichero.
-      - name: Comprobar idempotencia de 0231
-        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0231_hilos_de_trabajo.sql
+      - name: Comprobar idempotencia de 0231-0233
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0231_hilos_de_trabajo.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
 
       - name: Apagar Supabase
         if: always()
