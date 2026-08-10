@@ -334,11 +334,14 @@ begin
   perform pg_temp.ok('T14 ni PUBLIC ni anon ejecutan el módulo' || v_mal, v_mal = '');
 end $$;
 
--- ═══ T15 — Idempotencia: 0231 se puede volver a aplicar ═══
-\i supabase/migrations/0231_hilos_de_trabajo.sql
-do $$ begin
-  perform pg_temp.ok('T15 0231 es idempotente (llegó hasta aquí)', true);
-end $$;
+-- ═══ Idempotencia de 0231: NO se comprueba aquí ═══
+-- Se hacía con «\i supabase/migrations/0231_hilos_de_trabajo.sql» y era un FALSO VERDE:
+-- el workflow de RLS mueve las migraciones a /tmp/migs antes de arrancar Supabase, así
+-- que en CI el fichero no existía. Peor: psql NO se detiene ante un \i que falla ni con
+-- ON_ERROR_STOP=1 —solo imprime «error: No such file or directory»— y la prueba seguía
+-- dando PASA sin haber cargado nada.
+-- Ahora la comprueba el propio workflow, con un paso que reaplica la migración DESPUÉS
+-- de estas pruebas: así se ejerce sobre una base con datos, que es el caso difícil.
 
 -- ═══ Veredicto ═══
 do $$
