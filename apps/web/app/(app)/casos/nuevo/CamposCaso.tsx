@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import AvisoEnlace from '@/components/AvisoEnlace';
 import BloqueAlcance from '@/components/BloqueAlcance';
 import BloqueContacto from '@/components/BloqueContacto';
@@ -14,6 +15,10 @@ import { OPCIONES_VIGENCIA, TIPOS_FUENTE } from '@/lib/constantes';
 // caso NO puede confirmarse hasta que todos estén en verde (candado 0173). Los
 // ofrecimientos NO van aquí: se registran en «Donación-Ofrecimiento».
 export default function CamposCaso() {
+  // El país vive aquí, no dentro de un bloque: lo eligen en «Ubicación» y lo necesita el
+  // MAPA, que está en otro bloque hermano. Sin esto, elegir Colombia dejaba el mapa
+  // abierto sobre Caracas y había que arrastrarse 1.000 km para poner el pin.
+  const [pais, setPais] = useState<'VE' | 'CO'>('VE');
   return (
     <>
       {/* Sin clasificación: toda información entra como solicitud del lado de Verificación. */}
@@ -26,10 +31,10 @@ export default function CamposCaso() {
       <BloqueContacto exigir />
 
       {/* Ubicación administrativa (Paso 4.2) — al crear se exige al menos el Estado. */}
-      <BloqueUbicacion exigir />
+      <BloqueUbicacion exigir onPaisChange={setPais} />
 
       {/* Necesidad + ubicación en el mapa */}
-      <BloqueRequerimiento fijo />
+      <BloqueRequerimiento fijo pais={pais} />
 
       {/* Vigencia (Paso 4.4) */}
       <div className="grid grid-2">

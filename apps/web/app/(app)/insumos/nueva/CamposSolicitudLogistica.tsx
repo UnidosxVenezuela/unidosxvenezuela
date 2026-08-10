@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import BloqueContacto from '@/components/BloqueContacto';
 import BloqueUbicacion from '@/components/BloqueUbicacion';
 import SelectorUbicacionMapa from '@/components/SelectorUbicacionMapa';
@@ -25,13 +26,15 @@ import { PRIORIDADES, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
  * uno, que es lo que convierte la solicitud en algo medible y repartible.
  */
 export default function CamposSolicitudLogistica({ puntos = [] }: { puntos?: { id: string; nombre: string }[] }) {
+  // El país lo elige «Ubicación» y lo necesita el mapa, que es hermano suyo (0230).
+  const [pais, setPais] = useState<'VE' | 'CO'>('VE');
   return (
     <>
       {/* Contacto y referente (0171) — mismas reglas que el alta de Recopilación. */}
       <BloqueContacto exigir />
 
       {/* Ubicación administrativa (0173) — al crear se exige al menos el Estado. */}
-      <BloqueUbicacion exigir />
+      <BloqueUbicacion exigir onPaisChange={setPais} />
 
       {/* Ubicación en el mapa. Opcional: sin pin la solicitud se registra igual y se
           podrá ubicar después (el mapa no carga en todos los equipos de campo). */}
@@ -43,7 +46,7 @@ export default function CamposSolicitudLogistica({ puntos = [] }: { puntos?: { i
         </p>
         <div style={{ marginTop: 10 }}>
           <LimiteError fallback={<p className="muted" style={{ fontSize: '.85rem' }}>El mapa no está disponible en este dispositivo (WebGL desactivado). Puedes continuar: la ubicación en el mapa es opcional.</p>}>
-            <SelectorUbicacionMapa />
+            <SelectorUbicacionMapa pais={pais} />
           </LimiteError>
         </div>
         <div className="grid grid-2" style={{ marginTop: 10 }}>

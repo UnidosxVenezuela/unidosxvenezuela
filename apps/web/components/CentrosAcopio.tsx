@@ -5,7 +5,7 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { createClient } from '@/lib/supabase/client';
-import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL, ETIQUETA_TIPO_LUGAR, TIPOS_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
+import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL, ETIQUETA_TIPO_LUGAR, TIPOS_LUGAR, TONO_TIPO_LUGAR, PAISES_ATENDIDOS, banderaPais} from '@/lib/constantes';
 import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
 import Avatar from './Avatar';
@@ -138,6 +138,9 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
       telefono: str(fd.get('telefono')),
       horario: str(fd.get('horario')),
       lat: sel.lat, lng: sel.lng,
+      // País del centro (0230). Es lo que impide que un centro venezolano salga como «el
+      // más cercano» de un caso colombiano por estar a 10 km de la frontera.
+      pais: String(fd.get('pais') || 'VE'),
     };
     const res = editando === 'nuevo'
       ? await supabase.from('puntos_acopio').insert({ ...payload, creado_por: userId })
@@ -224,6 +227,17 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
                 <select name="tipo" className="input" defaultValue={ed?.tipo ?? 'acopio'}>
                   {TIPOS_LUGAR.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_LUGAR[t]}</option>)}
                 </select>
+              </div>
+              <div className="campo"><label>País</label>
+                <select name="pais" className="input" defaultValue={(ed as any)?.pais ?? 'VE'}>
+                  {PAISES_ATENDIDOS.map((p) => (
+                    <option key={p.codigo} value={p.codigo}>{banderaPais(p.codigo)} {p.nombre}</option>
+                  ))}
+                </select>
+                <span className="muted" style={{ fontSize: '.78rem' }}>
+                  Decide a qué solicitudes se ofrece este centro. Un centro del otro país solo
+                  aparece marcado como «cruza frontera», nunca por delante de los de casa.
+                </span>
               </div>
               {ed && (
                 <div className="campo"><label>Urgencia (en el mapa)</label>
