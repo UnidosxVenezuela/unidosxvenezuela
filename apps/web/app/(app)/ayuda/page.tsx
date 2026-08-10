@@ -43,7 +43,7 @@ export default async function AyudaPage() {
         <li><strong>Queda registrado.</strong> Un mensaje <strong>no se borra</strong>. Se puede editar, y entonces queda constancia de que se editó; lo que decía antes se guarda para el registro. Es a propósito: la conversación de un caso es parte de su historia.</li>
         <li><strong>Aquí sí van los datos del caso.</strong> Es lo contrario de un grupo de WhatsApp: este es el sitio donde la dirección, el teléfono o la foto están protegidos. Lo que no conviene nunca es <strong>sacarlos de aquí</strong> — ni por captura de pantalla. Si escribes algo que parece una cédula, un teléfono o unas coordenadas, la plataforma te lo señala antes de enviar; no te lo impide, solo te lo recuerda.</li>
         <li><strong>Avisar a alguien:</strong> con «Avisar a alguien» le llega una notificación. Solo aparece quien ya entró a esa conversación, que es a quien el aviso le llegaría de verdad.</li>
-        <li>En <strong>«Conversaciones»</strong> (menú lateral) tienes todas las tuyas juntas, con lo que llevas sin leer.</li>
+        <li>En <strong>«Conversaciones»</strong> (menú lateral) tienes todas las tuyas juntas, con lo que llevas sin leer. Y abajo a la derecha, en cualquier pantalla, hay un <strong>botón redondo</strong> que te lleva ahí; si tiene un número, son los mensajes que te esperan.</li>
       </S>
 
       {f.gestionCasos && !f.verificacion && (

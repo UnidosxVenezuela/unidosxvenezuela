@@ -23,9 +23,18 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
   const esAdmin = esAdministrador(yo);
   const supabase = await createClient();
   const { data } = await supabase.from('perfiles')
-    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, grupo_interes, pais, ciudad, disponibilidad, horas_semana, experiencia, contacto_emergencia, estado_presencia, ultima_conexion, avatar_url, habilidades, creado_en')
+    .select('id, nombre_completo, telefono, whatsapp, rol, roles_extra, verificado, super_admin, organizacion, motivo, area_registro, grupo_interes, pais, ciudad, disponibilidad, horas_semana, estado_presencia, ultima_conexion, avatar_url, habilidades, creado_en')
     .order('creado_en', { ascending: false });
   let perfiles = (data ?? []) as Perfil[];
+  // Experiencia y contacto de emergencia viven en `perfiles_intake` desde 0232, con RLS
+  // de dueño-o-administración: en `perfiles` los leía cualquier cuenta verificada, porque
+  // la RLS filtra filas y no columnas. Aquí la consulta solo devuelve algo si quien mira
+  // es administración; si la migración aún no está aplicada, degrada a vacío.
+  const { data: intakeData } = await supabase.from('perfiles_intake')
+    .select('perfil_id, experiencia, contacto_emergencia');
+  const intakePorId = new Map<string, { experiencia: string | null; contacto_emergencia: string | null }>(
+    ((intakeData ?? []) as any[]).map((i) => [i.perfil_id as string, { experiencia: i.experiencia, contacto_emergencia: i.contacto_emergencia }]),
+  );
   // Identidad verificada (2ª verificación aprobada) por persona, para el sello.
   const { data: idsVerif } = await supabase.from('verificaciones_identidad').select('perfil_id').eq('estado', 'aprobada');
   const identidadOK = new Set<string>((idsVerif ?? []).map((v: any) => v.perfil_id));
@@ -398,7 +407,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
               </div>
 
               {/* Ficha del voluntario: contacto y datos extra, plegado para no alargar */}
-              {(correoPorId.get(p.id) || p.telefono || p.whatsapp || p.disponibilidad || p.horas_semana || p.experiencia || p.contacto_emergencia || (p.habilidades ?? []).length > 0) && (
+              {(correoPorId.get(p.id) || p.telefono || p.whatsapp || p.disponibilidad || p.horas_semana || intakePorId.get(p.id)?.experiencia || intakePorId.get(p.id)?.contacto_emergencia || (p.habilidades ?? []).length > 0) && (
                 <details className="usuario-ficha">
                   <summary>Ficha del voluntario</summary>
                   <div className="usuario-ficha-cont">
@@ -415,8 +424,8 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                       </div>
                     )}
                     {(p.disponibilidad || p.horas_semana) && <div><Icono nombre="reloj" size={12} /> {[p.disponibilidad, p.horas_semana].filter(Boolean).join(' · ')}</div>}
-                    {p.experiencia && <div><Icono nombre="pizarra" size={12} /> {p.experiencia}</div>}
-                    {p.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {p.contacto_emergencia}</div>}
+                    {intakePorId.get(p.id)?.experiencia && <div><Icono nombre="pizarra" size={12} /> {intakePorId.get(p.id)!.experiencia}</div>}
+                    {intakePorId.get(p.id)?.contacto_emergencia && <div><Icono nombre="avisos" size={12} /> Emergencia: {intakePorId.get(p.id)!.contacto_emergencia}</div>}
                     {(p.habilidades ?? []).length > 0 && (
                       <div>{(p.habilidades ?? []).slice(0, 12).map((h) => <span key={h} className="hab-ro">{h}</span>)}</div>
                     )}

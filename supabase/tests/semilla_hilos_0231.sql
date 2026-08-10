@@ -52,8 +52,12 @@ values ('bbbb0000-0000-4000-8000-000000000001','Grupo Prueba Hilos','logistica',
         'aaaa0000-0000-4000-8000-00000000000a','grupo-prueba-hilos')
 on conflict (id) do nothing;
 
+-- Marta y Olga dentro; Ana fuera. Olga se siembra aquí (y no solo en las pruebas de
+-- hilos) para que las del contador de 0233 no dependan de que aquellas se hayan
+-- ejecutado antes: una prueba que necesita otra prueba es una trampa esperando.
 insert into public.miembros_grupo (grupo_id, perfil_id, rol_en_grupo)
-values ('bbbb0000-0000-4000-8000-000000000001','aaaa4444-4444-4444-8444-444444444444','miembro')
+values ('bbbb0000-0000-4000-8000-000000000001','aaaa4444-4444-4444-8444-444444444444','miembro'),
+       ('bbbb0000-0000-4000-8000-000000000001','aaaa5555-5555-4555-8555-555555555555','miembro')
 on conflict do nothing;
 
 -- ── Una solicitud de insumo, ancla del ámbito 'insumo' ──
