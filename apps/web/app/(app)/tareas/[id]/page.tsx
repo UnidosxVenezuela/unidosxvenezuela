@@ -9,6 +9,7 @@ import {
   claseEstado, clasePrioridad, ETIQUETA_TIPO_ADJUNTO, iconoAdjunto, hrefSeguro,
 } from '@/lib/constantes';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Hilo from '@/components/Hilo';
 import Icono from '@/components/Icono';
 import SubirAdjunto from './SubirAdjunto';
 import BotonConfirmar from '@/components/BotonConfirmar';
@@ -292,6 +293,10 @@ export default async function TareaDetallePage({ params }: { params: { id: strin
           </form>
         )}
       </div>
+
+      {/* Conversación de la tarea (0231). Los comentarios de arriba siguen donde estaban:
+          absorberlos es un backfill que merece su propia migración, no un efecto colateral. */}
+      <Hilo ambito="tarea" anclaId={id} />
 
       {/* Historial de cambios (0206): estado / prioridad / asignación / vencimiento / cupo */}
       <h2 className="fila" style={{ gap: 6 }}><Icono nombre="historial" size={20} /> Historial de cambios</h2>

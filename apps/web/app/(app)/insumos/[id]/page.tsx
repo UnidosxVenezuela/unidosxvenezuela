@@ -11,6 +11,7 @@ import Pill, { tonoDeClase } from '@/components/Pill';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
+import Hilo from '@/components/Hilo';
 import InfoSolicitud from '@/components/InfoSolicitudCaso';
 import ItemsSemaforo from '@/components/ItemsSemaforo';
 import EditorDesglose from '../EditorDesglose';
@@ -541,6 +542,10 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               </div>
             ))}
           </div>
+
+          {/* Conversación de la entrega (0231). La bitácora de arriba son asientos de
+              Alianzas sobre empresas y aliados; esto es la coordinación del día a día. */}
+          <Hilo ambito="insumo" anclaId={id} />
         </div>
 
         {gestor && (

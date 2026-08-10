@@ -37,6 +37,15 @@ export default async function AyudaPage() {
         <li><strong>Mi perfil:</strong> tu foto, WhatsApp y habilidades (menú de arriba a la derecha).</li>
       </S>
 
+      <S icono="conversacion" titulo="Conversaciones (para todos)">
+        <li><strong>Cada cosa se habla en su sitio.</strong> La solicitud tiene su conversación, la entrega la suya, la tarea la suya y tu grupo la suya. No hay un chat general ni mensajes privados: por eso nada acaba en la conversación equivocada.</li>
+        <li><strong>La lee exactamente quien ya tiene acceso.</strong> Si puedes abrir la solicitud, puedes leer lo que se habla de ella. Si no, no aparece — ni siquiera sabes que existe. No hay que invitar a nadie ni gestionar permisos.</li>
+        <li><strong>Queda registrado.</strong> Un mensaje <strong>no se borra</strong>. Se puede editar, y entonces queda constancia de que se editó; lo que decía antes se guarda para el registro. Es a propósito: la conversación de un caso es parte de su historia.</li>
+        <li><strong>Aquí sí van los datos del caso.</strong> Es lo contrario de un grupo de WhatsApp: este es el sitio donde la dirección, el teléfono o la foto están protegidos. Lo que no conviene nunca es <strong>sacarlos de aquí</strong> — ni por captura de pantalla. Si escribes algo que parece una cédula, un teléfono o unas coordenadas, la plataforma te lo señala antes de enviar; no te lo impide, solo te lo recuerda.</li>
+        <li><strong>Avisar a alguien:</strong> con «Avisar a alguien» le llega una notificación. Solo aparece quien ya entró a esa conversación, que es a quien el aviso le llegaría de verdad.</li>
+        <li>En <strong>«Conversaciones»</strong> (menú lateral) tienes todas las tuyas juntas, con lo que llevas sin leer.</li>
+      </S>
+
       {f.gestionCasos && !f.verificacion && (
         <S icono="documento" titulo="Gestión de solicitudes (tu función)">
           <li>Con <strong>«Reportar una solicitud»</strong> registras la información que llega. El formulario está <strong>organizado por bloques</strong> (datos generales · contacto · qué se necesita · fuente y fecha) para que no se te escape nada.</li>

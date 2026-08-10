@@ -9,6 +9,7 @@ import { etiquetaArea, hrefSeguro, ETIQUETA_ESTADO, ETIQUETA_PRIORIDAD, ETIQUETA
 import AltaUsuarioGrupo from './AltaUsuarioGrupo';
 import type { Rol } from '@unidos/types';
 import Icono from '@/components/Icono';
+import Hilo from '@/components/Hilo';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -497,6 +498,9 @@ export default async function GrupoDetallePage({ params }: { params: { id: strin
               </div>
             </>
           )}
+
+          {/* Conversación del equipo (0231). La lee quien pertenece al grupo. */}
+          <Hilo ambito="grupo" anclaId={grupoId} />
         </div>
 
         {/* ── Columna derecha: publicar (líder/admin/coordinador) + gestión (líder/admin) ── */}

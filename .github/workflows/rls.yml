@@ -55,6 +55,13 @@ jobs:
       - name: Ejecutar pruebas de RLS
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/verificar_rls.sql
 
+      # Hilos de trabajo (0231): la semilla es autónoma y las pruebas terminan lanzando
+      # una excepción si alguna falló, así que ON_ERROR_STOP basta para poner CI en rojo.
+      - name: Ejecutar pruebas de hilos (0231)
+        run: |
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/semilla_hilos_0231.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_hilos_0231.sql
+
       - name: Apagar Supabase
         if: always()
         run: supabase stop

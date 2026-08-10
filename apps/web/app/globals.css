@@ -1269,3 +1269,68 @@ a.flujo-paso:hover { transform: translateY(-2px); box-shadow: var(--sombra2); bo
   /* El certificado se imprime SOLO: nada de cabeceras, avisos ni el marco de la app. */
   .pagina-cab, .toolbar { display: none !important; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Conversaciones ancladas al trabajo (migración 0231)
+   ───────────────────────────────────────────────────────────── */
+.hilo-bloque { margin-top: 22px; }
+
+.hilo { display: flex; flex-direction: column; gap: 14px; }
+
+/* Alto máximo con scroll propio: una conversación larga no debe empujar el resto
+   de la ficha fuera de la pantalla. */
+.hilo-lista {
+  display: flex; flex-direction: column; gap: 12px;
+  max-height: 480px; overflow-y: auto; overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.hilo-msg {
+  border-left: 3px solid var(--borde);
+  padding: 2px 0 2px 12px;
+}
+/* Los propios se distinguen por el filete, no por alinearlos a la derecha: esto es
+   un registro de trabajo que se lee en orden, no una app de mensajería. */
+.hilo-msg-mio { border-left-color: var(--acento); }
+
+.hilo-meta { font-size: .85rem; margin-bottom: 2px; }
+.hilo-cuerpo { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.hilo-pii {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: .82rem; margin: 6px 0 0;
+  color: var(--pill-aviso-fg); background: var(--pill-aviso-bg);
+  border-radius: 8px; padding: 6px 10px;
+}
+.hilo-pii svg { flex: none; margin-top: 2px; }
+
+.hilo-editar {
+  background: none; border: 0; padding: 0; margin-top: 4px;
+  color: var(--link); font-size: .82rem; cursor: pointer; text-decoration: underline;
+}
+
+.hilo-editor textarea { width: 100%; }
+
+.hilo-redactor { border-top: 1px solid var(--borde); padding-top: 14px; }
+.hilo-redactor textarea { width: 100%; resize: vertical; }
+
+.hilo-mencionar { margin-top: 8px; }
+.hilo-mencionar summary { cursor: pointer; font-size: .88rem; }
+
+/* Bandeja */
+.hilo-bandeja { list-style: none; margin: 0; padding: 0; }
+.hilo-bandeja li + li { border-top: 1px solid var(--borde); }
+.hilo-bandeja-fila {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; text-decoration: none; color: inherit;
+}
+.hilo-bandeja-fila:hover { background: var(--borde-f); }
+.hilo-bandeja-txt { min-width: 0; }
+.hilo-bandeja-txt .muted {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .hilo-lista { max-height: 60vh; }
+  .hilo-bandeja-fila { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
