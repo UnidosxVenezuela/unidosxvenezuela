@@ -6,7 +6,7 @@ import { subirArchivo, borrarArchivo } from '@/lib/storage';
 import { redirigirOk, redirigirError } from '@/lib/flash';
 import { analizarUrl, validarArchivo } from '@/lib/validaciones';
 import { revisarSafeBrowsing } from '@/lib/safe-browsing';
-import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import { CANALES_DIFUSION, ETIQUETA_CANAL_DIFUSION, TERMINOS_FUERA_ALCANCE, AREAS_DESTINO, ETIQUETA_AREA_DESTINO, centroideEstado, CODIGOS_PAIS_ATENDIDO, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
 import type { EventoCelebracion } from '@/lib/celebraciones';
 import type { EstadoCaso, Rol } from '@unidos/types';
 
@@ -95,7 +95,12 @@ function datosContacto(formData: FormData, exigir: boolean) {
 function datosEstructurados(formData: FormData) {
   const ft = opt(formData.get('fuente_tipo'));
   const vig = opt(formData.get('sigue_vigente'));
+  // País de la solicitud (0230). Se valida contra el catálogo: un valor fuera de él cae a
+  // 'VE', que es el país de todo lo anterior a esa migración. La base lo vuelve a comprobar
+  // con un CHECK — esto solo evita un viaje de ida y vuelta con un error feo.
+  const paisForm = String(opt(formData.get('pais')) ?? '').toUpperCase();
   return {
+    pais: (CODIGOS_PAIS_ATENDIDO as string[]).includes(paisForm) ? paisForm : 'VE',
     fuente_tipo: ft && TIPOS_FUENTE_VAL.includes(ft) ? ft : null,
     ubicacion_estado: opt(formData.get('ubicacion_estado')),
     ubicacion_municipio: opt(formData.get('ubicacion_municipio')),
@@ -152,7 +157,7 @@ function datosRequerimiento(formData: FormData, categoria: string | null) {
     // solicitud en el CENTROIDE del estado para que sea mapeable y accionable (es_requerimiento
     // = true satisface el CHECK 0112 porque ya hay lat/lng). Nunca es un PUNTO fijo
     // (hospital/albergue), que exige pin exacto → punto_tipo se deja en null.
-    const centro = centroideEstado(opt(formData.get('ubicacion_estado')));
+    const centro = centroideEstado(opt(formData.get('ubicacion_estado')), opt(formData.get('pais')));
     if (centro) {
       return { es_requerimiento: true, lat: centro.lat, lng: centro.lng,
         req_tipo: reqTipo, req_cantidad: reqCant, req_urgencia: reqUrg,

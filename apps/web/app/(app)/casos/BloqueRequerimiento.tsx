@@ -24,7 +24,11 @@ type Defaults = {
  *    solicitud con ubicación. Manda `es_requerimiento=on` por un campo oculto.
  *  · sin `fijo` (edición): interruptor opcional (por compatibilidad con casos previos).
  */
-export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { defaults?: Defaults; fijo?: boolean }) {
+export default function BloqueRequerimiento({ defaults = {}, fijo = false, pais = 'VE' }: {
+  defaults?: Defaults; fijo?: boolean;
+  /** País elegido arriba (0230): el mapa abre sobre él en vez de sobre Caracas siempre. */
+  pais?: string;
+}) {
   const [activo, setActivo] = useState(!!defaults.es_requerimiento);
   const mostrar = fijo || activo;
   return (
@@ -52,7 +56,7 @@ export default function BloqueRequerimiento({ defaults = {}, fijo = false }: { d
       {mostrar && (
         <div style={{ marginTop: 10 }}>
           <LimiteError fallback={<p className="muted" style={{ fontSize: '.85rem' }}>El mapa no está disponible en este dispositivo (WebGL desactivado, p. ej. en Modo de bajo consumo). Puedes continuar; la ubicación en el mapa es opcional.</p>}>
-            <SelectorUbicacionMapa latInicial={defaults.lat ?? null} lngInicial={defaults.lng ?? null} />
+            <SelectorUbicacionMapa latInicial={defaults.lat ?? null} lngInicial={defaults.lng ?? null} pais={pais} />
           </LimiteError>
           <div className="grid grid-2" style={{ marginTop: 10 }}>
             <div className="campo">

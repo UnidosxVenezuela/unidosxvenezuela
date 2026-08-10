@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ, PAISES_ATENDIDOS, CODIGOS_PAIS_ATENDIDO, paisAtendido, banderaPais } from '@/lib/constantes';
 import { scoreCaso, nivelPrioridad, ETIQUETA_NIVEL_PRIORIDAD, TONO_NIVEL_PRIORIDAD } from '@/lib/prioridad';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
@@ -25,10 +25,10 @@ import FiltroSelect from '@/components/FiltroSelect';
 import BotonExportar from '@/components/BotonExportar';
 import { nombreMostrado } from '@/lib/nombre';
 
-type SP = { q?: string; estado?: string; categoria?: string; caso?: string; orden?: string };
+type SP = { q?: string; estado?: string; categoria?: string; caso?: string; orden?: string; pais?: string };
 // req_urgencia/sigue_vigente/creado_en/es_requerimiento (columnas antiguas, seguras) alimentan
 // el score de prioridad; personas_afectadas (0182) se lee aparte por si aún no está aplicada.
-const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, req_urgencia, sigue_vigente, creado_en, es_requerimiento, publicado_en';
+const COLS = 'id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, asignado_a, estado, info_requerida, actualizado_en, req_urgencia, sigue_vigente, creado_en, es_requerimiento, publicado_en, pais';
 
 export default async function CasosPage({ searchParams }: { searchParams: SP }) {
   const { user, perfil } = await requireUsuario();
@@ -122,6 +122,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   if (estadoFiltro.length === 1) q = q.eq('estado', estadoFiltro[0]);
   else if (estadoFiltro.length > 1) q = q.in('estado', estadoFiltro);
   if (searchParams.categoria) q = q.eq('categoria', searchParams.categoria);
+  // Filtro por país (0230). Se valida contra el catálogo para no mandar a la base un valor
+  // arbitrario venido de la URL.
+  const fPais = (CODIGOS_PAIS_ATENDIDO as string[]).includes(String(searchParams.pais ?? '').toUpperCase())
+    ? String(searchParams.pais).toUpperCase() : '';
+  if (fPais) q = q.eq('pais', fPais);
   if (searchParams.q) {
     const s = searchParams.q.replace(/[%,()]/g, ' ').trim();
     // Si lo buscado parece un número de solicitud (#00012, 12 o SOL-00012),
@@ -182,6 +187,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   if (searchParams.q) filtros.set('q', searchParams.q);
   if (searchParams.estado) filtros.set('estado', searchParams.estado);
   if (searchParams.categoria) filtros.set('categoria', searchParams.categoria);
+  if (fPais) filtros.set('pais', fPais);
   const hrefCaso = (cid: string) => { const p = new URLSearchParams(filtros); p.set('caso', cid); return '/casos?' + p.toString(); };
   const cerrarHref = '/casos' + (filtros.toString() ? '?' + filtros.toString() : '');
   // Nombres para mostrar «tomado por» en la lista (respeta la privacidad de apellidos).
@@ -191,6 +197,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
     const p = new URLSearchParams();
     if (searchParams.q) p.set('q', searchParams.q);
     if (searchParams.categoria) p.set('categoria', searchParams.categoria);
+    if (fPais) p.set('pais', fPais);
     if (estado) p.set('estado', estado);
     const s = p.toString();
     return '/casos' + (s ? '?' + s : '');
@@ -227,7 +234,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       // Campos de «punto del mapa» (0145) best-effort: si faltan las columnas, el
       // detalle igual abre (sin la info de punto) en vez de romper el render.
       const { data: dpunto } = await supabase.from('casos')
-        .select('punto_tipo, punto_temporal, punto_acopio_id, referente, contacto_whatsapp, contacto_instagram, referente_rol, fuente_tipo, ubicacion_estado, ubicacion_municipio, ubicacion_parroquia, ubicacion_sector, ubicacion_direccion, sigue_vigente, ultima_confirmacion, contacto_difusion, autoriza_difusion, revision_alcance').eq('id', searchParams.caso).maybeSingle();
+        .select('punto_tipo, punto_temporal, punto_acopio_id, referente, contacto_whatsapp, contacto_instagram, referente_rol, fuente_tipo, ubicacion_estado, ubicacion_municipio, ubicacion_parroquia, ubicacion_sector, ubicacion_direccion, sigue_vigente, ultima_confirmacion, contacto_difusion, autoriza_difusion, revision_alcance, pais').eq('id', searchParams.caso).maybeSingle();
       if (dpunto) Object.assign(drawerCaso, dpunto);
       // Verificación por campo (0172) best-effort: si la tabla aún no existe, se omite.
       const { data: vcampos } = await supabase.from('casos_verificacion_campo')
@@ -313,6 +320,15 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             </FiltroSelect>
           </div>
           <div className="campo-filtro">
+            <label htmlFor="filtro-pais">País</label>
+            <FiltroSelect id="filtro-pais" name="pais" className="input" defaultValue={fPais} style={{ width: 'auto' }}>
+              <option value="">Todos</option>
+              {PAISES_ATENDIDOS.map((p) => (
+                <option key={p.codigo} value={p.codigo}>{banderaPais(p.codigo)} {p.nombre}</option>
+              ))}
+            </FiltroSelect>
+          </div>
+          <div className="campo-filtro">
             <label htmlFor="filtro-categoria">Categoría</label>
             <FiltroSelect id="filtro-categoria" name="categoria" className="input" defaultValue={searchParams.categoria ?? ''} style={{ width: 'auto' }}>
               <option value="">Todas</option>
@@ -320,7 +336,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
             </FiltroSelect>
           </div>
           <button className="btn" type="submit"><Icono nombre="filtro" /> Filtrar</button>
-          {(searchParams.q || searchParams.estado || searchParams.categoria) && <Link className="btn" href="/casos">Limpiar</Link>}
+          {(searchParams.q || searchParams.estado || searchParams.categoria || fPais) && <Link className="btn" href="/casos">Limpiar</Link>}
         </form>
         <div className="toolbar-acciones">
           <BotonActualizar />
@@ -381,6 +397,12 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                     <div className="celda-titulo">
                       <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
                         <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                        {/* País (0230). Se marca SIEMPRE, también Venezuela: con dos
+                            respuestas a la vez, señalar solo una deja la otra ambigua
+                            —¿es de aquí o es un caso viejo sin país?—. */}
+                        <Pill tono={paisAtendido(c.pais).codigo === 'CO' ? 'aviso' : 'info'} punto={false}>
+                          {banderaPais(paisAtendido(c.pais).codigo)} {paisAtendido(c.pais).nombre}
+                        </Pill>
                         {orden === 'prioridad' && <Pill tono={TONO_NIVEL_PRIORIDAD[c._nivel as keyof typeof TONO_NIVEL_PRIORIDAD]} punto={false}>{ETIQUETA_NIVEL_PRIORIDAD[c._nivel as keyof typeof ETIQUETA_NIVEL_PRIORIDAD]}</Pill>}
                         {c.fecha_publicacion && (Date.now() - new Date(c.fecha_publicacion + 'T00:00:00').getTime()) > 2 * 86400000 ? (
                           <Pill tono="aviso" punto={false}>+2 días</Pill>

@@ -5,6 +5,7 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Icono from './Icono';
+import { paisAtendido } from '@/lib/constantes';
 
 const ESTILO: StyleSpecification = {
   version: 8,
@@ -19,9 +20,14 @@ const ESTILO: StyleSpecification = {
  */
 export default function SelectorUbicacionMapa({
   latInicial = null, lngInicial = null, nombreLat = 'lat', nombreLng = 'lng', alto = 320,
+  pais = 'VE',
 }: {
   latInicial?: number | null; lngInicial?: number | null;
   nombreLat?: string; nombreLng?: string; alto?: number;
+  /** País de la solicitud (0230): decide dónde abre el mapa cuando aún no hay pin.
+   *  Las teselas de OpenStreetMap son mundiales, así que Colombia ya estaba cubierta:
+   *  lo único que faltaba era no abrir siempre sobre Caracas. */
+  pais?: string;
 }) {
   const cont = useRef<HTMLDivElement>(null);
   const mapa = useRef<MapLibreMap | null>(null);
@@ -36,10 +42,11 @@ export default function SelectorUbicacionMapa({
   useEffect(() => {
     if (mapa.current || !cont.current) return;
     const inicial = latInicial != null && lngInicial != null ? { lat: latInicial, lng: lngInicial } : null;
+    const centro = paisAtendido(pais).centro;
     const m = new maplibregl.Map({
       container: cont.current, style: ESTILO,
-      center: inicial ? [inicial.lng, inicial.lat] : [-66.9, 10.48],
-      zoom: inicial ? 14 : 6,
+      center: inicial ? [inicial.lng, inicial.lat] : [centro.lng, centro.lat],
+      zoom: inicial ? 14 : centro.zoom,
     });
     m.addControl(new maplibregl.NavigationControl(), 'top-right');
     const poner = (lng: number, lat: number, volar = false) => {

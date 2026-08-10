@@ -1,0 +1,112 @@
+<meta charset="utf-8">
+<title>Guía rápida · Incorporar un centro de acopio</title>
+<style>
+  :root{ --azul:#0033A0; --azul-osc:#002270; --amarillo:#FFCE00; --rojo:#CF142B;
+    --texto:#0f172a; --suave:#556074; --borde:#e6e9f0; --ok:#047857; --crit:#b91c1c; }
+  *{ box-sizing:border-box; } html,body{ margin:0; padding:0; }
+  body{ font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--texto); line-height:1.22; font-size:8.9pt; }
+  .tri{ height:10px; display:flex; } .tri i{ flex:1; } .tri .a{background:var(--azul);} .tri .y{background:var(--amarillo);} .tri .r{background:var(--rojo);}
+  .head{ display:flex; align-items:center; justify-content:space-between; margin:11px 0 4px; }
+  .head h1{ font-size:16.5pt; color:var(--azul); margin:0; line-height:1.05; }
+  .head .rp{ background:var(--amarillo); color:#5b4a00; font-weight:800; border-radius:999px; padding:5px 13px; font-size:10pt; white-space:nowrap; }
+  .sub{ color:var(--suave); margin:0 0 8px; font-size:9.6pt; }
+  h2{ font-size:10pt; color:var(--azul-osc); margin:7px 0 3px; }
+  .pasos{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .paso{ border:1px solid var(--borde); border-radius:9px; padding:6px 8px; background:#fff; }
+  .paso .n{ width:28px;height:28px;border-radius:50%;background:var(--azul);color:#fff;font-weight:800;font-size:13pt;
+    display:flex;align-items:center;justify-content:center; margin-bottom:5px; }
+  .paso > b{ display:block; color:var(--azul-osc); font-size:10.4pt; margin-bottom:2px; }
+  .paso p{ margin:0; font-size:8pt; color:#334155; }
+  .campos{ border:1px solid var(--borde); border-radius:10px; overflow:hidden; margin-top:4px; }
+  .campos table{ width:100%; border-collapse:collapse; font-size:8.1pt; }
+  .campos td{ padding:2.5px 8px; border-bottom:1px solid var(--borde); vertical-align:top; }
+  .campos tr:last-child td{ border-bottom:0; }
+  .campos tr:nth-child(even) td{ background:#fafbfe; }
+  .campos .c1{ width:31%; font-weight:700; color:var(--azul-osc); }
+  .ob{ display:inline-block; font-size:7.6pt; font-weight:800; border-radius:999px; padding:0 6px; margin-left:4px;
+    background:#fee2e2; color:#991b1b; }
+  .op{ background:#eef1f6; color:#475569; }
+  .sino{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:4px; }
+  .col{ border-radius:10px; padding:7px 10px; }
+  .col.si{ background:#ecfdf5; border:1px solid #a7f3d0; } .col.no{ background:#fef2f2; border:1px solid #fecaca; }
+  .col h3{ margin:0 0 4px; font-size:10.4pt; } .col.si h3{ color:var(--ok);} .col.no h3{ color:var(--crit);}
+  .col ul{ margin:0; padding-left:16px; } .col li{ margin:0; font-size:8pt; }
+  .rec{ border-left:4px solid var(--amarillo); background:#fffbe9; border-radius:0 10px 10px 0; padding:5px 9px; margin-top:5px; font-size:8.1pt; }
+  .rec b{ color:var(--azul-osc); }
+  .pie{ margin-top:6px; border-top:1px dashed var(--borde); padding-top:6px; color:var(--suave); font-size:8.2pt; display:flex; justify-content:space-between; }
+  .punto{ display:inline-block; width:10px;height:10px;border-radius:50%; vertical-align:middle;
+    background:conic-gradient(var(--azul) 0 33%, var(--amarillo) 0 66%, var(--rojo) 0); }
+</style>
+<div class="tri"><i class="a"></i><i class="y"></i><i class="r"></i></div>
+<div class="head">
+  <h1>Incorporar un centro de acopio</h1>
+  <span class="rp">GUÍA RÁPIDA · 1 página</span>
+</div>
+<p class="sub">Un centro de acopio es un <b>sitio físico</b> donde se recibe y se guarda la ayuda. Registrarlo bien es lo que hace que la plataforma pueda <b>sugerirlo</b> cuando aparece una solicitud cerca. Lo hace <b>Logística</b> desde <b>«Centros de acopio»</b>.</p>
+
+<h2>✅ Darlo de alta en 3 pasos</h2>
+<div class="pasos">
+  <div class="paso"><div class="n">1</div><b>Abre y pulsa «Nuevo»</b><p>Menú <b>«Centros de acopio»</b> → <b>«Nuevo centro»</b>. Se abre un panel con el mapa.</p></div>
+  <div class="paso"><div class="n">2</div><b>Pon el pin</b><p><b>Toca o arrastra</b> el pin hasta el sitio exacto. Sin pin no se guarda: la cercanía es el motivo de existir del centro.</p></div>
+  <div class="paso"><div class="n">3</div><b>Llena y guarda</b><p>Nombre, tipo, <b>país</b>, dirección y responsable. Guardar y ya aparece en el mapa.</p></div>
+</div>
+
+<h2>Qué te va a pedir</h2>
+<div class="campos"><table><tbody>
+  <tr><td class="c1">Nombre<span class="ob">obligatorio</span></td><td>Cómo lo conoce la gente. «Cancha de La Concordia», no «Centro 3».</td></tr>
+  <tr><td class="c1">Ubicación (pin)<span class="ob">obligatorio</span></td><td>El punto exacto en el mapa. Es lo que permite sugerirlo por cercanía.</td></tr>
+  <tr><td class="c1">Tipo de lugar</td><td><b>Acopio</b> (recibe y guarda), <b>albergue</b> (aloja personas) u <b>hospital</b>.</td></tr>
+  <tr><td class="c1">País<span class="ob">importante</span></td><td>Venezuela o Colombia. Decide a qué solicitudes se ofrece este centro. Ver el recuadro de abajo.</td></tr>
+  <tr><td class="c1">Dirección</td><td>Para llegar aunque el mapa no cargue: calle, referencia, cómo se entra.</td></tr>
+  <tr><td class="c1">Responsable y teléfono</td><td>A quién llamar. Sin esto, el centro existe pero nadie sabe con quién hablar.</td></tr>
+  <tr><td class="c1">Horario</td><td>Cuándo se puede llegar de verdad. Evita viajes en balde.</td></tr>
+  <tr><td class="c1">Camas <span class="ob op">albergues</span></td><td>Totales y ocupadas. Es lo que se consulta cuando hay que ubicar a una familia.</td></tr>
+</tbody></table></div>
+
+<div class="rec" style="border-left-color:var(--azul);background:#f2f6ff">
+  <b>El país no es un dato de adorno.</b> Cúcuta y San Antonio del Táchira están a unos 10 km: sin el país, un centro
+  venezolano saldría como «el más cercano» de una solicitud colombiana y la entrega cruzaría una frontera internacional
+  sin que nadie lo notara. Con el país puesto, los centros del país de la solicitud salen <b>siempre primero</b>; los del
+  otro lado se ven marcados como <b>«cruza frontera»</b>, para que asignarlos sea una decisión y no un descuido.
+</div>
+
+<h2>Después del alta</h2>
+<div class="pasos">
+  <div class="paso"><div class="n">4</div><b>Carga el inventario</b><p>Producto, categoría, unidad, cantidad y un <b>mínimo de alerta</b>. Sin inventario el centro no sale como «con stock».</p></div>
+  <div class="paso"><div class="n">5</div><b>Asigna responsables</b><p>Quien manda en <b>ese</b> centro. Los voluntarios de acopio <b>solo suman</b> entradas, no descuentan.</p></div>
+  <div class="paso"><div class="n">6</div><b>Imprime el QR</b><p>Cada centro tiene su <b>QR</b>: con él se registran las donaciones que llegan, sin escribir nada.</p></div>
+</div>
+
+<h2>Lo que sí y lo que no</h2>
+<div class="sino">
+  <div class="col si">
+    <h3>Sí</h3>
+    <ul>
+      <li><b>Pon el pin donde es.</b> Un centro mal ubicado se sugiere para solicitudes que le quedan lejos.</li>
+      <li><b>Marca «temporal»</b> si nace por la emergencia, y <b>desactívalo</b> cuando deje de operar.</li>
+      <li><b>Mantén el inventario al día.</b> El «con stock» de la sugerencia sale de ahí.</li>
+      <li><b>Revisa el país</b> antes de guardar, sobre todo en la zona fronteriza.</li>
+    </ul>
+  </div>
+  <div class="col no">
+    <h3>No</h3>
+    <ul>
+      <li><b>No dupliques.</b> Busca antes: si el centro nació de una solicitud marcada como punto, ya está creado.</li>
+      <li><b>No lo borres</b> cuando cierre: <b>desactívalo</b>. Borrar se lleva su historial de donaciones.</li>
+      <li><b>No dejes el centro sin responsable ni teléfono:</b> existe en el mapa pero no sirve para coordinar.</li>
+      <li><b>No inventes el pin</b> «más o menos». Si no sabes el sitio exacto, pregunta antes de guardar.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="rec">
+  <b>Hay centros que se crean solos.</b> Cuando Recopilación marca una solicitud como <b>albergue, hospital o centro de
+  acopio</b> y Verificación la valida, el punto <b>aparece en el mapa sin dueño</b> y le llega un aviso a Logística.
+  Ese centro ya <b>hereda el país</b> de la solicitud. Lo que falta es completarlo: responsable, horario, camas e
+  inventario. Búscalo antes de crear uno nuevo — si no, quedan dos fichas del mismo sitio.
+</div>
+
+<div class="pie">
+  <span><span class="punto"></span> &nbsp;Apoyo por Venezuela · Centros de acopio</span>
+  <span>Guía rápida · Agosto 2026</span>
+</div>

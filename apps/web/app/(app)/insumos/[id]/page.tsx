@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireUsuario, puedeLogistica, puedeAlianzas, esAdministrador } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
-import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO } from '@/lib/constantes';
+import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO, banderaPais} from '@/lib/constantes';
 import { urlFirmada } from '@/lib/storage';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
@@ -708,8 +708,22 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                           {c.con_stock
                             ? <Pill tono="ok" punto={false}>con stock</Pill>
                             : <Pill tono="neutra" punto={false}>sin stock</Pill>}
+                          {/* Aviso de frontera (0230). La RPC ya coloca los centros del propio
+                              país delante SIEMPRE; este distintivo es para que, cuando aparezca
+                              uno del otro lado, asignarlo sea una decisión consciente —con sus
+                              aduanas y sus permisos— y no un descuido por ver «12 km». */}
+                          {c.cruza_frontera && (
+                            <Pill tono="aviso" punto={false}>
+                              {banderaPais(c.pais)} cruza frontera
+                            </Pill>
+                          )}
                         </div>
                         <div className="muted" style={{ fontSize: '.8rem' }}>~{Math.round(c.distancia_km)} km{c.telefono ? ' · ' + c.telefono : ''}</div>
+                        {c.cruza_frontera && (
+                          <div className="muted" style={{ fontSize: '.76rem', color: 'var(--critica)' }}>
+                            Está en otro país: la entrega cruzaría una frontera internacional.
+                          </div>
+                        )}
                       </div>
                       <form action={asignarCentroSolicitud}>
                         <input type="hidden" name="id" value={id} />

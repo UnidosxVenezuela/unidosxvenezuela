@@ -5,7 +5,7 @@ import maplibregl, {
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { createClient } from '@/lib/supabase/client';
-import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL, ETIQUETA_TIPO_LUGAR, TIPOS_LUGAR, TONO_TIPO_LUGAR } from '@/lib/constantes';
+import { ETIQUETA_URGENCIA, URGENCIAS, claseUrgencia, ETIQUETA_ROL, ETIQUETA_TIPO_LUGAR, TIPOS_LUGAR, TONO_TIPO_LUGAR, PAISES_ATENDIDOS, banderaPais, paisAtendido} from '@/lib/constantes';
 import Icono from './Icono';
 import Pill, { tonoDeClase } from './Pill';
 import Avatar from './Avatar';
@@ -35,6 +35,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
   const [sel, setSel] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [paisForm, setPaisForm] = useState<'VE' | 'CO'>('VE');
   const cont = useRef<HTMLDivElement>(null);
   const mapa = useRef<MapLibreMap | null>(null);
   const marcador = useRef<MapLibreMarker | null>(null);
@@ -81,14 +82,25 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
       .then(({ data }) => setCandidatos((data ?? []) as any[]));
   }, [esAdmin]);
 
+  // Al abrir el formulario, el selector de país arranca con el del centro que se edita
+  // (o VE al dar de alta). Sin esto, editar un centro colombiano lo mostraría como
+  // venezolano y guardarlo lo cambiaría de país sin que nadie lo pidiera.
+  useEffect(() => {
+    if (editando === null) return;
+    setPaisForm(editando === 'nuevo' ? 'VE' : (((editando as any).pais as 'VE' | 'CO') ?? 'VE'));
+  }, [editando]);
+
   // Mapa selector: vive mientras el formulario está abierto.
   useEffect(() => {
     if (editando === null || !cont.current) return;
     const inicial = editando !== 'nuevo' ? editando : null;
+    // Al dar de alta, el mapa abre sobre el país elegido (0230) y no siempre sobre
+    // Caracas: registrar un centro colombiano obligaba a arrastrarse 1.000 km.
+    const cen = paisAtendido(paisForm).centro;
     const m = new maplibregl.Map({
       container: cont.current, style: ESTILO,
-      center: inicial ? [inicial.lng, inicial.lat] : [-66.9, 10.48],
-      zoom: inicial ? 14 : 6,
+      center: inicial ? [inicial.lng, inicial.lat] : [cen.lng, cen.lat],
+      zoom: inicial ? 14 : cen.zoom,
     });
     m.addControl(new maplibregl.NavigationControl(), 'top-right');
     const poner = (lng: number, lat: number) => {
@@ -103,7 +115,7 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
     else setSel(null);
     mapa.current = m;
     return () => { m.remove(); mapa.current = null; marcador.current = null; };
-  }, [editando]);
+  }, [editando, paisForm]);
 
   function abrir(c: PuntoAcopio | 'nuevo') { setError(null); setEditando(c); }
   function cerrar() { setEditando(null); setSel(null); }
@@ -138,6 +150,9 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
       telefono: str(fd.get('telefono')),
       horario: str(fd.get('horario')),
       lat: sel.lat, lng: sel.lng,
+      // País del centro (0230). Es lo que impide que un centro venezolano salga como «el
+      // más cercano» de un caso colombiano por estar a 10 km de la frontera.
+      pais: paisForm,
     };
     const res = editando === 'nuevo'
       ? await supabase.from('puntos_acopio').insert({ ...payload, creado_por: userId })
@@ -224,6 +239,18 @@ export default function CentrosAcopio({ userId, esAdmin }: { userId: string; esA
                 <select name="tipo" className="input" defaultValue={ed?.tipo ?? 'acopio'}>
                   {TIPOS_LUGAR.map((t) => <option key={t} value={t}>{ETIQUETA_TIPO_LUGAR[t]}</option>)}
                 </select>
+              </div>
+              <div className="campo"><label>País</label>
+                <select name="pais" className="input" value={paisForm}
+                  onChange={(e) => setPaisForm(e.target.value as 'VE' | 'CO')}>
+                  {PAISES_ATENDIDOS.map((p) => (
+                    <option key={p.codigo} value={p.codigo}>{banderaPais(p.codigo)} {p.nombre}</option>
+                  ))}
+                </select>
+                <span className="muted" style={{ fontSize: '.78rem' }}>
+                  Decide a qué solicitudes se ofrece este centro. Un centro del otro país solo
+                  aparece marcado como «cruza frontera», nunca por delante de los de casa.
+                </span>
               </div>
               {ed && (
                 <div className="campo"><label>Urgencia (en el mapa)</label>

@@ -297,11 +297,97 @@ export const ESTADOS_VE: { nombre: string; lat: number; lng: number }[] = [
 export const NOMBRES_ESTADOS_VE: string[] = ESTADOS_VE.map((e) => e.nombre);
 const normEstado = (s: string) => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 const MAPA_ESTADO_VE = new Map(ESTADOS_VE.map((e) => [normEstado(e.nombre), e]));
-/** Centroide aproximado del estado (para ubicar en el mapa cuando no hay pin). Devuelve
- *  null si el nombre no coincide con un estado conocido. Tolera acentos y mayúsculas. */
-export function centroideEstado(nombre?: string | null): { lat: number; lng: number } | null {
+/** Departamentos de Colombia (32 + Bogotá D.C.) con su centroide APROXIMADO. Mismo papel
+ *  que ESTADOS_VE: poblar el desplegable de la división administrativa y ubicar en el mapa
+ *  una solicitud sin pin. Se añadieron con la respuesta al terremoto de Colombia (0230). */
+export const DEPARTAMENTOS_CO: { nombre: string; lat: number; lng: number }[] = [
+  { nombre: 'Amazonas', lat: -1.4, lng: -71.6 },
+  { nombre: 'Antioquia', lat: 6.9, lng: -75.5 },
+  { nombre: 'Arauca', lat: 6.5, lng: -70.8 },
+  { nombre: 'Atlántico', lat: 10.7, lng: -74.9 },
+  { nombre: 'Bogotá D.C.', lat: 4.65, lng: -74.1 },
+  { nombre: 'Bolívar', lat: 8.7, lng: -74.5 },
+  { nombre: 'Boyacá', lat: 5.6, lng: -73.2 },
+  { nombre: 'Caldas', lat: 5.3, lng: -75.3 },
+  { nombre: 'Caquetá', lat: 0.9, lng: -74.0 },
+  { nombre: 'Casanare', lat: 5.4, lng: -71.6 },
+  { nombre: 'Cauca', lat: 2.5, lng: -76.8 },
+  { nombre: 'Cesar', lat: 9.4, lng: -73.5 },
+  { nombre: 'Chocó', lat: 5.7, lng: -76.9 },
+  { nombre: 'Córdoba', lat: 8.4, lng: -75.7 },
+  { nombre: 'Cundinamarca', lat: 5.0, lng: -74.2 },
+  { nombre: 'Guainía', lat: 2.6, lng: -68.9 },
+  { nombre: 'Guaviare', lat: 1.9, lng: -72.6 },
+  { nombre: 'Huila', lat: 2.5, lng: -75.6 },
+  { nombre: 'La Guajira', lat: 11.4, lng: -72.6 },
+  { nombre: 'Magdalena', lat: 10.2, lng: -74.3 },
+  { nombre: 'Meta', lat: 3.5, lng: -73.1 },
+  { nombre: 'Nariño', lat: 1.5, lng: -78.0 },
+  { nombre: 'Norte de Santander', lat: 7.9, lng: -72.9 },
+  { nombre: 'Putumayo', lat: 0.5, lng: -76.2 },
+  { nombre: 'Quindío', lat: 4.5, lng: -75.7 },
+  { nombre: 'Risaralda', lat: 5.2, lng: -75.9 },
+  { nombre: 'San Andrés y Providencia', lat: 12.55, lng: -81.7 },
+  { nombre: 'Santander', lat: 6.9, lng: -73.5 },
+  { nombre: 'Sucre', lat: 9.0, lng: -75.1 },
+  { nombre: 'Tolima', lat: 4.1, lng: -75.2 },
+  { nombre: 'Valle del Cauca', lat: 3.8, lng: -76.5 },
+  { nombre: 'Vaupés', lat: 0.9, lng: -70.6 },
+  { nombre: 'Vichada', lat: 4.7, lng: -69.4 },
+];
+
+/**
+ * Los países que atiende la plataforma. Espejo de `paises_atendidos()` (0230), que además
+ * los impone con un CHECK en `casos.pais` y `puntos_acopio.pais`: añadir uno aquí sin
+ * tocar la migración deja un país que la interfaz ofrece y la base rechaza.
+ *
+ * `division` es el nombre que recibe la primera división administrativa en cada país
+ * —«Estado» en Venezuela, «Departamento» en Colombia—: usar la palabra del país no es
+ * cosmético, es lo que hace que quien reporta reconozca el campo.
+ */
+export const PAISES_ATENDIDOS: {
+  codigo: 'VE' | 'CO'; nombre: string; division: string;
+  divisiones: { nombre: string; lat: number; lng: number }[];
+  centro: { lat: number; lng: number; zoom: number };
+}[] = [
+  { codigo: 'VE', nombre: 'Venezuela', division: 'Estado', divisiones: ESTADOS_VE,
+    centro: { lat: 10.48, lng: -66.9, zoom: 6 } },
+  { codigo: 'CO', nombre: 'Colombia', division: 'Departamento', divisiones: DEPARTAMENTOS_CO,
+    centro: { lat: 4.65, lng: -74.1, zoom: 6 } },
+];
+
+export const CODIGOS_PAIS_ATENDIDO = PAISES_ATENDIDOS.map((p) => p.codigo);
+const MAPA_PAIS_ATENDIDO = new Map(PAISES_ATENDIDOS.map((p) => [p.codigo, p]));
+
+/** El país atendido, o Venezuela si el código no se reconoce (es el país por defecto:
+ *  toda solicitud anterior a 0230 es venezolana). Nunca devuelve null: la interfaz
+ *  siempre tiene que poder pintar un desplegable. */
+export function paisAtendido(codigo?: string | null) {
+  return MAPA_PAIS_ATENDIDO.get(String(codigo ?? '').toUpperCase() as 'VE' | 'CO')
+      ?? MAPA_PAIS_ATENDIDO.get('VE')!;
+}
+
+/** Cómo se llama la primera división administrativa del país: «Estado» o «Departamento». */
+export function nombreDivision(pais?: string | null): string {
+  return paisAtendido(pais).division;
+}
+
+/** Los nombres de las divisiones del país, para poblar el desplegable. */
+export function divisionesDe(pais?: string | null): string[] {
+  return paisAtendido(pais).divisiones.map((d) => d.nombre);
+}
+
+const MAPA_DIVISION = new Map(
+  PAISES_ATENDIDOS.map((p) => [p.codigo, new Map(p.divisiones.map((d) => [normEstado(d.nombre), d]))]),
+);
+
+/** Centroide aproximado de la división administrativa (para ubicar en el mapa cuando no hay
+ *  pin). Devuelve null si el nombre no coincide con ninguna del país. Tolera acentos y
+ *  mayúsculas. `pais` por defecto 'VE' para no romper a los llamadores anteriores a 0230. */
+export function centroideEstado(nombre?: string | null, pais?: string | null): { lat: number; lng: number } | null {
   if (!nombre) return null;
-  const e = MAPA_ESTADO_VE.get(normEstado(nombre));
+  const mapa = MAPA_DIVISION.get(paisAtendido(pais).codigo);
+  const e = mapa?.get(normEstado(nombre));
   return e ? { lat: e.lat, lng: e.lng } : null;
 }
 

@@ -18,6 +18,7 @@ import { type CambioItem } from './HistorialItem';
 import Derivaciones, { type DerivacionItem } from './Derivaciones';
 import LineaTiempoCaso from './LineaTiempoCaso';
 import { nombreMostrado } from '@/lib/nombre';
+import { paisAtendido, banderaPais } from '@/lib/constantes';
 
 const EXPLICA_ESTADO: Record<string, string> = {
   pendiente: 'Todavía no lo ha tomado nadie; está pendiente de revisión.',
@@ -215,7 +216,7 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           <div style={{ gridColumn: '1 / -1' }}><strong>Fuente:</strong> {caso.fuente_tipo ? (ETIQUETA_TIPO_FUENTE[caso.fuente_tipo] ?? caso.fuente_tipo) + ' · ' : ''}{waFuente ? <a href={waFuente} target="_blank" rel="noopener noreferrer">{caso.fuente || 'Ver fuente'} ↗</a> : (caso.fuente || '—')}</div>
           {caso.sigue_vigente && <div><strong>¿Vigente?:</strong> {ETIQUETA_VIGENCIA[caso.sigue_vigente] ?? caso.sigue_vigente}</div>}
           {(caso.ubicacion_direccion || caso.ubicacion_sector || caso.ubicacion_parroquia || caso.ubicacion_municipio || caso.ubicacion_estado) && (
-            <div style={{ gridColumn: '1 / -1' }}><strong>Ubicación:</strong> {[caso.ubicacion_direccion, caso.ubicacion_sector, caso.ubicacion_parroquia, caso.ubicacion_municipio, caso.ubicacion_estado].filter(Boolean).join(' · ')}</div>
+            <div style={{ gridColumn: '1 / -1' }}><strong>Ubicación:</strong> {[caso.ubicacion_direccion, caso.ubicacion_sector, caso.ubicacion_parroquia, caso.ubicacion_municipio, caso.ubicacion_estado].filter(Boolean).join(' · ')}{' · '}<strong>{banderaPais(paisAtendido(caso.pais).codigo)} {paisAtendido(caso.pais).nombre}</strong></div>
           )}
           {caso.contacto_difusion && (
             <div style={{ gridColumn: '1 / -1' }}><strong>Contacto de difusión:</strong> {caso.contacto_difusion}{caso.autoriza_difusion ? '' : ' — sin autorizar (Redes no lo ve)'}</div>

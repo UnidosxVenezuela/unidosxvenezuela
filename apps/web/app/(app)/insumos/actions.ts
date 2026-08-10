@@ -86,9 +86,20 @@ export async function crearSolicitud(formData: FormData) {
     p_fuente: opt(formData.get('fuente')),
     p_punto: opt(formData.get('punto_id')),
     p_notas: opt(formData.get('notas')),
+    // País de la solicitud (0230). La RPC lo valida contra paises_atendidos() y rechaza
+    // uno no atendido en vez de caer al DEFAULT: guardar un caso colombiano como
+    // venezolano lo mandaría al equipo equivocado y le sugeriría los centros de otro país.
+    p_pais: (['VE', 'CO'] as string[]).includes(String(opt(formData.get('pais')) ?? '').toUpperCase())
+      ? String(formData.get('pais')).toUpperCase() : 'VE',
   };
 
-  const { data, error } = await supabase.rpc('crear_solicitud_logistica', args);
+  let { data, error } = await supabase.rpc('crear_solicitud_logistica', args);
+  // Sin 0230 aplicada, la RPC todavía tiene 19 parámetros y `p_pais` la hace no resolver.
+  // Se reintenta sin él: la solicitud se crea igual (como venezolana, que es el DEFAULT).
+  if (error && /p_pais|could not find the function|schema cache/i.test(error.message || '')) {
+    const { p_pais: _omitido, ...sinPais } = args as Record<string, unknown>;
+    ({ data, error } = await supabase.rpc('crear_solicitud_logistica', sinPais));
+  }
   if (error) {
     const m = (error.message || '').toLowerCase();
     if (/could not find the function|function .* does not exist|no existe la funci|schema cache/.test(m)) {
