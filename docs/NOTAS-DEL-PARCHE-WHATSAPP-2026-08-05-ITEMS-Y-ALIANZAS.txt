@@ -3,7 +3,7 @@ _Apoyo por Venezuela_
 
 El parche más grande hasta ahora. Dos cambios de fondo: *Alianzas Estratégicas pasa a ser un solo equipo* con su correo institucional, y las solicitudes dejan de ser un texto suelto para tener *desglose por ítem* — con su cantidad, su avance y su cumplimiento, uno por uno.
 
-✅ *13 novedades* · 🤝 *Alianzas* · 🚚 *Logística* · 📋 *Solicitudes* · 🛠️ *13 cambios de base de datos*
+✅ *13 novedades* · 🤝 *Alianzas* · 🚚 *Logística* · 📋 *Solicitudes* · 🇨🇴 *Colombia* · 🛠️ *15 cambios de base de datos*
 
 ━━━━━━━━━━━━━━━━━━
 🤝 *ALIANZAS ESTRATÉGICAS: UN SOLO EQUIPO*
@@ -113,7 +113,7 @@ Todas siguen en *docs/*, en HTML y PDF, listas para imprimir o mandar por aquí.
 ━━━━━━━━━━━━━━━━━━
 🔧 *PARA EL ADMINISTRADOR*
 
-*Trece* cambios de base de datos: las migraciones *0216* a *0228*. Se aplican con *pnpm db:reset* y se regeneran los tipos con *pnpm db:types*. A prueba de fallos, como siempre: mientras no se apliquen, cada sección avisa y el resto sigue funcionando.
+*Quince* cambios de base de datos: las migraciones *0216* a *0230*. *Ya están aplicadas*, así que todo lo de estas notas está funcionando: el desglose por ítem, la capacidad de los aliados, la reportería y la apertura a Colombia.
 
 Dos cosas que conviene saber:
 
@@ -128,7 +128,7 @@ Sobre quién puede otorgar el rol de Alianzas: se planteó restringirlo a admini
 
 Este parche empezó como *«un ajuste chiquito en Alianzas»*.
 
-Terminó en *trece migraciones*, dos áreas nuevas de reportería y un sistema de correo. 📈
+Terminó en *quince migraciones*, dos áreas nuevas de reportería, un sistema de correo y un país más. 📈
 
 En el camino se pidieron *tantos cambios* que hubo que inventar una tabla nueva solo para llevar la cuenta de las cosas… y entonces alguien pidió un cambio *en esa tabla*. 🙃
 
