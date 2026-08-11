@@ -8,6 +8,7 @@ import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, claseP
 import { urlFirmada } from '@/lib/storage';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import BotonConfirmar from '@/components/BotonConfirmar';
 import BotonEnviar from '@/components/BotonEnviar';
 import RealtimeRefrescar from '@/components/RealtimeRefrescar';
@@ -63,6 +64,18 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   if (s.caso_id) {
     const { data: co } = await supabase.rpc('caso_de_solicitud', { p_caso: s.caso_id });
     origen = ((co as any[]) ?? [])[0] ?? null;
+  }
+
+  // País de la solicitud (0230) por la vista curada de 0237, y NO por `caso_de_solicitud`
+  // ni por `casos`: aquella RPC está acotada a admin/logística/verificación —expone el
+  // contacto y las coordenadas— y deja fuera a Alianzas, que entra a esta pantalla en modo
+  // consulta. La vista da solo número y país, así que el dato llega a quien lo necesita sin
+  // arrastrar nada más. Best-effort: sin la migración no hay pastilla, que es lo honesto.
+  let paisSol: string | null = null;
+  {
+    const { data: ctx } = await supabase.from('solicitudes_contexto')
+      .select('pais').eq('solicitud_id', s.id).maybeSingle();
+    paisSol = (ctx as any)?.pais ?? null;
   }
 
   // Solicitud (caso) COMPLETA para gestionar bien: descripción, observaciones de
@@ -189,6 +202,10 @@ export default async function SolicitudPage({ params }: { params: { id: string }
       <div className="fila" style={{ justifyContent: 'space-between', marginTop: 8 }}>
         <h1 style={{ margin: 0 }}>{s.titulo}</h1>
         <span className="fila" style={{ gap: 6 }}>
+          {/* País (0230/0237) en la cabecera, junto a urgencia y estado: decide el centro
+              de acopio, el transportista y si hay frontera de por medio, así que tiene que
+              verse aquí y no dentro del caso —al que además Alianzas no entra—. */}
+          {paisSol && <PillPais pais={paisSol} />}
           <Pill tono={tonoDeClase(clasePrioridad(s.urgencia))} punto={false}>{ETIQUETA_PRIORIDAD[s.urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? s.urgencia}</Pill>
           <Pill tono={tonoDeClase(claseEstadoInsumo(s.estado))}>{ETIQUETA_ESTADO_INSUMO[s.estado] ?? s.estado}</Pill>
         </span>
