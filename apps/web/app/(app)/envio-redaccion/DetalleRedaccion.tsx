@@ -2,6 +2,7 @@ import { fechaHora } from '@/lib/fechas';
 import { pasoRedaccion } from '@/lib/flujo';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import EstadoCaso from '@/components/EstadoCaso';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
@@ -31,6 +32,10 @@ export default function DetalleRedaccion(
       <h2 style={{ margin: '4px 0 8px' }}>{caso.titulo}</h2>
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
         <EstadoCaso estado={caso.estado} />
+        {/* País (0230/0236). Aquí es donde de verdad hace falta: este panel es el que se
+            tiene delante al redactar el llamado público. Sin 0236 aplicada no llega, y
+            entonces no se pinta nada: mejor callarse que etiquetarlo de venezolano. */}
+        {caso.pais && <PillPais pais={caso.pais} />}
         {caso.categoria && <BadgeCategoria>{caso.categoria}</BadgeCategoria>}
         {caso.publicado_en && <Pill tono="ok" punto={false}>📣 Publicada</Pill>}
         {!caso.publicado_en && caso.requiere_difusion && <Pill tono="alta" punto={false}>⚠ Prioriza · Logística no pudo cubrir</Pill>}

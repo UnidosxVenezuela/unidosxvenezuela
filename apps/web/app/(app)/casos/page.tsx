@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ, PAISES_ATENDIDOS, CODIGOS_PAIS_ATENDIDO, paisAtendido, banderaPais } from '@/lib/constantes';
+import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ, PAISES_ATENDIDOS, CODIGOS_PAIS_ATENDIDO, banderaPais } from '@/lib/constantes';
 import { scoreCaso, nivelPrioridad, ETIQUETA_NIVEL_PRIORIDAD, TONO_NIVEL_PRIORIDAD } from '@/lib/prioridad';
 import Icono from '@/components/Icono';
 import BotonActualizar from '@/components/BotonActualizar';
@@ -13,6 +13,7 @@ import DrawerModal from '@/components/DrawerModal';
 import Avatar from '@/components/Avatar';
 import Kpi from '@/components/Kpi';
 import Pill from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import BarraBusqueda from '@/components/BarraBusqueda';
 import Carrusel from '@/components/Carrusel';
@@ -397,12 +398,10 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                     <div className="celda-titulo">
                       <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
                         <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
-                        {/* País (0230). Se marca SIEMPRE, también Venezuela: con dos
-                            respuestas a la vez, señalar solo una deja la otra ambigua
-                            —¿es de aquí o es un caso viejo sin país?—. */}
-                        <Pill tono={paisAtendido(c.pais).codigo === 'CO' ? 'aviso' : 'info'} punto={false}>
-                          {banderaPais(paisAtendido(c.pais).codigo)} {paisAtendido(c.pais).nombre}
-                        </Pill>
+                        {/* País (0230). Desde 0236 sale de `PillPais`, el mismo componente
+                            que usan Redacción y Logística: tres tableros pintando el país a
+                            mano es garantizar que en tres meses uno diga otra cosa. */}
+                        <PillPais pais={c.pais} />
                         {orden === 'prioridad' && <Pill tono={TONO_NIVEL_PRIORIDAD[c._nivel as keyof typeof TONO_NIVEL_PRIORIDAD]} punto={false}>{ETIQUETA_NIVEL_PRIORIDAD[c._nivel as keyof typeof ETIQUETA_NIVEL_PRIORIDAD]}</Pill>}
                         {c.fecha_publicacion && (Date.now() - new Date(c.fecha_publicacion + 'T00:00:00').getTime()) > 2 * 86400000 ? (
                           <Pill tono="aviso" punto={false}>+2 días</Pill>

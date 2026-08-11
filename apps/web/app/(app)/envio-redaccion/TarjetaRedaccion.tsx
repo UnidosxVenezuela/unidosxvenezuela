@@ -4,6 +4,7 @@ import { ETIQUETA_CANAL_DIFUSION } from '@/lib/constantes';
 import { pasoRedaccion } from '@/lib/flujo';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import FlujoProgreso from '@/components/FlujoProgreso';
 
@@ -22,6 +23,14 @@ export default function TarjetaRedaccion({ caso, href, redactorNombre }: { caso:
       </div>
       <strong style={{ display: 'block', margin: '6px 0 2px' }}>{caso.titulo}</strong>
       <div className="fila" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
+        {/* País (0230/0236) el PRIMERO de la fila: quien redacta elige canal, tono e
+            instituciones a mencionar, y confundir un caso colombiano con uno venezolano
+            manda a la gente al organismo equivocado. Tiene que verse antes que nada.
+
+            Condicionado a que HAYA país: la vista curada solo lo expone desde 0236, y
+            hasta que esa migración se aplique es preferible no decir nada a caer al
+            DEFAULT «Venezuela» y etiquetar de venezolano un caso colombiano. */}
+        {caso.pais && <PillPais pais={caso.pais} />}
         {caso.categoria && <BadgeCategoria>{caso.categoria}</BadgeCategoria>}
         {/* Solicitud creada por Logística. Con caso padre es una COBERTURA PARCIAL —lo que
             no se pudo cubrir de otra solicitud (0211)—; sin padre, la levantó el área por
