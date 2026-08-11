@@ -17,6 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { AMBITOS_HILO, esAmbitoHilo, type MensajeHilo } from '@/lib/hilos';
+import { GRUPOS_INACTIVOS } from '@/lib/constantes';
 import { fechaHora } from '@/lib/fechas';
 import Icono from './Icono';
 import HiloEnVivo from './HiloEnVivo';
@@ -33,6 +34,8 @@ type Abierto = {
   mensajes: MensajeHilo[]; participantes: { id: string; nombre: string }[];
 };
 
+type Grupo = { id: string; nombre: string };
+
 /** Resuelve el título humano de cada fila. Una consulta por tabla, no una por hilo. */
 async function conTitulos(supabase: any, filas: any[]): Promise<FilaBandeja[]> {
   const ids = (a: string) => filas.filter((f) => f.ambito === a).map((f) => f.ancla_id);
@@ -47,6 +50,8 @@ async function conTitulos(supabase: any, filas: any[]): Promise<FilaBandeja[]> {
   for (const x of (insumos.data ?? [])) mapa.set('insumo:' + x.id, 'Entrega · ' + x.titulo);
   for (const x of (tareas.data ?? [])) mapa.set('tarea:' + x.id, x.titulo);
   for (const x of (grupos.data ?? [])) mapa.set('grupo:' + x.id, x.nombre);
+  // El general no cuelga de ninguna entidad: su nombre es fijo (0235).
+  for (const f of filas) if (f.ambito === 'general') mapa.set('general:' + f.ancla_id, 'General · toda la organización');
   return filas.map((f) => ({ ...f, titulo: mapa.get(f.ambito + ':' + f.ancla_id) ?? 'Conversación' }));
 }
 
@@ -54,6 +59,7 @@ export default function PanelConversaciones({
   miId, alCerrar,
 }: { miId: string; alCerrar: () => void }) {
   const [filas, setFilas] = useState<FilaBandeja[] | null>(null);
+  const [misGrupos, setMisGrupos] = useState<Grupo[]>([]);
   const [abierto, setAbierto] = useState<Abierto | null>(null);
   const [fallo, setFallo] = useState(false);
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -93,6 +99,30 @@ export default function PanelConversaciones({
 
   useEffect(() => { void cargarLista(); }, [cargarLista]);
 
+  // Mis equipos, para las pastillas de arriba. Se cargan una vez al abrir el panel.
+  // Incluye los grupos que lidero: liderar no siempre implica figurar en miembros_grupo.
+  useEffect(() => {
+    (async () => {
+      const supabase = createClient();
+      const [{ data: mios }, { data: lidero }] = await Promise.all([
+        supabase.from('miembros_grupo').select('grupos ( id, nombre, clave, activa )').eq('perfil_id', miId),
+        supabase.from('grupos').select('id, nombre, clave, activa').eq('lider_id', miId),
+      ]);
+      const bruto = [
+        ...((mios ?? []) as any[]).map((m) => m.grupos).filter(Boolean),
+        ...((lidero ?? []) as any[]),
+      ];
+      const vistos = new Set<string>();
+      setMisGrupos(
+        bruto
+          .filter((g: any) => g?.id && g.activa !== false && !GRUPOS_INACTIVOS.includes(g.clave ?? ''))
+          .filter((g: any) => (vistos.has(g.id) ? false : (vistos.add(g.id), true)))
+          .map((g: any) => ({ id: g.id as string, nombre: g.nombre as string }))
+          .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+      );
+    })();
+  }, [miId]);
+
   // La lista se refresca cuando entra un mensaje en cualquier hilo legible: la RLS ya
   // decide cuáles llegan, así que no hace falta filtro.
   useEffect(() => {
@@ -110,13 +140,69 @@ export default function PanelConversaciones({
     const supabase = createClient();
     const [{ data: msgs }, { data: parts }] = await Promise.all([
       supabase.from('hilo_mensajes')
-        .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, editado_en, creado_en')
+        .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, sticker, editado_en, creado_en')
         .eq('hilo_id', f.id).order('creado_en', { ascending: true }).limit(200),
       supabase.from('hilo_participantes')
         .select('perfil_id, perfiles ( nombre_completo )').eq('hilo_id', f.id),
     ]);
     setAbierto({
       hiloId: f.id, ambito: f.ambito, anclaId: f.ancla_id, titulo: f.titulo,
+      mensajes: (msgs ?? []) as MensajeHilo[],
+      participantes: ((parts ?? []) as any[])
+        .filter((p) => p.perfil_id !== miId)
+        .map((p) => ({ id: p.perfil_id as string, nombre: (p.perfiles?.nombre_completo as string) || 'Alguien' }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+    });
+  }, [miId]);
+
+  /** Abre la conversación general. Existe desde la propia migración, así que no hay que crearla. */
+  const abrirGeneral = useCallback(async () => {
+    const supabase = createClient();
+    const { data: h } = await supabase.from('hilos').select('id').eq('ambito', 'general').maybeSingle();
+    if (!h?.id) return;
+    const [{ data: msgs }, { data: parts }] = await Promise.all([
+      supabase.from('hilo_mensajes')
+        .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, sticker, editado_en, creado_en')
+        .eq('hilo_id', h.id).order('creado_en', { ascending: true }).limit(200),
+      supabase.from('hilo_participantes')
+        .select('perfil_id, perfiles ( nombre_completo )').eq('hilo_id', h.id),
+    ]);
+    setAbierto({
+      hiloId: h.id as string, ambito: 'general',
+      // Centinela del ámbito general (0235): la RPC lo repone sola al escribir.
+      anclaId: '00000000-0000-0000-0000-000000000000',
+      titulo: 'General · toda la organización',
+      mensajes: (msgs ?? []) as MensajeHilo[],
+      participantes: ((parts ?? []) as any[])
+        .filter((p) => p.perfil_id !== miId)
+        .map((p) => ({ id: p.perfil_id as string, nombre: (p.perfiles?.nombre_completo as string) || 'Alguien' }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+    });
+  }, [miId]);
+
+  /**
+   * Abre la conversación de un equipo desde su pastilla, exista ya o no.
+   *
+   * `abrir_hilo` es idempotente: si el equipo aún no tiene conversación, la crea vacía
+   * y devuelve su id. Una conversación sin mensajes NO ensucia la bandeja —la vista
+   * filtra por `ultimo_mensaje_en is not null`—, así que crearla al abrir es gratis y
+   * evita el caso raro de escribir el primer mensaje sin canal en vivo al que engancharse.
+   */
+  const abrirGrupo = useCallback(async (g: Grupo) => {
+    const supabase = createClient();
+    const { data: hiloId, error } = await supabase.rpc('abrir_hilo', {
+      p_ambito: 'grupo', p_ancla: g.id,
+    });
+    if (error || !hiloId) return;
+    const [{ data: msgs }, { data: parts }] = await Promise.all([
+      supabase.from('hilo_mensajes')
+        .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, sticker, editado_en, creado_en')
+        .eq('hilo_id', hiloId).order('creado_en', { ascending: true }).limit(200),
+      supabase.from('hilo_participantes')
+        .select('perfil_id, perfiles ( nombre_completo )').eq('hilo_id', hiloId),
+    ]);
+    setAbierto({
+      hiloId: hiloId as string, ambito: 'grupo', anclaId: g.id, titulo: g.nombre,
       mensajes: (msgs ?? []) as MensajeHilo[],
       participantes: ((parts ?? []) as any[])
         .filter((p) => p.perfil_id !== miId)
@@ -155,6 +241,29 @@ export default function PanelConversaciones({
           <Icono nombre="cerrar" size={16} />
         </button>
       </header>
+
+      {/* Pastillas de mis equipos: la vía rápida para EMPEZAR una conversación. Sin
+          esto no había ninguna — la bandeja solo lista lo que ya tiene mensajes, así que
+          un equipo que aún no ha escrito nada era invisible desde aquí. */}
+      {!abierto && (
+        <div className="panel-conv-equipos">
+          <span className="muted panel-conv-equipos-tit">Empezar una conversación</span>
+          <div className="panel-conv-chips">
+            {/* El general va primero y marcado: es el único canal que cruza equipos, y
+                por eso mismo el que hay que poder encontrar sin buscar. */}
+            <button type="button" className="chip-equipo chip-general"
+              onClick={() => void abrirGeneral()} title="Conversación general de la organización">
+              <Icono nombre="conversacion" size={13} /> General
+            </button>
+            {misGrupos.map((g) => (
+              <button key={g.id} type="button" className="chip-equipo"
+                onClick={() => void abrirGrupo(g)} title={'Conversación de ' + g.nombre}>
+                <Icono nombre="grupos" size={13} /> {g.nombre}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="panel-conv-cuerpo">
         {abierto ? (

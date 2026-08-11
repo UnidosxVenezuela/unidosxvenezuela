@@ -32,6 +32,8 @@ async function titulosDe(supabase: any, filas: any[]) {
   for (const x of (i.data ?? [])) mapa.set('insumo:' + x.id, 'Entrega · ' + x.titulo);
   for (const x of (t.data ?? [])) mapa.set('tarea:' + x.id, x.titulo);
   for (const x of (g.data ?? [])) mapa.set('grupo:' + x.id, x.nombre);
+  // El general no cuelga de ninguna entidad: su nombre es fijo (0235).
+  for (const f of filas) if (f.ambito === 'general') mapa.set('general:' + f.ancla_id, 'General · toda la organización');
   return mapa;
 }
 

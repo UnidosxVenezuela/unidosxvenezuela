@@ -71,17 +71,30 @@ jobs:
       - name: Ejecutar pruebas del buzón (0234)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_sugerencias_0234.sql
 
+      # Conversación general + stickers (0235).
+      - name: Ejecutar pruebas del general (0235)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_general_0235.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
       # desde supabase/migrations dentro del propio .sql de pruebas era un falso verde,
       # ya que psql no se detiene ante un \i que no encuentra el fichero.
-      - name: Comprobar idempotencia de 0231-0234
+      #
+      # 0231 NO entra en la lista, y es correcto que no entre: 0235 sustituye tres de sus
+      # funciones (abrir_hilo, escribir_en_hilo, puede_leer_ancla) y le cambia la firma a
+      # una. Reaplicar 0231 encima de 0235 falla —«cannot remove parameter defaults»— y
+      # además resucitaría la firma vieja de escribir_en_hilo, dejando dos y con ellas la
+      # ambigüedad de PostgREST que el repo lleva evitando desde 0222. «Idempotente»
+      # significa que una migración se puede repetir a sí misma, no que se pueda volver a
+      # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
+      # la cadena entera desde vacío y en orden, que es lo que sí funciona.
+      - name: Comprobar idempotencia de 0232-0235
         run: |
-          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0231_hilos_de_trabajo.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0234_sugerencias.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0235_hilo_general_y_stickers.sql
 
       - name: Apagar Supabase
         if: always()

@@ -46,7 +46,7 @@ export default async function Hilo({
     hiloId
       ? supabase
           .from('hilo_mensajes')
-          .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, editado_en, creado_en')
+          .select('id, hilo_id, autor_id, autor_sello, cuerpo, pii_alerta, sticker, editado_en, creado_en')
           .eq('hilo_id', hiloId)
           .order('creado_en', { ascending: true })
           .limit(300)

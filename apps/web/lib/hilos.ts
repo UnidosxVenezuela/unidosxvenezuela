@@ -2,7 +2,7 @@
 // La BASE es la fuente de verdad: el CHECK de `hilos.ambito` manda y la RLS decide quién
 // lee. Esto solo sirve para saber qué etiqueta pintar y a dónde enlazar.
 
-export type AmbitoHilo = 'caso' | 'insumo' | 'tarea' | 'grupo';
+export type AmbitoHilo = 'caso' | 'insumo' | 'tarea' | 'grupo' | 'general';
 
 type MetaAmbito = {
   /** Cómo se llama la conversación en pantalla. */
@@ -16,6 +16,13 @@ type MetaAmbito = {
 };
 
 export const AMBITOS_HILO: Record<AmbitoHilo, MetaAmbito> = {
+  general: {
+    titulo: 'Conversación general',
+    quienLee: 'La lee toda la organización. Para lo que cruza a varios equipos.',
+    vacio: 'Aquí se habla de lo que afecta a todos: cortes de transporte, faltantes, quién puede echar una mano.',
+    // No cuelga de ninguna entidad, así que tiene página propia.
+    ruta: () => '/conversaciones/general',
+  },
   caso: {
     titulo: 'Conversación de la solicitud',
     quienLee: 'La lee quien ya puede ver esta solicitud. Nadie más.',
@@ -43,7 +50,7 @@ export const AMBITOS_HILO: Record<AmbitoHilo, MetaAmbito> = {
 };
 
 export function esAmbitoHilo(v: string | null | undefined): v is AmbitoHilo {
-  return v === 'caso' || v === 'insumo' || v === 'tarea' || v === 'grupo';
+  return v === 'caso' || v === 'insumo' || v === 'tarea' || v === 'grupo' || v === 'general';
 }
 
 /** Etiquetas de `hilo_mensajes.pii_alerta`, tal como las produce detectar_datos_sensibles(). */
@@ -75,6 +82,8 @@ export type MensajeHilo = {
   autor_sello: string;
   cuerpo: string;
   pii_alerta: string[] | null;
+  /** Id de STICKERS (lib/stickers.tsx) cuando el mensaje es un sticker. */
+  sticker?: string | null;
   editado_en: string | null;
   creado_en: string;
 };

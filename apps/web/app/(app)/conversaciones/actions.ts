@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AMBITOS_HILO, esAmbitoHilo } from '@/lib/hilos';
+import { STICKERS } from '@/lib/stickers';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
 
@@ -26,8 +27,12 @@ export async function escribirEnHilo(formData: FormData) {
   const ambito = txt(formData.get('ambito'));
   const ancla = txt(formData.get('ancla'));
   const cuerpo = txt(formData.get('cuerpo'));
+  // El sticker viaja como `value` del botón que se pulsó: por eso el envío normal (el
+  // botón «Enviar») no lo trae y este campo queda vacío.
+  const sticker = txt(formData.get('sticker'));
+  const etiqueta = sticker ? (STICKERS.find((s) => s.id === sticker)?.etiqueta ?? null) : null;
   if (!esAmbitoHilo(ambito)) throw new Error('Ámbito de conversación no válido.');
-  if (!cuerpo) return;                       // enviar vacío no es un error, es no hacer nada
+  if (!cuerpo && !sticker) return;           // enviar vacío no es un error, es no hacer nada
 
   // Menciones: llegan como lista de ids separados por coma desde el redactor.
   const menciones = txt(formData.get('menciones')).split(',').map((s) => s.trim()).filter(Boolean);
@@ -35,9 +40,13 @@ export async function escribirEnHilo(formData: FormData) {
   const { supabase } = await ctx();
   const { error } = await supabase.rpc('escribir_en_hilo', {
     p_ambito: ambito,
-    p_ancla: ancla,
-    p_cuerpo: cuerpo,
+    // El ámbito general no cuelga de nada: la RPC pone su centinela (0235).
+    p_ancla: ambito === 'general' ? null : ancla,
+    // Con sticker, el cuerpo guarda su etiqueta para que el registro y los avisos se
+    // lean igual sin el dibujo.
+    p_cuerpo: sticker ? etiqueta : cuerpo,
     p_menciones: menciones.length > 0 ? menciones : null,
+    p_sticker: sticker || null,
   });
   if (error) throw new Error('No se pudo enviar el mensaje: ' + error.message);
   revalidar(ambito, ancla);
