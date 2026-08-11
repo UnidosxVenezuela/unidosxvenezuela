@@ -7,20 +7,23 @@
 // El número de sin leer llega del servidor y se mantiene vivo por Realtime: cuando entra
 // un mensaje que esta persona puede leer, sube solo. No se resta aquí — bajar el
 // contador es cosa del servidor cuando se marca el hilo como leído.
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { animate, createSpring } from 'animejs';
 import { createClient } from '@/lib/supabase/client';
 import { sinMovimiento } from '@/lib/anime';
 import Icono from './Icono';
+import PanelConversaciones from './PanelConversaciones';
 
 export default function ChatFlotante({ sinLeerInicial, miId }: { sinLeerInicial: number; miId: string }) {
   const pathname = usePathname();
   const [sinLeer, setSinLeer] = useState(sinLeerInicial);
-  const botonRef = useRef<HTMLAnchorElement | null>(null);
+  const [abierto, setAbierto] = useState(false);
+  const botonRef = useRef<HTMLButtonElement | null>(null);
   const insigniaRef = useRef<HTMLSpanElement | null>(null);
   const montado = useRef(false);
+
+  const cerrar = useCallback(() => setAbierto(false), []);
 
   // El servidor manda: al navegar, su número es el bueno.
   useEffect(() => { setSinLeer(sinLeerInicial); }, [sinLeerInicial]);
@@ -63,23 +66,32 @@ export default function ChatFlotante({ sinLeerInicial, miId }: { sinLeerInicial:
     : 'Conversaciones';
 
   return (
-    <Link
-      ref={botonRef}
-      href="/conversaciones"
-      className={'fab-chat' + (sinLeer > 0 ? ' fab-chat-pendiente' : '')}
-      aria-label={etiqueta}
-      title={etiqueta}
-    >
-      <Icono nombre="conversacion" size={24} />
-      {sinLeer > 0 && (
-        <span ref={insigniaRef} className="fab-chat-insignia" aria-hidden="true">
-          {sinLeer > 99 ? '99+' : sinLeer}
+    <>
+      {/* Es un <button>, no un enlace: abre el panel encima en vez de navegar. Entrar a
+          una conversación no debería costar salir de la pantalla en la que estás
+          trabajando. La página completa sigue existiendo, y el panel enlaza a ella. */}
+      <button
+        type="button"
+        ref={botonRef}
+        className={'fab-chat' + (sinLeer > 0 && !abierto ? ' fab-chat-pendiente' : '')}
+        aria-label={etiqueta}
+        aria-expanded={abierto}
+        title={etiqueta}
+        onClick={() => setAbierto((v) => !v)}
+      >
+        <Icono nombre={abierto ? 'cerrar' : 'conversacion'} size={24} />
+        {sinLeer > 0 && !abierto && (
+          <span ref={insigniaRef} className="fab-chat-insignia" aria-hidden="true">
+            {sinLeer > 99 ? '99+' : sinLeer}
+          </span>
+        )}
+        {/* El número también se anuncia a un lector de pantalla, sin duplicar el aria-label. */}
+        <span className="sr-solo" role="status" aria-live="polite">
+          {sinLeer > 0 ? sinLeer + (sinLeer === 1 ? ' mensaje sin leer' : ' mensajes sin leer') : ''}
         </span>
-      )}
-      {/* El número también se anuncia a un lector de pantalla, sin duplicar el aria-label. */}
-      <span className="sr-solo" role="status" aria-live="polite">
-        {sinLeer > 0 ? sinLeer + (sinLeer === 1 ? ' mensaje sin leer' : ' mensajes sin leer') : ''}
-      </span>
-    </Link>
+      </button>
+
+      {abierto && <PanelConversaciones miId={miId} alCerrar={cerrar} />}
+    </>
   );
 }

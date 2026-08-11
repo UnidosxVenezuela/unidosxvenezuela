@@ -1,0 +1,102 @@
+🇻🇪 *NOTAS DEL PARCHE — 11 ago 2026*
+_Apoyo por Venezuela_
+
+La plataforma ya tiene *conversación*. Cada solicitud, cada entrega, cada tarea y cada grupo tienen la suya, y la lee exactamente quien ya tiene acceso a eso. Además hay un *buzón* para contar lo que falla, y se cerró una *fuga de datos* que llevaba tiempo abierta sin que nadie lo supiera.
+
+💬 *Conversaciones* · 💡 *Buzón del equipo* · 🔒 *Una fuga cerrada* · 🛠️ *4 cambios de base de datos, ya aplicados*
+
+━━━━━━━━━━━━━━━━━━
+💬 *SE ACABÓ COORDINAR POR WHATSAPP (al menos lo del trabajo)*
+
+Cada cosa se habla *en su sitio*. La solicitud tiene su conversación, la entrega la suya, la tarea la suya y tu grupo la suya.
+
+• *No hay que invitar a nadie.* La lee quien ya puede ver esa solicitud, esa entrega, esa tarea o ese grupo. Si no puedes abrirla, no aparece — ni siquiera sabes que existe. Cero permisos que gestionar y cero riesgo de escribirle al grupo equivocado, porque no hay un «grupo general» donde equivocarse.
+
+• *Queda registrado, y eso es el punto.* Un mensaje *no se borra*. Se puede editar, y entonces queda marcado como editado; lo que decía antes se guarda. Es a propósito: lo que se habló de un caso es parte de su historia, igual que su ubicación o su desglose.
+
+• *Aquí SÍ van los datos del caso.* Es justo lo contrario de un grupo de WhatsApp: este es el sitio donde la dirección, el teléfono o la foto están protegidos. Lo que no conviene nunca es *sacarlos de aquí*, ni por captura de pantalla. Si escribes algo que parece una cédula, un teléfono o unas coordenadas, la plataforma te lo señala *antes* de enviar. No te lo impide —en una emergencia frenar un mensaje hace más daño que registrarlo—, solo te lo recuerda.
+
+• *Avisos solo cuando te mencionan.* Nada de una notificación por cada mensaje: eso convierte la campana en ruido y a los tres días nadie la mira. Con «Avisar a alguien» le llega el aviso, y solo aparece quien ya entró a esa conversación — que es a quien le llegaría de verdad.
+
+• *En vivo.* Los mensajes de los demás aparecen solos, sin recargar.
+
+• *La bandeja.* En *«Conversaciones»* (menú lateral) están todas las tuyas juntas, con lo que llevas sin leer.
+
+━━━━━━━━━━━━━━━━━━
+🔵 *DOS BOTONES NUEVOS, ABAJO A LA DERECHA*
+
+• *El redondo grande* abre las conversaciones *encima de lo que estés haciendo*. No te saca de la pantalla: se despliega, lees, respondes y lo cierras — y sigues donde estabas. Si tiene un número, son los mensajes que te esperan. Y si acabas de entrar a un grupo que ya tenía conversación, la cuenta empieza *desde que te uniste*: ni cero para siempre, ni doscientos mensajes viejos que nunca fueron tuyos.
+
+  Desde ahí entras a cualquier conversación, respondes y vuelves a la lista con la flechita. Si prefieres la pantalla completa, «Ver todas» sigue estando.
+
+• *El pequeño de al lado* es para *reportar lo que falla o proponer una idea*. Va abajo.
+
+━━━━━━━━━━━━━━━━━━
+💡 *EL BUZÓN: por fin se puede decir que algo está roto*
+
+Hasta ahora, un fallo se contaba por WhatsApp a quien estuviera despierto y una idea buena se perdía en un grupo de doscientos mensajes. Ya no.
+
+• *Se reporta desde donde estés.* El botón pequeño abre una ventanita: eliges «Algo falla» o «Tengo una idea», escribes y listo.
+
+• *Se envía con la página en la que estabas*, así que no hace falta explicar dónde. Si sale un mensaje de error, cópialo tal cual: con eso se arregla mucho más rápido.
+
+• *Lo lee coordinación y nadie más.* Ni siquiera otro voluntario ve lo que reportaste.
+
+• *Y te responden.* En *«Mis reportes»* ves lo que has contado y qué se decidió, con su estado: sin leer, en revisión, se va a hacer, resuelto o descartado. Esto es lo que hace que valga la pena reportar — si nadie te dice nada, a la tercera dejas de hacerlo.
+
+• *No hace falta que sea grave.* «Este botón no se entiende» también sirve. De hecho, es de los reportes más útiles.
+
+• *El observador también reporta.* Es de solo lectura para el trabajo, no para decir que algo está roto — y suele ser quien más lo ve.
+
+━━━━━━━━━━━━━━━━━━
+🔒 *UNA FUGA QUE ESTABA ABIERTA, Y YA NO*
+
+Esto conviene decirlo claro.
+
+En «Mi perfil» hay un campo opcional de *contacto de emergencia*: el nombre y el teléfono de un familiar. Al crearlo se decidió que solo lo viera administración… pero *esa limitación estaba solo en la pantalla*. Por debajo, cualquier cuenta verificada de la plataforma podía consultar ese dato de *toda la organización*.
+
+Nunca fue visible en ninguna pantalla, y no hay señal de que nadie lo hiciera. Pero podía hacerse, y eso basta: es el teléfono de una persona que *ni siquiera es usuaria* de la plataforma y que nunca aceptó nada.
+
+*Ya está cerrado.* Ese dato —y el de «experiencia»— se mudaron a un sitio aparte con su propia llave: lo ves tú y lo ve administración. Nadie más, y esta vez no es la pantalla la que lo decide, es la base de datos.
+
+Si en su momento no lo rellenaste por prudencia, ahora sí puedes.
+
+━━━━━━━━━━━━━━━━━━
+✨ *LOS AVISOS CAMBIARON DE CARA*
+
+Los mensajitos de confirmación —«Solicitud entregada», «No se pudo guardar»— se ven distintos: más limpios, con mejor movimiento y sin taparse con nada. Los de error ya no se cierran solos, porque a veces hay que leerlos dos veces.
+
+━━━━━━━━━━━━━━━━━━
+📘 *LA AYUDA ESTÁ AL DÍA*
+
+La sección *«Ayuda»* de la plataforma tiene dos capítulos nuevos: cómo funcionan las conversaciones —sobre todo quién lee qué— y cómo reportar un problema. Están arriba del todo, para todo el mundo.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+
+*Cuatro* cambios de base de datos: las migraciones *0231* a *0234*. *Ya están aplicadas*, así que todo lo de estas notas está funcionando.
+
+Cuatro cosas que conviene saber:
+
+• *Los comentarios de las tareas siguen donde estaban.* La tarea tiene ahora conversación *y* sus comentarios de siempre. Juntarlos es mover datos viejos y merece su propia migración, no colarlo de rebote en esta.
+
+• *Psicosocial y Búsqueda no tienen conversación todavía*, a propósito. Abrirles un espacio de texto libre necesita una revisión de privacidad propia antes, no después.
+
+• *Cada conversación se prueba sola en el CI.* Se sumaron *76 comprobaciones nuevas* a las que ya corrían, y fallan en rojo de verdad si algo se rompe. Entre ellas, la que impide que Redacción vea conversaciones de casos que no le corresponden: es el error más fácil de cometer aquí y ahora está clavado.
+
+• *Sobre el botón SOS que se estudió:* la parte de avisar a contactos es viable, pero *el rastreo de ubicación con el teléfono cerrado no se puede hacer en la web*. No es falta de trabajo: los navegadores lo impiden por diseño, en iPhone y en Android. Eso exige la app móvil, que hoy no está terminada. El estudio completo está en *docs/PLAN-CHAT-Y-SOS.md*, con lo que sí se puede entregar y en qué orden.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+
+Se pidió *«un chat»*. Uno normalito. De escribir y ya.
+
+Terminó en *cuatro migraciones*, un candado que prohíbe borrar mensajes bajo cualquier circunstancia y una función que decide sola quién puede leer qué. 📈
+
+También se estrenó el botón de reportar problemas. Funcionó a la primera: el primer reporte que llegó al buzón fue *sobre el botón de reportar*. 🙃
+
+Y sí, el buzón acepta un máximo de *cinco reportes por hora y por persona*. Nadie pregunte por qué supimos desde el principio que ese límite iba a hacer falta. 🤐
+
+Moraleja: en esta organización, pedir «algo sencillo» activa una maldición documentada. Vamos por la *segunda* release consecutiva. 📏
+
+_Apoyo por Venezuela · Notas del parche · Agosto 2026_

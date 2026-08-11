@@ -1493,3 +1493,84 @@ html[data-tema="oscuro"] {
 .sug-tipo-on { background: var(--btn-prim); color: #fff; border-color: var(--btn-prim); }
 
 @media print { .fab-sug, .sug-panel { display: none !important; } }
+
+/* ─────────────────────────────────────────────────────────────
+   Panel flotante de conversaciones (0231/0233)
+   ───────────────────────────────────────────────────────────── */
+
+/* Se abre encima de la pantalla en la que estás, no en lugar de ella: atender un
+   mensaje no debe costar perder el trabajo de debajo. Va por encima del panel de
+   sugerencias (47) porque el chat es lo que se usa a diario. */
+.panel-conv {
+  position: fixed;
+  right: 18px;
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 52px + 12px);
+  z-index: 48;
+  width: min(400px, calc(100vw - 36px));
+  max-height: min(560px, calc(100vh - 130px));
+  display: flex; flex-direction: column;
+  background: var(--sup1); border: 1px solid var(--borde-f); border-radius: 16px;
+  box-shadow: 0 22px 54px rgba(9,14,30,.30), 0 5px 14px rgba(9,14,30,.18);
+  overflow: hidden;
+}
+
+.panel-conv-cab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 12px; border-bottom: 1px solid var(--borde);
+  background: var(--sup2); flex: none;
+}
+.panel-conv-titulo {
+  flex: 1; min-width: 0; font-size: .95rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.panel-conv-ir { font-size: .82rem; color: var(--link); text-decoration: none; white-space: nowrap; }
+.panel-conv-ir:hover { text-decoration: underline; }
+
+.panel-conv-atras, .panel-conv-x {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex: none;
+  background: none; border: 0; border-radius: 8px;
+  color: var(--texto2); cursor: pointer;
+}
+.panel-conv-atras:hover, .panel-conv-x:hover { background: var(--borde-f); color: var(--texto); }
+/* La flecha de volver es el chevron girado: no hace falta un icono nuevo para esto. */
+.panel-conv-atras svg { transform: rotate(90deg); }
+
+.panel-conv-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; }
+
+/* Dentro del panel la conversación ocupa lo que le den: el alto lo manda el panel, no
+   el tope de 480 px que usa el hilo cuando vive dentro de una ficha. */
+.panel-conv-cuerpo .hilo-lista { max-height: none; }
+
+.panel-conv-lista { list-style: none; margin: 0; padding: 0; }
+.panel-conv-lista li + li { border-top: 1px solid var(--borde); }
+.panel-conv-fila {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 4px; background: none; border: 0; text-align: left; color: inherit; cursor: pointer;
+}
+.panel-conv-fila:hover { background: var(--borde-f); }
+.panel-conv-txt { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* El título trunca antes que envolverse: en móvil, dejar que la insignia de no leídos
+   caiga a su propia línea partía la fila en tres renglones y la lista dejaba de leerse
+   de un vistazo, que es lo único que tiene que hacer. */
+.panel-conv-txt > .fila { flex-wrap: nowrap; min-width: 0; }
+.panel-conv-txt > .fila > strong {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.panel-conv-txt > .fila > .pill { flex: none; }
+.panel-conv-ultimo {
+  font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: block; max-width: 100%;
+}
+.panel-conv-fecha { font-size: .76rem; white-space: nowrap; flex: none; }
+
+/* En móvil ocupa el ancho y casi todo el alto: media pantalla no sirve para leer. */
+@media (max-width: 640px) {
+  .panel-conv {
+    left: 12px; right: 12px; width: auto;
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 52px + 10px);
+    max-height: calc(100vh - 120px);
+  }
+}
+
+@media print { .panel-conv { display: none !important; } }
