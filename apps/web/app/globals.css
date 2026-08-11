@@ -1574,3 +1574,51 @@ html[data-tema="oscuro"] {
 }
 
 @media print { .panel-conv { display: none !important; } }
+
+/* Pastillas de «mis equipos» dentro del panel de conversaciones. Van FUERA del cuerpo
+   con scroll, para que sigan a mano por larga que sea la lista. */
+.panel-conv-equipos {
+  flex: none; padding: 10px 12px; border-bottom: 1px solid var(--borde);
+  background: var(--fondo);
+}
+.panel-conv-equipos-tit { display: block; font-size: .76rem; margin-bottom: 6px; }
+/* Una sola fila que se desplaza: con seis equipos, envolver empujaría la lista fuera de
+   pantalla en un móvil. */
+.panel-conv-chips {
+  display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+.chip-equipo {
+  flex: none; display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+  font-size: .8rem; font-weight: 600;
+  background: var(--sup2); color: var(--texto2);
+  border: 1px solid var(--borde); cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.chip-equipo:hover { background: var(--btn-prim); color: #fff; border-color: var(--btn-prim); }
+.chip-equipo:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+
+/* Stickers en la conversación (0235) */
+.hilo-sticker { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.hilo-sticker .muted { font-size: .85rem; }
+
+.hilo-stickers {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 6px; margin-top: 10px;
+  padding: 10px; border: 1px solid var(--borde); border-radius: 12px; background: var(--sup2);
+}
+.hilo-sticker-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 8px 4px; border-radius: 10px;
+  background: none; border: 1px solid transparent; cursor: pointer;
+}
+.hilo-sticker-btn .muted { font-size: .7rem; text-align: center; line-height: 1.2; }
+.hilo-sticker-btn:hover { background: var(--sup1); border-color: var(--borde-f); }
+.hilo-sticker-btn:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+
+.hilo-abrir-stickers { min-height: 36px; padding: 0 12px; }
+
+/* La pastilla del general se distingue del resto: es el único canal que cruza equipos. */
+.chip-general { background: var(--pill-info-bg); color: var(--pill-info-fg); border-color: transparent; }
+.chip-general:hover { background: var(--btn-prim); color: #fff; border-color: var(--btn-prim); }

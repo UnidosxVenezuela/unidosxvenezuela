@@ -14,6 +14,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { avisoPii, type MensajeHilo } from '@/lib/hilos';
+import { STICKERS, DibujoSticker, stickerPorId } from '@/lib/stickers';
 import { fechaHora } from '@/lib/fechas';
 import Icono from './Icono';
 import { escribirEnHilo, editarMensajeHilo, marcarHiloLeido } from '@/app/(app)/conversaciones/actions';
@@ -58,6 +59,7 @@ export default function HiloEnVivo({
   const [borrador, setBorrador] = useState('');
   const [editando, setEditando] = useState<string | null>(null);
   const [mencionados, setMencionados] = useState<string[]>([]);
+  const [stickers, setStickers] = useState(false);
   const listaRef = useRef<HTMLDivElement | null>(null);
 
   // Los que ya vinieron por revalidación dejan de necesitar la copia local.
@@ -163,13 +165,20 @@ export default function HiloEnVivo({
                 </form>
               ) : (
                 <>
-                  <div className="hilo-cuerpo">{m.cuerpo}</div>
+                  {m.sticker && stickerPorId(m.sticker) ? (
+                    <div className="hilo-sticker">
+                      <DibujoSticker id={m.sticker} size={68} />
+                      <span className="muted">{m.cuerpo}</span>
+                    </div>
+                  ) : (
+                    <div className="hilo-cuerpo">{m.cuerpo}</div>
+                  )}
                   {avisoMsg && (
                     <p className="hilo-pii">
                       <Icono nombre="avisos" size={14} /> {avisoMsg}
                     </p>
                   )}
-                  {mio && puedeEscribir && (
+                  {mio && puedeEscribir && !m.sticker && (
                     <button className="hilo-editar" type="button" onClick={() => setEditando(m.id)}>
                       Editar
                     </button>
@@ -208,6 +217,21 @@ export default function HiloEnVivo({
             </p>
           )}
 
+          {/* Stickers. Cada uno es un submit con su propio `name`/`value`: así el envío
+              sigue siendo el mismo <form> con la Server Action —funciona sin JavaScript—
+              y no hace falta estado ni un segundo camino de escritura. */}
+          {stickers && (
+            <div className="hilo-stickers" role="group" aria-label="Stickers">
+              {STICKERS.map((st) => (
+                <button key={st.id} type="submit" name="sticker" value={st.id}
+                  className="hilo-sticker-btn" title={st.etiqueta} aria-label={st.etiqueta}>
+                  <DibujoSticker id={st.id} size={38} />
+                  <span className="muted">{st.etiqueta}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {participantes.length > 0 && (
             <details className="hilo-mencionar">
               <summary>Avisar a alguien ({mencionados.length})</summary>
@@ -238,10 +262,17 @@ export default function HiloEnVivo({
             <span className="muted" style={{ fontSize: '.8rem' }}>
               {borrador.length > 3500 ? borrador.length + ' / 4000' : 'Queda registrado. No se borra.'}
             </span>
-            {/* Sin `disabled`: sin JavaScript `borrador` sería siempre '' y el botón
-                nacería inutilizable. Un envío vacío no es un error — la acción no hace
-                nada y ya está. */}
-            <button className="btn btn-primario" type="submit">Enviar</button>
+            <span className="fila" style={{ gap: 8 }}>
+              <button type="button" className="btn hilo-abrir-stickers"
+                onClick={() => setStickers((v) => !v)}
+                aria-expanded={stickers} aria-label="Stickers" title="Stickers">
+                <Icono nombre="corazon" size={16} />
+              </button>
+              {/* Sin `disabled`: sin JavaScript `borrador` sería siempre '' y el botón
+                  nacería inutilizable. Un envío vacío no es un error — la acción no hace
+                  nada y ya está. */}
+              <button className="btn btn-primario" type="submit">Enviar</button>
+            </span>
           </div>
         </form>
       ) : (
