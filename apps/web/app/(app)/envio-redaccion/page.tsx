@@ -14,6 +14,7 @@ import Icono from '@/components/Icono';
 import Kpi from '@/components/Kpi';
 import BotonExportar from '@/components/BotonExportar';
 import Pill from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import BadgeCategoria from '@/components/BadgeCategoria';
 import EstadoCaso from '@/components/EstadoCaso';
 import FlujoProgreso from '@/components/FlujoProgreso';
@@ -102,6 +103,15 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       const m = new Map((org as any[]).map((r) => [r.id, r]));
       for (const c of lista) { const o: any = m.get(c.id); if (o) { c.origen_area = o.origen_area; c.caso_padre_numero = o.caso_padre_numero; } }
     }
+    // País (0230) en consulta APARTE best-effort: la vista curada solo lo expone desde
+    // 0236, y en su propia consulta un fallo no arrastra a las de arriba. Redacción no lee
+    // `casos` desde 0180, así que esta vista es su única vía para saber si el llamado que
+    // va a escribir es de Venezuela o de Colombia.
+    const { data: pss } = await supabase.from('casos_difusion').select('id, pais').in('id', ids);
+    if (pss) {
+      const m = new Map((pss as any[]).map((r) => [r.id, r.pais]));
+      for (const c of lista) { const v = m.get(c.id); if (v) c.pais = v; }
+    }
   }
 
   // Filtros en memoria (incluye canal, que depende de la columna 0169).
@@ -157,6 +167,9 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
       // Procedencia (0211), también best-effort.
       const { data: dorg } = await supabase.from('casos_difusion').select('origen_area, caso_padre_numero').eq('id', dCaso.id).maybeSingle();
       if (dorg) { dCaso.origen_area = (dorg as any).origen_area ?? null; dCaso.caso_padre_numero = (dorg as any).caso_padre_numero ?? null; }
+      // País (0230/0236), también best-effort y en su propia consulta.
+      const { data: dpais } = await supabase.from('casos_difusion').select('pais').eq('id', dCaso.id).maybeSingle();
+      if (dpais) dCaso.pais = (dpais as any).pais ?? null;
       // Link del grupo de WhatsApp (0188) + publicaciones por canal (0190), best-effort.
       { const { data: aj } = await supabase.from('ajustes_app').select('valor').eq('clave', 'whatsapp_grupo_difusion').maybeSingle(); dWhatsappGrupo = (aj as any)?.valor ?? null; }
       { const { data: pubs } = await supabase.from('casos_publicaciones').select('id, canal, url, estado_canal, publicado_en').eq('caso_id', dCaso.id).eq('estado_canal', 'publicado').order('publicado_en'); dPublicaciones = (pubs as any[]) ?? []; }
@@ -330,8 +343,9 @@ export default async function EnvioRedaccionPage({ searchParams }: { searchParam
                       <td className="muted">#{String(c.numero).padStart(5, '0')}</td>
                       <td>
                         <div className="celda-titulo">
-                          <span className="fila" style={{ gap: 6 }}>
+                          <span className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
                             <Link href={hrefCaso(c.id)}>{c.titulo}</Link>
+                            {c.pais && <PillPais pais={c.pais} />}
                             {!c.publicado_en && c.requiere_difusion && <Pill tono="alta" punto={false}>Prioriza</Pill>}
                           </span>
                           {c.descripcion && <div className="desc">{String(c.descripcion).slice(0, 60)}</div>}

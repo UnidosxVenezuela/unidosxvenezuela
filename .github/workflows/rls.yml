@@ -75,6 +75,12 @@ jobs:
       - name: Ejecutar pruebas del general (0235)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_general_0235.sql
 
+      # País en la vista curada de Redacción (0236). Lo que comprueba de verdad no es que
+      # la columna esté, sino que el sexto drop/create de `casos_difusion` no aflojó el
+      # filtro: esa vista es la única puerta de Redacción a los casos desde 0180.
+      - name: Ejecutar pruebas del país en difusión (0236)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_pais_difusion_0236.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
@@ -89,12 +95,13 @@ jobs:
       # significa que una migración se puede repetir a sí misma, no que se pueda volver a
       # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
       # la cadena entera desde vacío y en orden, que es lo que sí funciona.
-      - name: Comprobar idempotencia de 0232-0235
+      - name: Comprobar idempotencia de 0232-0236
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0234_sugerencias.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0235_hilo_general_y_stickers.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0236_pais_en_vista_difusion.sql
 
       - name: Apagar Supabase
         if: always()

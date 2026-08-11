@@ -8,6 +8,7 @@ import { resumenItems, resumenCobertura, type AporteItem } from '@/lib/flujo';
 import { BarraCobertura, pctTerceros } from '@/components/AportesItem';
 import Icono from '@/components/Icono';
 import Pill, { tonoDeClase } from '@/components/Pill';
+import PillPais from '@/components/PillPais';
 import Kpi from '@/components/Kpi';
 import FlujoProgreso from '@/components/FlujoProgreso';
 import AnimarEntrada from '@/components/AnimarEntrada';
@@ -29,12 +30,19 @@ export default async function InsumosPage() {
   if (!esLog && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
-  const [{ data }, { count: oportCount }] = await Promise.all([
-    supabase.from('solicitudes_insumo')
-      .select('id, titulo, tipo, cantidad, urgencia, estado, creado_en, actualizado_en, caso_id, casos(numero), puntos_acopio(nombre), proveedores(nombre)')
-      .order('creado_en', { ascending: false }),
+  // El PAÍS (0230) sale del caso, no de la solicitud: `solicitudes_insumo` no lo guarda y
+  // no hace falta que lo guarde —desde 0223 toda solicitud nace con su caso detrás, y ese
+  // caso ya lo tiene—. Se pide en el join que esta página ya hacía para el número.
+  const COLS_BASE = 'id, titulo, tipo, cantidad, urgencia, estado, creado_en, actualizado_en, caso_id, puntos_acopio(nombre), proveedores(nombre)';
+  const consulta = (cols: string) => supabase.from('solicitudes_insumo').select(cols).order('creado_en', { ascending: false });
+  const [solRes, { count: oportCount }] = await Promise.all([
+    consulta(COLS_BASE + ', casos(numero, pais)'),
     supabase.from('oportunidades_donacion').select('*', { count: 'exact', head: true }).neq('estado', 'descartada'),
   ]);
+  // Sin 0230 aplicada, `casos(numero, pais)` tumbaría la consulta ENTERA y el tablero
+  // quedaría vacío. Se reintenta con el join de siempre: mejor sin bandera que sin tablero.
+  let data = solRes.data as any;
+  if (solRes.error) ({ data } = await consulta(COLS_BASE + ', casos(numero)') as any);
   const solicitudes = (data ?? []) as any[];
   const activas = solicitudes.filter((s) => s.estado !== 'cancelado');
   const entregadas = solicitudes.filter((s) => s.estado === 'entregado').length;
@@ -172,13 +180,30 @@ export default async function InsumosPage() {
                       {ETIQUETA_PRIORIDAD[s.urgencia as keyof typeof ETIQUETA_PRIORIDAD] ?? s.urgencia}
                     </Pill>
                   </div>
-                  {(s.casos?.numero != null || s.actualizado_en) && (
-                    <div className="muted" style={{ fontSize: '.75rem', marginTop: 5 }}>
-                      {s.casos?.numero != null && <strong style={{ color: 'var(--texto)' }}>#{String(s.casos.numero).padStart(5, '0')}</strong>}
-                      {s.casos?.numero != null && s.actualizado_en ? ' · ' : ''}
-                      {s.actualizado_en && <>Act. {fechaHora(s.actualizado_en)}</>}
-                    </div>
-                  )}
+                  {/* País (0230) antes que el número y la fecha: con dos respuestas a la
+                      vez, saber si la entrega es de Venezuela o de Colombia decide el
+                      centro de acopio, el transportista y si hay frontera de por medio.
+                      Va en pastilla y no en texto gris porque tiene que verse de un
+                      vistazo, sin abrir la solicitud.
+
+                      Se pinta SOLO cuando de verdad se sabe. El país vive en el caso, y
+                      hay una situación en la que este tablero no puede leerlo: que la RLS
+                      no conceda ese caso a quien mira (Alianzas entra en consulta y no
+                      tiene rama en `casos_select`; Logística la pierde si el caso vuelve a
+                      verificación). Ahí no hay pastilla: caer al DEFAULT «Venezuela» sería
+                      afirmar algo que nadie registró, y es justo el error que 0230 quiso
+                      evitar. Una solicitud SIN caso detrás sí la lleva: son anteriores a
+                      0223, de cuando la plataforma solo atendía Venezuela. */}
+                  <div className="fila" style={{ gap: 6, marginTop: 5 }}>
+                    {(s.casos || !s.caso_id) && <PillPais pais={s.casos?.pais} />}
+                    {(s.casos?.numero != null || s.actualizado_en) && (
+                      <span className="muted" style={{ fontSize: '.75rem' }}>
+                        {s.casos?.numero != null && <strong style={{ color: 'var(--texto)' }}>#{String(s.casos.numero).padStart(5, '0')}</strong>}
+                        {s.casos?.numero != null && s.actualizado_en ? ' · ' : ''}
+                        {s.actualizado_en && <>Act. {fechaHora(s.actualizado_en)}</>}
+                      </span>
+                    )}
+                  </div>
                   <strong style={{ display: 'block', margin: '6px 0 2px' }}>{s.titulo}</strong>
                   {s.cantidad && <div className="muted" style={{ fontSize: '.85rem' }}>{s.cantidad}</div>}
                   {s.caso_id && <div className="fila" style={{ gap: 4, fontSize: '.78rem', marginTop: 4, color: 'var(--t-teal-fg)' }}><Icono nombre="ubicacion" size={13} /> Solicitud de ayuda (caso derivado)</div>}
