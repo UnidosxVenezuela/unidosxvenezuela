@@ -1,16 +1,16 @@
 🇻🇪 *NOTAS DEL PARCHE — 11 ago 2026*
 _Apoyo por Venezuela_
 
-La plataforma ya tiene *conversación*. Cada solicitud, cada entrega, cada tarea y cada grupo tienen la suya, y la lee exactamente quien ya tiene acceso a eso. Además hay un *buzón* para contar lo que falla, y se cerró una *fuga de datos* que llevaba tiempo abierta sin que nadie lo supiera.
+La plataforma ya tiene *conversación*. Cada solicitud, cada entrega, cada tarea y cada grupo tienen la suya, hay una *general* para lo que cruza a todos, y se abre sin salir de donde estés. Además hay un *buzón* para contar lo que falla, y se cerró una *fuga de datos* que llevaba tiempo abierta sin que nadie lo supiera.
 
-💬 *Conversaciones* · 💡 *Buzón del equipo* · 🔒 *Una fuga cerrada* · 🛠️ *4 cambios de base de datos, ya aplicados*
+💬 *Conversaciones* · 🌎 *Canal general* · 🎨 *Stickers* · 💡 *Buzón* · 🔒 *Una fuga cerrada* · 🛠️ *5 cambios de base de datos*
 
 ━━━━━━━━━━━━━━━━━━
 💬 *SE ACABÓ COORDINAR POR WHATSAPP (al menos lo del trabajo)*
 
 Cada cosa se habla *en su sitio*. La solicitud tiene su conversación, la entrega la suya, la tarea la suya y tu grupo la suya.
 
-• *No hay que invitar a nadie.* La lee quien ya puede ver esa solicitud, esa entrega, esa tarea o ese grupo. Si no puedes abrirla, no aparece — ni siquiera sabes que existe. Cero permisos que gestionar y cero riesgo de escribirle al grupo equivocado, porque no hay un «grupo general» donde equivocarse.
+• *No hay que invitar a nadie.* La lee quien ya puede ver esa solicitud, esa entrega, esa tarea o ese grupo. Si no puedes abrirla, no aparece — ni siquiera sabes que existe. Cero permisos que gestionar.
 
 • *Queda registrado, y eso es el punto.* Un mensaje *no se borra*. Se puede editar, y entonces queda marcado como editado; lo que decía antes se guarda. Es a propósito: lo que se habló de un caso es parte de su historia, igual que su ubicación o su desglose.
 
@@ -20,16 +20,40 @@ Cada cosa se habla *en su sitio*. La solicitud tiene su conversación, la entreg
 
 • *En vivo.* Los mensajes de los demás aparecen solos, sin recargar.
 
-• *La bandeja.* En *«Conversaciones»* (menú lateral) están todas las tuyas juntas, con lo que llevas sin leer.
+━━━━━━━━━━━━━━━━━━
+🔵 *SE ABRE ENCIMA, SIN SACARTE DE DONDE ESTÁS*
+
+Abajo a la derecha, en cualquier pantalla, hay dos botones.
+
+• *El redondo grande* despliega las conversaciones *encima* de lo que estés haciendo. No te saca de la pantalla: se abre, lees, respondes y lo cierras — y sigues donde estabas. Si estás verificando una solicitud y alguien pregunta algo en tu grupo, ya no hay que abandonar el trabajo para contestar.
+
+  Dentro entras a cualquier conversación y vuelves a la lista con la flechita. Si el botón tiene un número, son los mensajes que te esperan. Y si acabas de entrar a un grupo que ya tenía conversación, la cuenta empieza *desde que te uniste*: ni cero para siempre, ni doscientos mensajes viejos que nunca fueron tuyos.
+
+• *Las pastillas de arriba* son la vía rápida para *empezar* una conversación: están tus equipos y el canal general. Antes solo se veía lo que ya tenía mensajes, así que un equipo que aún no había escrito nada era invisible.
+
+• *El botón pequeño de al lado* es para reportar problemas o proponer ideas. Va más abajo.
+
+Si prefieres la pantalla completa, *«Conversaciones»* sigue en el menú lateral.
 
 ━━━━━━━━━━━━━━━━━━
-🔵 *DOS BOTONES NUEVOS, ABAJO A LA DERECHA*
+🌎 *UN CANAL GENERAL, PARA LO QUE CRUZA A TODOS*
 
-• *El redondo grande* abre las conversaciones *encima de lo que estés haciendo*. No te saca de la pantalla: se despliega, lees, respondes y lo cierras — y sigues donde estabas. Si tiene un número, son los mensajes que te esperan. Y si acabas de entrar a un grupo que ya tenía conversación, la cuenta empieza *desde que te uniste*: ni cero para siempre, ni doscientos mensajes viejos que nunca fueron tuyos.
+Los hilos cuelgan siempre de algo, y eso resuelve el trabajo del día pero deja fuera lo que afecta a varios equipos: «mañana no hay transporte hacia el sur», «se agotaron los colchones en el centro», «¿alguien de Redacción puede mirar esto?». Para eso está el *canal general*.
 
-  Desde ahí entras a cualquier conversación, respondes y vuelves a la lista con la flechita. Si prefieres la pantalla completa, «Ver todas» sigue estando.
+• *Lo lee y escribe toda la organización*, sin tener que pertenecer a ningún grupo.
 
-• *El pequeño de al lado* es para *reportar lo que falla o proponer una idea*. Va abajo.
+• *Se abre desde la pastilla «General»* del panel, o desde la bandeja.
+
+• *Con una advertencia que va en serio:* ahí te lee todo el mundo. Lo de una solicitud concreta —direcciones, teléfonos, nombres de familias— sigue yendo en la conversación de esa solicitud, donde solo entra quien debe. La plataforma te lo recuerda al entrar y te marca los datos sensibles antes de enviar, pero el criterio lo pones tú.
+
+━━━━━━━━━━━━━━━━━━
+🎨 *STICKERS*
+
+Ocho, para decir lo de siempre sin escribirlo: *Voy en camino*, *Recibido*, *Hecho*, *Gracias*, *Necesito ayuda*, *Un momento*, *Todo bien* y un *corazón tricolor*. Están en el botón del corazón, junto a «Enviar».
+
+Son un juego cerrado, no imágenes que suba cada quien. Es a propósito: así no hay que moderar lo que se manda a un canal con doscientas personas dentro.
+
+Y quedan registrados como cualquier mensaje: si alguien responde «Voy en camino», eso consta.
 
 ━━━━━━━━━━━━━━━━━━
 💡 *EL BUZÓN: por fin se puede decir que algo está roto*
@@ -69,20 +93,22 @@ Los mensajitos de confirmación —«Solicitud entregada», «No se pudo guardar
 ━━━━━━━━━━━━━━━━━━
 📘 *LA AYUDA ESTÁ AL DÍA*
 
-La sección *«Ayuda»* de la plataforma tiene dos capítulos nuevos: cómo funcionan las conversaciones —sobre todo quién lee qué— y cómo reportar un problema. Están arriba del todo, para todo el mundo.
+La sección *«Ayuda»* de la plataforma tiene capítulos nuevos: cómo funcionan las conversaciones —sobre todo quién lee qué—, el canal general, los stickers y cómo reportar un problema. Están arriba del todo, para todo el mundo.
 
 ━━━━━━━━━━━━━━━━━━
 🔧 *PARA EL ADMINISTRADOR*
 
-*Cuatro* cambios de base de datos: las migraciones *0231* a *0234*. *Ya están aplicadas*, así que todo lo de estas notas está funcionando.
+*Cinco* cambios de base de datos: las migraciones *0231* a *0235*.
 
-Cuatro cosas que conviene saber:
+Cinco cosas que conviene saber:
+
+• *El canal general NO tiene moderación.* No hay denuncia de mensajes ni silenciado. Es el único sitio donde escribe todo el mundo y, por tanto, el único donde vuelve a ser posible pegar algo en el lugar equivocado. Si se llena de ruido o alguien lo usa mal, hoy la única herramienta es hablar con esa persona. Conviene decidir quién lo mira antes de abrirlo a todos.
 
 • *Los comentarios de las tareas siguen donde estaban.* La tarea tiene ahora conversación *y* sus comentarios de siempre. Juntarlos es mover datos viejos y merece su propia migración, no colarlo de rebote en esta.
 
 • *Psicosocial y Búsqueda no tienen conversación todavía*, a propósito. Abrirles un espacio de texto libre necesita una revisión de privacidad propia antes, no después.
 
-• *Cada conversación se prueba sola en el CI.* Se sumaron *76 comprobaciones nuevas* a las que ya corrían, y fallan en rojo de verdad si algo se rompe. Entre ellas, la que impide que Redacción vea conversaciones de casos que no le corresponden: es el error más fácil de cometer aquí y ahora está clavado.
+• *Todo esto se prueba solo en el CI.* Se sumaron *94 comprobaciones nuevas* a las que ya corrían, y fallan en rojo de verdad si algo se rompe. Entre ellas, dos que importan más que el resto: la que impide que Redacción vea conversaciones de casos que no le corresponden, y la que comprueba que abrir el canal general *no afloja* ninguno de los cerrados.
 
 • *Sobre el botón SOS que se estudió:* la parte de avisar a contactos es viable, pero *el rastreo de ubicación con el teléfono cerrado no se puede hacer en la web*. No es falta de trabajo: los navegadores lo impiden por diseño, en iPhone y en Android. Eso exige la app móvil, que hoy no está terminada. El estudio completo está en *docs/PLAN-CHAT-Y-SOS.md*, con lo que sí se puede entregar y en qué orden.
 
@@ -91,12 +117,14 @@ Cuatro cosas que conviene saber:
 
 Se pidió *«un chat»*. Uno normalito. De escribir y ya.
 
-Terminó en *cuatro migraciones*, un candado que prohíbe borrar mensajes bajo cualquier circunstancia y una función que decide sola quién puede leer qué. 📈
+Terminó en *cinco migraciones*, un candado que prohíbe borrar mensajes bajo cualquier circunstancia, una función que decide sola quién puede leer qué, y ocho dibujos hechos a mano. 📈
 
-También se estrenó el botón de reportar problemas. Funcionó a la primera: el primer reporte que llegó al buzón fue *sobre el botón de reportar*. 🙃
+Por el camino se estrenó el botón de reportar problemas. Funcionó a la primera: el primer reporte que llegó al buzón fue *sobre el botón de reportar*. 🙃
 
 Y sí, el buzón acepta un máximo de *cinco reportes por hora y por persona*. Nadie pregunte por qué supimos desde el principio que ese límite iba a hacer falta. 🤐
 
-Moraleja: en esta organización, pedir «algo sencillo» activa una maldición documentada. Vamos por la *segunda* release consecutiva. 📏
+Ahora, además, hay stickers. Empieza la cuenta atrás hasta que alguien responda a una solicitud urgente con el pulgar arriba. 👍
+
+Moraleja: en esta organización, pedir «algo sencillo» activa una maldición documentada. Vamos por la *tercera* release consecutiva. 📏
 
 _Apoyo por Venezuela · Notas del parche · Agosto 2026_
