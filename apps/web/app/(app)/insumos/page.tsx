@@ -30,9 +30,12 @@ export default async function InsumosPage() {
   if (!esLog && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
-  // El PAÍS (0230) sale del caso, no de la solicitud: `solicitudes_insumo` no lo guarda y
-  // no hace falta que lo guarde —desde 0223 toda solicitud nace con su caso detrás, y ese
-  // caso ya lo tiene—. Se pide en el join que esta página ya hacía para el número.
+  // El PAÍS (0230) vive en el caso, no en la solicitud. El join a `casos` lo trae, pero
+  // SOLO para quien tenga ese caso concedido por `casos_select`: Alianzas no lo tiene
+  // (entra en consulta y no tiene rama) y Logística lo pierde si el caso vuelve a
+  // verificación. Por eso el join se queda de respaldo y la fuente es la vista curada
+  // `solicitudes_contexto` (0237), que da número y país sin abrirle a nadie la fila de
+  // `casos` con su contacto y su ubicación.
   const COLS_BASE = 'id, titulo, tipo, cantidad, urgencia, estado, creado_en, actualizado_en, caso_id, puntos_acopio(nombre), proveedores(nombre)';
   const consulta = (cols: string) => supabase.from('solicitudes_insumo').select(cols).order('creado_en', { ascending: false });
   const [solRes, { count: oportCount }] = await Promise.all([
@@ -44,6 +47,15 @@ export default async function InsumosPage() {
   let data = solRes.data as any;
   if (solRes.error) ({ data } = await consulta(COLS_BASE + ', casos(numero)') as any);
   const solicitudes = (data ?? []) as any[];
+
+  // Contexto por solicitud (0237): una sola consulta para todo el tablero. Best-effort —
+  // sin la migración vuelve vacío y cada tarjeta se queda con lo que le diera el join.
+  const contexto = new Map<string, { caso_numero: number | null; pais: string | null }>();
+  if (solicitudes.length > 0) {
+    const { data: ctx } = await supabase.from('solicitudes_contexto')
+      .select('solicitud_id, caso_numero, pais').in('solicitud_id', solicitudes.map((s) => s.id));
+    for (const r of ((ctx ?? []) as any[])) contexto.set(r.solicitud_id, { caso_numero: r.caso_numero, pais: r.pais });
+  }
   const activas = solicitudes.filter((s) => s.estado !== 'cancelado');
   const entregadas = solicitudes.filter((s) => s.estado === 'entregado').length;
   const porEstado = (e: string) => activas.filter((s) => s.estado === e);
@@ -172,7 +184,12 @@ export default async function InsumosPage() {
                 <span className="insignia">{porEstado(e).length}</span>
               </h3>
               {porEstado(e).length === 0 && <p className="muted" style={{ fontSize: '.85rem', margin: '0 4px' }}>—</p>}
-              {porEstado(e).map((s) => (
+              {porEstado(e).map((s) => {
+                // La vista curada manda; el join queda de respaldo por si 0237 no está.
+                const ctx = contexto.get(s.id);
+                const paisSol: string | null = ctx?.pais ?? s.casos?.pais ?? null;
+                const numeroSol: number | null = ctx?.caso_numero ?? s.casos?.numero ?? null;
+                return (
                 <Link key={s.id} data-fila href={'/insumos/' + s.id} className="tarjeta insumo-card">
                   <div className="fila" style={{ justifyContent: 'space-between', gap: 6 }}>
                     <span className="insignia">{ETIQUETA_TIPO_INSUMO[s.tipo] ?? s.tipo}</span>
@@ -186,20 +203,15 @@ export default async function InsumosPage() {
                       Va en pastilla y no en texto gris porque tiene que verse de un
                       vistazo, sin abrir la solicitud.
 
-                      Se pinta SOLO cuando de verdad se sabe. El país vive en el caso, y
-                      hay una situación en la que este tablero no puede leerlo: que la RLS
-                      no conceda ese caso a quien mira (Alianzas entra en consulta y no
-                      tiene rama en `casos_select`; Logística la pierde si el caso vuelve a
-                      verificación). Ahí no hay pastilla: caer al DEFAULT «Venezuela» sería
-                      afirmar algo que nadie registró, y es justo el error que 0230 quiso
-                      evitar. Una solicitud SIN caso detrás sí la lleva: son anteriores a
-                      0223, de cuando la plataforma solo atendía Venezuela. */}
+                      Se pinta SOLO cuando de verdad se sabe: sin 0237 y sin el join, no
+                      hay pastilla. Caer al DEFAULT «Venezuela» sería afirmar algo que
+                      nadie registró, justo el error que 0230 quiso evitar. */}
                   <div className="fila" style={{ gap: 6, marginTop: 5 }}>
-                    {(s.casos || !s.caso_id) && <PillPais pais={s.casos?.pais} />}
-                    {(s.casos?.numero != null || s.actualizado_en) && (
+                    {paisSol && <PillPais pais={paisSol} />}
+                    {(numeroSol != null || s.actualizado_en) && (
                       <span className="muted" style={{ fontSize: '.75rem' }}>
-                        {s.casos?.numero != null && <strong style={{ color: 'var(--texto)' }}>#{String(s.casos.numero).padStart(5, '0')}</strong>}
-                        {s.casos?.numero != null && s.actualizado_en ? ' · ' : ''}
+                        {numeroSol != null && <strong style={{ color: 'var(--texto)' }}>#{String(numeroSol).padStart(5, '0')}</strong>}
+                        {numeroSol != null && s.actualizado_en ? ' · ' : ''}
                         {s.actualizado_en && <>Act. {fechaHora(s.actualizado_en)}</>}
                       </span>
                     )}
@@ -242,7 +254,8 @@ export default async function InsumosPage() {
                     );
                   })()}
                 </Link>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>
