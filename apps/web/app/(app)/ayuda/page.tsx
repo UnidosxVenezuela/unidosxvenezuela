@@ -37,6 +37,13 @@ export default async function AyudaPage() {
         <li><strong>Mi perfil:</strong> tu foto, WhatsApp y habilidades (menú de arriba a la derecha).</li>
       </S>
 
+      <S icono="bombilla" titulo="Si algo falla o se te ocurre algo (para todos)">
+        <li>Abajo a la derecha, junto al botón de conversaciones, hay otro <strong>más pequeño</strong>. Ahí se reporta lo que no funciona y se proponen ideas.</li>
+        <li><strong>Se envía con la página en la que estás</strong>, así que no hace falta explicar dónde estabas. Si sale un mensaje de error, cópialo tal cual: con eso se arregla mucho más rápido.</li>
+        <li>Lo lee <strong>coordinación</strong> y nadie más — ni siquiera otros voluntarios. En <strong>«Mis reportes»</strong> ves lo que has contado y qué se decidió.</li>
+        <li>No hace falta que sea un fallo grave. «Este botón no se entiende» también sirve.</li>
+      </S>
+
       <S icono="conversacion" titulo="Conversaciones (para todos)">
         <li><strong>Cada cosa se habla en su sitio.</strong> La solicitud tiene su conversación, la entrega la suya, la tarea la suya y tu grupo la suya. No hay un chat general ni mensajes privados: por eso nada acaba en la conversación equivocada.</li>
         <li><strong>La lee exactamente quien ya tiene acceso.</strong> Si puedes abrir la solicitud, puedes leer lo que se habla de ella. Si no, no aparece — ni siquiera sabes que existe. No hay que invitar a nadie ni gestionar permisos.</li>

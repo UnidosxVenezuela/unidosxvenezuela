@@ -17,6 +17,8 @@ export function destinosNav(flags: NavFlags): Destino[] {
     // Bandeja de conversaciones (0231). Para todo el mundo: la RLS de cada hilo decide
     // qué aparece, así que quien no participa de nada la ve vacía.
     { href: '/conversaciones', etiqueta: 'Conversaciones', icono: 'conversacion' },
+    // Buzón propio (0234): lo que cada quien reportó y qué respondió coordinación.
+    { href: '/sugerencias', etiqueta: 'Mis reportes', icono: 'bombilla' },
   ];
   if (flags.gestionCasos || flags.verificacion) {
     d.push({ href: '/casos', etiqueta: 'Solicitudes', icono: 'documento' });
@@ -88,6 +90,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
   if (flags.admin) {
     d.push({ href: '/admin/verificaciones', etiqueta: 'Verificaciones', icono: 'video' });
     d.push({ href: '/admin/certificados', etiqueta: 'Certificados', icono: 'ok' });
+    // Buzón de problemas e ideas del equipo (0234): la retroalimentación que antes se
+    // perdía en WhatsApp.
+    d.push({ href: '/admin/sugerencias', etiqueta: 'Buzón del equipo', icono: 'buzon' });
     d.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
     d.push({ href: '/admin/ajustes', etiqueta: 'Ajustes', icono: 'puntos' });
   }
