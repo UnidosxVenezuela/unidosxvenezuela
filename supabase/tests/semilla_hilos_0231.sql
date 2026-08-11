@@ -14,7 +14,11 @@ insert into auth.users (id, email) values
   ('aaaa3333-3333-4333-8333-333333333333','logistica.hilos@t.local'),
   ('aaaa4444-4444-4444-8444-444444444444','miembro.hilos@t.local'),
   ('aaaa5555-5555-4555-8555-555555555555','observador.hilos@t.local'),
-  ('aaaa6666-6666-4666-8666-666666666666','ajena.hilos@t.local')
+  ('aaaa6666-6666-4666-8666-666666666666','ajena.hilos@t.local'),
+  -- Usuario propio del buzón (0234). NO se reutiliza Marta: las pruebas de hilos la dan
+  -- de baja en su T10, y una suite que depende del estado que deja otra es una trampa
+  -- esperando a que alguien cambie el orden en CI.
+  ('aaaa7777-7777-4777-8777-777777777777','reporta.buzon@t.local')
 on conflict (id) do nothing;
 
 insert into public.perfiles (id, nombre_completo, rol, roles_extra, verificado) values
@@ -24,7 +28,8 @@ insert into public.perfiles (id, nombre_completo, rol, roles_extra, verificado) 
   ('aaaa3333-3333-4333-8333-333333333333','Luis Logística','logistica','{}', true),
   ('aaaa4444-4444-4444-8444-444444444444','Marta Miembro','voluntario','{}', true),
   ('aaaa5555-5555-4555-8555-555555555555','Olga Observadora','observador','{}', true),
-  ('aaaa6666-6666-4666-8666-666666666666','Ana Ajena','voluntario','{}', true)
+  ('aaaa6666-6666-4666-8666-666666666666','Ana Ajena','voluntario','{}', true),
+  ('aaaa7777-7777-4777-8777-777777777777','Pedro Reporta','voluntario','{}', true)
 on conflict (id) do update
   set rol = excluded.rol, roles_extra = excluded.roles_extra, verificado = excluded.verificado;
 
@@ -34,7 +39,7 @@ select p, 'aprobada', 's', 'd', true from unnest(array[
   'aaaa0000-0000-4000-8000-00000000000a','aaaa1111-1111-4111-8111-111111111111',
   'aaaa2222-2222-4222-8222-222222222222','aaaa3333-3333-4333-8333-333333333333',
   'aaaa4444-4444-4444-8444-444444444444','aaaa5555-5555-4555-8555-555555555555',
-  'aaaa6666-6666-4666-8666-666666666666']::uuid[]) as p
+  'aaaa6666-6666-4666-8666-666666666666','aaaa7777-7777-4777-8777-777777777777']::uuid[]) as p
 on conflict (perfil_id) do update set estado = 'aprobada';
 
 -- ── Dos casos: uno pendiente (para el hilo) y uno confirmado (ancla del insumo) ──

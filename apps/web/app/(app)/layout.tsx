@@ -4,10 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 import CerrarSesion from '@/components/CerrarSesion';
 import RegistrarActividad from '@/components/RegistrarActividad';
 import Shell from '@/components/Shell';
-import Toast from '@/components/Toast';
+import Avisos, { ContenedorAvisos } from '@/components/Avisos';
 import ClaveTemporalModal from '@/components/ClaveTemporalModal';
 import AvisoColombia from '@/components/AvisoColombia';
 import ChatFlotante from '@/components/ChatFlotante';
+import BotonSugerencia from '@/components/BotonSugerencia';
 import CelebracionProveedor from '@/components/CelebracionProveedor';
 import Icono from '@/components/Icono';
 import { Suspense } from 'react';
@@ -47,7 +48,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <Suspense fallback={null}><Toast /></Suspense>
+      {/* Avisos con sileo: el contenedor va fuera de Suspense (no lee la URL) y el
+          lector de `?ok=`/`?err=` dentro, porque usa useSearchParams. */}
+      <ContenedorAvisos />
+      <Suspense fallback={null}><Avisos /></Suspense>
       <Suspense fallback={null}><ClaveTemporalModal /></Suspense>
       {/* Apertura a Colombia (0230). Se muestra una vez por persona y se recuerda; va
           DESPUÉS del modal de clave temporal para no taparlo —esa contraseña no se
@@ -74,6 +78,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           `position: fixed` y así no depende de que ningún contenedor de la maqueta
           tenga `transform`, que rompería el anclaje al viewport. */}
       <ChatFlotante sinLeerInicial={sinLeer} miId={user!.id} />
+      {/* Buzón de problemas e ideas (0234): comparte carril con el chat, a su izquierda. */}
+      <BotonSugerencia />
     </>
   );
 }

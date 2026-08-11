@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Sora } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
+// sileo ANTES de globals.css, para que nuestros ajustes de la sección «Avisos con
+// sileo» de globals.css ganen sin necesitar !important.
+import 'sileo/styles.css';
 import './globals.css';
 
 // Tipografía del rediseño «Claridad con calidez»: Inter para el cuerpo y Sora
