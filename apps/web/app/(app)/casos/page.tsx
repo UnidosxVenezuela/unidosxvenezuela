@@ -222,6 +222,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   // Gestión del caso (0239): quién reparte, y los candidatos a gestor para el desplegable.
   const puedeRepartirGestor = puedeAsignarGestor(perfil);
   let drawerGestores: { id: string; nombre: string }[] = [];
+  let drawerInfo: any[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -246,6 +247,11 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
         .select('gestor_id, gestor_asignado_en, proxima_accion, proxima_revision, area_siguiente')
         .eq('id', searchParams.caso).maybeSingle();
       if (dgestion) Object.assign(drawerCaso, dgestion);
+      // Solicitudes de información del caso (0240) best-effort. La RLS ya acota quién ve
+      // cuáles; aquí solo se piden.
+      const { data: dinfo } = await supabase.from('casos_solicitudes_info')
+        .select('*').eq('caso_id', searchParams.caso).order('creado_en', { ascending: false });
+      drawerInfo = (dinfo ?? []) as any[];
       // Candidatos a gestor: solo hace falta cargarlos si quien mira puede repartir.
       if (puedeRepartirGestor) {
         const { data: gs } = await supabase.from('perfiles')
@@ -463,7 +469,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
                 derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr}
-                gestores={drawerGestores} puedeRepartirGestor={puedeRepartirGestor}
+                gestores={drawerGestores} puedeRepartirGestor={puedeRepartirGestor} solicitudesInfo={drawerInfo}
                 items={drawerItems} puedeGestionarItems={drawerGestionaItems} cambiosItems={drawerCambiosItems}
                 aportesItems={drawerAportesItems} derivacionItems={drawerDerivItems} />
             </DrawerModal>

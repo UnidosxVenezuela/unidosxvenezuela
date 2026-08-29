@@ -72,3 +72,71 @@ export async function fijarSeguimiento(formData: FormData) {
   revalidatePath('/casos');
   return redirigirOk(volver, 'Próxima acción guardada.');
 }
+
+// ── Solicitudes de información (0240) ──
+// Los cinco campos que pide la propuesta: qué dato, a quién, por qué, para cuándo y qué
+// desbloquea. La autorización vive en la RPC; aquí solo se recogen y se devuelve el motivo
+// tal cual, que ya viene escrito para una persona.
+
+export async function pedirInfo(formData: FormData) {
+  const supabase = await createClient();
+  const caso = txt(formData.get('caso'));
+  const dato = txt(formData.get('dato'));
+  const volver = txt(formData.get('volver')) || '/gestion-casos';
+  if (!caso) return redirigirError(volver, 'Falta la solicitud.');
+  if (!dato) return redirigirError(volver, 'Di qué dato o evidencia hace falta.');
+
+  const area = txt(formData.get('area'));
+  const responsable = txt(formData.get('responsable'));
+  if (!area && !responsable) {
+    return redirigirError(volver, 'Indica a quién se le pide: una persona, un área, o las dos.');
+  }
+  const vence = txt(formData.get('vence'));
+
+  const { error } = await supabase.rpc('pedir_info_caso', {
+    p_caso: caso,
+    p_dato: dato,
+    p_motivo: txt(formData.get('motivo')) || null,
+    p_resultado: txt(formData.get('resultado')) || null,
+    p_area: area || null,
+    p_responsable: responsable || null,
+    p_vence: vence ? new Date(vence).toISOString() : null,
+  });
+  if (error) return redirigirError(volver, motivo(error, 'No se pudo pedir la información.'));
+
+  revalidatePath('/gestion-casos');
+  revalidatePath('/casos');
+  return redirigirOk(volver, 'Petición enviada. Le llega el aviso a quien le toca.');
+}
+
+export async function responderInfo(formData: FormData) {
+  const supabase = await createClient();
+  const id = txt(formData.get('id'));
+  const respuesta = txt(formData.get('respuesta'));
+  const volver = txt(formData.get('volver')) || '/gestion-casos';
+  if (!id) return redirigirError(volver, 'Falta la petición.');
+  if (!respuesta) return redirigirError(volver, 'Escribe la respuesta.');
+
+  const { error } = await supabase.rpc('responder_info_caso', { p_id: id, p_respuesta: respuesta });
+  if (error) return redirigirError(volver, motivo(error, 'No se pudo guardar la respuesta.'));
+
+  revalidatePath('/gestion-casos');
+  revalidatePath('/casos');
+  return redirigirOk(volver, 'Respuesta enviada.');
+}
+
+export async function cerrarInfo(formData: FormData) {
+  const supabase = await createClient();
+  const id = txt(formData.get('id'));
+  const volver = txt(formData.get('volver')) || '/gestion-casos';
+  if (!id) return redirigirError(volver, 'Falta la petición.');
+
+  const { error } = await supabase.rpc('cerrar_info_caso', {
+    p_id: id, p_nota: txt(formData.get('nota')) || null,
+  });
+  if (error) return redirigirError(volver, motivo(error, 'No se pudo cerrar la petición.'));
+
+  revalidatePath('/gestion-casos');
+  revalidatePath('/casos');
+  return redirigirOk(volver, 'Petición cerrada.');
+}
