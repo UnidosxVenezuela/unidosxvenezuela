@@ -35,6 +35,10 @@ export type Rol =
   // (ver ROLES_INACTIVOS en apps/web/lib/constantes.ts).
   | 'prospeccion'              // (inerte) Prospección de empresas, organizaciones, fundaciones e iglesias
   | 'afiliacion'               // (inerte) Afiliación y clasificación de profesionales y voluntarios
+  // Gestor Integral de Casos (0239): dueño transversal del caso desde su registro hasta su
+  // cierre. Coordina áreas, fija la próxima acción y su fecha; no ejecuta el trabajo
+  // especializado de ninguna. Vive en «Verificación y Gestión de Casos».
+  | 'gestor_casos'
   // Administración por ÁREA: gestiona SOLO su área (no es admin general). Ver 0103.
   | 'admin_verificacion'       // Admin · Verificaciones (grupos de gestión de información)
   | 'admin_redes'              // Admin · Redes Sociales (grupos de contenido/marketing)

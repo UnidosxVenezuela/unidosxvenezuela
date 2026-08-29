@@ -18,6 +18,7 @@ import { type CambioItem } from './HistorialItem';
 import Derivaciones, { type DerivacionItem } from './Derivaciones';
 import LineaTiempoCaso from './LineaTiempoCaso';
 import { nombreMostrado } from '@/lib/nombre';
+import BloqueGestion from '@/components/BloqueGestion';
 import { paisAtendido, banderaPais } from '@/lib/constantes';
 
 const EXPLICA_ESTADO: Record<string, string> = {
@@ -33,8 +34,8 @@ const EXPLICA_ESTADO: Record<string, string> = {
  * Cuerpo del caso, reutilizado por la página /casos/[id] y por el panel lateral
  * (drawer) en /casos?caso=ID. `volver` define a dónde regresan los formularios.
  */
-export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [], items = [], puedeGestionarItems = false, cambiosItems = [], aportesItems = [], derivacionItems = [] }: {
-  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[]; items?: ItemCaso[]; puedeGestionarItems?: boolean; cambiosItems?: CambioItem[]; aportesItems?: AporteItem[]; derivacionItems?: DerivacionItem[];
+export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarHref, puedeEditar = true, puedeEditarDatos = false, esAdmin = false, esMandoVerif = false, puedeTomar = false, miId, solicitud = null, derivaciones = [], areasOperables = [], correcciones = [], items = [], puedeGestionarItems = false, cambiosItems = [], aportesItems = [], derivacionItems = [], gestores = [], puedeRepartirGestor = false }: {
+  caso: any; perfiles: any[]; historial: any[]; volver: string; cerrarHref: string; puedeEditar?: boolean; puedeEditarDatos?: boolean; esAdmin?: boolean; esMandoVerif?: boolean; puedeTomar?: boolean; miId?: string; solicitud?: any; derivaciones?: any[]; areasOperables?: string[]; correcciones?: any[]; items?: ItemCaso[]; puedeGestionarItems?: boolean; cambiosItems?: CambioItem[]; aportesItems?: AporteItem[]; derivacionItems?: DerivacionItem[]; gestores?: { id: string; nombre: string }[]; puedeRepartirGestor?: boolean;
 }) {
   // Derivación a Logística (Fase 2): un requerimiento CONFIRMADO se convierte en
   // solicitud de insumo. La Verificación (o admin, o el creador) puede derivarlo.
@@ -207,6 +208,13 @@ export default function DetalleCaso({ caso, perfiles, historial, volver, cerrarH
           </div>
         </div>
       )}
+
+      {/* Gestión del caso (0239) ARRIBA DEL TODO, antes incluso de la descripción: quién
+          responde y qué toca ahora son las dos preguntas que la propuesta pide tener
+          siempre contestadas, y enterrarlas al final del panel es no tenerlas. */}
+      <BloqueGestion caso={caso} gestores={gestores} puedeRepartir={puedeRepartirGestor}
+        soyElGestor={Boolean(miId && caso.gestor_id && caso.gestor_id === miId)}
+        nombres={nombres} volver={volver} />
 
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <p style={{ marginTop: 0 }}>{caso.descripcion || <span className="muted">Sin descripción</span>}</p>

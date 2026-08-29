@@ -81,9 +81,16 @@ seed del área.
 
 ## 3. Orden de entrega propuesto
 
-**Fase 1 — el dueño y el reloj.** Rol `gestor_casos`, `gestor_id`, próxima acción y fecha,
-panel «Mis casos» y los cuatro reportes de control. Es lo que hace realidad el *un
-responsable por caso*, y sin ello lo demás no se puede medir.
+**Fase 1 — el dueño y el reloj. ENTREGADA** (migración `0239`). Rol `gestor_casos`,
+`gestor_id`, próxima acción y fecha, pantalla «Gestión de Casos» con la bandeja del gestor
+y los reportes de control, y el bloque de gestión dentro de cada solicitud.
+
+Los reportes son **tres de los cuatro** que pide la propuesta: *sin responsable*, *fecha
+vencida* y *sin próxima acción*, más *listo para cerrar* (desglose cubierto al 100 %).
+Falta **«bloqueado»**, y a propósito: un caso está bloqueado cuando espera un dato que
+alguien pidió y no llega, y esa solicitud estructurada es la Fase 2. Inventarle ahora una
+definición débil —«lleva N días sin tocarse»— daría un reporte que nadie mira a la segunda
+semana.
 
 **Fase 2 — solicitudes de información estructuradas**, a cualquier área, con fecha y
 responsable. Absorbe `info_requerida` sin romperlo.
@@ -96,26 +103,27 @@ Fase 1 es la que cambia el trabajo del día a día; las demás se apoyan en ella
 
 ---
 
-## 4. Decisiones que necesita tomar la organización
+## 4. Decisiones tomadas
 
-No son técnicas: cambian qué se construye.
+1. **Desaparecidos NO entra.** Búsqueda tiene flujo propio y su propia `proxima_revision`.
+   La frontera está escrita en cada gate de la base de datos, no en la interfaz: la RPC
+   rechaza asignar gestor a un caso de esa categoría aunque se llame por otra vía.
 
-1. **¿Los casos de Desaparecidos entran en este circuito?** Búsqueda tiene flujo propio y
-   ya tiene su `proxima_revision`. Meterlos duplicaría el seguimiento; dejarlos fuera
-   significa que «cada caso tiene gestor» tendrá una excepción escrita.
+2. **El gestor lo asigna el líder o administración.** Ni automático ni «tomar»: el reparto
+   es una decisión de mando. En la base de datos, `puede_asignar_gestor()` = admin o mando
+   de Verificación (líder o coordinador del grupo).
 
-2. **¿Cómo se asigna el gestor?** La propuesta admite tres vías a la vez (la plataforma, el
-   líder, o que el voluntario lo tome). Automático reparte carga pero asigna a quien no
-   está disponible; «tomar» deja huérfanos los casos que nadie quiere — que suelen ser los
-   difíciles.
+3. **Los casos abiertos no se migran.** Se quedan sin gestor y salen en el reporte «Sin
+   responsable», que es exactamente para lo que sirve: el líder los reparte cuando quiera,
+   sin que nadie tenga que decidir cien asignaciones de golpe.
 
-3. **¿Los casos abiertos hoy se migran o solo aplica a los nuevos?** Migrar exige decidir
-   quién queda de gestor de cada uno; no migrar deja dos mundos conviviendo un tiempo.
+4. **Cerrar sin evidencia: se avisa, no se bloquea** — de momento. Es Fase 3 y conviene
+   verlo con el circuito ya rodando; bloquear en una emergencia deja casos abiertos porque
+   falta un papel.
 
-4. **¿Cerrar sin evidencia se bloquea o solo se avisa?** Bloquear cumple la propuesta al
-   pie; en una emergencia también deja casos abiertos porque falta un papel.
-
-5. **¿Qué plazo por defecto** tiene la fecha de seguimiento — fijo (48 h) o según urgencia?
+5. **El plazo por defecto va por urgencia**, no fijo: crítica 24 h · alta 48 h · media 72 h
+   · baja 7 días. El dato ya estaba en `req_urgencia`; un reloj único para todo trataría
+   igual una crítica y una baja.
 
 ---
 

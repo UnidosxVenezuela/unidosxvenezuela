@@ -98,6 +98,8 @@ export const ETIQUETA_ROL: Record<Rol, string> = {
   lider_psicosocial: 'Líder Psicosocial',
   coordinador_psicosocial: 'Coordinación Psicosocial',
   // Rol ÚNICO del departamento desde 0216 (clave histórica del enum: 'captacion').
+  // Gestor Integral de Casos (0239). Dueño transversal del caso hasta su cierre.
+  gestor_casos: 'Gestor de Casos',
   captacion: 'Alianzas Estratégicas',
   // Retirados por 0216 (unificados en 'captacion'). Se conservan para poder MOSTRAR y
   // filtrar lo existente; no se ofrecen para asignar (ver ROLES_INACTIVOS).
@@ -175,7 +177,7 @@ export const GRUPOS_REGISTRO: {
 }[] = [
   { seccion: 'Gestión y verificación de la información', area: 'verificacion', opciones: [
     { grupo: 'gestion_casos', etiqueta: 'Recopilación y Gestión de la Información' },
-    { grupo: 'verificacion',  etiqueta: 'Verificación de información' },
+    { grupo: 'verificacion',  etiqueta: 'Verificación y Gestión de Casos' },
   ] },
   { seccion: 'Redes sociales y contenido', area: 'redes', opciones: [
     { grupo: 'redaccion',      etiqueta: 'Redacción' },

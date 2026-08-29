@@ -93,6 +93,12 @@ jobs:
       - name: Ejecutar pruebas de avisos generales (0238)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_avisos_0238.sql
 
+      # Gestor Integral de Casos (0239). Lo que se comprueba son las dos decisiones de la
+      # organización —Desaparecidos fuera, y reparte solo el líder o administración— y que
+      # la rama nueva de `casos_select` no abrió nada de más.
+      - name: Ejecutar pruebas del gestor de casos (0239)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_gestor_0239.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
@@ -107,7 +113,7 @@ jobs:
       # significa que una migración se puede repetir a sí misma, no que se pueda volver a
       # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
       # la cadena entera desde vacío y en orden, que es lo que sí funciona.
-      - name: Comprobar idempotencia de 0232-0238
+      - name: Comprobar idempotencia de 0232-0239
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
@@ -116,6 +122,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0236_pais_en_vista_difusion.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0237_solicitudes_contexto.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0238_avisos_enviados.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0239_gestor_de_casos.sql
 
       - name: Apagar Supabase
         if: always()
