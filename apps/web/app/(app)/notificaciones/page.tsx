@@ -8,20 +8,15 @@ import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import ActivarNotificaciones from '@/components/ActivarNotificaciones';
 import { marcarLeida, marcarTodasLeidas } from './actions';
-import { enviarAviso } from './avisos-actions';
 
 export default async function NotificacionesPage() {
   const { perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
-  const [{ data }, gruposRes] = await Promise.all([
-    supabase.from('notificaciones')
-      .select('*')   // '*' para incluir `imagen_url` (0170) sin romper si aún no se aplicó.
-      .order('creado_en', { ascending: false }).limit(100),
-    esAdmin ? supabase.from('grupos').select('id, nombre').order('nombre') : Promise.resolve({ data: [] as any[] }),
-  ]);
+  const { data } = await supabase.from('notificaciones')
+    .select('*')   // '*' para incluir `imagen_url` (0170) sin romper si aún no se aplicó.
+    .order('creado_en', { ascending: false }).limit(100);
   const items = (data ?? []) as any[];
-  const grupos = (gruposRes.data ?? []) as any[];
 
   return (
     <div>
@@ -38,55 +33,17 @@ export default async function NotificacionesPage() {
 
       <ActivarNotificaciones />
 
+      {/* El formulario de envío vive ahora en /admin/avisos (0238). Estaba aquí dentro de
+          un desplegable y sin entrada en ningún menú: quien no supiera que existía, no lo
+          encontraba. Allí además está el historial de lo que se ha mandado. */}
       {esAdmin && (
-        <details className="tarjeta" style={{ marginBottom: 12 }}>
-          <summary style={{ cursor: 'pointer', fontWeight: 600 }} className="fila">
-            <Icono nombre="avisos" size={16} /> Enviar un aviso
-          </summary>
-          <form action={enviarAviso} encType="multipart/form-data" style={{ marginTop: 12 }}>
-            <div className="campo">
-              <label>Título</label>
-              <input name="titulo" className="input" required maxLength={120} placeholder="Ej. Reunión general hoy a las 6pm" />
-            </div>
-            <div className="campo">
-              <label>Mensaje (opcional)</label>
-              <textarea name="cuerpo" className="input" rows={3} maxLength={400} />
-            </div>
-            <div className="campo">
-              <label>Imagen (opcional)</label>
-              <input name="imagen" type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="input" />
-              <small className="muted">PNG, JPG, WebP o GIF · hasta 4 MB. Se muestra en la notificación, el push y Telegram.</small>
-            </div>
-            <div className="campo">
-              <label>Enlace (opcional)</label>
-              <input name="enlace" className="input" placeholder="/grupos  ·  https://…" />
-            </div>
-            <div className="campo">
-              <label>¿A quién se envía?</label>
-              <label className="fila" style={{ gap: 6, fontWeight: 500 }}>
-                <input type="radio" name="destino" value="todos" defaultChecked style={{ width: 'auto', minHeight: 0 }} /> Todos los usuarios verificados
-              </label>
-              <label className="fila" style={{ gap: 6, fontWeight: 500 }}>
-                <input type="radio" name="destino" value="grupos" style={{ width: 'auto', minHeight: 0 }} /> Solo los grupos que marque abajo
-              </label>
-            </div>
-            {grupos.length > 0 && (
-              <div className="campo">
-                <label>Grupos (si elegiste “Solo los grupos…”)</label>
-                <div style={{ display: 'grid', gap: 4, gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))' }}>
-                  {grupos.map((g) => (
-                    <label key={g.id} className="fila" style={{ gap: 6, fontWeight: 500 }}>
-                      <input type="checkbox" name="grupos" value={g.id} style={{ width: 'auto', minHeight: 0 }} /> {g.nombre}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-            <button className="btn btn-primario" type="submit" style={{ marginTop: 4 }}>
-              <Icono nombre="avisos" size={16} /> Enviar aviso
-            </button>
-          </form>
-        </details>
+        <div className="tarjeta fila" style={{ justifyContent: 'space-between', gap: 8, marginBottom: 12 }}>
+          <span className="fila" style={{ gap: 8 }}>
+            <Icono nombre="avisos" size={16} />
+            <span>¿Necesitas avisar a toda la organización?</span>
+          </span>
+          <Link className="btn btn-primario" href="/admin/avisos">Enviar un aviso general</Link>
+        </div>
       )}
 
       {items.length === 0 ? (

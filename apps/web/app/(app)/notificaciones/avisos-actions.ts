@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { esAdministrador } from '@/lib/auth';
-import { redirigirOk } from '@/lib/flash';
+import { redirigirOk, redirigirError } from '@/lib/flash';
 import { clasificarMime, extDe } from '@/lib/subida-tipos';
 
 function txt(v: FormDataEntryValue | null) { return String(v ?? '').trim(); }
@@ -65,6 +65,35 @@ export async function enviarAviso(formData: FormData) {
   }
   if (destinatarios.length === 0) throw new Error('No hay destinatarios para ese envío.');
 
+  // ── Registro del aviso (0238) ANTES de repartir ──
+  // Es la acción de más alcance de la plataforma y era la única sin rastro: nadie podía
+  // responder «¿se mandó el del viernes?» ni «¿a cuánta gente llegó?». La RPC además
+  // frena el DOBLE ENVÍO —dos clics y toda la organización lo recibe dos veces— y por eso
+  // va delante del abanico: un aviso que ya salió no se puede recoger.
+  //
+  // Si la llamada rechaza, no se envía nada y se vuelve con el motivo escrito. Un aviso
+  // duplicado que se queda en el camino deja su imagen sin usar en el bucket; sale mucho
+  // más barato que sonarle la campana dos veces a toda la organización.
+  //
+  // Best-effort: sin la migración 0238 la RPC no existe y el aviso sale igual, como
+  // siempre. Lo que no puede pasar es que una función que falta rompa un aviso urgente.
+  {
+    const { error: eReg } = await supabase.rpc('registrar_aviso_enviado', {
+      p_titulo: titulo,
+      p_cuerpo: cuerpo || null,
+      p_enlace: enlace,
+      p_imagen: imagenUrl,
+      p_destino: destino === 'grupos' ? 'grupos' : 'todos',
+      p_grupos: destino === 'grupos' ? formData.getAll('grupos').map((g) => String(g)).filter(Boolean) : null,
+      p_destinatarios: destinatarios.length,
+    });
+    if (eReg) {
+      const m = (eReg.message || '').toLowerCase();
+      const falta = /could not find the function|function .* does not exist|no existe la funci|schema cache/.test(m);
+      if (!falta) return redirigirError('/admin/avisos', eReg.message);
+    }
+  }
+
   const filas = destinatarios.map((id) => {
     // Sin imagen: se omite la columna para no depender de 0170 (los avisos de solo
     // texto siguen funcionando aunque aún no se haya aplicado la migración).
@@ -79,5 +108,6 @@ export async function enviarAviso(formData: FormData) {
     if (error) throw new Error('No se pudo enviar el aviso: ' + error.message);
   }
   revalidatePath('/notificaciones');
-  redirigirOk('/notificaciones', 'Aviso enviado a ' + destinatarios.length + ' persona(s)');
+  revalidatePath('/admin/avisos');
+  redirigirOk('/admin/avisos', 'Aviso enviado a ' + destinatarios.length + ' persona(s)');
 }

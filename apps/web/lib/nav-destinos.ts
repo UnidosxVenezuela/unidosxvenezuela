@@ -93,6 +93,9 @@ export function destinosNav(flags: NavFlags): Destino[] {
     // Buzón de problemas e ideas del equipo (0234): la retroalimentación que antes se
     // perdía en WhatsApp.
     d.push({ href: '/admin/sugerencias', etiqueta: 'Buzón del equipo', icono: 'buzon' });
+    // Avisos generales (0238). El envío existía desde hace tiempo, pero vivía plegado
+    // dentro de /notificaciones y sin entrada en ningún menú: no se encontraba.
+    d.push({ href: '/admin/avisos', etiqueta: 'Enviar aviso', icono: 'avisos' });
     d.push({ href: '/admin/logs', etiqueta: 'Registro de actividad', icono: 'historial' });
     d.push({ href: '/admin/ajustes', etiqueta: 'Ajustes', icono: 'puntos' });
   }
