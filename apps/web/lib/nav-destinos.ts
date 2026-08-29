@@ -77,6 +77,11 @@ export function destinosNav(flags: NavFlags): Destino[] {
     d.push({ href: '/alianzas', etiqueta: 'Alianzas (consulta)', icono: 'enlace' });
     d.push({ href: '/reportes/alianzas', etiqueta: 'Reportería Alianzas', icono: 'tareas' });
   }
+  // Gestión de Casos (0239): la bandeja del gestor y los reportes de control. La ve
+  // el gestor (es su trabajo) y quien reparte —el mando de Verificación y admin—.
+  if (flags.gestorCasos || flags.repartirGestor) {
+    d.push({ href: '/gestion-casos', etiqueta: 'Gestión de Casos', icono: 'tareas' });
+  }
   if (flags.admin) d.push({ href: '/tablon', etiqueta: 'Tablón', icono: 'tablon' });
   d.push({ href: '/horas', etiqueta: 'Mis horas', icono: 'reloj' });
   d.push({ href: '/notificaciones', etiqueta: 'Avisos', icono: 'avisos' });

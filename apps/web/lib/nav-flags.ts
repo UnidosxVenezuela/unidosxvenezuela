@@ -26,6 +26,8 @@ export type NavFlags = {
   afiliacion: boolean;     // = alianzas
   miArea: boolean;         // opera alguna área de derivación → bandeja «Mi área» (0201/0202)
   seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
+  gestorCasos: boolean;    // Gestor Integral de Casos: su bandeja y el control (0239)
+  repartirGestor: boolean; // reparte los casos entre gestores: mando de Verificación o admin
 };
 
 // Grupos/roles del área de contenido (producción y publicación).
@@ -42,19 +44,23 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
   let identidadOK = false;               // 2ª verificación (identidad) aprobada
   let mandoRecopilacion = false;         // líder/coordinador de «gestion_casos» (0143/0207)
   let mandoLogistica = false;            // líder/coordinador de «gestion_acopio» (0214)
+  let mandoVerificacion = false;         // líder/coordinador de «verificacion» (0147) — reparte casos (0239)
   if (!admin) {
-    const [{ data: lid }, { data: vi }, { data: mr }, { data: ml }] = await Promise.all([
+    const [{ data: lid }, { data: vi }, { data: mr }, { data: ml }, { data: mv }] = await Promise.all([
       supabase.from('grupos').select('clave').eq('lider_id', userId),
       supabase.from('verificaciones_identidad').select('estado').eq('perfil_id', userId).maybeSingle(),
       // Mando de Recopilación: la RPC (0143) ya exige su 2ª verificación aprobada.
       supabase.rpc('es_mando_recopilacion'),
       // Mando de Logística: la RPC (0214) también exige la identidad aprobada.
       supabase.rpc('es_mando_logistica'),
+      // Mando de Verificación (0147): quien reparte los casos entre gestores (0239).
+      supabase.rpc('es_mando_verificacion'),
     ]);
     clavesLidero = new Set(((lid ?? []) as any[]).map((g) => g.clave).filter(Boolean));
     identidadOK = (vi as any)?.estado === 'aprobada';
     mandoRecopilacion = mr === true;
     mandoLogistica = ml === true;
+    mandoVerificacion = mv === true;
   }
   // Recopilación y Búsqueda EXIGEN 2ª verificación: sin ella se ocultan Casos y
   // su grupo (la RLS además niega el acceso a los datos). Verificación: exenta.
@@ -118,6 +124,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     // consultar el recorrido de cualquier solicitud (la RPC 0179 acota a datos no
     // sensibles y exige identidad verificada). Fuera para voluntario/observador.
     seguimiento: admin || !!areaAdmin || roles.some((r) => !['voluntario', 'observador'].includes(r)),
+    // Gestor Integral de Casos (0239). Su bandeja la ve quien tiene el rol; el reparto
+    // es del mando de Verificación o de administración — decisión de la organización.
+    gestorCasos: admin || roles.includes('gestor_casos'),
+    repartirGestor: admin || mandoVerificacion,
   };
 }
 

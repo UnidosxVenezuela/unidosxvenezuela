@@ -26,12 +26,22 @@ export async function getUsuarioYPerfil() {
   // coordinación/liderazgo de grupo, no hace falta ir a la base de datos.
   if (p) {
     const roles = rolesDe(p as EntradaRoles);
-    const yaOpera = roles.some((r) => ['admin', 'logistica', 'admin_logistica'].includes(r));
-    const puedeSerMando = !yaOpera && (p.rol === 'coordinador' || p.rol === 'lider_grupo');
-    if (puedeSerMando) {
-      const { data: mandoLog } = await supabase.rpc('es_mando_logistica');
-      if (mandoLog === true) (p as PerfilConMandos).mandos = ['logistica'];
+    const esCoordOLider = p.rol === 'coordinador' || p.rol === 'lider_grupo';
+    const mandos: string[] = [];
+    if (esCoordOLider) {
+      if (!roles.some((r) => ['admin', 'logistica', 'admin_logistica'].includes(r))) {
+        const { data: mandoLog } = await supabase.rpc('es_mando_logistica');
+        if (mandoLog === true) mandos.push('logistica');
+      }
+      // Mando de Verificación (0147). Hace falta desde 0239: el líder o coordinador del
+      // grupo es quien REPARTE los casos entre gestores, y sin esto la pantalla lo dejaba
+      // fuera aunque la base de datos sí lo reconociera.
+      if (!roles.some((r) => ['admin', 'admin_verificacion'].includes(r))) {
+        const { data: mandoVer } = await supabase.rpc('es_mando_verificacion');
+        if (mandoVer === true) mandos.push('verificacion');
+      }
     }
+    if (mandos.length > 0) (p as PerfilConMandos).mandos = mandos;
   }
 
   return { user, perfil: p };
@@ -165,6 +175,19 @@ export function puedeVerAliados(e?: EntradaRoles) {
 // Módulo de verificación de casos: coordinación o rol verificador.
 export function puedeVerificar(e?: EntradaRoles) {
   return tieneAlguno(e, ['admin', 'verificador']);
+}
+
+// Gestor Integral de Casos (0239): dueño transversal del caso hasta su cierre.
+export function esGestorCasos(e?: EntradaRoles) {
+  return tieneAlguno(e, ['gestor_casos']);
+}
+
+// Quién REPARTE los casos. Decisión de la organización: el líder o administración —
+// ni automático ni «tomar»—. `esMandoDe` cubre al líder y al coordinador del grupo de
+// Verificación aunque no lleven el rol operativo, igual que hace `es_mando_verificacion()`
+// en la base de datos.
+export function puedeAsignarGestor(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin']) || esMandoDe(e as any, 'verificacion');
 }
 
 // Quién puede ENVIAR/crear y ver casos: verificación + el rol de recopilación

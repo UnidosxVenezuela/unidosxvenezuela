@@ -1,7 +1,7 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe } from '@/lib/auth';
+import { requireUsuario, puedeVerificar, puedeRecopilar, puedeBusqueda, esAdministrador, esAdminVerificacion, rolesDe, puedeAsignarGestor } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { ETIQUETA_ESTADO_CASO, ESTADOS_CASO, CATEGORIAS_CASO, hrefSeguro, ETIQUETA_TIPO_LUGAR, TONO_TIPO_LUGAR, areasOperablesDe, CAMPOS_VERIFICACION_BASE, CAMPOS_VERIFICACION_REQ, PAISES_ATENDIDOS, CODIGOS_PAIS_ATENDIDO, banderaPais } from '@/lib/constantes';
 import { scoreCaso, nivelPrioridad, ETIQUETA_NIVEL_PRIORIDAD, TONO_NIVEL_PRIORIDAD } from '@/lib/prioridad';
@@ -219,6 +219,9 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
   }
 
   let drawerCaso: any = null; let drawerHist: any[] = []; let drawerSol: any = null; let esMandoVerif = false; let drawerDeriv: any[] = []; let drawerCorr: any[] = []; let drawerItems: any[] = []; let drawerGestionaItems = false; let drawerCambiosItems: any[] = []; let drawerAportesItems: any[] = []; let drawerDerivItems: any[] = [];
+  // Gestión del caso (0239): quién reparte, y los candidatos a gestor para el desplegable.
+  const puedeRepartirGestor = puedeAsignarGestor(perfil);
+  let drawerGestores: { id: string; nombre: string }[] = [];
   if (searchParams.caso) {
     const [{ data: dc }, { data: dh }, { data: dAdj }, { data: ds }] = await Promise.all([
       supabase.from('casos').select('id, numero, titulo, descripcion, categoria, fuente, fuente_url, fecha_publicacion, contacto, estado, notas, info_requerida, creado_por, creado_en, asignado_a, es_requerimiento, lat, lng, req_tipo, req_cantidad, req_urgencia, publicado_en, publicacion_url, publicado_por').eq('id', searchParams.caso).single(),
@@ -237,6 +240,24 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
       const { data: dpunto } = await supabase.from('casos')
         .select('punto_tipo, punto_temporal, punto_acopio_id, referente, contacto_whatsapp, contacto_instagram, referente_rol, fuente_tipo, ubicacion_estado, ubicacion_municipio, ubicacion_parroquia, ubicacion_sector, ubicacion_direccion, sigue_vigente, ultima_confirmacion, contacto_difusion, autoriza_difusion, revision_alcance, pais').eq('id', searchParams.caso).maybeSingle();
       if (dpunto) Object.assign(drawerCaso, dpunto);
+      // Gestión del caso (0239) best-effort: si la migración no está, el panel abre igual
+      // y el bloque de gestión simplemente no muestra nada.
+      const { data: dgestion } = await supabase.from('casos')
+        .select('gestor_id, gestor_asignado_en, proxima_accion, proxima_revision, area_siguiente')
+        .eq('id', searchParams.caso).maybeSingle();
+      if (dgestion) Object.assign(drawerCaso, dgestion);
+      // Candidatos a gestor: solo hace falta cargarlos si quien mira puede repartir.
+      if (puedeRepartirGestor) {
+        const { data: gs } = await supabase.from('perfiles')
+          .select('id, nombre_completo, rol, roles_extra')
+          .eq('verificado', true).order('nombre_completo');
+        drawerGestores = ((gs ?? []) as any[])
+          .filter((p) => {
+            const rs = [p.rol, ...((p.roles_extra ?? []) as string[])];
+            return rs.includes('gestor_casos');
+          })
+          .map((p) => ({ id: p.id, nombre: nombreMostrado(p.nombre_completo, esAdmin) }));
+      }
       // Verificación por campo (0172) best-effort: si la tabla aún no existe, se omite.
       const { data: vcampos } = await supabase.from('casos_verificacion_campo')
         .select('campo, estado, nota, verificado_por, verificado_en').eq('caso_id', searchParams.caso);
@@ -442,6 +463,7 @@ export default async function CasosPage({ searchParams }: { searchParams: SP }) 
                 puedeEditarDatos={esAdmin || (verifica && drawerCaso.estado !== 'enviado_redaccion') || (drawerCaso.creado_por === user!.id && ['pendiente', 'en_proceso'].includes(drawerCaso.estado))}
                 esAdmin={esAdmin} esMandoVerif={esMandoVerif} puedeTomar={verifica} miId={user!.id}
                 derivaciones={drawerDeriv} areasOperables={areasOperables} correcciones={drawerCorr}
+                gestores={drawerGestores} puedeRepartirGestor={puedeRepartirGestor}
                 items={drawerItems} puedeGestionarItems={drawerGestionaItems} cambiosItems={drawerCambiosItems}
                 aportesItems={drawerAportesItems} derivacionItems={drawerDerivItems} />
             </DrawerModal>
