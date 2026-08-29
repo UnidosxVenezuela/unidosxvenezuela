@@ -5,24 +5,35 @@ Apoyo por Venezuela · para enviar por la plataforma
 ANTES DE ENVIAR: POR DÓNDE LLEGA CADA COSA
 ═══════════════════════════════════════════════════════════
 
-Hoy la plataforma NO tiene un botón de «avisar a todos». Conviene saberlo antes
-de escribir, porque cada vía llega a gente distinta:
+• AVISO GENERAL (Administración → «Enviar aviso», o /admin/avisos). Es la vía
+  de verdad: entra en la campana de cada persona verificada y sale también por
+  push y Telegram. Admite título, mensaje, imagen y enlace, y puede ir a toda la
+  organización o solo a los grupos que marques.
 
-• TABLÓN. Se ve al entrar, pero la campana solo le suena a administración
-  (así quedó desde la migración 0075). Es el sitio para lo que se lee sin prisa.
+  Úsala poco. Una campana que suena de más deja de leerse a la semana, y
+  entonces no sirve el día que hay una emergencia de verdad. Todo lo enviado
+  queda registrado en esa misma pantalla, con quién lo mandó y a cuánta gente
+  llegó.
 
 • CANAL GENERAL del chat. Lo lee toda la organización sin pertenecer a ningún
-  grupo. No suena la campana salvo que menciones a alguien. Es la vía más
-  parecida a «que lo vea todo el mundo».
+  grupo, y NO interrumpe: no suena la campana salvo que menciones a alguien. Es
+  la vía para lo cotidiano — un «buen trabajo» de un martes va aquí, no en la
+  campana de doscientas personas.
 
-• CHAT DE CADA GRUPO, con «Avisar a alguien». Esta SÍ suena, pero es persona a
-  persona. Sirve para lo dirigido, no para lo masivo.
+• TABLÓN. Se ve al entrar, pero la campana solo le suena a administración (así
+  quedó desde la migración 0075). Es el sitio para lo que se lee sin prisa.
 
-• WHATSAPP. Sigue siendo donde de verdad se lee. Para un mensaje que quieras
-  que llegue seguro, sigue siendo la mejor vía.
+• CHAT DEL GRUPO, con «Avisar a alguien». Suena, pero es persona a persona.
+  Sirve para agradecer con nombre, que es lo que más se recuerda.
 
-Todos los cuerpos de abajo entran en 140 caracteres, que es lo que la campana
-muestra antes de cortar. Si les cambias algo, cuenta.
+REGLA CORTA: si es para toda la organización y quieres que se entere hoy, aviso
+general. Si es para el ánimo del día a día, canal general. Si es para una
+persona, su grupo y con su nombre.
+
+SOBRE EL LARGO: el cuerpo se ve entero en la campana, así que no hay límite duro.
+Pero el push del teléfono lo corta, y un mensaje largo se lee en diagonal. Los de
+abajo están escritos en 140 caracteres o menos a propósito: lo importante entra
+en la primera pantalla.
 
 ⚠ NINGÚN mensaje trae cifras inventadas. Donde hace falta un número real aparece
   [N] y hay que rellenarlo. Si no tienes el dato a mano, borra la frase entera:
@@ -231,7 +242,9 @@ CÓMO SE USAN
 ═══════════════════════════════════════════════════════════
 
 • Uno cada tanto, no varios seguidos. Un agradecimiento diario deja de leerse a
-  la semana; uno bien puesto se recuerda.
+  la semana; uno bien puesto se recuerda. La plataforma frena cinco avisos
+  generales en una hora, y frena el mismo aviso repetido en diez minutos: son
+  topes de seguridad, no una cuota que haya que gastar.
 • Mejor con nombre. «Gracias a Marta, que se quedó hasta las dos cerrando la
   entrega de El Valle» vale por diez mensajes generales.
 • Después de un día duro, primero el de «Cuando no se pudo» y solo al día

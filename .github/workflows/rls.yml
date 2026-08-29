@@ -87,6 +87,12 @@ jobs:
       - name: Ejecutar pruebas del contexto de solicitudes (0237)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_contexto_0237.sql
 
+      # Registro de avisos generales (0238). Lo que importa no es que la fila se guarde,
+      # sino que la RPC frena ANTES de que salga nada: un aviso llega a toda la
+      # organización y no se puede recoger.
+      - name: Ejecutar pruebas de avisos generales (0238)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_avisos_0238.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
@@ -101,7 +107,7 @@ jobs:
       # significa que una migración se puede repetir a sí misma, no que se pueda volver a
       # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
       # la cadena entera desde vacío y en orden, que es lo que sí funciona.
-      - name: Comprobar idempotencia de 0232-0237
+      - name: Comprobar idempotencia de 0232-0238
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
@@ -109,6 +115,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0235_hilo_general_y_stickers.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0236_pais_en_vista_difusion.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0237_solicitudes_contexto.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0238_avisos_enviados.sql
 
       - name: Apagar Supabase
         if: always()
