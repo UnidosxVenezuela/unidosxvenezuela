@@ -117,6 +117,12 @@ jobs:
       - name: Ejecutar pruebas de cierre y reapertura (0243)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_cierre_0243.sql
 
+      # Recordatorios del Gestor (0244). Lo que importa: que AGRUPE —un aviso por persona
+      # y no uno por caso, que es lo que evita que se silencie la campana— y que el
+      # anti-spam frene la segunda corrida seguida.
+      - name: Ejecutar pruebas de recordatorios (0244)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_recordatorios_0244.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
@@ -131,7 +137,7 @@ jobs:
       # significa que una migración se puede repetir a sí misma, no que se pueda volver a
       # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
       # la cadena entera desde vacío y en orden, que es lo que sí funciona.
-      - name: Comprobar idempotencia de 0232-0243
+      - name: Comprobar idempotencia de 0232-0244
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
@@ -145,6 +151,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0241_eje_verificacion_y_gestion.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0242_alianzas_verificada_por_el_eje.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0243_cierre_y_reapertura.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0244_recordatorios_de_gestion.sql
 
       - name: Apagar Supabase
         if: always()
