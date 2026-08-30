@@ -1,0 +1,157 @@
+🇻🇪 *NOTAS DEL PARCHE — 30 ago 2026*
+_Apoyo por Venezuela_
+
+Cada solicitud tiene ahora un *responsable con nombre*, una *próxima acción* escrita y una *fecha viva* hasta que se cierra. Y *Verificación y Gestión de Casos* pasa a ser el eje del trabajo: coordina el caso de principio a fin, verifica las alianzas y toma la primera mitad del flujo de insumos.
+
+🧭 *Gestor de Casos* · 📋 *Tablero de control* · ❓ *Pedir un dato sin perseguir a nadie* · 🔗 *Alianzas verificadas por el eje* · ✅ *Cierre con criterios* · ⏰ *El reloj avisa solo* · 🌎 *El país a simple vista* · 🛠️ *9 cambios de base de datos*
+
+━━━━━━━━━━━━━━━━━━
+🧭 *UN RESPONSABLE POR CASO, DE PRINCIPIO A FIN*
+
+Hasta ahora un caso pasaba por Verificación, luego por Logística, luego por Redacción… y en cada salto quedaba *entre dos áreas*, que es donde las cosas se paran sin que nadie se entere. Ya no.
+
+• *Cada solicitud tiene un gestor.* Una persona que responde por ella hasta el final, aunque el trabajo lo hagan Logística, Alianzas o Redacción. El gestor *no ejecuta*: coordina, pide lo que falta y no deja que nada se detenga.
+
+• *Lo asigna el líder de Verificación o administración.* No se reparte solo ni se lo toma quien quiera. Fue una decisión explícita: si el reparto es automático, nadie lo siente suyo.
+
+• *Dos cosas obligatorias en cada caso:* qué es lo próximo que hay que hacer —una frase— y para cuándo.
+
+• *La fecha se pone sola si no la escribes*, según la urgencia: *24 h* si es crítica, *48 h* si es alta, *72 h* si es media, *7 días* el resto. Un caso nunca se queda sin reloj.
+
+• *Los casos de Desaparecidos NO entran aquí.* Siguen su circuito de Búsqueda, que es otro trabajo y tiene sus propias reglas. Es a propósito.
+
+Está en el menú, en *«Gestión de Casos»*. Lo ve el gestor y quien reparte.
+
+━━━━━━━━━━━━━━━━━━
+📋 *EL TABLERO: LO QUE SE ESTÁ CAYENDO, EN UNA PANTALLA*
+
+Dos vistas del mismo trabajo. *«Mis casos»* es lo que me toca hoy. *«Control»* es lo que se está cayendo en toda la organización, ordenado por gravedad:
+
+• 🔴 *Sin responsable* — mientras no tenga gestor, nadie responde por él.
+• 🔴 *Bloqueado* — espera un dato que se pidió y no llegó. Hay que ir a buscar a quien lo debe.
+• 🟠 *Fecha vencida* — la de seguimiento ya pasó. Revísalo y fija la siguiente.
+• 🟡 *Sin próxima acción* — tiene dueño pero no dice qué toca ahora. Escríbelo en una frase.
+• 🟢 *Listo para cerrar* — el desglose está cubierto al 100 %. Valida y ciérralo.
+
+Cada situación *dice qué hacer*, no solo que hay un problema. Un reporte que no dice la acción no se usa.
+
+━━━━━━━━━━━━━━━━━━
+❓ *PEDIR UN DATO SIN PERSEGUIR A NADIE POR WHATSAPP*
+
+Antes, cuando faltaba un dato para avanzar —una dirección exacta, cuántas personas son, si el acceso es en camión o a pie— tocaba escribir a alguien y esperar. Si esa persona no contestaba, el caso se quedaba parado *sin que constara por qué*.
+
+Ahora se pide desde el propio caso, y la petición lleva: *qué dato*, *para qué hace falta*, *a quién o a qué área*, y *para cuándo*.
+
+• *Le llega a quien la debe traer*, aunque *no pueda leer el caso*. Ese es todo el punto: se puede pedir un dato a Logística sin abrirle el expediente entero de una familia.
+
+• *Responder y cerrar son pasos distintos.* Contesta quien tiene el dato; cierra el gestor cuando comprueba que sirve. Si la respuesta no vale, la petición sigue abierta.
+
+• *Y ahora «Bloqueado» significa algo.* Antes era una corazonada; ahora es una consulta: el caso tiene una petición abierta y vencida. Consta.
+
+━━━━━━━━━━━━━━━━━━
+🔀 *EL FLUJO DE INSUMOS SE REPARTE*
+
+El tablero de Logística se divide en dos mitades, y cada área manda en la suya:
+
+• *Verificación y Gestión* lleva *«Solicitado»* y *«En gestión»* — la entrada, que es donde se decide qué se pide y a quién. También *«Cancelado»* y *«No disponible»*.
+
+• *Logística* lleva *«En ruta»* y *«Entregado»* — el traslado y la entrega, que es lo suyo.
+
+Las dos áreas *ven el tablero entero*. Lo que cambia es quién puede mover cada estado. Y si intentas mover uno que no es tuyo, la plataforma *te lo dice con un error claro*: no se queda callada fingiendo que se guardó.
+
+━━━━━━━━━━━━━━━━━━
+🔗 *LA FICHA DE ALIANZAS LA VERIFICA EL EJE*
+
+Los ofrecimientos de donación ya los verificaba Verificación desde hace tiempo. Lo que se autocertificaba era la *ficha de prospección* del CRM: la misma gente que la crea y la edita era la que le ponía los verdes — y ese semáforo es el que abre el candado de «Enviar a Logística».
+
+• *Ahora el semáforo lo marca Verificación y Gestión.* Es una *sustitución*, no dos firmas: Alianzas deja de firmar su propia ficha.
+
+• *Y verifica con los contactos delante* —teléfono del responsable, contactos operativos y alternos—, porque verificar un aliado sin poder llamarlo es firmar a ciegas. Fue una decisión explícita de la organización.
+
+• *Si se edita un campo ya validado, el verde se cae solo.* Un visto bueno sobre un dato que cambió después no vale nada.
+
+━━━━━━━━━━━━━━━━━━
+✅ *CERRAR UN CASO YA NO ES APRETAR UN BOTÓN*
+
+Antes, cerrar era un clic. Ahora la plataforma *calcula sola* cinco criterios y te los enseña:
+
+• *Desglose* — los ítems pedidos están cubiertos.
+• *Entrega* — la solicitud de Logística llegó a un estado final.
+• *Evidencia* — hay al menos un archivo adjunto. Es el que más se salta y el que más cuesta reconstruir después.
+• *Sin peticiones abiertas* — no queda ningún dato pedido y sin cerrar.
+• *Sin derivaciones abiertas* — ningún área se quedó con trabajo colgando.
+
+No son casillas que alguien marca: *se comprueban contra los datos*. Si abres una petición de información, uno de los criterios se cae solo, en el acto.
+
+*Se puede cerrar sin cumplirlos todos* —hay casos que terminan mal y hay que poder decirlo—, pero entonces *la nota es obligatoria*: hay que escribir por qué se cierra igual. Y queda guardada la *foto* de cómo estaban los criterios en ese momento, no solo el hecho de haber cerrado.
+
+*Y se puede reabrir.* Con motivo obligatorio. El caso vuelve a «Confirmado» —no a «Pendiente», no se pierde lo andado— con fecha de seguimiento nueva, y se avisa al gestor, a quien lo creó y a quien lo cerró.
+
+━━━━━━━━━━━━━━━━━━
+⏰ *EL RELOJ AVISA SOLO*
+
+Todo lo anterior tenía un fallo: las fechas se veían en el tablero *si alguien lo abría*. Un reloj que solo suena cuando vas a mirarlo no es un reloj, es un calendario.
+
+Ahora la plataforma *busca a la persona*:
+
+• *Se te venció la fecha de un caso* → te llega a ti, su gestor.
+• *Un dato que te pidieron y no llegó* → te llega a ti, o a tu área si la petición no nombraba a nadie.
+• *Hay casos sin responsable* (con 24 h de gracia) → le llega al líder de Verificación, a sus coordinadores y a administración.
+
+*Un aviso por persona, no uno por caso.* Si tienes tres casos vencidos, recibes *un* mensaje que dice «se te vencieron 3 casos». Diez notificaciones seguidas enseñan a silenciar la campana, y entonces el aviso deja de existir justo para quien más lo necesita.
+
+Y un caso concreto *no vuelve a avisar hasta pasadas 11 horas*: como mucho dos veces al día, y lo que suma es lo nuevo.
+
+━━━━━━━━━━━━━━━━━━
+🌎 *EL PAÍS, A SIMPLE VISTA*
+
+Desde el terremoto de Colombia convivimos con dos emergencias en la misma plataforma, y saber de cuál es cada solicitud *antes* de abrirla ahorra un clic en cada tarjeta — que multiplicado por un turno entero, no es poco.
+
+Ahora la bandera y el país se ven en las tarjetas de *Redacción*, de *Logística* y de *Alianzas*, igual que ya se veían en el panel de solicitudes.
+
+━━━━━━━━━━━━━━━━━━
+📢 *EL AVISO GENERAL SALE DE SU ESCONDITE*
+
+La plataforma *ya podía* mandar un aviso a toda la organización. El problema es que el botón estaba en un rincón donde casi nadie miraba, así que en la práctica era como si no existiera.
+
+• *Ahora tiene su propia pantalla*, en el panel de administración.
+• *Queda registro de cada aviso enviado*: qué se dijo, quién lo mandó, a cuánta gente llegó.
+• *Con dos frenos, porque un aviso general no se puede recoger:* no deja repetir el mismo mensaje antes de *10 minutos*, y no salen más de *5 avisos por hora* en toda la organización. El freno actúa *antes* de que salga nada.
+
+━━━━━━━━━━━━━━━━━━
+🔧 *PARA EL ADMINISTRADOR*
+
+*Nueve* cambios de base de datos: las migraciones *0236* a *0244*. Y *143 comprobaciones nuevas* en el CI, que se ponen en rojo de verdad si algo se rompe.
+
+Siete cosas que conviene saber:
+
+• *La primera vez que corra el recordatorio va a soltar todo lo atrasado de golpe.* Es correcto —eso es exactamente lo que llevaba tiempo invisible—, pero conviene avisar a Verificación antes para que no lo lea como un fallo.
+
+• *El recordatorio necesita `pg_cron`.* La migración intenta agendarlo sola cada hora, en el minuto 41. Si la extensión no estuviera habilitada, *no falla*: deja el comando exacto en un aviso para agendarlo a mano. Para comprobar que quedó puesto: `select jobname, schedule, active from cron.job where jobname = 'gestion-casos-recordatorios';`
+
+• *El reporte «Resumen de Logística» todavía tiene el permiso viejo.* Verificación y Gestión ya manda en «Solicitado» y «En gestión», pero aún no puede abrir el informe de esa misma cola. No rompe nada —el tablero sí se ve—, pero es una incoherencia que hay que cerrar.
+
+• *`docs/ROLES.md` está desactualizado.* No menciona el rol nuevo `gestor_casos`, ni el mando de área, ni un par de roles que ya existían antes de este parche.
+
+• *Las guías en PDF describen el flujo anterior.* La de Logística y la de solicitudes y donaciones cuentan el tablero antes del reparto por áreas. Hay que rehacerlas.
+
+• *Las notas del parche anterior citan `docs/PLAN-CHAT-Y-SOS.md`, que no llegó a subirse.* La referencia está rota desde el 11 de agosto.
+
+• *Una cosa que se dejó a propósito con Logística:* la cobertura parcial de una solicitud. Es una decisión de entrega, no de coordinación, y moverla no aportaba nada.
+
+━━━━━━━━━━━━━━━━━━
+😅 *Y lo más importante del parche…*
+
+Se pidió *«un botón para avisar a todos»*.
+
+Se estudió, se planificó, se dijo con mucha seguridad que la plataforma no tenía nada parecido… y resultó que *ya existía*. Llevaba semanas funcionando, en una pantalla donde nadie miraba. La lección de producto es buena: si nadie encuentra tu botón, tu botón no existe. La lección personal es peor. 🫠
+
+También construimos un *gestor de casos* con una fecha de seguimiento por cada solicitud. Y luego, como las fechas no servían de nada si nadie abría el tablero, construimos un *robot que persigue a la gente cada hora* para recordárselas. Con muy buenas intenciones. Pero persigue. ⏰
+
+La primera versión mandaba *una notificación por caso vencido*. Duró exactamente lo que tardamos en imaginar a alguien con doce casos abriendo el teléfono un lunes. 📱💥
+
+Y nuestro criterio favorito del cierre: si un caso está *listo para cerrar* y a alguien se le ocurre *preguntar un dato*, deja de estarlo al instante. Hemos automatizado, con rigor técnico, el momento en que alguien levanta la mano en la reunión que ya se iba a acabar. 🙋
+
+Moraleja: pedir *«algo sencillo»* en esta organización sigue activando una maldición documentada. Vamos por la *cuarta* release consecutiva. A este ritmo habrá que pedirlo complicado, a ver si sale pequeño. 📏
+
+_Apoyo por Venezuela · Notas del parche · 30 de agosto de 2026_
