@@ -77,3 +77,12 @@ export const TONO_ESTADO_INFO: Record<EstadoInfo, TonoPill> = {
   respondida: 'info',
   cerrada:    'ok',
 };
+
+// ── Cierre con criterios (0243) ──
+export const ETIQUETA_CRITERIO: Record<string, string> = {
+  desglose:         'Desglose cubierto',
+  entrega:          'Entrega registrada',
+  evidencia:        'Evidencia adjunta',
+  sin_peticiones:   'Sin peticiones abiertas',
+  sin_derivaciones: 'Sin áreas con trabajo abierto',
+};

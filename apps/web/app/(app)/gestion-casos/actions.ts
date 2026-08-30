@@ -140,3 +140,40 @@ export async function cerrarInfo(formData: FormData) {
   revalidatePath('/casos');
   return redirigirOk(volver, 'Petición cerrada.');
 }
+
+// ── Cierre y reapertura (0243) ──
+// Los criterios los calcula la base de datos, no la pantalla: aquí solo se recoge la nota
+// y se deja que la RPC decida. El mensaje de error ya viene escrito para una persona y
+// enumera qué falta, así que se devuelve tal cual.
+
+export async function cerrarCaso(formData: FormData) {
+  const supabase = await createClient();
+  const caso = txt(formData.get('caso'));
+  const volver = txt(formData.get('volver')) || '/gestion-casos';
+  if (!caso) return redirigirError(volver, 'Falta la solicitud.');
+
+  const { error } = await supabase.rpc('cerrar_caso_gestion', {
+    p_caso: caso, p_nota: txt(formData.get('nota')) || null,
+  });
+  if (error) return redirigirError(volver, motivo(error, 'No se pudo cerrar el caso.'));
+
+  revalidatePath('/gestion-casos');
+  revalidatePath('/casos');
+  return redirigirOk(volver, 'Caso cerrado.');
+}
+
+export async function reabrirCaso(formData: FormData) {
+  const supabase = await createClient();
+  const caso = txt(formData.get('caso'));
+  const motivoTxt = txt(formData.get('motivo'));
+  const volver = txt(formData.get('volver')) || '/gestion-casos';
+  if (!caso) return redirigirError(volver, 'Falta la solicitud.');
+  if (!motivoTxt) return redirigirError(volver, 'Escribe por qué se reabre el caso.');
+
+  const { error } = await supabase.rpc('reabrir_caso', { p_caso: caso, p_motivo: motivoTxt });
+  if (error) return redirigirError(volver, motivo(error, 'No se pudo reabrir el caso.'));
+
+  revalidatePath('/gestion-casos');
+  revalidatePath('/casos');
+  return redirigirOk(volver, 'Caso reabierto. Vuelve a tu cola con fecha de seguimiento.');
+}
