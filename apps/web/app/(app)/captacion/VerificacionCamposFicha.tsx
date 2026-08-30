@@ -35,7 +35,7 @@ export default function VerificacionCamposFicha(
       </div>
       {puedeVerificar
         ? <p className="muted" style={{ fontSize: '.82rem', margin: '4px 0 0' }}>Marca cada dato. La ficha queda <strong>Verificada</strong> (y puede enviarse a Logística) cuando todos están en verde.</p>
-        : <p className="muted" style={{ fontSize: '.82rem', margin: '4px 0 0' }}>Estado marcado por el equipo de Alianzas.</p>}
+        : <p className="muted" style={{ fontSize: '.82rem', margin: '4px 0 0' }}>Estado marcado por Verificación y Gestión de Casos.</p>}
 
       <div style={{ marginTop: 8, display: 'grid', gap: 8 }}>
         {campos.map((c) => {

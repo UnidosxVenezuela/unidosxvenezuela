@@ -40,6 +40,11 @@ export function destinosNav(flags: NavFlags): Destino[] {
   // (heatmap de necesidades + filtro «albergues con cupo»). Logística/admin/digitalización
   // lo ven además con las capas operativas (tareas, lugares) y editable desde Centros de acopio.
   if (flags.seguimiento) d.push({ href: '/mapa', etiqueta: 'Mapa', icono: 'mapa' });
+  // El área eje entra a la cola de solicitudes de Logística (0241) sin ganar el resto del
+  // área: nada de acopio, mapa ni proveedores.
+  if (flags.ejeInsumos && !flags.acopio) {
+    d.push({ href: '/insumos', etiqueta: 'Logística · solicitudes', icono: 'camion' });
+  }
   if (flags.acopio) {
     d.push({ href: '/acopio', etiqueta: 'Centros de acopio', icono: 'acopio' });
     d.push({ href: '/insumos', etiqueta: 'Logística', icono: 'camion' });

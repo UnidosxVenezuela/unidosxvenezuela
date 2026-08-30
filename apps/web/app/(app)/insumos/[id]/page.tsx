@@ -1,7 +1,8 @@
 import { fechaHora } from '@/lib/fechas';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica, puedeAlianzas, esAdministrador } from '@/lib/auth';
+import { areaDeEstadoInsumo, ETIQUETA_AREA_FLUJO, deQuienEsElPaso, puedeMoverSolicitudA } from '@/lib/flujo-insumos';
+import { requireUsuario, puedeLogistica, puedeAlianzas, esAdministrador, puedeGestionCasos } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { nombreMostrado } from '@/lib/nombre';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, claseEstadoInsumo, clasePrioridad, ETIQUETA_PRIORIDAD, siguienteEstadoInsumo, TIPOS_VEHICULO, banderaPais} from '@/lib/constantes';
@@ -33,9 +34,19 @@ export default async function SolicitudPage({ params }: { params: { id: string }
   // empresas o aliados que puedan ayudar, sin editar ni avanzar nada. Desde 0216 el
   // departamento tiene un solo rol y `bitsol_insert` lo acepta entero, así que ya no hay
   // dos modos de consulta distintos (antes Prospección/Afiliación no podían anotar).
-  const gestor = puedeLogistica(perfil);
+  // Desde 0241 el flujo está repartido: 'solicitado' y 'en gestión' son de Verificación y
+  // Gestión de Casos; 'en ruta' y 'entregado', de Logística. Las dos entran a la pantalla y
+  // trabajan la solicitud; lo que cambia es QUIÉN puede dar cada paso de estado, y eso se
+  // decide abajo con `mePasoAqui`, no con una sola bandera.
+  const esLog = puedeLogistica(perfil);
+  const esEje = puedeGestionCasos(perfil);
+  const gestor = esLog || esEje;
   const esCapt = !gestor && puedeAlianzas(perfil);
   if (!gestor && !esCapt) redirect('/dashboard');
+  // ¿Puedo LLEVAR la solicitud a ese estado? Manda el área dueña del DESTINO (0241).
+  // Se calcula por destino y no por una bandera global: es lo único que hace que la
+  // pantalla y la base de datos digan lo mismo.
+  const puedoLlevarA = (destino: string) => puedeMoverSolicitudA(perfil, destino);
   const verFull = esAdministrador(perfil);
   const supabase = await createClient();
   const id = params.id;
@@ -569,11 +580,22 @@ export default async function SolicitudPage({ params }: { params: { id: string }
           <aside className="grupo-aside">
             <div className="tarjeta">
               <h3 className="aside-titulo"><Icono nombre="flecha" size={16} /> Estado</h3>
+              {/* De quién es esta solicitud AHORA MISMO (0241). */}
+              <p className="muted" style={{ margin: '-4px 0 10px', fontSize: '.78rem' }}>
+                En «{ETIQUETA_ESTADO_INSUMO[s.estado] ?? s.estado}» la lleva <strong>{ETIQUETA_AREA_FLUJO[areaDeEstadoInsumo(s.estado)]}</strong>.
+              </p>
               {/* Regla de cierre (0221): «entregado» ya no es un paso más. Con ítems sin
                   cubrir hay que decirlo a sabiendas: la entrega se registra como PARCIAL,
                   el caso NO se da por resuelto y Redacción sigue difundiendo lo que falta.
                   Quien decide de verdad es la RPC; esto solo evita el 22023 a ciegas. */}
-              {sig === 'entregado' && desgloseIncompleto ? (
+              {/* Cada paso se ofrece SOLO a su área (0241). Cuando no es tuyo se dice de
+                  quién es, en vez de esconder el botón: el tablero es compartido y saber a
+                  quién empujar es la mitad del trabajo. */}
+              {sig && !puedoLlevarA(sig) ? (
+                <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>
+                  El siguiente paso —«{ETIQUETA_ESTADO_INSUMO[sig] ?? sig}»— lo da <strong>{deQuienEsElPaso(sig)}</strong>.
+                </p>
+              ) : sig === 'entregado' && desgloseIncompleto ? (
                 <>
                   <p className="muted" style={{ margin: '0 0 8px', fontSize: '.82rem' }}>
                     Faltan por cubrir <strong style={{ color: 'var(--texto)' }}>{rItems.total - rItems.cumplidos} de {rItems.total} ítems</strong>
@@ -601,16 +623,18 @@ export default async function SolicitudPage({ params }: { params: { id: string }
                   <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud entregada ✅</p>
                   {/* Devolver la entrega (#2b, decisión 4): revierte a «en ruta» y el caso a
                       «confirmado». El inventario se ajusta manualmente. */}
-                  <form action={devolverEntregaInsumo} style={{ marginTop: 8 }}>
-                    <input type="hidden" name="id" value={id} />
-                    <BotonConfirmar mensaje="¿Devolver esta entrega? La solicitud volverá a «en ruta» y el caso ligado a «confirmado». Ajusta el inventario manualmente si hace falta." className="btn" confirmar="Sí, devolver" style={{ width: '100%' }}>Devolver entrega</BotonConfirmar>
-                  </form>
+                  {puedoLlevarA('en_ruta') && (
+                    <form action={devolverEntregaInsumo} style={{ marginTop: 8 }}>
+                      <input type="hidden" name="id" value={id} />
+                      <BotonConfirmar mensaje="¿Devolver esta entrega? La solicitud volverá a «en ruta» y el caso ligado a «confirmado». Ajusta el inventario manualmente si hace falta." className="btn" confirmar="Sí, devolver" style={{ width: '100%' }}>Devolver entrega</BotonConfirmar>
+                    </form>
+                  )}
                 </>
               ) : s.estado === 'cancelado' ? (
                 <p className="muted" style={{ margin: 0, fontSize: '.85rem' }}>Solicitud cancelada.</p>
               ) : null}
 
-              {['solicitado', 'en_gestion', 'en_ruta'].includes(s.estado) && (
+              {['solicitado', 'en_gestion', 'en_ruta'].includes(s.estado) && puedoLlevarA('no_disponible') && (
                 <form action={cambiarEstadoSolicitud} style={{ marginTop: 8 }}>
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value="no_disponible" />
@@ -621,15 +645,21 @@ export default async function SolicitudPage({ params }: { params: { id: string }
               {s.estado === 'no_disponible' && (
                 <div style={{ marginTop: 8 }}>
                   <p className="muted" style={{ margin: '0 0 8px', fontSize: '.85rem' }}>Marcada como <strong style={{ color: 'var(--texto)' }}>no cubierta</strong>: en Redacción se resalta como <strong style={{ color: 'var(--texto)' }}>prioridad de difusión</strong>.</p>
-                  <form action={cambiarEstadoSolicitud}>
-                    <input type="hidden" name="id" value={id} />
-                    <input type="hidden" name="estado" value="solicitado" />
-                    <button className="btn" style={{ width: '100%' }} type="submit">Reactivar (volver a intentar)</button>
-                  </form>
+                  {puedoLlevarA('solicitado') ? (
+                    <form action={cambiarEstadoSolicitud}>
+                      <input type="hidden" name="id" value={id} />
+                      <input type="hidden" name="estado" value="solicitado" />
+                      <button className="btn" style={{ width: '100%' }} type="submit">Reactivar (volver a intentar)</button>
+                    </form>
+                  ) : (
+                    <p className="muted" style={{ margin: 0, fontSize: '.82rem' }}>
+                      Reactivarla es de <strong>{deQuienEsElPaso('solicitado')}</strong>.
+                    </p>
+                  )}
                 </div>
               )}
 
-              {s.estado !== 'cancelado' && s.estado !== 'entregado' && s.estado !== 'no_disponible' && (
+              {s.estado !== 'cancelado' && s.estado !== 'entregado' && s.estado !== 'no_disponible' && puedoLlevarA('cancelado') && (
                 <form action={cambiarEstadoSolicitud} style={{ marginTop: 8 }}>
                   <input type="hidden" name="id" value={id} />
                   <input type="hidden" name="estado" value="cancelado" />

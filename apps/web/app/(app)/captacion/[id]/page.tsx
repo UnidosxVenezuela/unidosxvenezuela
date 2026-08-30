@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect, notFound } from 'next/navigation';
-import { requireUsuario, puedeAlianzas, esAdministrador } from '@/lib/auth';
+import { requireUsuario, puedeAlianzas, esAdministrador , puedeGestionCasos} from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { urlFirmada } from '@/lib/storage';
 import { hrefSeguro, ETIQUETA_ESTADO_OPORTUNIDAD, ESTADOS_OPORTUNIDAD, tonoEstadoOportunidad, ETIQUETA_CATEGORIA_OPORTUNIDAD, CAMPOS_VERIF_FICHA } from '@/lib/constantes';
@@ -27,10 +27,19 @@ function diasEntre(desde?: string | null, hasta?: string | null): number | null 
 
 export default async function OportunidadPage({ params }: { params: { id: string } }) {
   const { perfil } = await requireUsuario();
-  if (!puedeAlianzas(perfil)) redirect('/dashboard');
+  // Desde 0242 la ficha la VERIFICA Verificación y Gestión de Casos (sustitución: Alianzas
+  // ya no marca su propio semáforo). Entra al detalle, o no podría firmar lo que se le pide.
+  const esEje = puedeGestionCasos(perfil);
+  if (!puedeAlianzas(perfil) && !esEje) redirect('/dashboard');
   const esAdmin = esAdministrador(perfil);
   const supabase = await createClient();
-  const { data: o } = await supabase.from('oportunidades').select('*').eq('id', params.id).maybeSingle();
+  // Alianzas lee su tabla; el área eje lee la VISTA CURADA de 0242 —que sí trae los
+  // contactos, porque sin ellos el campo «responsable» se firmaría en blanco— y NUNCA la
+  // tabla: `oportunidades` sigue siendo de Alianzas por RLS (molde 0226).
+  let { data: o } = await supabase.from('oportunidades').select('*').eq('id', params.id).maybeSingle();
+  if (!o && esEje) {
+    ({ data: o } = await supabase.from('ficha_alianza_verificacion').select('*').eq('id', params.id).maybeSingle());
+  }
   if (!o) notFound();
   const oo = o as any;
   const url = oo.archivo_path ? await urlFirmada(supabase, 'oportunidades', oo.archivo_path, 3600) : null;
@@ -113,7 +122,7 @@ export default async function OportunidadPage({ params }: { params: { id: string
       {/* 2ª verificación campo por campo de la Ficha (0199) — solo si la ficha está en uso. */}
       {fichaEnUso && (
         <VerificacionCamposFicha oportunidadId={oo.id} estados={estadosVerif}
-          volver={'/captacion/' + oo.id} nombres={nombresVerif} puedeVerificar={puedeAlianzas(perfil)} />
+          volver={'/captacion/' + oo.id} nombres={nombresVerif} puedeVerificar={esEje} />
       )}
 
       {/* Puente a Donación-Ofrecimiento (0192): convertir sin re-tipear */}

@@ -142,7 +142,9 @@ export const GRUPOS_POR_AREA_ADMIN: Record<AreaAdmin, string[]> = {
 };
 /** Roles funcionales de cada área (para el selector acotado y deducir el área de un usuario). */
 export const ROLES_POR_AREA_ADMIN: Record<AreaAdmin, Rol[]> = {
-  verificacion: ['recopilacion', 'verificador'],
+  // 'gestor_casos' (0239) entra desde 0241: el rol del área eje lo tiene que poder
+  // asignar el admin de su propia área, no solo el admin general.
+  verificacion: ['recopilacion', 'verificador', 'gestor_casos'],
   redes: ['redaccion', 'redes_sociales', 'diseno_grafico', 'edicion_video', 'influencers'],
   logistica: ['logistica'],
   digitalizacion: [],  // roles de digitalización/búsqueda desactivados (ver ROLES_INACTIVOS)

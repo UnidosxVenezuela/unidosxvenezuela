@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { requireUsuario, puedeLogistica } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeGestionCasos } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import Consejo from '@/components/Consejos';
 import Icono from '@/components/Icono';
@@ -15,7 +15,9 @@ export default async function NuevaSolicitudPage() {
   // esta página solo llamaba a `requireUsuario()`: CUALQUIER cuenta entraba y sembraba
   // tareas en el tablero del área (la policy solins_insert también estaba abierta; 0223
   // la cierra).
-  if (!puedeLogistica(perfil)) redirect('/insumos');
+  // Desde 0241 el alta es de las DOS áreas: Verificación y Gestión es dueña de
+  // 'solicitado' y 'en gestión', y por tanto de la entrada del flujo.
+  if (!puedeLogistica(perfil) && !puedeGestionCasos(perfil)) redirect('/insumos');
 
   const supabase = await createClient();
   const { data: puntos } = await supabase.from('puntos_acopio').select('id, nombre').order('nombre');
