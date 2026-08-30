@@ -11,7 +11,9 @@ import { fechaHora } from '@/lib/fechas';
 import {
   SITUACIONES_GESTION, ETIQUETA_SITUACION, QUE_HACER, TONO_SITUACION,
   esSituacionGestion, ETIQUETA_AREA_SIGUIENTE, cuantoFalta,
+  ETIQUETA_ESTADO_INFO, TONO_ESTADO_INFO,
 } from '@/lib/gestion';
+import { responderInfo } from './actions';
 import Icono from '@/components/Icono';
 import Pill from '@/components/Pill';
 import PillPais from '@/components/PillPais';
@@ -25,22 +27,34 @@ export const dynamic = 'force-dynamic';
 
 type SP = { vista?: string; situacion?: string };
 
+type Vista = 'mis' | 'control' | 'piden';
+
 export default async function GestionCasosPage({ searchParams }: { searchParams: SP }) {
   const { perfil } = await requireUsuario();
   const esAdmin = esAdministrador(perfil);
   const puedeRepartir = puedeAsignarGestor(perfil);
-  // Entra el gestor (es su bandeja), su mando y administración. Nadie más: una pantalla
-  // que se abre y sale vacía es peor que una que dice que no es para ti.
-  if (!esGestorCasos(perfil) && !puedeRepartir) redirect('/dashboard');
-
   const supabase = await createClient();
-  const vista = searchParams.vista === 'control' ? 'control' : 'mis';
   const fSituacion = esSituacionGestion(searchParams.situacion ?? '') ? searchParams.situacion! : '';
 
-  const [misRes, controlRes] = await Promise.all([
+  const [misRes, controlRes, pidenRes] = await Promise.all([
     supabase.rpc('mis_casos_gestion'),
     supabase.rpc('casos_gestion_control', { p_situacion: fSituacion || null }),
+    // Lo que me piden (0240). Esto NO es solo del gestor: le llega a cualquier área a la
+    // que se le haya pedido un dato, y es la razón de que la pantalla no se cierre a los
+    // dos roles de gestión.
+    supabase.rpc('mis_solicitudes_info'),
   ]);
+  const piden = (pidenRes.data ?? []) as any[];
+
+  // Entra el gestor (es su bandeja), quien reparte, y cualquiera a quien le hayan pedido
+  // algo. Una pantalla que se abre y sale vacía es peor que una que dice que no es para ti.
+  const esGestor = esGestorCasos(perfil);
+  if (!esGestor && !puedeRepartir && piden.length === 0) redirect('/dashboard');
+
+  const vista: Vista = searchParams.vista === 'control' ? 'control'
+    : searchParams.vista === 'piden' ? 'piden'
+    // Quien solo entra porque le piden algo aterriza donde le sirve.
+    : (!esGestor && !puedeRepartir) ? 'piden' : 'mis';
 
   // Sin 0239 aplicada las RPC no existen: se avisa y el resto de la app sigue igual.
   if (misRes.error && controlRes.error) {
@@ -61,9 +75,11 @@ export default async function GestionCasosPage({ searchParams }: { searchParams:
   const cuenta = (s: string) => control.filter((c) => c.situacion === s).length;
   const misVencidos = mios.filter((c) => c.vencido).length;
 
-  const href = (v: 'mis' | 'control', s?: string) => {
+  const pidenVencidas = piden.filter((s) => s.vencida).length;
+
+  const href = (v: Vista, s?: string) => {
     const p = new URLSearchParams();
-    if (v === 'control') p.set('vista', 'control');
+    if (v !== 'mis') p.set('vista', v);
     if (s) p.set('situacion', s);
     return '/gestion-casos' + (p.toString() ? '?' + p.toString() : '');
   };
@@ -91,19 +107,26 @@ export default async function GestionCasosPage({ searchParams }: { searchParams:
           className={vista === 'mis' ? 'activo' : undefined}>Mis casos ({mios.length})</Link>
         <Link href={href('control')} aria-current={vista === 'control' ? 'page' : undefined}
           className={vista === 'control' ? 'activo' : undefined}>Control ({control.length})</Link>
+        <Link href={href('piden')} aria-current={vista === 'piden' ? 'page' : undefined}
+          className={vista === 'piden' ? 'activo' : undefined}>Me piden ({piden.length})</Link>
       </div>
 
-      {vista === 'control' ? (
+      {vista === 'piden' ? (
+        <SeccionMePiden piden={piden} vencidas={pidenVencidas} />
+      ) : vista === 'control' ? (
         <>
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(185px,1fr))', margin: '16px 0' }}>
             {SITUACIONES_GESTION.map((s) => (
               <Kpi key={s} etiqueta={ETIQUETA_SITUACION[s]} valor={cuenta(s)}
-                sub={s === 'sin_gestor' ? 'Nadie responde' : s === 'vencido' ? 'La fecha ya pasó'
+                sub={s === 'sin_gestor' ? 'Nadie responde' : s === 'bloqueado' ? 'Espera un dato'
+                  : s === 'vencido' ? 'La fecha ya pasó'
                   : s === 'sin_proxima' ? 'No dice qué toca' : 'Desglose cubierto'}
-                color={s === 'sin_gestor' ? '#b91c1c' : s === 'vencido' ? '#c2410c'
+                color={s === 'sin_gestor' ? '#b91c1c' : s === 'bloqueado' ? '#9333ea'
+                  : s === 'vencido' ? '#c2410c'
                   : s === 'sin_proxima' ? '#a16207' : '#16a34a'}
-                icono={s === 'por_cerrar' ? 'ok' : 'avisos'}
-                tinte={s === 'sin_gestor' ? '#fee2e2' : s === 'vencido' ? '#ffedd5'
+                icono={s === 'por_cerrar' ? 'ok' : s === 'bloqueado' ? 'reloj' : 'avisos'}
+                tinte={s === 'sin_gestor' ? '#fee2e2' : s === 'bloqueado' ? '#f3e8ff'
+                  : s === 'vencido' ? '#ffedd5'
                   : s === 'sin_proxima' ? '#fef9c3' : '#d1fae5'}
                 href={href('control', s)} />
             ))}
@@ -222,5 +245,71 @@ export default async function GestionCasosPage({ searchParams }: { searchParams:
         </p>
       )}
     </AnimarEntrada>
+  );
+}
+
+/** Lo que me piden (0240): peticiones dirigidas a mí o a mi área, sin cerrar. */
+function SeccionMePiden({ piden, vencidas }: { piden: any[]; vencidas: number }) {
+  if (piden.length === 0) {
+    return (
+      <div style={{ marginTop: 14 }}>
+        <EstadoVacio icono="ok" titulo="No te piden nada"
+          texto="Cuando alguien necesite un dato tuyo —o de tu área— para avanzar un caso, aparecerá aquí." />
+      </div>
+    );
+  }
+  return (
+    <>
+      {vencidas > 0 && (
+        <p className="fila" style={{ gap: 6, marginTop: 14, fontSize: '.9rem' }}>
+          <Pill tono="critica" punto={false}>{vencidas} con la fecha pasada</Pill>
+          <span className="muted">Cada una tiene un caso parado detrás.</span>
+        </p>
+      )}
+      <div style={{ display: 'grid', gap: 10, marginTop: 14 }}>
+        {piden.map((s) => {
+          const f = cuantoFalta(s.vence_en);
+          return (
+            <div key={s.id} className="tarjeta">
+              <div className="fila" style={{ gap: 6, flexWrap: 'wrap' }}>
+                <Pill tono={TONO_ESTADO_INFO[s.estado as keyof typeof TONO_ESTADO_INFO] ?? 'neutra'} punto={false}>
+                  {ETIQUETA_ESTADO_INFO[s.estado as keyof typeof ETIQUETA_ESTADO_INFO] ?? s.estado}
+                </Pill>
+                {s.es_mia
+                  ? <Pill tono="info" punto={false}>Te la pidieron a ti</Pill>
+                  : s.area && <Pill tono="neutra" punto={false}>{ETIQUETA_AREA_SIGUIENTE[s.area] ?? s.area}</Pill>}
+                {f && <Pill tono={f.vencido ? 'critica' : 'neutra'} punto={false}>{f.texto}</Pill>}
+              </div>
+              <div style={{ margin: '8px 0 2px' }}><strong>{s.dato}</strong></div>
+              {s.motivo && <div className="muted" style={{ fontSize: '.85rem' }}>Por qué: {s.motivo}</div>}
+              {s.resultado_esperado && (
+                <div className="muted" style={{ fontSize: '.85rem' }}>Desbloquea: {s.resultado_esperado}</div>
+              )}
+              <div className="muted" style={{ fontSize: '.78rem', marginTop: 4 }}>
+                {/* El caso va como TEXTO y no como enlace: quien recibe la petición puede
+                    ser de un área que no lee `casos` por RLS, y el enlace la devolvería al
+                    panel. Aquí ya tiene todo lo que necesita para contestar. */}
+                Para #{String(s.caso_numero ?? '—').padStart(5, '0')} · {s.caso_titulo}
+                {' · '}lo pidió {s.solicitante}
+              </div>
+              {s.estado === 'abierta' && (
+                <form action={responderInfo} style={{ marginTop: 8 }}>
+                  <input type="hidden" name="id" value={s.id} />
+                  <input type="hidden" name="volver" value="/gestion-casos?vista=piden" />
+                  <div className="fila" style={{ gap: 6, alignItems: 'flex-end' }}>
+                    <div className="campo crece" style={{ marginBottom: 0 }}>
+                      <label htmlFor={'mp-' + s.id}>Responder</label>
+                      <input id={'mp-' + s.id} name="respuesta" className="input" required maxLength={2000}
+                        placeholder="El dato, o dónde está" />
+                    </div>
+                    <button className="btn btn-primario" type="submit">Enviar</button>
+                  </div>
+                </form>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

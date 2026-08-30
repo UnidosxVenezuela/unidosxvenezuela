@@ -28,6 +28,7 @@ export type NavFlags = {
   seguimiento: boolean;    // consulta cross-área del recorrido de cualquier caso (Paso 5)
   gestorCasos: boolean;    // Gestor Integral de Casos: su bandeja y el control (0239)
   repartirGestor: boolean; // reparte los casos entre gestores: mando de Verificación o admin
+  ejeInsumos: boolean;     // el área eje entra al tablero de Logística (0241)
 };
 
 // Grupos/roles del área de contenido (producción y publicación).
@@ -107,6 +108,10 @@ export async function flagsDeNavegacion(supabase: any, userId: string, perfil: P
     // El líder y los coordinadores del grupo de Logística ven su área aunque no tengan el
     // rol operativo (0214): si no, no podían ni entrar a desestimar una solicitud.
     acopio: admin || supLogistica || roles.includes('logistica') || mandoLogistica,
+    // El área eje entra al tablero de Logística desde 0241: 'solicitado' y 'en gestión'
+    // son suyas. Se separa de `acopio` a propósito — no ganan acopio, mapa ni proveedores,
+    // solo la cola de solicitudes.
+    ejeInsumos: admin || mandoVerificacion || roles.some((r) => ['verificador', 'gestor_casos', 'admin_verificacion'].includes(r)),
     psicosocial: puedeSupervisarPsicosocial(perfil),
     aliados: admin || roles.includes('lider_plataforma_aliada'),
     // Departamento de Alianzas Estratégicas (0198 → 0216): un solo rol para todo el

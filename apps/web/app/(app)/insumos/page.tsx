@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { requireUsuario, puedeLogistica, puedeAlianzas } from '@/lib/auth';
+import { requireUsuario, puedeLogistica, puedeAlianzas, puedeGestionCasos } from '@/lib/auth';
+import { areaDeEstadoInsumo, ETIQUETA_AREA_FLUJO } from '@/lib/flujo-insumos';
 import { createClient } from '@/lib/supabase/server';
 import { fechaHora } from '@/lib/fechas';
 import { ETIQUETA_TIPO_INSUMO, ETIQUETA_ESTADO_INSUMO, ESTADOS_INSUMO, clasePrioridad, ETIQUETA_PRIORIDAD } from '@/lib/constantes';
@@ -26,8 +27,11 @@ export default async function InsumosPage() {
   // Alianzas Estratégicas entra en modo CONSULTA (0163): revisa las solicitudes y deja en
   // su bitácora referencias de empresas y aliados; no gestiona ni avanza nada (eso es de
   // Logística). Mismo criterio que /insumos/[id] (0216: un solo rol de departamento).
-  const esCapt = !esLog && puedeAlianzas(perfil);
-  if (!esLog && !esCapt) redirect('/dashboard');
+  // Verificación y Gestión de Casos entra al tablero desde 0241: es dueña de las dos
+  // primeras columnas ('solicitado' y 'en gestión'), así que este panel también es suyo.
+  const esEje = puedeGestionCasos(perfil);
+  const esCapt = !esLog && !esEje && puedeAlianzas(perfil);
+  if (!esLog && !esEje && !esCapt) redirect('/dashboard');
 
   const supabase = await createClient();
   // El PAÍS (0230) vive en el caso, no en la solicitud. El join a `casos` lo trae, pero
@@ -138,11 +142,22 @@ export default async function InsumosPage() {
             <>
               <Link className="btn" href="/insumos/captacion"><Icono nombre="enlace" size={16} /> Captación</Link>
               <Link className="btn" href="/insumos/transportistas"><Icono nombre="camion" size={16} /> Transportistas</Link>
-              <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
             </>
+          )}
+          {/* El alta es de las dos áreas desde 0241 (decisión: «mueve, trabaja y crea»). */}
+          {(esLog || esEje) && (
+            <Link className="btn btn-primario" href="/insumos/nueva"><Icono nombre="mas" /> Nueva solicitud</Link>
           )}
         </div>
       </div>
+
+      {esEje && !esLog && (
+        <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
+          <Icono nombre="tareas" size={15} /> Las columnas <strong>Solicitado</strong> y <strong>En gestión</strong> son
+          de tu área: aquí se consigue el insumo y se deja listo. Cuando lo esté, <strong>Logística lo toma</strong> y
+          lo pone en ruta.
+        </p>
+      )}
 
       {esCapt && (
         <p className="muted fila" style={{ gap: 6, fontSize: '.88rem', marginTop: 4 }}>
@@ -183,6 +198,11 @@ export default async function InsumosPage() {
                 <span>{ETIQUETA_ESTADO_INSUMO[e] ?? e}</span>
                 <span className="insignia">{porEstado(e).length}</span>
               </h3>
+              {/* De quién es la columna (0241). Se dice en las cuatro, no solo en las que
+                  cambiaron de dueño: marcar solo una mitad deja la otra ambigua. */}
+              <div className="muted" style={{ fontSize: '.72rem', margin: '-4px 4px 8px' }}>
+                {ETIQUETA_AREA_FLUJO[areaDeEstadoInsumo(e)]}
+              </div>
               {porEstado(e).length === 0 && <p className="muted" style={{ fontSize: '.85rem', margin: '0 4px' }}>—</p>}
               {porEstado(e).map((s) => {
                 // La vista curada manda; el join queda de respaldo por si 0237 no está.

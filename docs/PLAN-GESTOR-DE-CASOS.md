@@ -92,8 +92,21 @@ alguien pidió y no llega, y esa solicitud estructurada es la Fase 2. Inventarle
 definición débil —«lleva N días sin tocarse»— daría un reporte que nadie mira a la segunda
 semana.
 
-**Fase 2 — solicitudes de información estructuradas**, a cualquier área, con fecha y
-responsable. Absorbe `info_requerida` sin romperlo.
+**Fase 2 — solicitudes de información estructuradas. ENTREGADA** (migración `0240`).
+`casos_solicitudes_info` con los cinco campos de la propuesta: qué dato, a quién (persona,
+área o las dos), por qué, para cuándo y qué desbloquea. Pedir → responder → cerrar son tres
+pasos distintos a propósito: si responder cerrara la petición, «me contestaron algo que no
+sirve» no tendría dónde quedar registrado.
+
+Lo importante del diseño: **la petición viaja por su propia policy, no por el acceso al
+caso.** Logística y Alianzas no leen `casos`; si la petición dependiera de eso, el gestor
+solo podría pedirle datos a quien ya ve el caso — que son justo los que no los tienen.
+
+Y con esto **«bloqueado» entra en el reporte de control**: un caso con al menos una petición
+abierta y vencida. Ya es una consulta y no una corazonada.
+
+`casos.info_requerida` (0142) se queda como está: es la devolución a Recopilación, otra
+cosa. Un solo texto, un solo destinatario.
 
 **Fase 3 — cierre con criterios y reapertura.**
 

@@ -182,6 +182,16 @@ export function esGestorCasos(e?: EntradaRoles) {
   return tieneAlguno(e, ['gestor_casos']);
 }
 
+// El ÁREA EJE al completo (0241): «Verificación y Gestión de Casos». Espejo de
+// `public.puede_gestion_casos()`. Existe porque `puedeVerificar` es admin + verificador y
+// deja fuera al gestor de casos, al mando del grupo y al admin de área — los cinco perfiles
+// del área tienen que entrar por la misma puerta o la pantalla y la RLS dirán cosas
+// distintas.
+export function puedeGestionCasos(e?: EntradaRoles) {
+  return tieneAlguno(e, ['admin', 'verificador', 'gestor_casos', 'admin_verificacion'])
+    || esMandoDe(e as any, 'verificacion');
+}
+
 // Quién REPARTE los casos. Decisión de la organización: el líder o administración —
 // ni automático ni «tomar»—. `esMandoDe` cubre al líder y al coordinador del grupo de
 // Verificación aunque no lleven el rol operativo, igual que hace `es_mando_verificacion()`
