@@ -111,6 +111,12 @@ jobs:
       - name: Ejecutar pruebas del eje (0241/0242)
         run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_eje_0241.sql
 
+      # Cierre con criterios y reapertura (0243). Lo que importa: que los criterios se
+      # CALCULEN —uno se cae solo al abrir una petición—, que sin nota no se cierre
+      # incompleto, y que quede la foto de los criterios y no solo el hecho de cerrar.
+      - name: Ejecutar pruebas de cierre y reapertura (0243)
+        run: psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/pruebas_cierre_0243.sql
+
       # Idempotencia: se reaplican las migraciones con la base YA POBLADA, que es el caso
       # difícil (constraints sobre filas existentes, policies con datos detrás). Se leen
       # de /tmp/migs porque el paso de arranque saca las migraciones del árbol; intentarlo
@@ -125,7 +131,7 @@ jobs:
       # significa que una migración se puede repetir a sí misma, no que se pueda volver a
       # aplicar por encima de otra posterior que la sustituyó. Un `db reset` real replaya
       # la cadena entera desde vacío y en orden, que es lo que sí funciona.
-      - name: Comprobar idempotencia de 0232-0242
+      - name: Comprobar idempotencia de 0232-0243
         run: |
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0232_intake_sensible_fuera_de_perfiles.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0233_hilos_sin_leer.sql
@@ -138,6 +144,7 @@ jobs:
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0240_solicitudes_de_informacion.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0241_eje_verificacion_y_gestion.sql
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0242_alianzas_verificada_por_el_eje.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f /tmp/migs/0243_cierre_y_reapertura.sql
 
       - name: Apagar Supabase
         if: always()

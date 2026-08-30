@@ -108,7 +108,24 @@ abierta y vencida. Ya es una consulta y no una corazonada.
 `casos.info_requerida` (0142) se queda como está: es la devolución a Recopilación, otra
 cosa. Un solo texto, un solo destinatario.
 
-**Fase 3 — cierre con criterios y reapertura.**
+**Fase 3 — cierre con criterios y reapertura. ENTREGADA** (migración `0243`).
+
+Los criterios **se calculan, no se marcan**: desglose cubierto, entrega registrada,
+evidencia adjunta, peticiones de información cerradas y derivaciones cerradas. Una lista de
+casillas que alguien tilda antes de cerrar se convierte en cinco clics automáticos a la
+tercera semana, y entonces el «cierre documentado» de la propuesta es una firma sin
+contenido.
+
+«Avisa, no bloquea» —la decisión de la organización— pero **con dientes**: se puede cerrar
+con criterios sin cumplir, y para eso hay que escribir por qué. Sin la nota, la RPC rechaza
+y dice cuáles faltan.
+
+`casos_cierres` guarda la **foto de cada criterio** en el momento de cerrar, no solo si se
+cumplían todos: seis meses después, «se cerró sin evidencia y esta fue la razón» es una
+frase que se puede leer; «se cerró» no.
+
+Reabrir devuelve el caso a `confirmado` —no a `pendiente`: lo que se reabre es la atención,
+no la verificación— con fecha de seguimiento nueva, y avisa a quien lo cerró.
 
 **Fase 4 — recordatorios automáticos** (molde `0091`, ya probado) y renombrado del área.
 
